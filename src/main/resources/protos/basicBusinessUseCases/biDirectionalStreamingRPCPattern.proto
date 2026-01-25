@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package com.ecommerce.order.bidirectional;
+
+option java_package = "com.ecommerce.order.grpc.bidirectional";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message Money {
+  int64 units = 1;
+  int32 nanos = 2;
+}
+
+message OrderItem {
+  string product_id = 1;
+  int32 quantity = 2;
+  Money unit_price = 3;
+}
+
+message Address {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip_code = 4;
+  string country = 5;
+}
+
+message OrderProcessingRequest {
+  string order_id = 1;
+  string user_id = 2;
+  repeated OrderItem items = 3;
+  Address shipping_address = 4;
+  google.protobuf.Timestamp requested_delivery_date = 5;
+}
+
+message CombinedShipment {
+  string shipment_id = 1;
+  repeated string order_ids = 2;
+  google.protobuf.Timestamp delivery_date = 3;
+  Address shipping_address = 4;
+  Money total_shipping_cost = 5;
+  int32 total_items = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+service BidirectionalOrderProcessingService {
+  rpc ProcessOrdersForCombinedShipments (stream OrderProcessingRequest) returns (stream CombinedShipment);
+}

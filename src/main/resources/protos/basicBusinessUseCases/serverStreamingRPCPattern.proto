@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package com.ecommerce.order.search;
+
+option java_package = "com.ecommerce.order.grpc.search";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+enum OrderStatus {
+  ORDER_STATUS_UNKNOWN = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_PROCESSING = 2;
+  ORDER_STATUS_SHIPPED = 3;
+  ORDER_STATUS_DELIVERED = 4;
+  ORDER_STATUS_CANCELLED = 5;
+}
+
+message SearchOrdersRequest {
+  string order_id = 1;
+  OrderStatus status_filter = 2;
+}
+
+message OrderSearchResult {
+  string order_id = 1;
+  string customer_id = 2;
+  string customer_name = 3;
+  OrderStatus status = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  double total_amount = 7;
+  string currency = 8;
+  repeated OrderItem items = 9;
+  ShippingAddress shipping_address = 10;
+}
+
+message OrderItem {
+  string product_id = 1;
+  string product_name = 2;
+  int32 quantity = 3;
+  double unit_price = 4;
+  double subtotal = 5;
+}
+
+message ShippingAddress {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string postal_code = 4;
+  string country = 5;
+}
+
+service OrderSearchService {
+  rpc SearchOrders (SearchOrdersRequest) returns (stream OrderSearchResult);
+}

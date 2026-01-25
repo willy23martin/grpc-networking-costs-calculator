@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package com.ecommerce.order.clientstreaming;
+
+option java_package = "com.ecommerce.order.grpc.clientstreaming";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+enum TransactionStatus {
+  TRANSACTION_STATUS_UNKNOWN = 0;
+  TRANSACTION_STATUS_INITIATED = 1;
+  TRANSACTION_STATUS_COMMITTED = 2;
+  TRANSACTION_STATUS_ROLLED_BACK = 3;
+  TRANSACTION_STATUS_FAILED = 4;
+}
+
+message Money {
+  int64 units = 1;
+  int32 nanos = 2;
+}
+
+message OrderItem {
+  string product_id = 1;
+  int32 quantity = 2;
+  Money unit_price = 3;
+}
+
+message ProductReview {
+  string product_id = 1;
+  string user_id = 2;
+  int32 rating = 3;
+  string comment = 4;
+  google.protobuf.Timestamp review_date = 5;
+  string idempotency_key = 6;
+}
+
+message ProductReviewSummary {
+  string product_id = 1;
+  int32 total_reviews_uploaded = 2;
+  double average_rating = 3;
+  int32 failed_uploads = 4;
+  repeated string error_messages = 5;
+}
+
+message InventoryUpdate {
+  string product_id = 1;
+  int32 quantity_delta = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string warehouse_id = 4;
+  string transaction_id = 5;
+  string idempotency_key = 6;
+}
+
+message InventoryUpdateSummary {
+  int32 total_updates_processed = 1;
+  int32 successful_updates = 2;
+  int32 failed_updates = 3;
+  repeated string failed_product_ids = 4;
+  string transaction_id = 5;
+  TransactionStatus transaction_status = 6;
+  bool rollback_required = 7;
+  string message = 8;
+}
+
+message BookingConfirmation {
+  string booking_id = 1;
+  repeated OrderItem items = 2;
+  string user_id = 3;
+  google.protobuf.Timestamp booking_time = 4;
+  string idempotency_key = 5;
+}
+
+message BatchBookingSummary {
+  int32 total_bookings = 1;
+  int32 successful_bookings = 2;
+  int32 failed_bookings = 3;
+  repeated string confirmed_booking_ids = 4;
+  repeated string failed_booking_ids = 5;
+  string transaction_id = 6;
+  TransactionStatus transaction_status = 7;
+  string message = 8;
+}
+
+service ClientStreamingReviewService {
+  rpc UploadProductReviews (stream ProductReview) returns (ProductReviewSummary);
+  rpc BatchUpdateInventory (stream InventoryUpdate) returns (InventoryUpdateSummary);
+  rpc BatchConfirmBookings (stream BookingConfirmation) returns (BatchBookingSummary);
+}

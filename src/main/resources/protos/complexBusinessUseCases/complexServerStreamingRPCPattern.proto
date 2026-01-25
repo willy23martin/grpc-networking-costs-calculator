@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package com.ecommerce.order.serverstreaming;
+
+option java_package = "com.ecommerce.order.grpc.serverstreaming";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+enum OrderStatus {
+  ORDER_STATUS_UNKNOWN = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_PROCESSING = 2;
+  ORDER_STATUS_SHIPPED = 3;
+  ORDER_STATUS_DELIVERED = 4;
+  ORDER_STATUS_CANCELLED = 5;
+}
+
+enum TransactionStatus {
+  TRANSACTION_STATUS_UNKNOWN = 0;
+  TRANSACTION_STATUS_INITIATED = 1;
+  TRANSACTION_STATUS_COMMITTED = 2;
+  TRANSACTION_STATUS_ROLLED_BACK = 3;
+  TRANSACTION_STATUS_FAILED = 4;
+}
+
+enum BookingStatus {
+  BOOKING_STATUS_UNKNOWN = 0;
+  BOOKING_STATUS_RESERVED = 1;
+  BOOKING_STATUS_CONFIRMED = 2;
+  BOOKING_STATUS_EXPIRED = 3;
+  BOOKING_STATUS_CANCELLED = 4;
+}
+
+message GetOrderRequest {
+  string order_id = 1;
+}
+
+message OrderUpdate {
+  string order_id = 1;
+  OrderStatus new_status = 2;
+  google.protobuf.Timestamp update_time = 3;
+  string update_message = 4;
+  string transaction_id = 5;
+  TransactionStatus transaction_status = 6;
+  int32 retry_attempt = 7;
+}
+
+message StreamBookingRequest {
+  string booking_id = 1;
+  string user_id = 2;
+}
+
+message BookingUpdate {
+  string booking_id = 1;
+  BookingStatus status = 2;
+  google.protobuf.Timestamp update_time = 3;
+  string message = 4;
+  google.protobuf.Timestamp expiration_time = 5;
+  repeated string reserved_product_ids = 6;
+}
+
+message StreamTransactionRequest {
+  string transaction_id = 1;
+}
+
+message TransactionUpdate {
+  string transaction_id = 1;
+  TransactionStatus status = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string phase = 4;
+  string message = 5;
+  bool can_retry = 6;
+}
+
+service ServerStreamingOrderService {
+  rpc StreamOrderUpdates (GetOrderRequest) returns (stream OrderUpdate);
+  rpc StreamBookingUpdates (StreamBookingRequest) returns (stream BookingUpdate);
+  rpc StreamTransactionUpdates (StreamTransactionRequest) returns (stream TransactionUpdate);
+}
