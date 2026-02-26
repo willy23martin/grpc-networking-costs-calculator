@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>gRPC-based MACH Architecture TCO Networking Costs Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Custom Palette (Adapted for Professional Use) */
+        :root {
+            --custom-bg-light: #F0F2F5;       /* Very Light Grey/Blue-Grey */
+            --custom-bg-card: #FFFFFF;        /* Pure White for card backgrounds */
+            --custom-text-dark: #333333;      /* Dark Charcoal for main text */
+            --custom-text-medium: #555555;    /* Medium Grey for secondary text/labels */
+            --custom-accent-blue: #1A4B7D;    /* Deep Navy Blue for primary actions */
+            --custom-accent-blue-hover: #003366; /* Darker Navy for hover */
+            --custom-accent-gold: #CCA43B;    /* Refined Gold for highlights/focus */
+            --custom-border-subtle: #DDDDDD;  /* Very light grey for input borders */
+            --custom-shadow-soft: rgba(0, 0, 0, 0.08); /* Soft shadow for depth */
+
+            --custom-success-bg: #E8F5E9;    /* Light Green background */
+            --custom-success-text: #4CAF50;  /* Main Green text */
+            --custom-error-bg: #FFEBEE;      /* Light Red background */
+            --custom-error-text: #EF5350;    /* Main Red text */
+            --custom-info-bg: #E3F2FD;       /* Light Blue background */
+            --custom-info-text: #1A4B7D;     /* Navy Blue text for info */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif; /* Readable for body text */
+            background-color: var(--custom-bg-light);
+            color: var(--custom-text-dark);
+            margin: 0;
+            padding: 40px 20px; /* More padding around content */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh; /* Ensure body takes full height */
+        }
+
+        h1 {
+            font-family: 'Inter', sans-serif; /* Stronger font for headings */
+            font-size: 2.5rem; /* Larger heading */
+            font-weight: 700;
+            color: var(--custom-accent-blue); /* Title in accent color */
+            margin-bottom: 40px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05); /* Subtle text shadow */
+        }
+
+        h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--custom-text-dark);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .card {
+            background-color: var(--custom-bg-card);
+            padding: 35px;
+            border-radius: 12px; /* More rounded corners for softer look */
+            box-shadow: 0 8px 25px var(--custom-shadow-soft); /* More pronounced, soft shadow */
+            width: 100%;
+            max-width: 700px; /* Wider cards for better layout */
+            margin-bottom: 30px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* More space between form elements */
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--custom-text-medium);
+            margin-bottom: 8px; /* Space between label and input */
+            display: block;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 15px; /* More padding for inputs */
+            border: 1px solid var(--custom-border-subtle);
+            border-radius: 8px; /* Softly rounded input fields */
+            background-color: var(--custom-bg-card);
+            color: var(--custom-text-dark);
+            font-size: 1.05rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            -webkit-appearance: none; /* Remove default select styling */
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        select {
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2C114.7L154.7%2C247c-1.3%2C1.3-3.3%2C1.3-4.6%2C0L6%2C114.7c-1.3-1.3-1.3-3.3%2C0-4.6l4.6-4.6c1.3-1.3%2C3.3-1.3%2C4.6%2C0l132.8%2C132.8c1.3%2C1.3%2C3.3%2C1.3%2C4.6%2C0l132.8-132.8c1.3-1.3%2C3.3-1.3%2C4.6%2C0l4.6%2C4.6C288.3%2C111.4%2C288.3%2C113.4%2C287%2C114.7z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 14px;
+            padding-right: 40px; /* Space for the arrow */
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border-color: var(--custom-accent-gold);
+            box-shadow: 0 0 0 4px rgba(204, 164, 59, 0.2); /* Soft glow */
+            outline: none;
+        }
+
+        /* Hint text below inputs */
+        .input-hint {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: var(--custom-text-medium);
+            font-style: italic;
+        }
+
+        .button-primary {
+            background-color: var(--custom-accent-blue);
+            color: var(--custom-bg-card); /* White text on blue button */
+            padding: 14px 25px; /* Larger button */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            align-self: flex-start; /* Align button left */
+            box-shadow: 0 4px 10px rgba(26, 75, 125, 0.2); /* Shadow for buttons */
+        }
+
+        .button-primary:hover {
+            background-color: var(--custom-accent-blue-hover);
+            transform: translateY(-2px); /* Subtle lift on hover */
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            display: inline-block; /* Allows button to float next to it */
+            width: 100%;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0; /* Hide the default input */
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-button {
+            background-color: var(--custom-text-medium); /* Grey button for file select */
+            color: var(--custom-bg-card);
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            display: inline-flex; /* Align icon and text */
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-upload-button:hover {
+            background-color: #666666;
+        }
+
+        #fileNameDisplay {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--custom-text-medium);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .message {
+            margin-top: 25px;
+            padding: 18px 25px; /* Generous padding */
+            border-radius: 10px; /* Softer corners */
+            font-size: 1rem;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 15px; /* More space for icon */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for messages */
+            opacity: 0; /* Start hidden for animation */
+            transform: translateY(10px); /* Start slightly below */
+            animation: fadeInSlideUp 0.4s forwards ease-out; /* Animation on display */
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message .icon {
+            font-size: 1.5rem; /* Larger icons */
+        }
+
+        .success {
+            border: 1px solid var(--custom-success-text);
+            background-color: var(--custom-success-bg);
+            color: var(--custom-success-text);
+        }
+
+        .error {
+            border: 1px solid var(--custom-error-text);
+            background-color: var(--custom-error-bg);
+            color: var(--custom-error-text);
+        }
+
+        .info { /* For general messages */
+            border: 1px solid var(--custom-info-text);
+            background-color: var(--custom-info-bg);
+            color: var(--custom-info-text);
+        }
+
+        .results-section {
+            background-color: var(--custom-bg-card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px var(--custom-shadow-soft);
+            width: 100%;
+            max-width: 700px;
+            margin-top: 30px;
+            box-sizing: border-box;
+            opacity: 0; /* Start hidden for animation */
+            transform: translateY(10px); /* Start slightly below */
+            animation: fadeInSlideUp 0.4s forwards ease-out; /* Animation on display */
+        }
+
+        .results-section p {
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+            color: var(--custom-text-dark);
+        }
+
+        .results-section span {
+            font-weight: 600;
+            color: var(--custom-accent-blue); /* Highlight the values */
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 1rem;
+        }
+
+        .results-table thead tr {
+            background-color: var(--custom-accent-blue);
+            color: #FFFFFF;
+        }
+
+        .results-table thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+        }
+
+        .results-table thead th:not(:first-child) {
+            text-align: right;
+        }
+
+        .results-table tbody tr {
+            border-bottom: 1px solid var(--custom-border-subtle);
+            transition: background-color 0.2s ease;
+        }
+
+        .results-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .results-table tbody tr:hover {
+            background-color: var(--custom-info-bg);
+        }
+
+        .results-table tbody td {
+            padding: 14px 16px;
+            color: var(--custom-text-dark);
+            font-size: 1rem;
+        }
+
+        .results-table tbody td:not(:first-child) {
+            text-align: right;
+            font-weight: 600;
+            color: var(--custom-accent-blue);
+        }
+
+        .results-table tbody td:first-child {
+            font-weight: 500;
+            color: var(--custom-text-medium);
+        }
+
+
+
+        /* Loading bar */
+        .loading-bar-wrapper {
+            display: none;
+            width: 100%;
+            margin-top: 18px;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .loading-bar-wrapper.visible {
+            display: flex;
+        }
+
+        .loading-bar-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--custom-text-medium);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading-bar-label .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--custom-border-subtle);
+            border-top-color: var(--custom-accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-bar-track {
+            width: 100%;
+            height: 6px;
+            background-color: var(--custom-border-subtle);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .loading-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--custom-accent-blue), var(--custom-accent-gold));
+            border-radius: 999px;
+            animation: indeterminate 1.4s ease-in-out infinite;
+            transform-origin: left;
+        }
+
+        @keyframes indeterminate {
+            0%   { width: 0%;   margin-left: 0%; }
+            50%  { width: 60%;  margin-left: 20%; }
+            100% { width: 0%;   margin-left: 100%; }
+        }
+
+        #uploadSubmitBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Subtle hero background idea (optional) */
+        .hero-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(to right, #CCE0FF, #E0ECF8); /* Very subtle light blue gradient */
+            z-index: -1; /* Behind content */
+            opacity: 0.7;
+        }
+
+    </style>
+</head>
+<body>
+<div class="hero-background"></div>
+
+<h1>gRPC-based MACH Architecture TCO Networking Costs Calculator</h1>
+
+<div class="card">
+    <h2>Service Type Selection</h2>
+    <form>
+        <div>
+            <label for="serviceType">Choose a service type:</label>
+            <select id="serviceType" name="serviceType">
+                <option value="">-- Please choose an option --</option>
+                <option value="REST">REST</option>
+                <option value="gRPC">gRPC</option>
+                <option value="GraphQL">GraphQL</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="requestsPerSecond">Requests per Second (RPS)</label>
+            <input
+                    type="number"
+                    id="requestsPerSecond"
+                    name="requestsPerSecond"
+                    placeholder="e.g. 1000"
+                    min="1"
+                    step="1"
+            />
+            <p class="input-hint">Estimated number of incoming requests your service handles per second at peak load.</p>
+        </div>
+    </form>
+</div>
+
+<div id="grpcOptions" class="card hidden">
+    <h2>gRPC ProtocolBuffer file definition (IDL)</h2>
+    <p>You have selected gRPC. Please upload your .proto file.</p>
+    <form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data">
+        <input type="hidden" id="requestsPerSecondHidden" name="requestsPerSecond" value="0" />
+        <label for="protoFile">Upload .proto file:</label>
+        <div class="file-upload-wrapper">
+            <button type="button" class="file-upload-button" onclick="document.getElementById('protoFile').click()">
+                <i class="fas fa-upload"></i> Choose File
+            </button>
+            <input type="file" id="protoFile" name="protoFile" accept=".proto">
+        </div>
+        <div id="fileNameDisplay">No file chosen</div>
+        <button type="submit" id="uploadSubmitBtn" class="button-primary">Upload .proto</button>
+
+        <div class="loading-bar-wrapper" id="loadingBar">
+            <div class="loading-bar-label">
+                <span class="spinner"></span>
+                Uploading and calculating, please wait…
+            </div>
+            <div class="loading-bar-track">
+                <div class="loading-bar-fill"></div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="serverUploadMessage" th:if="${uploadMessage != null}"
+     style="display:none;"
+     th:class="'message ' + ${uploadMessage.contains('successfully') ? 'success' : 'error'}">
+    <i class="fas icon" th:classappend="${uploadMessage.contains('successfully') ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+    <p th:text="${uploadMessage}"></p>
+</div>
+
+<div id="serverResultsSection" th:if="${error != null || requestSize != null}" class="results-section hidden">
+    <div th:if="${error != null}" class="message error" style="margin-top: 0;"> <i class="fas fa-exclamation-circle icon"></i>
+        <p th:text="${error}"></p>
+    </div>
+    <div th:if="${requestSize != null}">
+        <h2>TCO Networking Costs</h2>
+        <table class="results-table">
+            <thead>
+            <tr>
+                <th>Message Type</th>
+                <th>ProtocolBuffer size (bytes)</th>
+                <th>Requests/month</th>
+                <th>Throughput (GB/month)</th>
+                <th>Data Transfer Cost to Internet (USD/month)</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Request</td>
+                <td th:text="${requestSize}"></td>
+                <td th:text="${requestsPerMonth}"></td>
+                <td th:text="${requestGbPerMonth} + ' GB'"></td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td>Response</td>
+                <td th:text="${responseSize}"></td>
+                <td th:text="${requestsPerMonth}"></td>
+                <td th:text="${responseGbPerMonth} + ' GB'"></td>
+                <td th:text="'$ ' + ${dataTransferCostUsd}"></td>
+            </tr>
+            </tbody>
+        </table>
+        <p class="input-hint" style="margin-top: 14px;">
+            * Data transfer cost applies to outbound (response) traffic only, using AWS standard
+            internet egress tiered pricing for US East (N. Virginia):
+            first 10 TB at $0.09/GB, next 40 TB at $0.085/GB, next 100 TB at $0.07/GB, beyond 150 TB at $0.05/GB.
+            Inbound (request) traffic is free.
+            For more information check the
+            <a href="https://calculator.aws/#/createCalculator/ec2-enhancement"
+               target="_blank"
+               rel="noopener noreferrer"
+               style="color: var(--custom-accent-blue); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--custom-accent-gold); padding-bottom: 1px; transition: color 0.2s ease, border-color 0.2s ease;"
+               onmouseover="this.style.color='var(--custom-accent-gold)'; this.style.borderColor='var(--custom-accent-blue)';"
+               onmouseout="this.style.color='var(--custom-accent-blue)'; this.style.borderColor='var(--custom-accent-gold)';">
+                AWS Pricing Calculator ↗
+            </a>
+        </p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const grpcOptionsDiv        = document.getElementById('grpcOptions');
+        const fileNameDisplay       = document.getElementById('fileNameDisplay');
+        const protoFileInput        = document.getElementById('protoFile');
+        const uploadForm            = document.getElementById('uploadForm');
+        const serviceTypeSelect     = document.getElementById('serviceType');
+        const serverUploadMessageDiv  = document.getElementById('serverUploadMessage');
+        const serverResultsSectionDiv = document.getElementById('serverResultsSection');
+
+        function hideAllServerRenderedSections() {
+            if (serverUploadMessageDiv) serverUploadMessageDiv.classList.add('hidden');
+            if (serverResultsSectionDiv) serverResultsSectionDiv.classList.add('hidden');
+        }
+
+        function showDynamicInfoMessage(text) {
+            let tempMessageDiv = document.getElementById('tempDynamicInfoMessage');
+            if (!tempMessageDiv) {
+                tempMessageDiv = document.createElement('div');
+                tempMessageDiv.id = 'tempDynamicInfoMessage';
+                tempMessageDiv.classList.add('message', 'info');
+                tempMessageDiv.innerHTML = '<i class="fas fa-info-circle icon"></i><p></p>';
+                document.querySelector('.card').after(tempMessageDiv);
+            }
+            tempMessageDiv.querySelector('p').textContent = text;
+            tempMessageDiv.classList.remove('hidden');
+            tempMessageDiv.style.opacity = 0;
+            tempMessageDiv.style.transform = 'translateY(10px)';
+            void tempMessageDiv.offsetWidth;
+            tempMessageDiv.style.opacity = 1;
+            tempMessageDiv.style.transform = 'translateY(0)';
+        }
+
+        function hideDynamicInfoMessage() {
+            const tempMessageDiv = document.getElementById('tempDynamicInfoMessage');
+            if (tempMessageDiv) tempMessageDiv.classList.add('hidden');
+        }
+
+        function handleServiceTypeChange() {
+            const serviceType = serviceTypeSelect.value;
+            hideDynamicInfoMessage();
+
+            if (serviceType === 'gRPC') {
+                grpcOptionsDiv.classList.remove('hidden');
+                fileNameDisplay.textContent = 'No file chosen';
+                protoFileInput.value = '';
+                showDynamicInfoMessage('gRPC service selected. Please upload your .proto file to proceed.');
+            } else {
+                grpcOptionsDiv.classList.add('hidden');
+                if (serviceType !== '') {
+                    showDynamicInfoMessage(`You selected ${serviceType}. Advanced features for this service type are coming soon!`);
+                }
+            }
+        }
+
+        function displayFileName(input) {
+            if (input.files && input.files.length > 0) {
+                fileNameDisplay.textContent = `File chosen: ${input.files[0].name}`;
+                hideDynamicInfoMessage();
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+            }
+        }
+
+        serviceTypeSelect.addEventListener('change', handleServiceTypeChange);
+        protoFileInput.addEventListener('change', () => displayFileName(protoFileInput));
+        uploadForm.addEventListener('submit', () => {
+            const rpsValue = document.getElementById('requestsPerSecond').value;
+            document.getElementById('requestsPerSecondHidden').value = rpsValue || 0;
+
+            const loadingBar    = document.getElementById('loadingBar');
+            const submitBtn     = document.getElementById('uploadSubmitBtn');
+            loadingBar.classList.add('visible');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading…';
+        });
+
+        if (serviceTypeSelect.value === 'gRPC') {
+            grpcOptionsDiv.classList.remove('hidden');
+        } else {
+            grpcOptionsDiv.classList.add('hidden');
+        }
+
+        if (serverUploadMessageDiv) {
+            serverUploadMessageDiv.style.display = 'flex';
+        }
+
+        if (serverResultsSectionDiv) {
+            serverResultsSectionDiv.classList.remove('hidden');
+            serverResultsSectionDiv.style.display = 'block';
+        }
+    });
+</script>
+</body>
+</html>
