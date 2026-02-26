@@ -3,6 +3,10 @@ gRPC-based Microservices Networking Costs Calculator based on Protocol Buffer de
 
 This service calculates the Networking costs in AWS for a gRPC-based Mircorservices by using the Protocol Buffers definition of the service.
 
+![TCO Calculator Interface.png](src/main/resources/images/TCO%20Calculator%20Interface.png)
+
+![TCO Calculator Interface - Cost table.png](src/main/resources/images/TCO%20Calculator%20Interface%20-%20Cost%20table.png)
+
 ## Protocol Buffer files:
 You can find the **Protocol Buffers files** in the [protos](src/main/resources/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
 in the context of an **E-Commerce microservice**:
