@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.*;
@@ -37,6 +38,7 @@ public class AWSDataTransferCostCalculationService {
     public AWSDataTransferCostCalculationService() {
         this.pricingClient = PricingClient.builder()
                 .region(Region.US_EAST_1) // Because AWS Pricing API is only available in us-east-1
+                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
     }
 

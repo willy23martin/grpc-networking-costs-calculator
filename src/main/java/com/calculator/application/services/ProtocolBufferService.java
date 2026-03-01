@@ -15,7 +15,6 @@ import static com.calculator.shared.ProtocolBufferFileParser.parseProtoFileFrom;
 import static com.calculator.shared.ProtocolBuffersUtils.importGoogleProtocolBufferFileDependencies;
 import static com.calculator.shared.ProtocolBuffersUtils.resolveProtocolBufferFilesCompiler;
 
-@NoArgsConstructor
 @Service
 public class ProtocolBufferService {
 

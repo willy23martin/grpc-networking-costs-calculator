@@ -11,7 +11,6 @@ import java.net.URLClassLoader;
 
 import static com.calculator.shared.ProtocolBuffersUtils.populateFieldsForMaxSize;
 
-@NoArgsConstructor
 @Service
 public class ProtocolBufferMessageSizeCalculationService {
 
