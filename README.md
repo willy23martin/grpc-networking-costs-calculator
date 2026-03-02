@@ -35,6 +35,7 @@ in the context of an **E-Commerce microservice**:
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
 2. [Data Transfer OUT From Amazon EC2 To Internet](https://aws.amazon.com/ec2/pricing/on-demand/).
+3. [ArchUnit for Architectural Tests](https://www.archunit.org/userguide/html/000_Index.html)
 
 ## Credits
 [CREDITS.md](CREDITS.md)
