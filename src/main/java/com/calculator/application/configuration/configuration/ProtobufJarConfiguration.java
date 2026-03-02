@@ -68,7 +68,7 @@ public class ProtobufJarConfiguration {
             try (InputStream is = jarFile.getInputStream(protobufEntry)) {
                 long bytesCopied = Files.copy(is, tempJar,
                         StandardCopyOption.REPLACE_EXISTING);
-                log.info("Extracted %s bytes to {}", bytesCopied, tempJar);
+                log.info("Extracted {} bytes to {}", bytesCopied, tempJar);
 
                 if (bytesCopied == 0) {
                     throw new IllegalStateException(
