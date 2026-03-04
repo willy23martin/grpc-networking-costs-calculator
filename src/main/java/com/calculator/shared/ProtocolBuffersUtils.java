@@ -66,8 +66,23 @@ public class ProtocolBuffersUtils {
 
         String classifier = getClassifier(operativeSystem, operativeSystemArchitecture);
 
-        String filename = "protoc-" + PROTOC_DEPENDENCY_VERSION + "-" + classifier + (operativeSystem.contains(OS_WINDOWS_INDICATOR) ? WINDOWS_DOT_EXE_EXTENSION : "");
-        return Path.of(mavenRepositoryDirectory, "com/" + GOOGLE_PROTOCOL_BUFFERS_WELL_KNOWN_TYPES_PREFIX + "/protoc", PROTOC_DEPENDENCY_VERSION, filename);
+        Path protocPath = getProtocPath(classifier, operativeSystem, mavenRepositoryDirectory);
+
+        return protocPath;
+    }
+
+    private static Path getProtocPath(String classifier, String operativeSystem, String mavenRepositoryDirectory) {
+        String filename = "protoc-" + PROTOC_DEPENDENCY_VERSION + "-" + classifier +
+                (operativeSystem.contains(OS_WINDOWS_INDICATOR) ? WINDOWS_DOT_EXE_EXTENSION : "");
+
+        Path protocPath = Path.of(mavenRepositoryDirectory,
+                "com/" + GOOGLE_PROTOCOL_BUFFERS_WELL_KNOWN_TYPES_PREFIX + "/protoc",
+                PROTOC_DEPENDENCY_VERSION, filename);
+
+        if (!operativeSystem.contains(OS_WINDOWS_INDICATOR)) {
+            protocPath.toFile().setExecutable(true);
+        }
+        return protocPath;
     }
 
     private static String getClassifier(String operativeSystem, String operativeSystemArchitecture) {
