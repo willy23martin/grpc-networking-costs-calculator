@@ -22,7 +22,7 @@ class TCOCalculatorControllerTest {
         this.mockMvc = mockMvc;
     }
 
-    private static final String VALID_PROTO_CONTENT = """
+    public static final String VALID_PROTO_CONTENT = """
                 syntax = "proto3";
                 
                 package com.ecommerce.order.unary;
