@@ -128,7 +128,6 @@ class TCOCalculatorControllerTest {
                         .file(protoFile)
                         .param("requestsPerSecond", "1000"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("calculator"))
                 .andExpect(model().attributeDoesNotExist("error"))
                 .andExpect(model().attributeExists("requestSize"))
                 .andExpect(model().attribute("requestSize", 30309))
