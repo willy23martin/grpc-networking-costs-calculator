@@ -22,6 +22,15 @@ jobs:
       - name: Resolve dependencies
         run: mvn dependency:resolve
 
+      - name: Debug protoc binary
+        run: |
+          echo "=== Looking for protoc binary ==="
+          find ~/.m2 -name "protoc-*" ! -name "*.jar" ! -name "*.sha1" ! -name "*.md5" ! -name "*.asc" 2>/dev/null || echo "No protoc binary found"
+          echo "=== OS info ==="
+          uname -a
+          echo "=== Java os.name and os.arch ==="
+          java -XshowSettings:property -version 2>&1 | grep -E "os\.(name|arch)"
+
       - name: Make protoc executable
         run: |
           find ~/.m2 -name "protoc-*-linux-x86_64" \
@@ -31,6 +40,7 @@ jobs:
       - name: Build with Maven
         run: mvn test
 
-      - name: Show test failures
+      - name: Show surefire failure reports
         if: failure()
-        run: find . -name "*.txt" -path "*/surefire-reports/*" | xargs cat
+        run: |
+          find . -name "*.txt" -path "*/surefire-reports/*" | xargs cat
