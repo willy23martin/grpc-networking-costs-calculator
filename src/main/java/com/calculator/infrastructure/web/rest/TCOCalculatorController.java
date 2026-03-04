@@ -26,6 +26,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -37,6 +38,7 @@ public class TCOCalculatorController implements ErrorController {
 
     private static final double SECONDS_PER_MONTH = 2_592_000.0; // 30 * 24 * 60 * 60
     private static final double BYTES_PER_GB = 1_073_741_824.0;  // 2^30
+    private static final Locale DISPLAY_LOCALE = Locale.forLanguageTag("es-ES");
 
     @Autowired
     AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
@@ -151,10 +153,10 @@ public class TCOCalculatorController implements ErrorController {
 
         double dataTransferCostUsd = awsDataTransferCostCalculationService.calculateDataTransferCost(responseGbPerMonth);
 
-        model.addAttribute("requestsPerMonth", String.format("%,d", requestsPerMonth));
-        model.addAttribute("requestGbPerMonth",  String.format("%.4f", requestGbPerMonth));
-        model.addAttribute("responseGbPerMonth", String.format("%.4f", responseGbPerMonth));
-        model.addAttribute("dataTransferCostUsd", String.format("%,.2f", dataTransferCostUsd));
+        model.addAttribute("requestsPerMonth", String.format(DISPLAY_LOCALE, "%,d", requestsPerMonth));
+        model.addAttribute("requestGbPerMonth", String.format(DISPLAY_LOCALE, "%.4f", requestGbPerMonth));
+        model.addAttribute("responseGbPerMonth", String.format(DISPLAY_LOCALE, "%.4f", responseGbPerMonth));
+        model.addAttribute("dataTransferCostUsd", String.format(DISPLAY_LOCALE, "%,.2f", dataTransferCostUsd));
     }
 
     private MessageSizeCalculationResult calculateResponseMessageSize(Model model, URLClassLoader classLoader, String fullResponseMessageClassName) {
