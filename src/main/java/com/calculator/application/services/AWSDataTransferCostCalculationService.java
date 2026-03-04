@@ -108,7 +108,7 @@ public class AWSDataTransferCostCalculationService {
         log.info("AWS Pricing API has been used for rates");
         return parseTieredRates(response.priceList());
     } catch (Exception e) {
-            log.info("AWS Pricing API unavailable, using fallback rates: " + e.getMessage());
+            log.info("AWS Pricing API unavailable, using fallback rates: ");
             return fallbackRates;
         }
     }
