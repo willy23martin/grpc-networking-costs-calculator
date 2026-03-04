@@ -28,9 +28,10 @@ public class ProtocolBuffersUtils {
     public static final String OSX_MAC_AARCH_64_INDICATOR = "osx-aarch_64";
     public static final String OSX_MAC_X_86_64_INDICATOR = "osx-x86_64";
     public static final String OS_LINUX_AARCH_64_INDICATOR = "aarch64";
+    public static final String OS_LINUX_ARM_64_INDICATOR = "arm64";
     public static final String LINUX_AARCH_64_INDICATOR = "linux-aarch_64";
     public static final String LINUX_X_86_64_INDICATOR = "linux-x86_64";
-    public static final String WINDOWS_DOT_EXE_EXTENSION = ".exe";
+    public static final String PROTOC_BINARY_EXTENSION = ".exe";
     public static final int ARBITRARY_LARGE_STRING_LENGTH = 255;
 
     public static Path importGoogleProtocolBufferFileDependencies(Path protocolBufferFileDirectory) throws IOException {
@@ -68,12 +69,15 @@ public class ProtocolBuffersUtils {
 
         Path protocPath = getProtocPath(classifier, operativeSystem, mavenRepositoryDirectory);
 
+        if (!operativeSystem.contains(OS_WINDOWS_INDICATOR)) {
+            protocPath.toFile().setExecutable(true);
+        }
+
         return protocPath;
     }
 
     private static Path getProtocPath(String classifier, String operativeSystem, String mavenRepositoryDirectory) {
-        String filename = "protoc-" + PROTOC_DEPENDENCY_VERSION + "-" + classifier +
-                (operativeSystem.contains(OS_WINDOWS_INDICATOR) ? WINDOWS_DOT_EXE_EXTENSION : "");
+        String filename = "protoc-" + PROTOC_DEPENDENCY_VERSION + "-" + classifier + PROTOC_BINARY_EXTENSION;
 
         Path protocPath = Path.of(mavenRepositoryDirectory,
                 "com/" + GOOGLE_PROTOCOL_BUFFERS_WELL_KNOWN_TYPES_PREFIX + "/protoc",
@@ -89,9 +93,15 @@ public class ProtocolBuffersUtils {
         if (operativeSystem.contains(OS_WINDOWS_INDICATOR)) {
             return WINDOWS_X_86_64;
         } else if (operativeSystem.contains(OS_MAC_INDICATOR)) {
-            return operativeSystemArchitecture.contains(OS_MAC_AARCH_64_INDICATOR) ? OSX_MAC_AARCH_64_INDICATOR : OSX_MAC_X_86_64_INDICATOR;
+            return operativeSystemArchitecture.contains(OS_MAC_AARCH_64_INDICATOR)
+                    ? OSX_MAC_AARCH_64_INDICATOR
+                    : OSX_MAC_X_86_64_INDICATOR;
         } else {
-            return operativeSystemArchitecture.contains(OS_LINUX_AARCH_64_INDICATOR) ? LINUX_AARCH_64_INDICATOR : LINUX_X_86_64_INDICATOR;
+            // aarch64 check must come first because it covers both "aarch64" and "arm64"
+            return (operativeSystemArchitecture.contains(OS_LINUX_AARCH_64_INDICATOR) ||
+                    operativeSystemArchitecture.contains(OS_LINUX_ARM_64_INDICATOR))
+                    ? LINUX_AARCH_64_INDICATOR
+                    : LINUX_X_86_64_INDICATOR;
         }
     }
 
