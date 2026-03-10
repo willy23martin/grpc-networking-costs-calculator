@@ -6,399 +6,142 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* Custom Palette (Adapted for Professional Use) */
         :root {
-            --custom-bg-light: #F0F2F5;       /* Very Light Grey/Blue-Grey */
-            --custom-bg-card: #FFFFFF;        /* Pure White for card backgrounds */
-            --custom-text-dark: #333333;      /* Dark Charcoal for main text */
-            --custom-text-medium: #555555;    /* Medium Grey for secondary text/labels */
-            --custom-accent-blue: #1A4B7D;    /* Deep Navy Blue for primary actions */
-            --custom-accent-blue-hover: #003366; /* Darker Navy for hover */
-            --custom-accent-gold: #CCA43B;    /* Refined Gold for highlights/focus */
-            --custom-border-subtle: #DDDDDD;  /* Very light grey for input borders */
-            --custom-shadow-soft: rgba(0, 0, 0, 0.08); /* Soft shadow for depth */
-
-            --custom-success-bg: #E8F5E9;    /* Light Green background */
-            --custom-success-text: #4CAF50;  /* Main Green text */
-            --custom-error-bg: #FFEBEE;      /* Light Red background */
-            --custom-error-text: #EF5350;    /* Main Red text */
-            --custom-info-bg: #E3F2FD;       /* Light Blue background */
-            --custom-info-text: #1A4B7D;     /* Navy Blue text for info */
+            --custom-bg-light: #F0F2F5;
+            --custom-bg-card: #FFFFFF;
+            --custom-text-dark: #333333;
+            --custom-text-medium: #555555;
+            --custom-accent-blue: #1A4B7D;
+            --custom-accent-blue-hover: #003366;
+            --custom-accent-gold: #CCA43B;
+            --custom-border-subtle: #DDDDDD;
+            --custom-shadow-soft: rgba(0, 0, 0, 0.08);
+            --custom-success-bg: #E8F5E9;
+            --custom-success-text: #4CAF50;
+            --custom-error-bg: #FFEBEE;
+            --custom-error-text: #EF5350;
+            --custom-info-bg: #E3F2FD;
+            --custom-info-text: #1A4B7D;
         }
-
-        body {
-            font-family: 'Roboto', sans-serif; /* Readable for body text */
-            background-color: var(--custom-bg-light);
-            color: var(--custom-text-dark);
-            margin: 0;
-            padding: 40px 20px; /* More padding around content */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh; /* Ensure body takes full height */
-        }
-
-        h1 {
-            font-family: 'Inter', sans-serif; /* Stronger font for headings */
-            font-size: 2.5rem; /* Larger heading */
-            font-weight: 700;
-            color: var(--custom-accent-blue); /* Title in accent color */
-            margin-bottom: 40px;
-            text-align: center;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.05); /* Subtle text shadow */
-        }
-
-        h2 {
-            font-family: 'Inter', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: var(--custom-text-dark);
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .card {
-            background-color: var(--custom-bg-card);
-            padding: 35px;
-            border-radius: 12px; /* More rounded corners for softer look */
-            box-shadow: 0 8px 25px var(--custom-shadow-soft); /* More pronounced, soft shadow */
-            width: 100%;
-            max-width: 700px; /* Wider cards for better layout */
-            margin-bottom: 30px;
-            box-sizing: border-box; /* Include padding in width */
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px; /* More space between form elements */
-        }
-
-        label {
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--custom-text-medium);
-            margin-bottom: 8px; /* Space between label and input */
-            display: block;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        select {
-            width: 100%;
-            padding: 12px 15px; /* More padding for inputs */
-            border: 1px solid var(--custom-border-subtle);
-            border-radius: 8px; /* Softly rounded input fields */
-            background-color: var(--custom-bg-card);
-            color: var(--custom-text-dark);
-            font-size: 1.05rem;
-            box-sizing: border-box;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            -webkit-appearance: none; /* Remove default select styling */
-            -moz-appearance: none;
-            appearance: none;
-        }
-
-        select {
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2C114.7L154.7%2C247c-1.3%2C1.3-3.3%2C1.3-4.6%2C0L6%2C114.7c-1.3-1.3-1.3-3.3%2C0-4.6l4.6-4.6c1.3-1.3%2C3.3-1.3%2C4.6%2C0l132.8%2C132.8c1.3%2C1.3%2C3.3%2C1.3%2C4.6%2C0l132.8-132.8c1.3-1.3%2C3.3-1.3%2C4.6%2C0l4.6%2C4.6C288.3%2C111.4%2C288.3%2C113.4%2C287%2C114.7z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            background-size: 14px;
-            padding-right: 40px; /* Space for the arrow */
-        }
-
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        select:focus {
-            border-color: var(--custom-accent-gold);
-            box-shadow: 0 0 0 4px rgba(204, 164, 59, 0.2); /* Soft glow */
-            outline: none;
-        }
-
-        /* Hint text below inputs */
-        .input-hint {
-            margin-top: 6px;
-            font-size: 0.85rem;
-            color: var(--custom-text-medium);
-            font-style: italic;
-        }
-
-        .button-primary {
-            background-color: var(--custom-accent-blue);
-            color: var(--custom-bg-card); /* White text on blue button */
-            padding: 14px 25px; /* Larger button */
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.05rem;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            align-self: flex-start; /* Align button left */
-            box-shadow: 0 4px 10px rgba(26, 75, 125, 0.2); /* Shadow for buttons */
-        }
-
-        .button-primary:hover {
-            background-color: var(--custom-accent-blue-hover);
-            transform: translateY(-2px); /* Subtle lift on hover */
-        }
-
-        .file-upload-wrapper {
-            position: relative;
-            display: inline-block; /* Allows button to float next to it */
-            width: 100%;
-        }
-
-        .file-upload-wrapper input[type="file"] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0; /* Hide the default input */
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .file-upload-button {
-            background-color: var(--custom-text-medium); /* Grey button for file select */
-            color: var(--custom-bg-card);
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            transition: background-color 0.3s ease;
-            display: inline-flex; /* Align icon and text */
-            align-items: center;
-            gap: 8px;
-        }
-
-        .file-upload-button:hover {
-            background-color: #666666;
-        }
-
-        #fileNameDisplay {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: var(--custom-text-medium);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .message {
-            margin-top: 25px;
-            padding: 18px 25px; /* Generous padding */
-            border-radius: 10px; /* Softer corners */
-            font-size: 1rem;
-            line-height: 1.5;
-            display: flex;
-            align-items: center;
-            gap: 15px; /* More space for icon */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for messages */
-            opacity: 0; /* Start hidden for animation */
-            transform: translateY(10px); /* Start slightly below */
-            animation: fadeInSlideUp 0.4s forwards ease-out; /* Animation on display */
-        }
-
-        @keyframes fadeInSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message .icon {
-            font-size: 1.5rem; /* Larger icons */
-        }
-
-        .success {
-            border: 1px solid var(--custom-success-text);
-            background-color: var(--custom-success-bg);
-            color: var(--custom-success-text);
-        }
-
-        .error {
-            border: 1px solid var(--custom-error-text);
-            background-color: var(--custom-error-bg);
-            color: var(--custom-error-text);
-        }
-
-        .info { /* For general messages */
-            border: 1px solid var(--custom-info-text);
-            background-color: var(--custom-info-bg);
-            color: var(--custom-info-text);
-        }
-
-        .results-section {
-            background-color: var(--custom-bg-card);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px var(--custom-shadow-soft);
-            width: 100%;
-            max-width: 700px;
-            margin-top: 30px;
-            box-sizing: border-box;
-            opacity: 0; /* Start hidden for animation */
-            transform: translateY(10px); /* Start slightly below */
-            animation: fadeInSlideUp 0.4s forwards ease-out; /* Animation on display */
-        }
-
-        .results-section p {
-            margin-bottom: 12px;
-            font-size: 1.05rem;
-            color: var(--custom-text-dark);
-        }
-
-        .results-section span {
-            font-weight: 600;
-            color: var(--custom-accent-blue); /* Highlight the values */
-        }
-
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 1rem;
-        }
-
-        .results-table thead tr {
-            background-color: var(--custom-accent-blue);
-            color: #FFFFFF;
-        }
-
-        .results-table thead th {
-            padding: 12px 16px;
-            text-align: left;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 0.95rem;
-            letter-spacing: 0.02em;
-        }
-
-        .results-table thead th:not(:first-child) {
-            text-align: right;
-        }
-
-        .results-table tbody tr {
-            border-bottom: 1px solid var(--custom-border-subtle);
-            transition: background-color 0.2s ease;
-        }
-
-        .results-table tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        .results-table tbody tr:hover {
-            background-color: var(--custom-info-bg);
-        }
-
-        .results-table tbody td {
-            padding: 14px 16px;
-            color: var(--custom-text-dark);
-            font-size: 1rem;
-        }
-
-        .results-table tbody td:not(:first-child) {
-            text-align: right;
-            font-weight: 600;
-            color: var(--custom-accent-blue);
-        }
-
-        .results-table tbody td:first-child {
-            font-weight: 500;
-            color: var(--custom-text-medium);
-        }
-
-
-
-        /* Loading bar */
-        .loading-bar-wrapper {
-            display: none;
-            width: 100%;
-            margin-top: 18px;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .loading-bar-wrapper.visible {
-            display: flex;
-        }
-
-        .loading-bar-label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--custom-text-medium);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .loading-bar-label .spinner {
-            width: 14px;
-            height: 14px;
-            border: 2px solid var(--custom-border-subtle);
-            border-top-color: var(--custom-accent-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-bar-track {
-            width: 100%;
-            height: 6px;
-            background-color: var(--custom-border-subtle);
-            border-radius: 999px;
-            overflow: hidden;
-        }
-
-        .loading-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(to right, var(--custom-accent-blue), var(--custom-accent-gold));
-            border-radius: 999px;
-            animation: indeterminate 1.4s ease-in-out infinite;
-            transform-origin: left;
-        }
-
-        @keyframes indeterminate {
-            0%   { width: 0%;   margin-left: 0%; }
-            50%  { width: 60%;  margin-left: 20%; }
-            100% { width: 0%;   margin-left: 100%; }
-        }
-
-        #uploadSubmitBtn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Subtle hero background idea (optional) */
-        .hero-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 200px;
-            background: linear-gradient(to right, #CCE0FF, #E0ECF8); /* Very subtle light blue gradient */
-            z-index: -1; /* Behind content */
-            opacity: 0.7;
-        }
-
+        body { font-family: 'Roboto', sans-serif; background-color: var(--custom-bg-light); color: var(--custom-text-dark); margin: 0; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        h1 { font-family: 'Inter', sans-serif; font-size: 2.5rem; font-weight: 700; color: var(--custom-accent-blue); margin-bottom: 40px; text-align: center; text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+        h2 { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 600; color: var(--custom-text-dark); margin-bottom: 25px; text-align: center; }
+        .card { background-color: var(--custom-bg-card); padding: 35px; border-radius: 12px; box-shadow: 0 8px 25px var(--custom-shadow-soft); width: 100%; max-width: 700px; margin-bottom: 30px; box-sizing: border-box; }
+        form { display: flex; flex-direction: column; gap: 20px; }
+        label { font-size: 1rem; font-weight: 500; color: var(--custom-text-medium); margin-bottom: 8px; display: block; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 12px 15px; border: 1px solid var(--custom-border-subtle); border-radius: 8px; background-color: var(--custom-bg-card); color: var(--custom-text-dark); font-size: 1.05rem; box-sizing: border-box; transition: border-color 0.3s ease, box-shadow 0.3s ease; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        select { background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2C114.7L154.7%2C247c-1.3%2C1.3-3.3%2C1.3-4.6%2C0L6%2C114.7c-1.3-1.3-1.3-3.3%2C0-4.6l4.6-4.6c1.3-1.3%2C3.3-1.3%2C4.6%2C0l132.8%2C132.8c1.3%2C1.3%2C3.3%2C1.3%2C4.6%2C0l132.8-132.8c1.3-1.3%2C3.3-1.3%2C4.6%2C0l4.6%2C4.6C288.3%2C111.4%2C288.3%2C113.4%2C287%2C114.7z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 15px center; background-size: 14px; padding-right: 40px; }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--custom-accent-gold); box-shadow: 0 0 0 4px rgba(204, 164, 59, 0.2); outline: none; }
+        .input-hint { margin-top: 6px; font-size: 0.85rem; color: var(--custom-text-medium); font-style: italic; }
+        .button-primary { background-color: var(--custom-accent-blue); color: var(--custom-bg-card); padding: 14px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.05rem; font-weight: 600; transition: background-color 0.3s ease, transform 0.1s ease; align-self: flex-start; box-shadow: 0 4px 10px rgba(26, 75, 125, 0.2); }
+        .button-primary:hover { background-color: var(--custom-accent-blue-hover); transform: translateY(-2px); }
+        .file-upload-wrapper { position: relative; display: inline-block; width: 100%; }
+        .file-upload-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .file-upload-button { background-color: var(--custom-text-medium); color: var(--custom-bg-card); padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background-color 0.3s ease; display: inline-flex; align-items: center; gap: 8px; }
+        .file-upload-button:hover { background-color: #666666; }
+        #fileNameDisplay { margin-top: 10px; font-size: 0.9rem; color: var(--custom-text-medium); }
+        .hidden { display: none !important; }
+        .message { margin-top: 25px; padding: 18px 25px; border-radius: 10px; font-size: 1rem; line-height: 1.5; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); opacity: 0; transform: translateY(10px); animation: fadeInSlideUp 0.4s forwards ease-out; }
+        @keyframes fadeInSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message .icon { font-size: 1.5rem; }
+        .success { border: 1px solid var(--custom-success-text); background-color: var(--custom-success-bg); color: var(--custom-success-text); }
+        .error   { border: 1px solid var(--custom-error-text);   background-color: var(--custom-error-bg);   color: var(--custom-error-text); }
+        .info    { border: 1px solid var(--custom-info-text);    background-color: var(--custom-info-bg);    color: var(--custom-info-text); }
+        .results-section { background-color: var(--custom-bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 8px 25px var(--custom-shadow-soft); width: 100%; max-width: 700px; margin-top: 30px; box-sizing: border-box; opacity: 0; transform: translateY(10px); animation: fadeInSlideUp 0.4s forwards ease-out; }
+        .results-section p { margin-bottom: 12px; font-size: 1.05rem; color: var(--custom-text-dark); }
+        .results-section span { font-weight: 600; color: var(--custom-accent-blue); }
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1rem; }
+        .results-table thead tr { background-color: var(--custom-accent-blue); color: #FFFFFF; }
+        .results-table thead th { padding: 12px 16px; text-align: left; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em; }
+        .results-table thead th:not(:first-child) { text-align: right; }
+        .results-table tbody tr { border-bottom: 1px solid var(--custom-border-subtle); transition: background-color 0.2s ease; }
+        .results-table tbody tr:last-child { border-bottom: none; }
+        .results-table tbody tr:hover { background-color: var(--custom-info-bg); }
+        .results-table tbody td { padding: 14px 16px; color: var(--custom-text-dark); font-size: 1rem; }
+        .results-table tbody td:not(:first-child) { text-align: right; font-weight: 600; color: var(--custom-accent-blue); }
+        .results-table tbody td:first-child { font-weight: 500; color: var(--custom-text-medium); }
+        .loading-bar-wrapper { display: none; width: 100%; margin-top: 18px; flex-direction: column; gap: 8px; }
+        .loading-bar-wrapper.visible { display: flex; }
+        .loading-bar-label { font-size: 0.9rem; font-weight: 500; color: var(--custom-text-medium); display: flex; align-items: center; gap: 8px; }
+        .loading-bar-label .spinner { width: 14px; height: 14px; border: 2px solid var(--custom-border-subtle); border-top-color: var(--custom-accent-blue); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-bar-track { width: 100%; height: 6px; background-color: var(--custom-border-subtle); border-radius: 999px; overflow: hidden; }
+        .loading-bar-fill { height: 100%; width: 0%; background: linear-gradient(to right, var(--custom-accent-blue), var(--custom-accent-gold)); border-radius: 999px; animation: indeterminate 1.4s ease-in-out infinite; transform-origin: left; }
+        @keyframes indeterminate { 0% { width:0%; margin-left:0%; } 50% { width:60%; margin-left:20%; } 100% { width:0%; margin-left:100%; } }
+        #uploadSubmitBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .hero-background { position: fixed; top: 0; left: 0; width: 100%; height: 200px; background: linear-gradient(to right, #CCE0FF, #E0ECF8); z-index: -1; opacity: 0.7; }
+        .tactics-card { background-color: var(--custom-bg-card); padding: 35px; border-radius: 12px; box-shadow: 0 8px 25px var(--custom-shadow-soft); width: 100%; max-width: 700px; margin-bottom: 30px; box-sizing: border-box; }
+        .tactics-category { border: 1px solid var(--custom-border-subtle); border-radius: 10px; margin-bottom: 14px; overflow: hidden; transition: box-shadow 0.2s ease; }
+        .tactics-category:hover { box-shadow: 0 4px 14px var(--custom-shadow-soft); }
+        .tactics-category-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; background-color: var(--custom-bg-light); user-select: none; transition: background-color 0.2s ease; }
+        .tactics-category-header:hover { background-color: #e4e8ee; }
+        .tactics-category-header.active { background-color: var(--custom-accent-blue); color: #fff; }
+        .tactics-category-header.active .tactics-category-title { color: #fff; }
+        .tactics-category-header.active .tactics-chevron { color: var(--custom-accent-gold); transform: rotate(180deg); }
+        .tactics-category-title { font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 600; color: var(--custom-text-dark); display: flex; align-items: center; gap: 10px; }
+        .tactics-category-title .category-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+        .tactics-chevron { font-size: 0.9rem; color: var(--custom-text-medium); transition: transform 0.3s ease, color 0.2s ease; }
+        .tactics-category-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.2s ease; padding: 0 20px; background-color: var(--custom-bg-card); }
+        .tactics-category-body.open { max-height: 1100px; padding: 18px 20px 20px; }
+        .tactic-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--custom-border-subtle); }
+        .tactic-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .tactic-row:first-child { padding-top: 0; }
+        .tactic-check { margin-top: 3px; accent-color: var(--custom-accent-blue); width: 17px; height: 17px; flex-shrink: 0; cursor: pointer; }
+        .tactic-label-group { flex: 1; }
+        .tactic-label { font-size: 0.97rem; font-weight: 500; color: var(--custom-text-dark); cursor: pointer; display: block; margin-bottom: 3px; }
+        .tactic-description { font-size: 0.82rem; color: var(--custom-text-medium); font-style: italic; line-height: 1.4; }
+        .tactic-input-group { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 120px; }
+        .tactic-input-group input[type="number"] { width: 110px; padding: 7px 10px; border: 1px solid var(--custom-border-subtle); border-radius: 7px; font-size: 0.92rem; color: var(--custom-text-dark); background-color: var(--custom-bg-card); transition: border-color 0.2s ease, box-shadow 0.2s ease; box-sizing: border-box; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        .tactic-input-group input[type="number"]:focus { border-color: var(--custom-accent-gold); box-shadow: 0 0 0 3px rgba(204,164,59,0.18); outline: none; }
+        .tactic-input-group input[type="number"]:disabled { background-color: var(--custom-bg-light); color: #aaa; cursor: not-allowed; }
+        .tactic-unit { font-size: 0.75rem; color: var(--custom-text-medium); text-align: right; }
+        .tactics-info-banner { display: none; align-items: center; gap: 12px; margin-top: 14px; padding: 13px 16px; border-radius: 8px; border: 1px solid var(--custom-info-text); background-color: var(--custom-info-bg); color: var(--custom-info-text); font-size: 0.88rem; line-height: 1.45; animation: fadeInSlideUp 0.3s forwards ease-out; }
+        .tactics-info-banner.visible { display: flex; }
+        .tactics-info-banner .info-icon { font-size: 1.2rem; flex-shrink: 0; }
+        .cb-sub-params, .saga-sub-params { display: none; padding-left: 30px; border-left: 3px solid var(--custom-accent-gold); margin: 4px 0 8px; }
+        .rps-impact-summary { display: none; margin-top: 18px; padding: 14px 18px; border-radius: 9px; background: linear-gradient(135deg, #e8f0fa, #f0f5ff); border: 1px solid #b8cce8; font-size: 0.9rem; color: var(--custom-accent-blue); font-weight: 500; }
+        .rps-impact-summary.visible { display: block; animation: fadeInSlideUp 0.3s forwards ease-out; }
+        .rps-impact-summary .rps-total { font-size: 1.1rem; font-weight: 700; }
+        .rps-impact-summary .rps-breakdown { margin-top: 6px; font-size: 0.82rem; color: var(--custom-text-medium); font-weight: 400; }
+        .saga-explainer { display: none; margin: 12px 0 4px; padding: 14px 16px; border-radius: 9px; background: linear-gradient(135deg, #fffbf0, #fff8e6); border: 1px solid var(--custom-accent-gold); font-size: 0.88rem; line-height: 1.55; color: var(--custom-text-dark); animation: fadeInSlideUp 0.3s forwards ease-out; }
+        .saga-explainer.visible { display: block; }
+        .saga-explainer-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--custom-accent-blue); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+        .saga-explainer p { margin: 0 0 7px; }
+        .saga-explainer p:last-child { margin-bottom: 0; }
+        .saga-explainer .formula { font-family: monospace; background: rgba(204,164,59,0.12); padding: 5px 10px; border-radius: 5px; display: inline-block; margin: 4px 0; font-size: 0.87rem; color: var(--custom-accent-blue); font-weight: 600; }
+        .saga-explainer .example-row { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; font-size: 0.83rem; color: var(--custom-text-medium); }
+        .saga-explainer .example-row .ex-icon { flex-shrink: 0; margin-top: 1px; }
+        .saga-live-preview { display: none; margin-top: 10px; padding: 9px 14px; border-radius: 7px; background-color: var(--custom-info-bg); border: 1px solid #b8cce8; font-size: 0.87rem; color: var(--custom-accent-blue); font-weight: 500; }
+        .saga-live-preview.visible { display: block; }
+        .tactics-summary-section { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 2px solid var(--custom-border-subtle); }
+        .tactics-summary-title { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--custom-accent-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .tactics-group-label { font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--custom-text-medium); margin: 14px 0 8px; }
+        .tactics-summary-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin-bottom: 6px; }
+        .tactics-summary-table thead tr { background-color: var(--custom-bg-light); }
+        .tactics-summary-table thead th { padding: 9px 14px; text-align: left; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.82rem; color: var(--custom-text-medium); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--custom-border-subtle); }
+        .tactics-summary-table thead th.col-impact { text-align: right; }
+        .tactics-summary-table tbody tr { border-bottom: 1px solid var(--custom-border-subtle); transition: background-color 0.15s ease; }
+        .tactics-summary-table tbody tr:last-child { border-bottom: none; }
+        .tactics-summary-table tbody tr:hover { background-color: var(--custom-info-bg); }
+        .tactics-summary-table tbody td { padding: 10px 14px; vertical-align: top; }
+        .tactic-name-cell { font-weight: 600; color: var(--custom-text-dark); white-space: nowrap; }
+        .tactic-value-cell { font-size: 0.85rem; color: var(--custom-accent-blue); font-weight: 500; }
+        .tactic-desc-cell { color: var(--custom-text-medium); font-size: 0.85rem; font-style: italic; line-height: 1.4; }
+        .tactic-impact-cell { text-align: right; white-space: nowrap; font-weight: 700; color: #c0392b; font-size: 0.88rem; }
+        .no-impact-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background-color: var(--custom-success-bg); color: var(--custom-success-text); font-size: 0.75rem; font-weight: 600; }
+        .rps-adjustment-banner { display: flex; align-items: flex-start; gap: 14px; margin-top: 16px; padding: 14px 18px; border-radius: 9px; background: linear-gradient(135deg, #e8f0fa, #f0f5ff); border: 1px solid #b8cce8; font-size: 0.9rem; color: var(--custom-accent-blue); }
+        .rps-adjustment-banner .banner-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+        .rps-adjustment-banner .banner-body { flex: 1; }
+        .rps-adjustment-banner .banner-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 5px; }
+        .rps-adjustment-banner .banner-values { display: flex; gap: 24px; flex-wrap: wrap; font-size: 0.88rem; }
+        .rps-val { display: flex; flex-direction: column; gap: 2px; }
+        .rps-val-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--custom-text-medium); font-weight: 600; }
+        .rps-val-number { font-size: 1.05rem; font-weight: 700; color: var(--custom-accent-blue); }
+        .rps-val-number.increased { color: #c0392b; }
     </style>
 </head>
 <body>
 <div class="hero-background"></div>
-
 <h1>gRPC-based MACH Architecture TCO Networking Costs Calculator</h1>
 
 <div class="card">
@@ -413,27 +156,213 @@
                 <option value="GraphQL">GraphQL</option>
             </select>
         </div>
-
         <div>
             <label for="requestsPerSecond">Requests per Second (RPS)</label>
-            <input
-                    type="number"
-                    id="requestsPerSecond"
-                    name="requestsPerSecond"
-                    placeholder="e.g. 1000"
-                    min="1"
-                    step="1"
-            />
+            <input type="number" id="requestsPerSecond" name="requestsPerSecond" placeholder="e.g. 1000" min="1" step="1" oninput="recalculateRps()"/>
             <p class="input-hint">Estimated number of incoming requests your service handles per second at peak load.</p>
         </div>
     </form>
+</div>
+
+<div id="tacticsCard" class="tactics-card hidden">
+    <h2>Architecture Tactics &amp; Patterns</h2>
+    <p style="font-size:0.92rem;color:var(--custom-text-medium);margin-bottom:20px;text-align:center;">
+        Select the tactics and patterns applied to your gRPC service. Options that affect your RPS will
+        automatically adjust the estimated request volume shown below.
+    </p>
+
+    <div class="tactics-category">
+        <div class="tactics-category-header" onclick="toggleCategory('reliability')">
+            <span class="tactics-category-title"><span class="category-icon">🛡️</span> Reliability Tactics</span>
+            <i class="fas fa-chevron-down tactics-chevron" id="chevron-reliability"></i>
+        </div>
+        <div class="tactics-category-body" id="body-reliability">
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-client-lb"
+                       data-category="reliability"
+                       data-info="Client-side load balancing distributes gRPC packets evenly across server instances. It does not change the total RPS your service receives.">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-client-lb">Client-side Load Balancing</label>
+                    <span class="tactic-description">Balances the emission of gRPC packets to the gRPC server.</span>
+                </div>
+            </div>
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-server-lb"
+                       data-category="reliability"
+                       data-info="Server-side load balancing distributes incoming traffic across backend replicas. It does not change the total RPS generated by clients.">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-server-lb">Server-side Load Balancing</label>
+                    <span class="tactic-description">Balances the reception of gRPC packets to the gRPC server.</span>
+                </div>
+            </div>
+            <div class="tactics-info-banner" id="info-reliability"><i class="fas fa-info-circle info-icon"></i><span id="info-reliability-text"></span></div>
+        </div>
+    </div>
+
+    <div class="tactics-category">
+        <div class="tactics-category-header" onclick="toggleCategory('resiliency')">
+            <span class="tactics-category-title"><span class="category-icon">🔄</span> Resiliency Patterns</span>
+            <i class="fas fa-chevron-down tactics-chevron" id="chevron-resiliency"></i>
+        </div>
+        <div class="tactics-category-body" id="body-resiliency">
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-timeout"
+                       data-category="resiliency"
+                       data-info="A timeout discards a lost packet and frees the client thread. It does not generate additional requests."
+                       onchange="document.getElementById('input-timeout').disabled=!this.checked;">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-timeout">Timeout</label>
+                    <span class="tactic-description">Establishes a timeout if a packet has been lost and has not reached the gRPC server.</span>
+                </div>
+                <div class="tactic-input-group">
+                    <input type="number" id="input-timeout" min="0" placeholder="500" disabled>
+                    <span class="tactic-unit">milliseconds</span>
+                </div>
+            </div>
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check" id="tactic-retry" onchange="toggleRetry(this.checked)">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-retry">Retry</label>
+                    <span class="tactic-description">
+                        Retries gRPC packet emission under temporary outages.
+                        <strong style="color:#c0392b;">⚠ Increases networking costs</strong> — additional packets are sent per logical request.
+                        <br><em style="font-size:0.8rem;">Formula: effective RPS = base RPS + (base RPS × max retries)</em>
+                    </span>
+                </div>
+                <div class="tactic-input-group">
+                    <input type="number" id="input-retry-times" min="1" max="10" placeholder="3" disabled oninput="recalculateRps()">
+                    <span class="tactic-unit">max retries</span>
+                </div>
+            </div>
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-cb"
+                       data-category="resiliency"
+                       data-info="The Circuit Breaker stops sending requests when failure thresholds are exceeded, reducing outbound packets. It does not add to your RPS."
+                       onchange="toggleCbParams(this.checked)">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-cb">Circuit Breaker</label>
+                    <span class="tactic-description">Opens the circuit when failure thresholds are exceeded, protecting downstream services.</span>
+                </div>
+            </div>
+            <div class="cb-sub-params" id="cb-params">
+                <div class="tactic-row">
+                    <div class="tactic-label-group"><label class="tactic-label" for="input-cb-min-calls">Minimum number of calls</label><span class="tactic-description">Calls below this threshold keep the circuit CLOSED regardless of failure rate.</span></div>
+                    <div class="tactic-input-group"><input type="number" id="input-cb-min-calls" min="1" placeholder="10"><span class="tactic-unit">calls</span></div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group"><label class="tactic-label" for="input-cb-half-open">Permitted calls in HALF-OPEN state</label><span class="tactic-description">Number of probe calls allowed when the circuit is half-open.</span></div>
+                    <div class="tactic-input-group"><input type="number" id="input-cb-half-open" min="1" placeholder="5"><span class="tactic-unit">calls</span></div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group"><label class="tactic-label" for="input-cb-wait">Wait duration in OPEN state</label><span class="tactic-description">Circuit remains OPEN and rejects all calls for this duration.</span></div>
+                    <div class="tactic-input-group"><input type="number" id="input-cb-wait" min="0" placeholder="60000"><span class="tactic-unit">milliseconds</span></div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group"><label class="tactic-label" for="input-cb-failure-rate">Failure rate threshold</label><span class="tactic-description">Failure percentage above which the circuit transitions to OPEN.</span></div>
+                    <div class="tactic-input-group"><input type="number" id="input-cb-failure-rate" min="1" max="100" placeholder="50"><span class="tactic-unit">%</span></div>
+                </div>
+            </div>
+            <div class="tactics-info-banner" id="info-resiliency"><i class="fas fa-info-circle info-icon"></i><span id="info-resiliency-text"></span></div>
+        </div>
+    </div>
+
+    <div class="tactics-category">
+        <div class="tactics-category-header" onclick="toggleCategory('microservices')">
+            <span class="tactics-category-title"><span class="category-icon">🧩</span> Microservices Patterns &amp; Tactics</span>
+            <i class="fas fa-chevron-down tactics-chevron" id="chevron-microservices"></i>
+        </div>
+        <div class="tactics-category-body" id="body-microservices">
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check" id="tactic-saga" onchange="toggleSagaParams(this.checked)">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-saga">SAGA Pattern</label>
+                    <span class="tactic-description">
+                        Distributed transaction spanning multiple microservices.
+                        <strong style="color:#c0392b;">⚠ Multiplies networking costs</strong> — each step in the SAGA generates an independent gRPC call.
+                    </span>
+                </div>
+            </div>
+
+            <div class="saga-explainer" id="saga-explainer">
+                <div class="saga-explainer-title">
+                    <i class="fas fa-graduation-cap"></i> How SAGA affects your gRPC traffic
+                </div>
+                <p>
+                    <strong>RPS vs. SAGA steps are different concepts.</strong>
+                    Your RPS (e.g. 1,000 req/s) measures how many <em>logical business requests</em>
+                    arrive per second — for example, 1,000 customers placing an order per second.
+                </p>
+                <p>
+                    Each of those orders triggers <em>one SAGA instance</em>, which internally
+                    coordinates multiple microservices. Every step in that SAGA instance is a
+                    separate gRPC call to a different service:
+                </p>
+                <div class="example-row">
+                    <span class="ex-icon">↳</span>
+                    <span>
+                        <strong>Compensatable step</strong> (e.g. Reserve inventory) — can be undone if a later step fails.<br>
+                        <strong>Pivot step</strong> (e.g. Charge payment) — point of no return.<br>
+                        <strong>Retriable step</strong> (e.g. Ship order) — guaranteed to eventually succeed.
+                    </span>
+                </div>
+                <p style="margin-top:10px;">
+                    So the formula is <strong>multiplicative, not additive</strong>:
+                </p>
+                <div class="formula">effective gRPC traffic = base RPS × steps per SAGA instance</div>
+                <p style="margin-top:8px; font-size:0.83rem; color:var(--custom-text-medium);">
+                    Example: 1,000 RPS × 3 steps = <strong>3,000 gRPC calls/sec</strong> — not 1,000 + 3,000 = 4,000.
+                    The 3 steps replace the single call; each of the 1,000 requests fans out into 3 independent calls.
+                </p>
+            </div>
+
+            <div class="saga-sub-params" id="saga-params">
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="input-saga-compensatable">Compensatable steps per SAGA instance</label>
+                        <span class="tactic-description">Steps that can be undone via a compensating action if a later step fails. Enter the number of such steps in <em>one</em> SAGA instance, not a total transaction count.</span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <input type="number" id="input-saga-compensatable" min="0" placeholder="1" oninput="recalculateRps()">
+                        <span class="tactic-unit">steps</span>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="input-saga-retriable">Retriable steps per SAGA instance</label>
+                        <span class="tactic-description">Steps guaranteed to eventually succeed after retries. Enter the number of such steps in <em>one</em> SAGA instance.</span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <input type="number" id="input-saga-retriable" min="0" placeholder="1" oninput="recalculateRps()">
+                        <span class="tactic-unit">steps</span>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="input-saga-pivot">Pivot steps per SAGA instance</label>
+                        <span class="tactic-description">The go/no-go point — neither compensatable nor retriable. Enter the number of pivot steps in <em>one</em> SAGA instance.</span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <input type="number" id="input-saga-pivot" min="0" placeholder="1" oninput="recalculateRps()">
+                        <span class="tactic-unit">steps</span>
+                    </div>
+                </div>
+                <div class="saga-live-preview" id="saga-live-preview"></div>
+            </div>
+
+            <div class="tactics-info-banner" id="info-microservices"><i class="fas fa-info-circle info-icon"></i><span id="info-microservices-text"></span></div>
+        </div>
+    </div>
+
+    <div class="rps-impact-summary" id="rps-impact-summary">
+        <div>Estimated effective RPS: <span class="rps-total" id="rps-adjusted-display">—</span></div>
+        <div class="rps-breakdown" id="rps-breakdown-text"></div>
+    </div>
 </div>
 
 <div id="grpcOptions" class="card hidden">
     <h2>gRPC ProtocolBuffer file definition (IDL)</h2>
     <p>You have selected gRPC. Please upload your .proto file.</p>
     <form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data">
-        <input type="hidden" id="requestsPerSecondHidden" name="requestsPerSecond" value="0" />
         <label for="protoFile">Upload .proto file:</label>
         <div class="file-upload-wrapper">
             <button type="button" class="file-upload-button" onclick="document.getElementById('protoFile').click()">
@@ -443,42 +372,94 @@
         </div>
         <div id="fileNameDisplay">No file chosen</div>
         <button type="submit" id="uploadSubmitBtn" class="button-primary">Upload .proto</button>
-
         <div class="loading-bar-wrapper" id="loadingBar">
-            <div class="loading-bar-label">
-                <span class="spinner"></span>
-                Uploading and calculating, please wait…
-            </div>
-            <div class="loading-bar-track">
-                <div class="loading-bar-fill"></div>
-            </div>
+            <div class="loading-bar-label"><span class="spinner"></span> Uploading and calculating, please wait…</div>
+            <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
         </div>
     </form>
 </div>
 
-<div id="serverUploadMessage" th:if="${uploadMessage != null}"
-     style="display:none;"
+<div id="serverUploadMessage" th:if="${uploadMessage != null}" style="display:none;"
      th:class="'message ' + ${uploadMessage.contains('successfully') ? 'success' : 'error'}">
     <i class="fas icon" th:classappend="${uploadMessage.contains('successfully') ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
     <p th:text="${uploadMessage}"></p>
 </div>
 
 <div id="serverResultsSection" th:if="${error != null || requestSize != null}" class="results-section hidden">
-    <div th:if="${error != null}" class="message error" style="margin-top: 0;"> <i class="fas fa-exclamation-circle icon"></i>
+
+    <div th:if="${error != null}" class="message error" style="margin-top:0;">
+        <i class="fas fa-exclamation-circle icon"></i>
         <p th:text="${error}"></p>
     </div>
+
     <div th:if="${requestSize != null}">
         <h2>TCO Networking Costs</h2>
+
+        <div class="tactics-summary-section" th:if="${hasTactics}">
+            <div class="tactics-summary-title">
+                <i class="fas fa-layer-group"></i> Applied Architecture Tactics &amp; Patterns
+            </div>
+
+            <div th:if="${not #lists.isEmpty(infoTactics)}">
+                <div class="tactics-group-label">ℹ️ Informational — No RPS Impact</div>
+                <table class="tactics-summary-table">
+                    <thead><tr>
+                        <th>Tactic</th><th>Configured Value</th><th>Description</th><th class="col-impact">RPS Impact</th>
+                    </tr></thead>
+                    <tbody>
+                    <tr th:each="tactic : ${infoTactics}">
+                        <td class="tactic-name-cell"  th:text="${tactic['name']}"></td>
+                        <td class="tactic-value-cell" th:text="${tactic['value']}"></td>
+                        <td class="tactic-desc-cell"  th:text="${tactic['description']}"></td>
+                        <td class="tactic-impact-cell"><span class="no-impact-badge">None</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div th:if="${not #lists.isEmpty(rpsTactics)}">
+                <div class="tactics-group-label">⚠️ RPS-Impacting — Increases Networking Costs</div>
+                <table class="tactics-summary-table">
+                    <thead><tr>
+                        <th>Tactic</th><th>Configured Value</th><th>Description</th><th class="col-impact">RPS Impact</th>
+                    </tr></thead>
+                    <tbody>
+                    <tr th:each="tactic : ${rpsTactics}">
+                        <td class="tactic-name-cell"   th:text="${tactic['name']}"></td>
+                        <td class="tactic-value-cell"  th:text="${tactic['value']}"></td>
+                        <td class="tactic-desc-cell"   th:text="${tactic['description']}"></td>
+                        <td class="tactic-impact-cell" th:text="${tactic['rpsImpact']}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="rps-adjustment-banner" th:if="${rpsWasAdjusted}">
+                <i class="fas fa-chart-line banner-icon"></i>
+                <div class="banner-body">
+                    <div class="banner-title">RPS Adjusted by Active Tactics</div>
+                    <div class="banner-values">
+                        <div class="rps-val">
+                            <span class="rps-val-label">Base RPS</span>
+                            <span class="rps-val-number" th:text="${baseRps}"></span>
+                        </div>
+                        <div class="rps-val">
+                            <span class="rps-val-label">Effective RPS</span>
+                            <span class="rps-val-number increased" th:text="${effectiveRps}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <table class="results-table">
-            <thead>
-            <tr>
+            <thead><tr>
                 <th>Message Type</th>
                 <th>ProtocolBuffer size (bytes)</th>
                 <th>Requests/month</th>
                 <th>Throughput (GB/month)</th>
                 <th>Data Transfer Cost to Internet (USD/month)</th>
-            </tr>
-            </thead>
+            </tr></thead>
             <tbody>
             <tr>
                 <td>Request</td>
@@ -502,12 +483,10 @@
             first 10 TB at $0.09/GB, next 40 TB at $0.085/GB, next 100 TB at $0.07/GB, beyond 150 TB at $0.05/GB.
             Inbound (request) traffic is free.
             For more information check the
-            <a href="https://calculator.aws/#/createCalculator/ec2-enhancement"
-               target="_blank"
-               rel="noopener noreferrer"
-               style="color: var(--custom-accent-blue); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--custom-accent-gold); padding-bottom: 1px; transition: color 0.2s ease, border-color 0.2s ease;"
-               onmouseover="this.style.color='var(--custom-accent-gold)'; this.style.borderColor='var(--custom-accent-blue)';"
-               onmouseout="this.style.color='var(--custom-accent-blue)'; this.style.borderColor='var(--custom-accent-gold)';">
+            <a href="https://calculator.aws/#/createCalculator/ec2-enhancement" target="_blank" rel="noopener noreferrer"
+               style="color:var(--custom-accent-blue);font-weight:600;text-decoration:none;border-bottom:1px solid var(--custom-accent-gold);padding-bottom:1px;transition:color 0.2s ease,border-color 0.2s ease;"
+               onmouseover="this.style.color='var(--custom-accent-gold)';this.style.borderColor='var(--custom-accent-blue)';"
+               onmouseout="this.style.color='var(--custom-accent-blue)';this.style.borderColor='var(--custom-accent-gold)';">
                 AWS Pricing Calculator ↗
             </a>
         </p>
@@ -516,97 +495,274 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-
-        const grpcOptionsDiv        = document.getElementById('grpcOptions');
-        const fileNameDisplay       = document.getElementById('fileNameDisplay');
-        const protoFileInput        = document.getElementById('protoFile');
-        const uploadForm            = document.getElementById('uploadForm');
-        const serviceTypeSelect     = document.getElementById('serviceType');
+        const grpcOptionsDiv          = document.getElementById('grpcOptions');
+        const tacticsCard             = document.getElementById('tacticsCard');
+        const fileNameDisplay         = document.getElementById('fileNameDisplay');
+        const protoFileInput          = document.getElementById('protoFile');
+        const uploadForm              = document.getElementById('uploadForm');
+        const serviceTypeSelect       = document.getElementById('serviceType');
         const serverUploadMessageDiv  = document.getElementById('serverUploadMessage');
         const serverResultsSectionDiv = document.getElementById('serverResultsSection');
 
-        function hideAllServerRenderedSections() {
-            if (serverUploadMessageDiv) serverUploadMessageDiv.classList.add('hidden');
-            if (serverResultsSectionDiv) serverResultsSectionDiv.classList.add('hidden');
-        }
-
-        function showDynamicInfoMessage(text) {
-            let tempMessageDiv = document.getElementById('tempDynamicInfoMessage');
-            if (!tempMessageDiv) {
-                tempMessageDiv = document.createElement('div');
-                tempMessageDiv.id = 'tempDynamicInfoMessage';
-                tempMessageDiv.classList.add('message', 'info');
-                tempMessageDiv.innerHTML = '<i class="fas fa-info-circle icon"></i><p></p>';
-                document.querySelector('.card').after(tempMessageDiv);
-            }
-            tempMessageDiv.querySelector('p').textContent = text;
-            tempMessageDiv.classList.remove('hidden');
-            tempMessageDiv.style.opacity = 0;
-            tempMessageDiv.style.transform = 'translateY(10px)';
-            void tempMessageDiv.offsetWidth;
-            tempMessageDiv.style.opacity = 1;
-            tempMessageDiv.style.transform = 'translateY(0)';
-        }
-
-        function hideDynamicInfoMessage() {
-            const tempMessageDiv = document.getElementById('tempDynamicInfoMessage');
-            if (tempMessageDiv) tempMessageDiv.classList.add('hidden');
-        }
-
-        function handleServiceTypeChange() {
-            const serviceType = serviceTypeSelect.value;
+        serviceTypeSelect.addEventListener('change', () => {
+            const v = serviceTypeSelect.value;
             hideDynamicInfoMessage();
-
-            if (serviceType === 'gRPC') {
+            if (v === 'gRPC') {
                 grpcOptionsDiv.classList.remove('hidden');
+                tacticsCard.classList.remove('hidden');
                 fileNameDisplay.textContent = 'No file chosen';
                 protoFileInput.value = '';
-                showDynamicInfoMessage('gRPC service selected. Please upload your .proto file to proceed.');
+                showDynamicInfoMessage('gRPC service selected. Configure your architecture tactics below, then upload your .proto file.');
             } else {
                 grpcOptionsDiv.classList.add('hidden');
-                if (serviceType !== '') {
-                    showDynamicInfoMessage(`You selected ${serviceType}. Advanced features for this service type are coming soon!`);
-                }
+                tacticsCard.classList.add('hidden');
+                if (v) showDynamicInfoMessage(`You selected ${v}. Advanced features for this service type are coming soon!`);
             }
-        }
-
-        function displayFileName(input) {
-            if (input.files && input.files.length > 0) {
-                fileNameDisplay.textContent = `File chosen: ${input.files[0].name}`;
-                hideDynamicInfoMessage();
-            } else {
-                fileNameDisplay.textContent = 'No file chosen';
-            }
-        }
-
-        serviceTypeSelect.addEventListener('change', handleServiceTypeChange);
-        protoFileInput.addEventListener('change', () => displayFileName(protoFileInput));
-        uploadForm.addEventListener('submit', () => {
-            const rpsValue = document.getElementById('requestsPerSecond').value;
-            document.getElementById('requestsPerSecondHidden').value = rpsValue || 0;
-
-            const loadingBar    = document.getElementById('loadingBar');
-            const submitBtn     = document.getElementById('uploadSubmitBtn');
-            loadingBar.classList.add('visible');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Uploading…';
         });
 
         if (serviceTypeSelect.value === 'gRPC') {
             grpcOptionsDiv.classList.remove('hidden');
-        } else {
-            grpcOptionsDiv.classList.add('hidden');
+            tacticsCard.classList.remove('hidden');
         }
 
-        if (serverUploadMessageDiv) {
-            serverUploadMessageDiv.style.display = 'flex';
+        function showDynamicInfoMessage(text) {
+            let el = document.getElementById('tempDynamicInfoMessage');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = 'tempDynamicInfoMessage';
+                el.classList.add('message', 'info');
+                el.innerHTML = '<i class="fas fa-info-circle icon"></i><p></p>';
+                document.querySelector('.card').after(el);
+            }
+            el.querySelector('p').textContent = text;
+            el.classList.remove('hidden');
+            el.style.opacity = 0; el.style.transform = 'translateY(10px)';
+            void el.offsetWidth;
+            el.style.opacity = 1; el.style.transform = 'translateY(0)';
         }
 
+        function hideDynamicInfoMessage() {
+            const el = document.getElementById('tempDynamicInfoMessage');
+            if (el) el.classList.add('hidden');
+        }
+
+        protoFileInput.addEventListener('change', () => {
+            fileNameDisplay.textContent = protoFileInput.files?.length
+                ? `File chosen: ${protoFileInput.files[0].name}` : 'No file chosen';
+            hideDynamicInfoMessage();
+        });
+
+        let saveTimer = null;
+
+        function scheduleSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveTacticsToSession, 400);
+        }
+
+        function collectTacticsDTO() {
+            return {
+                requestsPerSecond: parseInt(document.getElementById('requestsPerSecond').value) || 0,
+                reliabilityTactics: {
+                    reliabilityClientSideLoadBalancerTactic: document.getElementById('tactic-client-lb').checked,
+                    reliabilityServerSideLoadBalancerTactic: document.getElementById('tactic-server-lb').checked
+                },
+                timeoutTactic: {
+                    resiliencyTimeoutTactic:   document.getElementById('tactic-timeout').checked,
+                    tacticTimeoutMilliseconds: parseInt(document.getElementById('input-timeout').value) || 0
+                },
+                retryTactic: {
+                    resiliencyRetryTactic: document.getElementById('tactic-retry').checked,
+                    tacticRetryTimes:      parseInt(document.getElementById('input-retry-times').value) || 0
+                },
+                circuitBreakerTactic: {
+                    resiliencyCircuitBreakerPattern:   document.getElementById('tactic-cb').checked,
+                    circuitBreakerPatternMinimumCalls: parseInt(document.getElementById('input-cb-min-calls').value) || 0,
+                    circuitBreakerHalfOpen:            parseInt(document.getElementById('input-cb-half-open').value) || 0,
+                    circuitBreakerWaitMilliseconds:    parseInt(document.getElementById('input-cb-wait').value) || 0,
+                    circuitBreakerFailureRate:         parseInt(document.getElementById('input-cb-failure-rate').value) || 0
+                },
+                sagaPattern: {
+                    microservicesSAGAPattern:      document.getElementById('tactic-saga').checked,
+                    sagaCompensatableTransactions: parseInt(document.getElementById('input-saga-compensatable').value) || 0,
+                    sagaRetriableTransactions:     parseInt(document.getElementById('input-saga-retriable').value) || 0,
+                    sagaPivotTransactions:         parseInt(document.getElementById('input-saga-pivot').value) || 0
+                }
+            };
+        }
+
+        async function saveTacticsToSession() {
+            try {
+                await fetch('/api/session/tactics', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(collectTacticsDTO())
+                });
+            } catch (err) {
+                console.warn('Failed to save tactics to session:', err);
+            }
+        }
+
+        document.querySelectorAll(
+            '#requestsPerSecond, .tactic-check, ' +
+            '#input-timeout, #input-retry-times, ' +
+            '#input-cb-min-calls, #input-cb-half-open, #input-cb-wait, #input-cb-failure-rate, ' +
+            '#input-saga-compensatable, #input-saga-retriable, #input-saga-pivot'
+        ).forEach(el => {
+            el.addEventListener('change', scheduleSave);
+            el.addEventListener('input',  scheduleSave);
+        });
+
+        (async () => {
+            try {
+                const res = await fetch('/api/session/tactics');
+                if (!res.ok) return;
+                const dto = await res.json();
+                if (!dto || dto.requestsPerSecond === 0) return;
+
+                document.getElementById('requestsPerSecond').value = dto.requestsPerSecond;
+
+                const setCheck = (id, val) => { document.getElementById(id).checked = val; };
+                const setVal   = (id, val) => { document.getElementById(id).value   = val || ''; };
+
+                setCheck('tactic-client-lb', dto.reliabilityTactics.reliabilityClientSideLoadBalancerTactic);
+                setCheck('tactic-server-lb', dto.reliabilityTactics.reliabilityServerSideLoadBalancerTactic);
+
+                setCheck('tactic-timeout', dto.timeoutTactic.resiliencyTimeoutTactic);
+                setVal('input-timeout',    dto.timeoutTactic.tacticTimeoutMilliseconds);
+                document.getElementById('input-timeout').disabled = !dto.timeoutTactic.resiliencyTimeoutTactic;
+
+                setCheck('tactic-retry',    dto.retryTactic.resiliencyRetryTactic);
+                setVal('input-retry-times', dto.retryTactic.tacticRetryTimes);
+                document.getElementById('input-retry-times').disabled = !dto.retryTactic.resiliencyRetryTactic;
+
+                setCheck('tactic-cb', dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern);
+                if (dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern) {
+                    toggleCbParams(true);
+                    setVal('input-cb-min-calls',    dto.circuitBreakerTactic.circuitBreakerPatternMinimumCalls);
+                    setVal('input-cb-half-open',    dto.circuitBreakerTactic.circuitBreakerHalfOpen);
+                    setVal('input-cb-wait',         dto.circuitBreakerTactic.circuitBreakerWaitMilliseconds);
+                    setVal('input-cb-failure-rate', dto.circuitBreakerTactic.circuitBreakerFailureRate);
+                }
+
+                setCheck('tactic-saga', dto.sagaPattern.microservicesSAGAPattern);
+                if (dto.sagaPattern.microservicesSAGAPattern) {
+                    toggleSagaParams(true);
+                    setVal('input-saga-compensatable', dto.sagaPattern.sagaCompensatableTransactions);
+                    setVal('input-saga-retriable',     dto.sagaPattern.sagaRetriableTransactions);
+                    setVal('input-saga-pivot',         dto.sagaPattern.sagaPivotTransactions);
+                }
+
+                recalculateRps();
+            } catch (_) {}
+        })();
+
+        uploadForm.addEventListener('submit', () => {
+            saveTacticsToSession();
+            document.getElementById('loadingBar').classList.add('visible');
+            const submitBtn = document.getElementById('uploadSubmitBtn');
+            submitBtn.disabled    = true;
+            submitBtn.textContent = 'Uploading…';
+        });
+
+        document.querySelectorAll('.tactic-check.no-rps-impact').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const cat        = checkbox.dataset.category;
+                const banner     = document.getElementById('info-' + cat);
+                const bannerText = document.getElementById('info-' + cat + '-text');
+                if (!banner || !bannerText) return;
+                const checked = [...document.querySelectorAll(`.tactic-check.no-rps-impact[data-category="${cat}"]`)].filter(cb => cb.checked);
+                if (checked.length > 0) {
+                    bannerText.textContent = checkbox.checked ? checkbox.dataset.info : checked[checked.length - 1].dataset.info;
+                    banner.classList.add('visible');
+                } else {
+                    banner.classList.remove('visible');
+                }
+            });
+        });
+
+        if (serverUploadMessageDiv) serverUploadMessageDiv.style.display = 'flex';
         if (serverResultsSectionDiv) {
             serverResultsSectionDiv.classList.remove('hidden');
             serverResultsSectionDiv.style.display = 'block';
         }
     });
+
+    function toggleCategory(id) {
+        const body   = document.getElementById('body-' + id);
+        const header = body.previousElementSibling;
+        const isOpen = body.classList.contains('open');
+        body.classList.toggle('open', !isOpen);
+        header.classList.toggle('active', !isOpen);
+    }
+
+    function toggleCbParams(show) {
+        document.getElementById('cb-params').style.display = show ? 'block' : 'none';
+    }
+
+    function toggleRetry(checked) {
+        document.getElementById('input-retry-times').disabled = !checked;
+        recalculateRps();
+    }
+
+    function toggleSagaParams(show) {
+        document.getElementById('saga-params').style.display    = show ? 'block' : 'none';
+        document.getElementById('saga-explainer').classList.toggle('visible', show);
+        recalculateRps();
+    }
+
+    function recalculateRps() {
+        const baseRps = parseInt(document.getElementById('requestsPerSecond').value) || 0;
+        if (baseRps === 0) {
+            document.getElementById('rps-impact-summary').classList.remove('visible');
+            document.getElementById('saga-live-preview').classList.remove('visible');
+            return;
+        }
+
+        let effectiveRps = baseRps;
+        const breakdown  = [];
+
+        const sagaCb = document.getElementById('tactic-saga');
+        if (sagaCb?.checked) {
+            const comp  = parseInt(document.getElementById('input-saga-compensatable').value) || 0;
+            const ret   = parseInt(document.getElementById('input-saga-retriable').value)     || 0;
+            const pivot = parseInt(document.getElementById('input-saga-pivot').value)         || 0;
+            const steps = comp + ret + pivot;
+            if (steps > 0) {
+                effectiveRps = baseRps * steps;
+                breakdown.push(`×${steps} SAGA steps → ${effectiveRps.toLocaleString()} req/s`);
+                const preview = document.getElementById('saga-live-preview');
+                preview.innerHTML =
+                    `<i class="fas fa-calculator" style="margin-right:6px;"></i>` +
+                    `<strong>${baseRps.toLocaleString()} base RPS × ${steps} steps/instance = ` +
+                    `${effectiveRps.toLocaleString()} gRPC calls/sec</strong>`;
+                preview.classList.add('visible');
+            } else {
+                document.getElementById('saga-live-preview').classList.remove('visible');
+            }
+        } else {
+            document.getElementById('saga-live-preview').classList.remove('visible');
+        }
+
+        const retryCb = document.getElementById('tactic-retry');
+        if (retryCb?.checked) {
+            const times = parseInt(document.getElementById('input-retry-times').value) || 1;
+            const extra = baseRps * times;
+            effectiveRps += extra;
+            breakdown.push(`+${extra.toLocaleString()} from Retry (×${times})`);
+        }
+
+        const summaryEl   = document.getElementById('rps-impact-summary');
+        const displayEl   = document.getElementById('rps-adjusted-display');
+        const breakdownEl = document.getElementById('rps-breakdown-text');
+
+        if (effectiveRps !== baseRps) {
+            displayEl.textContent   = effectiveRps.toLocaleString() + ' req/s';
+            breakdownEl.textContent = 'Base: ' + baseRps.toLocaleString() + ' req/s  |  ' + breakdown.join('  |  ');
+            summaryEl.classList.add('visible');
+        } else {
+            summaryEl.classList.remove('visible');
+        }
+    }
 </script>
 </body>
 </html>
