@@ -1,19 +1,19 @@
 package com.calculator.domain.model.tactics;
 
 public record ArchitecturalTacticsContext(
-        boolean tacticClientLb,
-        boolean tacticServerLb,
-        boolean tacticTimeout,
-        int     tacticTimeoutMs,
-        boolean tacticRetry,
+        boolean reliabilityClientSideLoadBalancerTactic,
+        boolean reliabilityServerSideLoadBalancerTactic,
+        boolean resiliencyTimeoutTactic,
+        int tacticTimeoutMilliseconds,
+        boolean resiliencyRetryTactic,
         int     tacticRetryTimes,
-        boolean tacticCb,
-        int     tacticCbMinCalls,
-        int     tacticCbHalfOpen,
-        int     tacticCbWaitMs,
-        int     tacticCbFailureRate,
-        boolean tacticSaga,
-        int     tacticSagaCompensatable,
-        int     tacticSagaRetriable,
-        int     tacticSagaPivot
+        boolean resiliencyCircuitBreakerPattern,
+        int circuitBreakerPatternMinimumCalls,
+        int circuitBreakerHalfOpen,
+        int circuitBreakerWaitMilliseconds,
+        int circuitBreakerFailureRate,
+        boolean microservicesSAGAPattern,
+        int sagaCompensatableTransactions,
+        int sagaRetriableTransactions,
+        int sagaPivotTransactions
 ) { }

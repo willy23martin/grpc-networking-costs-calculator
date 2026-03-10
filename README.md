@@ -3,9 +3,21 @@ gRPC-based Microservices Networking Costs Calculator based on Protocol Buffer de
 
 This service calculates the Networking costs in AWS for a gRPC-based Mircorservices by using the Protocol Buffers definition of the service.
 
-![TCO Calculator Interface.png](src/main/resources/images/TCO%20Calculator%20Interface.png)
+![TCO Calculator select protocol.png](src/main/resources/images/TCO%20Calculator%20select%20protocol.png)
 
-![TCO Calculator Interface - Cost table.png](src/main/resources/images/TCO%20Calculator%20Interface%20-%20Cost%20table.png)
+![TCO Calculator gRPC selected and tactics.png](src/main/resources/images/TCO%20Calculator%20gRPC%20selected%20and%20tactics.png)
+
+![TCO Calculator reliability tactics.png](src/main/resources/images/TCO%20Calculator%20reliability%20tactics.png)
+
+![TCO Calculator resiliency tactics.png](src/main/resources/images/TCO%20Calculator%20resiliency%20tactics.png)
+
+![TCO Calculator microservices tactics.png](src/main/resources/images/TCO%20Calculator%20microservices%20tactics.png)
+
+![gRPC Protocol Buffer file uploader to calculate tco costs.png](src/main/resources/images/gRPC%20Protocol%20Buffer%20file%20uploader%20to%20calculate%20tco%20costs.png)
+
+![TCO Networking costs part I.png](src/main/resources/images/TCO%20Networking%20costs%20part%20I.png)
+
+![TCO Networking costs part II.png](src/main/resources/images/TCO%20Networking%20costs%20part%20II.png)
 
 ## Protocol Buffer files:
 You can find the **Protocol Buffers files** in the [protos](src/main/resources/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
@@ -25,6 +37,10 @@ in the context of an **E-Commerce microservice**:
 7. AWS tier thresholds and rates are correct for a **gRPC/EC2 workload in US East (N. Virginia)**.
 8. Define a global max repeated items in protofile like the maximum amount of messages property name: *protofile.max.repeated.items*.
 9. An **AWS account** with an **IAM user** with **permissions for consuming the AWS Pricing API** is needed.
+10. **Reliability tactics**: Client-side and server-side load balancing.
+11. **Resiliency tactics and patters**: Timeout, Retry and Circuit breaker. 
+12. **Microservices patterns**: SAGA Pattern.
+13. Some tests might be skipped as those are operating system dependent.
 
 ## How to run it?
 1. Execute ``mvn clean install -e`` from your terminal in order to generate the gRPCTCONetworkingCostCalculator **jar file**.

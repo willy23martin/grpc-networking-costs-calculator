@@ -7,11 +7,12 @@ import com.calculator.application.services.ProtocolBufferService;
 import com.calculator.domain.model.compilers.ProtocCompiler;
 import com.calculator.domain.model.properties.ProtoFileFullyQualifiedProperties;
 import com.calculator.domain.model.protofiles.ParsedProtocolBufferFile;
-import com.calculator.domain.model.request.TCOCalculatorRequestDTO;
 import com.calculator.domain.model.results.CompilationResult;
 import com.calculator.domain.model.results.JavaCompilationResult;
 import com.calculator.domain.model.results.MessageSizeCalculationResult;
 import com.calculator.domain.model.tactics.ArchitecturalTacticsContext;
+import com.calculator.domain.model.tactics.TacticsConfigDTO;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static com.calculator.infrastructure.web.rest.TacticsSessionController.SESSION_KEY;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.initializeProtoFileFullyQualifiedProperties;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.isValid;
 
@@ -40,13 +42,32 @@ public class TCOCalculatorController implements ErrorController {
     private static final double SECONDS_PER_MONTH = 2_592_000.0;
     private static final double BYTES_PER_GB      = 1_073_741_824.0;
     private static final Locale DISPLAY_LOCALE    = Locale.forLanguageTag("es-ES");
+    private static final String NO_TACTICS_CONFIGURATION_FOUND_MESSAGE =
+            """ 
+            Note: No tactic configuration found in your session.
+            Results are based on default settings (all tactics disabled).
+            Configure tactics and re-upload to get accurate results.
+            """;
+    public static final String RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE =
+            """
+            Retries gRPC packet emission under temporary outages. Increases networking costs
+            as up to N additional packets may be sent per logical request.
+            """;
+    public static final String SAGA_PATTERN_COSTS_ALTER_MESSAGE =
+            """
+            Each logical request triggers one SAGA instance. Every step in that instance 
+            is an independent gRPC call, so actual traffic = base RPS × steps per instance.
+            """;
 
     @Autowired
     AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
+
     @Autowired
     ProtocolBufferService protocolBufferService;
+
     @Autowired
     CompilationService compilationService;
+
     @Autowired
     ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
 
@@ -60,18 +81,25 @@ public class TCOCalculatorController implements ErrorController {
     }
 
     @PostMapping("/calculateTCO")
-    public String calculateProtoFileTCONetworkingCosts(TCOCalculatorRequestDTO request, Model model) {
+    public String calculateProtoFileTCONetworkingCosts(
+            @RequestParam("protoFile") MultipartFile protoFile,
+            HttpSession session,
+            Model model) {
 
-        if (request.getProtoFile() == null || request.getProtoFile().isEmpty()) {
+        if (protoFile == null || protoFile.isEmpty()) {
             model.addAttribute("uploadMessage", "No file selected for upload.");
             return "calculator";
         }
 
-        // Use the record's mapping method
-        ArchitecturalTacticsContext tactics = request.toTacticsContext();
+        TacticsConfigDTO tacticsConfiguration = (TacticsConfigDTO) session.getAttribute(SESSION_KEY);
+        if (tacticsConfiguration == null) {
+            tacticsConfiguration = TacticsConfigDTO.empty();
+            model.addAttribute("uploadMessage",
+                    NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
+        }
 
-        String view = calculateTCO(request.getRequestsPerSecond(), request.getProtoFile(), tactics, model);
-
+        ArchitecturalTacticsContext tactics = tacticsConfiguration.toTacticsContext();
+        String view = calculateTCO(tacticsConfiguration.requestsPerSecond(), protoFile, tactics, model);
         return (view != null) ? view : "calculator";
     }
 
@@ -103,10 +131,9 @@ public class TCOCalculatorController implements ErrorController {
 
                 URLClassLoader classLoader = javaResult.compilationResult().classLoader();
 
-                // Compute effective RPS after tactics adjustments, then use it for TCO
-                long effectiveRps = computeEffectiveRps(requestsPerSecond, tactics);
-                populateTacticsModel(tactics, requestsPerSecond, effectiveRps, model);
-                showTCONetworkingCosts(effectiveRps, classLoader, model, protoProps);
+                long effectiveRequestsPerSecond = compute(requestsPerSecond, tactics);
+                populateTacticsModel(tactics, requestsPerSecond, effectiveRequestsPerSecond, model);
+                showTCONetworkingCosts(effectiveRequestsPerSecond, classLoader, model, protoProps);
 
             } catch (Exception e) {
                 model.addAttribute("error", "Error: " + e.getMessage());
@@ -124,125 +151,114 @@ public class TCOCalculatorController implements ErrorController {
         return null;
     }
 
-    // ── Effective RPS after tactics ───────────────────────────────
-    //
-    // Two tactics can increase the number of actual gRPC calls per second:
-    //
-    // RETRY: Each logical request may generate up to N extra retries on failure.
-    //   effectiveRps += baseRps * retryTimes
-    //
-    // SAGA: Each logical request triggers exactly one SAGA instance.
-    //   Every step in that instance (compensatable, retriable, pivot) is an
-    //   independent gRPC call to a different microservice.
-    //   effectiveRps = baseRps * stepsPerSagaInstance  (replaces, not adds to, base)
-    //
-    //   Example: 1,000 RPS × 3 steps = 3,000 gRPC calls/sec.
-    //   This is NOT 1,000 + 3,000 = 4,000. The 3,000 already includes the original
-    //   1,000 — each of the 1,000 requests simply fans out into 3 calls.
-    //
-    // When both Retry and SAGA are active, SAGA multiplication is applied first,
-    // then retry additions are applied on top of the SAGA-multiplied value.
-    private long computeEffectiveRps(long baseRps, ArchitecturalTacticsContext t) {
-        long effective = baseRps;
+    private long compute(long baseRequestsPerSecond, ArchitecturalTacticsContext architecturalTactics) {
+        long effectiveRequestsPerSecond = baseRequestsPerSecond;
 
-        // SAGA: replace base with multiplied value
-        if (t.tacticSaga()) {
-            int steps = t.tacticSagaCompensatable() + t.tacticSagaRetriable() + t.tacticSagaPivot();
-            if (steps > 0) {
-                effective = baseRps * steps;
-            }
+        if (architecturalTactics.microservicesSAGAPattern()) {
+            effectiveRequestsPerSecond = computeSAGAPattern(baseRequestsPerSecond, architecturalTactics, effectiveRequestsPerSecond);
         }
 
-        // RETRY: additive on top of effective (which may already be SAGA-multiplied)
-        if (t.tacticRetry() && t.tacticRetryTimes() > 0) {
-            effective += baseRps * t.tacticRetryTimes();
+        if (architecturalTactics.resiliencyRetryTactic() && architecturalTactics.tacticRetryTimes() > 0) {
+            effectiveRequestsPerSecond += baseRequestsPerSecond * architecturalTactics.tacticRetryTimes();
         }
 
+        return effectiveRequestsPerSecond;
+    }
+
+    private static long computeSAGAPattern(long baseRequestsPerSecond, ArchitecturalTacticsContext architecturalTactics, long effective) {
+        int steps = architecturalTactics.sagaCompensatableTransactions() + architecturalTactics.sagaRetriableTransactions() + architecturalTactics.sagaPivotTransactions();
+        if (steps > 0) {
+            effective = baseRequestsPerSecond * steps;
+        }
         return effective;
     }
 
-    private void populateTacticsModel(ArchitecturalTacticsContext t, long baseRps, long effectiveRps, Model model) {
+    private void populateTacticsModel(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, long effectiveRequestsPerSecond, Model model) {
 
         List<Map<String, String>> infoTactics = new ArrayList<>();
-        List<Map<String, String>> rpsTactics  = new ArrayList<>();
+        List<Map<String, String>> requestsPerSecondsTactics  = new ArrayList<>();
 
-        // ── No-RPS-impact tactics ────────────────────────────────
-        if (t.tacticClientLb()) {
+        if (architecturalTactics.reliabilityClientSideLoadBalancerTactic()) {
             infoTactics.add(tacticEntry("Client-side Load Balancing", null,
                     "Balances the emission of gRPC packets across server instances."));
         }
-        if (t.tacticServerLb()) {
+        if (architecturalTactics.reliabilityServerSideLoadBalancerTactic()) {
             infoTactics.add(tacticEntry("Server-side Load Balancing", null,
                     "Balances the reception of gRPC packets across backend replicas."));
         }
-        if (t.tacticTimeout()) {
-            infoTactics.add(tacticEntry("Timeout", t.tacticTimeoutMs() + " ms",
+        if (architecturalTactics.resiliencyTimeoutTactic()) {
+            infoTactics.add(tacticEntry("Timeout", architecturalTactics.tacticTimeoutMilliseconds() + " ms",
                     "Discards lost packets and frees the client thread after the configured wait."));
         }
-        if (t.tacticCb()) {
-            String cbConfig = String.format(
-                    "Min calls: %d | Half-open calls: %d | Wait: %d ms | Failure threshold: %d%%",
-                    t.tacticCbMinCalls(), t.tacticCbHalfOpen(), t.tacticCbWaitMs(), t.tacticCbFailureRate());
-            infoTactics.add(tacticEntry("Circuit Breaker", cbConfig,
-                    "Opens the circuit when failure thresholds are exceeded, protecting downstream services."));
+        if (architecturalTactics.resiliencyCircuitBreakerPattern()) {
+            populateCircuitBreakerPattern(architecturalTactics, infoTactics);
         }
 
-        // ── RPS-impacting tactics ────────────────────────────────
-
-        // SAGA — multiplicative: each request fans out into N gRPC calls
-        if (t.tacticSaga()) {
-            int steps = t.tacticSagaCompensatable() + t.tacticSagaRetriable() + t.tacticSagaPivot();
-            String sagaConfig = String.format(
-                    "Steps per SAGA instance — Compensatable: %d | Retriable: %d | Pivot: %d | Total: %d",
-                    t.tacticSagaCompensatable(), t.tacticSagaRetriable(), t.tacticSagaPivot(), steps);
-            String impact = steps > 0
-                    ? "×" + steps + " steps → " + String.format(DISPLAY_LOCALE, "%,d", baseRps * steps) + " req/s"
-                    : "No steps configured";
-            rpsTactics.add(tacticEntry("SAGA Pattern", sagaConfig,
-                    "Each logical request triggers one SAGA instance. Every step in that instance " +
-                            "is an independent gRPC call, so actual traffic = base RPS × steps per instance.",
-                    impact));
+        if (architecturalTactics.microservicesSAGAPattern()) {
+            populateSAGAPattern(architecturalTactics, baseRequestsPerSecond, requestsPerSecondsTactics);
         }
 
-        // RETRY — additive: extra packets on top of existing traffic
-        if (t.tacticRetry()) {
-            long retryExtra = baseRps * t.tacticRetryTimes();
-            rpsTactics.add(tacticEntry("Retry", t.tacticRetryTimes() + " max retries",
-                    "Retries gRPC packet emission under temporary outages. Increases networking costs " +
-                            "as up to N additional packets may be sent per logical request.",
-                    "+" + String.format(DISPLAY_LOCALE, "%,d", retryExtra) + " req/s"));
+        if (architecturalTactics.resiliencyRetryTactic()) {
+            populateRetryTactic(architecturalTactics, baseRequestsPerSecond, requestsPerSecondsTactics);
         }
 
         model.addAttribute("infoTactics",    infoTactics);
-        model.addAttribute("rpsTactics",     rpsTactics);
-        model.addAttribute("hasTactics",     !infoTactics.isEmpty() || !rpsTactics.isEmpty());
-        model.addAttribute("baseRps",        String.format(DISPLAY_LOCALE, "%,d", baseRps));
-        model.addAttribute("effectiveRps",   String.format(DISPLAY_LOCALE, "%,d", effectiveRps));
-        model.addAttribute("rpsWasAdjusted", effectiveRps != baseRps);
+        model.addAttribute("rpsTactics",     requestsPerSecondsTactics);
+        model.addAttribute("hasTactics",     !infoTactics.isEmpty() || !requestsPerSecondsTactics.isEmpty());
+        model.addAttribute("baseRps",        String.format(DISPLAY_LOCALE, "%,d", baseRequestsPerSecond));
+        model.addAttribute("effectiveRps",   String.format(DISPLAY_LOCALE, "%,d", effectiveRequestsPerSecond));
+        model.addAttribute("rpsWasAdjusted", effectiveRequestsPerSecond != baseRequestsPerSecond);
+    }
+
+    private void populateCircuitBreakerPattern(ArchitecturalTacticsContext architecturalTactics, List<Map<String, String>> infoTactics) {
+        String cbConfig = String.format(
+                "Min calls: %d | Half-open calls: %d | Wait: %d ms | Failure threshold: %d%%",
+                architecturalTactics.circuitBreakerPatternMinimumCalls(), architecturalTactics.circuitBreakerHalfOpen(), architecturalTactics.circuitBreakerWaitMilliseconds(), architecturalTactics.circuitBreakerFailureRate());
+        infoTactics.add(tacticEntry("Circuit Breaker", cbConfig,
+                "Opens the circuit when failure thresholds are exceeded, protecting downstream services."));
+    }
+
+    private void populateRetryTactic(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, List<Map<String, String>> requestsPerSecondTactics) {
+        long retryExtra = baseRequestsPerSecond * architecturalTactics.tacticRetryTimes();
+        requestsPerSecondTactics.add(tacticEntry("Retry", architecturalTactics.tacticRetryTimes() + " max retries",
+                RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE,
+                "+" + String.format(DISPLAY_LOCALE, "%,d", retryExtra) + " req/s"));
+    }
+
+    private void populateSAGAPattern(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, List<Map<String, String>> requestsPerSecondTactics) {
+        int steps = architecturalTactics.sagaCompensatableTransactions() + architecturalTactics.sagaRetriableTransactions() + architecturalTactics.sagaPivotTransactions();
+        String sagaConfig = String.format(
+                "Steps per SAGA instance — Compensatable: %d | Retriable: %d | Pivot: %d | Total: %d",
+                architecturalTactics.sagaCompensatableTransactions(), architecturalTactics.sagaRetriableTransactions(), architecturalTactics.sagaPivotTransactions(), steps);
+        String impact = steps > 0
+                ? "×" + steps + " steps → " + String.format(DISPLAY_LOCALE, "%,d", baseRequestsPerSecond * steps) + " req/s"
+                : "No steps configured";
+        requestsPerSecondTactics.add(tacticEntry("SAGA Pattern", sagaConfig,
+                SAGA_PATTERN_COSTS_ALTER_MESSAGE,
+                impact));
     }
 
     private Map<String, String> tacticEntry(String name, String value, String description) {
         return tacticEntry(name, value, description, null);
     }
 
-    private Map<String, String> tacticEntry(String name, String value, String description, String rpsImpact) {
+    private Map<String, String> tacticEntry(String name, String value, String description, String requestsPerSecondImpact) {
         Map<String, String> entry = new LinkedHashMap<>();
         entry.put("name",        name);
         entry.put("value",       value != null ? value : "—");
         entry.put("description", description);
-        entry.put("rpsImpact",   rpsImpact != null ? rpsImpact : "");
+        entry.put("rpsImpact",   requestsPerSecondImpact != null ? requestsPerSecondImpact : "");
         return entry;
     }
 
-    // ── TCO costs ─────────────────────────────────────────────────
-    private void showTCONetworkingCosts(long effectiveRps, URLClassLoader classLoader,
+    private void showTCONetworkingCosts(long effectiveRequestsPerSecond, URLClassLoader classLoader,
                                         Model model, ProtoFileFullyQualifiedProperties protoProps) {
-        MessageSizeCalculationResult req  = calculateRequestMessageSize(model,  classLoader, protoProps.fullRequestMessageClassName());
-        MessageSizeCalculationResult resp = calculateResponseMessageSize(model, classLoader, protoProps.fullResponseMessageClassName());
+        MessageSizeCalculationResult requestMessageSize  = calculateRequestMessageSize(model,  classLoader, protoProps.fullRequestMessageClassName());
+        MessageSizeCalculationResult responseMessageSize = calculateResponseMessageSize(model, classLoader, protoProps.fullResponseMessageClassName());
 
-        long   requestsPerMonth    = (long) (effectiveRps * SECONDS_PER_MONTH);
-        double requestGbPerMonth   = (req.size()  * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
-        double responseGbPerMonth  = (resp.size() * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
+        long requestsPerMonth = (long) (effectiveRequestsPerSecond * SECONDS_PER_MONTH);
+        double requestGbPerMonth   = (requestMessageSize.size()  * effectiveRequestsPerSecond * SECONDS_PER_MONTH) / BYTES_PER_GB;
+        double responseGbPerMonth  = (responseMessageSize.size() * effectiveRequestsPerSecond * SECONDS_PER_MONTH) / BYTES_PER_GB;
         double dataTransferCostUsd = awsDataTransferCostCalculationService.calculateDataTransferCost(responseGbPerMonth);
 
         model.addAttribute("requestsPerMonth",    String.format(DISPLAY_LOCALE, "%,d",   requestsPerMonth));
@@ -282,16 +298,16 @@ public class TCOCalculatorController implements ErrorController {
 
     private MessageSizeCalculationResult calculateRequestMessageSize(
             Model model, URLClassLoader classLoader, String fullClassName) {
-        MessageSizeCalculationResult result = new MessageSizeCalculationResult(null, 0);
+        MessageSizeCalculationResult messageSizeCalculationResult = new MessageSizeCalculationResult(null, 0);
         try {
-            result = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
-            model.addAttribute("requestSize", result.size());
+            messageSizeCalculationResult = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
+            model.addAttribute("requestSize", messageSizeCalculationResult.size());
         } catch (Exception e) {
             log.warning(e.getMessage());
             model.addAttribute("requestSize", 0);
             model.addAttribute("requestMessageError", "Failed to calculate max request size: " + e.getMessage());
         }
-        return result;
+        return messageSizeCalculationResult;
     }
 
     private MessageSizeCalculationResult calculateResponseMessageSize(
@@ -331,8 +347,12 @@ public class TCOCalculatorController implements ErrorController {
         if (protocolBufferFileDirectory != null) {
             try (Stream<Path> walk = Files.walk(protocolBufferFileDirectory)) {
                 walk.sorted(Comparator.reverseOrder()).forEach(p -> {
-                    try { Files.deleteIfExists(p); }
-                    catch (IOException e) { throw new UncheckedIOException("Failed to delete: " + p, e); }
+                    try {
+                        Files.deleteIfExists(p);
+                    }
+                    catch (IOException e) {
+                        throw new UncheckedIOException("Failed to delete: " + p, e);
+                    }
                 });
             } catch (UncheckedIOException | IOException e) {
                 model.addAttribute("error", "Cleanup error: " + e.getMessage());

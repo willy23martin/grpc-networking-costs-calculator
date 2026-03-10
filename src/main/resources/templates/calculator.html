@@ -389,26 +389,11 @@
 <div id="grpcOptions" class="card hidden">
     <h2>gRPC ProtocolBuffer file definition (IDL)</h2>
     <p>You have selected gRPC. Please upload your .proto file.</p>
+    <!-- Only the file travels in this multipart request.
+         Tactic parameters are saved to the server session via POST /api/session/tactics
+         (JSON, fired debounced on every input change) so that the upload form carries
+         exactly one part — eliminating FileCountLimitExceededException. -->
     <form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data">
-        <input type="hidden" id="requestsPerSecondHidden" name="requestsPerSecond" value="0"/>
-        <!-- Reliability -->
-        <input type="hidden" id="h-client-lb"   name="tacticClientLb"   value="false"/>
-        <input type="hidden" id="h-server-lb"   name="tacticServerLb"   value="false"/>
-        <!-- Resiliency -->
-        <input type="hidden" id="h-timeout"     name="tacticTimeout"       value="false"/>
-        <input type="hidden" id="h-timeout-ms"  name="tacticTimeoutMs"     value="0"/>
-        <input type="hidden" id="h-retry"       name="tacticRetry"         value="false"/>
-        <input type="hidden" id="h-retry-times" name="tacticRetryTimes"    value="0"/>
-        <input type="hidden" id="h-cb"          name="tacticCb"            value="false"/>
-        <input type="hidden" id="h-cb-min"      name="tacticCbMinCalls"    value="0"/>
-        <input type="hidden" id="h-cb-half"     name="tacticCbHalfOpen"    value="0"/>
-        <input type="hidden" id="h-cb-wait"     name="tacticCbWaitMs"      value="0"/>
-        <input type="hidden" id="h-cb-rate"     name="tacticCbFailureRate" value="0"/>
-        <!-- Microservices -->
-        <input type="hidden" id="h-saga"         name="tacticSaga"              value="false"/>
-        <input type="hidden" id="h-saga-comp"    name="tacticSagaCompensatable" value="0"/>
-        <input type="hidden" id="h-saga-ret"     name="tacticSagaRetriable"     value="0"/>
-        <input type="hidden" id="h-saga-pivot"   name="tacticSagaPivot"         value="0"/>
 
         <label for="protoFile">Upload .proto file:</label>
         <div class="file-upload-wrapper">
@@ -607,53 +592,110 @@
             hideDynamicInfoMessage();
         });
 
-        // ── Sync all tactic values into hidden inputs on submit ──────
-        uploadForm.addEventListener('submit', () => {
-            const baseRps = parseInt(document.getElementById('requestsPerSecond').value) || 0;
+        // ── Auto-save tactics to server session (debounced, 400 ms) ─────────
+        // Tactics are sent as JSON to POST /api/session/tactics so that the
+        // upload form carries only the proto file — no extra multipart parts.
+        let saveTimer = null;
+        function scheduleSave() {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveTacticsToSession, 400);
+        }
 
-            document.getElementById('h-client-lb').value = document.getElementById('tactic-client-lb').checked;
-            document.getElementById('h-server-lb').value = document.getElementById('tactic-server-lb').checked;
+        function collectTacticsDTO() {
+            return {
+                requestsPerSecond:       parseInt(document.getElementById('requestsPerSecond').value) || 0,
+                reliabilityClientSideLoadBalancerTactic:          document.getElementById('tactic-client-lb').checked,
+                reliabilityServerSideLoadBalancerTactic:          document.getElementById('tactic-server-lb').checked,
+                resiliencyTimeoutTactic:           document.getElementById('tactic-timeout').checked,
+                tacticTimeoutMilliseconds:         parseInt(document.getElementById('input-timeout').value) || 0,
+                resiliencyRetryTactic:             document.getElementById('tactic-retry').checked,
+                tacticRetryTimes:        parseInt(document.getElementById('input-retry-times').value) || 0,
+                resiliencyCircuitBreakerPattern:                document.getElementById('tactic-cb').checked,
+                circuitBreakerPatternMinimumCalls:        parseInt(document.getElementById('input-cb-min-calls').value) || 0,
+                circuitBreakerHalfOpen:        parseInt(document.getElementById('input-cb-half-open').value) || 0,
+                circuitBreakerWaitMilliseconds:          parseInt(document.getElementById('input-cb-wait').value) || 0,
+                circuitBreakerFailureRate:     parseInt(document.getElementById('input-cb-failure-rate').value) || 0,
+                microservicesSAGAPattern:              document.getElementById('tactic-saga').checked,
+                sagaCompensatableTransactions: parseInt(document.getElementById('input-saga-compensatable').value) || 0,
+                sagaRetriableTransactions:     parseInt(document.getElementById('input-saga-retriable').value) || 0,
+                sagaPivotTransactions:         parseInt(document.getElementById('input-saga-pivot').value) || 0
+            };
+        }
 
-            const timeout    = document.getElementById('tactic-timeout').checked;
-            const timeoutMs  = document.getElementById('input-timeout').value     || 0;
-            const retry      = document.getElementById('tactic-retry').checked;
-            const retryTimes = document.getElementById('input-retry-times').value || 0;
-            const cb         = document.getElementById('tactic-cb').checked;
-            document.getElementById('h-timeout').value     = timeout;
-            document.getElementById('h-timeout-ms').value  = timeoutMs;
-            document.getElementById('h-retry').value       = retry;
-            document.getElementById('h-retry-times').value = retryTimes;
-            document.getElementById('h-cb').value          = cb;
-            document.getElementById('h-cb-min').value      = document.getElementById('input-cb-min-calls').value   || 0;
-            document.getElementById('h-cb-half').value     = document.getElementById('input-cb-half-open').value   || 0;
-            document.getElementById('h-cb-wait').value     = document.getElementById('input-cb-wait').value        || 0;
-            document.getElementById('h-cb-rate').value     = document.getElementById('input-cb-failure-rate').value || 0;
-
-            const saga      = document.getElementById('tactic-saga').checked;
-            const sagaComp  = parseInt(document.getElementById('input-saga-compensatable').value) || 0;
-            const sagaRet   = parseInt(document.getElementById('input-saga-retriable').value)     || 0;
-            const sagaPivot = parseInt(document.getElementById('input-saga-pivot').value)         || 0;
-            document.getElementById('h-saga').value       = saga;
-            document.getElementById('h-saga-comp').value  = sagaComp;
-            document.getElementById('h-saga-ret').value   = sagaRet;
-            document.getElementById('h-saga-pivot').value = sagaPivot;
-
-            // Mirror the server-side computeEffectiveRps logic exactly:
-            // 1. SAGA is multiplicative  → effectiveRps = baseRps × stepsPerInstance
-            // 2. Retry is additive       → effectiveRps += baseRps × retryTimes
-            let effectiveRps = baseRps;
-            if (saga) {
-                const steps = sagaComp + sagaRet + sagaPivot;
-                if (steps > 0) effectiveRps = baseRps * steps;
+        async function saveTacticsToSession() {
+            try {
+                await fetch('/api/session/tactics', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(collectTacticsDTO())
+                });
+            } catch (err) {
+                console.warn('Failed to save tactics to session:', err);
             }
-            if (retry) {
-                effectiveRps += baseRps * parseInt(retryTimes || 1);
-            }
-            document.getElementById('requestsPerSecondHidden').value = effectiveRps || baseRps;
+        }
+
+        // Attach debounced save to every tactic control
+        document.querySelectorAll(
+            '#requestsPerSecond, .tactic-check, ' +
+            '#input-timeout, #input-retry-times, ' +
+            '#input-cb-min-calls, #input-cb-half-open, #input-cb-wait, #input-cb-failure-rate, ' +
+            '#input-saga-compensatable, #input-saga-retriable, #input-saga-pivot'
+        ).forEach(el => {
+            el.addEventListener('change', scheduleSave);
+            el.addEventListener('input',  scheduleSave);
+        });
+
+        // ── Page-load restore from session ────────────────────────────
+        (async () => {
+            try {
+                const res = await fetch('/api/session/tactics');
+                if (!res.ok) return;
+                const dto = await res.json();
+                if (!dto || dto.requestsPerSecond === 0) return;
+
+                document.getElementById('requestsPerSecond').value = dto.requestsPerSecond;
+
+                const setCheck = (id, val) => { document.getElementById(id).checked = val; };
+                const setVal   = (id, val) => { document.getElementById(id).value   = val || ''; };
+
+                setCheck('tactic-client-lb', dto.reliabilityClientSideLoadBalancerTactic);
+                setCheck('tactic-server-lb', dto.reliabilityServerSideLoadBalancerTactic);
+                setCheck('tactic-timeout',   dto.resiliencyTimeoutTactic);
+                setVal('input-timeout', dto.tacticTimeoutMilliseconds);
+                document.getElementById('input-timeout').disabled = !dto.resiliencyTimeoutTactic;
+
+                setCheck('tactic-retry', dto.resiliencyRetryTactic);
+                setVal('input-retry-times', dto.tacticRetryTimes);
+                document.getElementById('input-retry-times').disabled = !dto.resiliencyRetryTactic;
+
+                setCheck('tactic-cb', dto.resiliencyCircuitBreakerPattern);
+                if (dto.resiliencyCircuitBreakerPattern) {
+                    toggleCbParams(true);
+                    setVal('input-cb-min-calls',    dto.circuitBreakerPatternMinimumCalls);
+                    setVal('input-cb-half-open',    dto.circuitBreakerHalfOpen);
+                    setVal('input-cb-wait',         dto.circuitBreakerWaitMilliseconds);
+                    setVal('input-cb-failure-rate', dto.circuitBreakerFailureRate);
+                }
+
+                setCheck('tactic-saga', dto.microservicesSAGAPattern);
+                if (dto.microservicesSAGAPattern) {
+                    toggleSagaParams(true);
+                    setVal('input-saga-compensatable', dto.sagaCompensatableTransactions);
+                    setVal('input-saga-retriable',     dto.sagaRetriableTransactions);
+                    setVal('input-saga-pivot',         dto.sagaPivotTransactions);
+                }
+
+                recalculateRps();
+            } catch (_) { /* no session yet — silently skip */ }
+        })();
+
+        // ── On submit: fire an immediate save, then show loader ───────
+        uploadForm.addEventListener('submit', (e) => {
+            saveTacticsToSession(); // best-effort sync before multipart lands
 
             document.getElementById('loadingBar').classList.add('visible');
             const submitBtn = document.getElementById('uploadSubmitBtn');
-            submitBtn.disabled = true;
+            submitBtn.disabled    = true;
             submitBtn.textContent = 'Uploading…';
         });
 
