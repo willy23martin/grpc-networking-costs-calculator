@@ -1,7 +1,6 @@
 package com.calculator.domain.model.tactics.resiliency;
 
-public record RetryTactic(
+public record RetryPattern(
         boolean resiliencyRetryTactic,
-        int  tacticRetryTimes
-) {
-}
+        int tacticRetryTimes
+) { }

@@ -70,8 +70,6 @@
         @keyframes indeterminate { 0% { width:0%; margin-left:0%; } 50% { width:60%; margin-left:20%; } 100% { width:0%; margin-left:100%; } }
         #uploadSubmitBtn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .hero-background { position: fixed; top: 0; left: 0; width: 100%; height: 200px; background: linear-gradient(to right, #CCE0FF, #E0ECF8); z-index: -1; opacity: 0.7; }
-
-        /* ── Tactics input card ── */
         .tactics-card { background-color: var(--custom-bg-card); padding: 35px; border-radius: 12px; box-shadow: 0 8px 25px var(--custom-shadow-soft); width: 100%; max-width: 700px; margin-bottom: 30px; box-sizing: border-box; }
         .tactics-category { border: 1px solid var(--custom-border-subtle); border-radius: 10px; margin-bottom: 14px; overflow: hidden; transition: box-shadow 0.2s ease; }
         .tactics-category:hover { box-shadow: 0 4px 14px var(--custom-shadow-soft); }
@@ -105,20 +103,7 @@
         .rps-impact-summary.visible { display: block; animation: fadeInSlideUp 0.3s forwards ease-out; }
         .rps-impact-summary .rps-total { font-size: 1.1rem; font-weight: 700; }
         .rps-impact-summary .rps-breakdown { margin-top: 6px; font-size: 0.82rem; color: var(--custom-text-medium); font-weight: 400; }
-
-        /* ── SAGA educational explainer ── */
-        .saga-explainer {
-            display: none;
-            margin: 12px 0 4px;
-            padding: 14px 16px;
-            border-radius: 9px;
-            background: linear-gradient(135deg, #fffbf0, #fff8e6);
-            border: 1px solid var(--custom-accent-gold);
-            font-size: 0.88rem;
-            line-height: 1.55;
-            color: var(--custom-text-dark);
-            animation: fadeInSlideUp 0.3s forwards ease-out;
-        }
+        .saga-explainer { display: none; margin: 12px 0 4px; padding: 14px 16px; border-radius: 9px; background: linear-gradient(135deg, #fffbf0, #fff8e6); border: 1px solid var(--custom-accent-gold); font-size: 0.88rem; line-height: 1.55; color: var(--custom-text-dark); animation: fadeInSlideUp 0.3s forwards ease-out; }
         .saga-explainer.visible { display: block; }
         .saga-explainer-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--custom-accent-blue); margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
         .saga-explainer p { margin: 0 0 7px; }
@@ -128,8 +113,6 @@
         .saga-explainer .example-row .ex-icon { flex-shrink: 0; margin-top: 1px; }
         .saga-live-preview { display: none; margin-top: 10px; padding: 9px 14px; border-radius: 7px; background-color: var(--custom-info-bg); border: 1px solid #b8cce8; font-size: 0.87rem; color: var(--custom-accent-blue); font-weight: 500; }
         .saga-live-preview.visible { display: block; }
-
-        /* ── Tactics summary in results ── */
         .tactics-summary-section { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 2px solid var(--custom-border-subtle); }
         .tactics-summary-title { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--custom-accent-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         .tactics-group-label { font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--custom-text-medium); margin: 14px 0 8px; }
@@ -161,7 +144,6 @@
 <div class="hero-background"></div>
 <h1>gRPC-based MACH Architecture TCO Networking Costs Calculator</h1>
 
-<!-- ── Service Type Selection ── -->
 <div class="card">
     <h2>Service Type Selection</h2>
     <form>
@@ -182,7 +164,6 @@
     </form>
 </div>
 
-<!-- ── Architecture Tactics & Patterns ── -->
 <div id="tacticsCard" class="tactics-card hidden">
     <h2>Architecture Tactics &amp; Patterns</h2>
     <p style="font-size:0.92rem;color:var(--custom-text-medium);margin-bottom:20px;text-align:center;">
@@ -190,7 +171,6 @@
         automatically adjust the estimated request volume shown below.
     </p>
 
-    <!-- 1. Reliability -->
     <div class="tactics-category">
         <div class="tactics-category-header" onclick="toggleCategory('reliability')">
             <span class="tactics-category-title"><span class="category-icon">🛡️</span> Reliability Tactics</span>
@@ -219,7 +199,6 @@
         </div>
     </div>
 
-    <!-- 2. Resiliency -->
     <div class="tactics-category">
         <div class="tactics-category-header" onclick="toggleCategory('resiliency')">
             <span class="tactics-category-title"><span class="category-icon">🔄</span> Resiliency Patterns</span>
@@ -287,7 +266,6 @@
         </div>
     </div>
 
-    <!-- 3. Microservices -->
     <div class="tactics-category">
         <div class="tactics-category-header" onclick="toggleCategory('microservices')">
             <span class="tactics-category-title"><span class="category-icon">🧩</span> Microservices Patterns &amp; Tactics</span>
@@ -305,7 +283,6 @@
                 </div>
             </div>
 
-            <!-- SAGA educational explainer — shown when SAGA is checked -->
             <div class="saga-explainer" id="saga-explainer">
                 <div class="saga-explainer-title">
                     <i class="fas fa-graduation-cap"></i> How SAGA affects your gRPC traffic
@@ -369,8 +346,6 @@
                         <span class="tactic-unit">steps</span>
                     </div>
                 </div>
-
-                <!-- Live preview of SAGA multiplication -->
                 <div class="saga-live-preview" id="saga-live-preview"></div>
             </div>
 
@@ -378,23 +353,16 @@
         </div>
     </div>
 
-    <!-- RPS Impact Summary -->
     <div class="rps-impact-summary" id="rps-impact-summary">
         <div>Estimated effective RPS: <span class="rps-total" id="rps-adjusted-display">—</span></div>
         <div class="rps-breakdown" id="rps-breakdown-text"></div>
     </div>
 </div>
 
-<!-- ── gRPC Proto Upload ── -->
 <div id="grpcOptions" class="card hidden">
     <h2>gRPC ProtocolBuffer file definition (IDL)</h2>
     <p>You have selected gRPC. Please upload your .proto file.</p>
-    <!-- Only the file travels in this multipart request.
-         Tactic parameters are saved to the server session via POST /api/session/tactics
-         (JSON, fired debounced on every input change) so that the upload form carries
-         exactly one part — eliminating FileCountLimitExceededException. -->
     <form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data">
-
         <label for="protoFile">Upload .proto file:</label>
         <div class="file-upload-wrapper">
             <button type="button" class="file-upload-button" onclick="document.getElementById('protoFile').click()">
@@ -411,14 +379,12 @@
     </form>
 </div>
 
-<!-- ── Server messages ── -->
 <div id="serverUploadMessage" th:if="${uploadMessage != null}" style="display:none;"
      th:class="'message ' + ${uploadMessage.contains('successfully') ? 'success' : 'error'}">
     <i class="fas icon" th:classappend="${uploadMessage.contains('successfully') ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
     <p th:text="${uploadMessage}"></p>
 </div>
 
-<!-- ── Results ── -->
 <div id="serverResultsSection" th:if="${error != null || requestSize != null}" class="results-section hidden">
 
     <div th:if="${error != null}" class="message error" style="margin-top:0;">
@@ -429,13 +395,11 @@
     <div th:if="${requestSize != null}">
         <h2>TCO Networking Costs</h2>
 
-        <!-- ══ TACTICS SUMMARY — above TCO table ══ -->
         <div class="tactics-summary-section" th:if="${hasTactics}">
             <div class="tactics-summary-title">
                 <i class="fas fa-layer-group"></i> Applied Architecture Tactics &amp; Patterns
             </div>
 
-            <!-- No-RPS-impact group -->
             <div th:if="${not #lists.isEmpty(infoTactics)}">
                 <div class="tactics-group-label">ℹ️ Informational — No RPS Impact</div>
                 <table class="tactics-summary-table">
@@ -453,7 +417,6 @@
                 </table>
             </div>
 
-            <!-- RPS-impacting group -->
             <div th:if="${not #lists.isEmpty(rpsTactics)}">
                 <div class="tactics-group-label">⚠️ RPS-Impacting — Increases Networking Costs</div>
                 <table class="tactics-summary-table">
@@ -471,7 +434,6 @@
                 </table>
             </div>
 
-            <!-- RPS adjustment banner -->
             <div class="rps-adjustment-banner" th:if="${rpsWasAdjusted}">
                 <i class="fas fa-chart-line banner-icon"></i>
                 <div class="banner-body">
@@ -489,9 +451,7 @@
                 </div>
             </div>
         </div>
-        <!-- ══ END TACTICS SUMMARY ══ -->
 
-        <!-- TCO Table -->
         <table class="results-table">
             <thead><tr>
                 <th>Message Type</th>
@@ -592,10 +552,8 @@
             hideDynamicInfoMessage();
         });
 
-        // ── Auto-save tactics to server session (debounced, 400 ms) ─────────
-        // Tactics are sent as JSON to POST /api/session/tactics so that the
-        // upload form carries only the proto file — no extra multipart parts.
         let saveTimer = null;
+
         function scheduleSave() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(saveTacticsToSession, 400);
@@ -603,22 +561,32 @@
 
         function collectTacticsDTO() {
             return {
-                requestsPerSecond:       parseInt(document.getElementById('requestsPerSecond').value) || 0,
-                reliabilityClientSideLoadBalancerTactic:          document.getElementById('tactic-client-lb').checked,
-                reliabilityServerSideLoadBalancerTactic:          document.getElementById('tactic-server-lb').checked,
-                resiliencyTimeoutTactic:           document.getElementById('tactic-timeout').checked,
-                tacticTimeoutMilliseconds:         parseInt(document.getElementById('input-timeout').value) || 0,
-                resiliencyRetryTactic:             document.getElementById('tactic-retry').checked,
-                tacticRetryTimes:        parseInt(document.getElementById('input-retry-times').value) || 0,
-                resiliencyCircuitBreakerPattern:                document.getElementById('tactic-cb').checked,
-                circuitBreakerPatternMinimumCalls:        parseInt(document.getElementById('input-cb-min-calls').value) || 0,
-                circuitBreakerHalfOpen:        parseInt(document.getElementById('input-cb-half-open').value) || 0,
-                circuitBreakerWaitMilliseconds:          parseInt(document.getElementById('input-cb-wait').value) || 0,
-                circuitBreakerFailureRate:     parseInt(document.getElementById('input-cb-failure-rate').value) || 0,
-                microservicesSAGAPattern:              document.getElementById('tactic-saga').checked,
-                sagaCompensatableTransactions: parseInt(document.getElementById('input-saga-compensatable').value) || 0,
-                sagaRetriableTransactions:     parseInt(document.getElementById('input-saga-retriable').value) || 0,
-                sagaPivotTransactions:         parseInt(document.getElementById('input-saga-pivot').value) || 0
+                requestsPerSecond: parseInt(document.getElementById('requestsPerSecond').value) || 0,
+                reliabilityTactics: {
+                    reliabilityClientSideLoadBalancerTactic: document.getElementById('tactic-client-lb').checked,
+                    reliabilityServerSideLoadBalancerTactic: document.getElementById('tactic-server-lb').checked
+                },
+                timeoutTactic: {
+                    resiliencyTimeoutTactic:   document.getElementById('tactic-timeout').checked,
+                    tacticTimeoutMilliseconds: parseInt(document.getElementById('input-timeout').value) || 0
+                },
+                retryTactic: {
+                    resiliencyRetryTactic: document.getElementById('tactic-retry').checked,
+                    tacticRetryTimes:      parseInt(document.getElementById('input-retry-times').value) || 0
+                },
+                circuitBreakerTactic: {
+                    resiliencyCircuitBreakerPattern:   document.getElementById('tactic-cb').checked,
+                    circuitBreakerPatternMinimumCalls: parseInt(document.getElementById('input-cb-min-calls').value) || 0,
+                    circuitBreakerHalfOpen:            parseInt(document.getElementById('input-cb-half-open').value) || 0,
+                    circuitBreakerWaitMilliseconds:    parseInt(document.getElementById('input-cb-wait').value) || 0,
+                    circuitBreakerFailureRate:         parseInt(document.getElementById('input-cb-failure-rate').value) || 0
+                },
+                sagaPattern: {
+                    microservicesSAGAPattern:      document.getElementById('tactic-saga').checked,
+                    sagaCompensatableTransactions: parseInt(document.getElementById('input-saga-compensatable').value) || 0,
+                    sagaRetriableTransactions:     parseInt(document.getElementById('input-saga-retriable').value) || 0,
+                    sagaPivotTransactions:         parseInt(document.getElementById('input-saga-pivot').value) || 0
+                }
             };
         }
 
@@ -634,7 +602,6 @@
             }
         }
 
-        // Attach debounced save to every tactic control
         document.querySelectorAll(
             '#requestsPerSecond, .tactic-check, ' +
             '#input-timeout, #input-retry-times, ' +
@@ -645,7 +612,6 @@
             el.addEventListener('input',  scheduleSave);
         });
 
-        // ── Page-load restore from session ────────────────────────────
         (async () => {
             try {
                 const res = await fetch('/api/session/tactics');
@@ -658,48 +624,46 @@
                 const setCheck = (id, val) => { document.getElementById(id).checked = val; };
                 const setVal   = (id, val) => { document.getElementById(id).value   = val || ''; };
 
-                setCheck('tactic-client-lb', dto.reliabilityClientSideLoadBalancerTactic);
-                setCheck('tactic-server-lb', dto.reliabilityServerSideLoadBalancerTactic);
-                setCheck('tactic-timeout',   dto.resiliencyTimeoutTactic);
-                setVal('input-timeout', dto.tacticTimeoutMilliseconds);
-                document.getElementById('input-timeout').disabled = !dto.resiliencyTimeoutTactic;
+                setCheck('tactic-client-lb', dto.reliabilityTactics.reliabilityClientSideLoadBalancerTactic);
+                setCheck('tactic-server-lb', dto.reliabilityTactics.reliabilityServerSideLoadBalancerTactic);
 
-                setCheck('tactic-retry', dto.resiliencyRetryTactic);
-                setVal('input-retry-times', dto.tacticRetryTimes);
-                document.getElementById('input-retry-times').disabled = !dto.resiliencyRetryTactic;
+                setCheck('tactic-timeout', dto.timeoutTactic.resiliencyTimeoutTactic);
+                setVal('input-timeout',    dto.timeoutTactic.tacticTimeoutMilliseconds);
+                document.getElementById('input-timeout').disabled = !dto.timeoutTactic.resiliencyTimeoutTactic;
 
-                setCheck('tactic-cb', dto.resiliencyCircuitBreakerPattern);
-                if (dto.resiliencyCircuitBreakerPattern) {
+                setCheck('tactic-retry',    dto.retryTactic.resiliencyRetryTactic);
+                setVal('input-retry-times', dto.retryTactic.tacticRetryTimes);
+                document.getElementById('input-retry-times').disabled = !dto.retryTactic.resiliencyRetryTactic;
+
+                setCheck('tactic-cb', dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern);
+                if (dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern) {
                     toggleCbParams(true);
-                    setVal('input-cb-min-calls',    dto.circuitBreakerPatternMinimumCalls);
-                    setVal('input-cb-half-open',    dto.circuitBreakerHalfOpen);
-                    setVal('input-cb-wait',         dto.circuitBreakerWaitMilliseconds);
-                    setVal('input-cb-failure-rate', dto.circuitBreakerFailureRate);
+                    setVal('input-cb-min-calls',    dto.circuitBreakerTactic.circuitBreakerPatternMinimumCalls);
+                    setVal('input-cb-half-open',    dto.circuitBreakerTactic.circuitBreakerHalfOpen);
+                    setVal('input-cb-wait',         dto.circuitBreakerTactic.circuitBreakerWaitMilliseconds);
+                    setVal('input-cb-failure-rate', dto.circuitBreakerTactic.circuitBreakerFailureRate);
                 }
 
-                setCheck('tactic-saga', dto.microservicesSAGAPattern);
-                if (dto.microservicesSAGAPattern) {
+                setCheck('tactic-saga', dto.sagaPattern.microservicesSAGAPattern);
+                if (dto.sagaPattern.microservicesSAGAPattern) {
                     toggleSagaParams(true);
-                    setVal('input-saga-compensatable', dto.sagaCompensatableTransactions);
-                    setVal('input-saga-retriable',     dto.sagaRetriableTransactions);
-                    setVal('input-saga-pivot',         dto.sagaPivotTransactions);
+                    setVal('input-saga-compensatable', dto.sagaPattern.sagaCompensatableTransactions);
+                    setVal('input-saga-retriable',     dto.sagaPattern.sagaRetriableTransactions);
+                    setVal('input-saga-pivot',         dto.sagaPattern.sagaPivotTransactions);
                 }
 
                 recalculateRps();
-            } catch (_) { /* no session yet — silently skip */ }
+            } catch (_) {}
         })();
 
-        // ── On submit: fire an immediate save, then show loader ───────
-        uploadForm.addEventListener('submit', (e) => {
-            saveTacticsToSession(); // best-effort sync before multipart lands
-
+        uploadForm.addEventListener('submit', () => {
+            saveTacticsToSession();
             document.getElementById('loadingBar').classList.add('visible');
             const submitBtn = document.getElementById('uploadSubmitBtn');
             submitBtn.disabled    = true;
             submitBtn.textContent = 'Uploading…';
         });
 
-        // ── Info banners for no-rps-impact checkboxes ────────────────
         document.querySelectorAll('.tactic-check.no-rps-impact').forEach(checkbox => {
             checkbox.addEventListener('change', () => {
                 const cat        = checkbox.dataset.category;
@@ -723,7 +687,6 @@
         }
     });
 
-    // ── Accordion ────────────────────────────────────────────────────
     function toggleCategory(id) {
         const body   = document.getElementById('body-' + id);
         const header = body.previousElementSibling;
@@ -747,9 +710,6 @@
         recalculateRps();
     }
 
-    // ── RPS recalculation — mirrors server-side computeEffectiveRps ──
-    // SAGA:  multiplicative → effectiveRps = baseRps × stepsPerInstance
-    // Retry: additive       → effectiveRps += baseRps × retryTimes
     function recalculateRps() {
         const baseRps = parseInt(document.getElementById('requestsPerSecond').value) || 0;
         if (baseRps === 0) {
@@ -761,7 +721,6 @@
         let effectiveRps = baseRps;
         const breakdown  = [];
 
-        // SAGA — multiplicative
         const sagaCb = document.getElementById('tactic-saga');
         if (sagaCb?.checked) {
             const comp  = parseInt(document.getElementById('input-saga-compensatable').value) || 0;
@@ -771,8 +730,6 @@
             if (steps > 0) {
                 effectiveRps = baseRps * steps;
                 breakdown.push(`×${steps} SAGA steps → ${effectiveRps.toLocaleString()} req/s`);
-
-                // Live preview inside the SAGA sub-params
                 const preview = document.getElementById('saga-live-preview');
                 preview.innerHTML =
                     `<i class="fas fa-calculator" style="margin-right:6px;"></i>` +
@@ -786,7 +743,6 @@
             document.getElementById('saga-live-preview').classList.remove('visible');
         }
 
-        // Retry — additive on top of whatever effectiveRps is now
         const retryCb = document.getElementById('tactic-retry');
         if (retryCb?.checked) {
             const times = parseInt(document.getElementById('input-retry-times').value) || 1;

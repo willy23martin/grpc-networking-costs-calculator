@@ -1,10 +1,9 @@
 package com.calculator.domain.model.tactics.resiliency;
 
-public record CircuitBreakerTactic(
+public record CircuitBreakerPattern(
         boolean resiliencyCircuitBreakerPattern,
         int circuitBreakerPatternMinimumCalls,
         int circuitBreakerHalfOpen,
-        int circuitBreakerWaitMilliseconds,
+        long circuitBreakerWaitMilliseconds,
         int circuitBreakerFailureRate
-) {
-}
+) { }

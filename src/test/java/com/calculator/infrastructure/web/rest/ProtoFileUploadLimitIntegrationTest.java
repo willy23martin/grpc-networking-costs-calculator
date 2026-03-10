@@ -3,9 +3,9 @@ package com.calculator.infrastructure.web.rest;
 import com.calculator.domain.model.tactics.TacticsConfigDTO;
 import com.calculator.domain.model.tactics.microservices.SAGAPattern;
 import com.calculator.domain.model.tactics.reliability.ReliabilityTactics;
-import com.calculator.domain.model.tactics.resiliency.CircuitBreakerTactic;
-import com.calculator.domain.model.tactics.resiliency.RetryTactic;
-import com.calculator.domain.model.tactics.resiliency.TimeoutTactic;
+import com.calculator.domain.model.tactics.resiliency.CircuitBreakerPattern;
+import com.calculator.domain.model.tactics.resiliency.RetryPattern;
+import com.calculator.domain.model.tactics.resiliency.TimeoutPattern;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +33,9 @@ class ProtoFileUploadLimitIntegrationTest {
         TacticsConfigDTO dto = new TacticsConfigDTO(
                 1000,
                 new ReliabilityTactics(true,  false),
-                new TimeoutTactic(true,  300),
-                new RetryTactic(true,  3),
-                new CircuitBreakerTactic(false, 0, 0, 0, 0),
+                new TimeoutPattern(true,  300),
+                new RetryPattern(true,  3),
+                new CircuitBreakerPattern(false, 0, 0, 0, 0),
                 new SAGAPattern(false, 0, 0, 0)
         );
 
@@ -54,9 +54,9 @@ class ProtoFileUploadLimitIntegrationTest {
         TacticsConfigDTO dto = new TacticsConfigDTO(
                 1000,
                 new ReliabilityTactics(true, false),
-                new TimeoutTactic(true, 300),
-                new RetryTactic(true, 3),
-                new CircuitBreakerTactic(false, 0, 0, 0, 0),
+                new TimeoutPattern(true, 300),
+                new RetryPattern(true, 3),
+                new CircuitBreakerPattern(false, 0, 0, 0, 0),
                 new SAGAPattern(false, 0, 0, 0)
         );
         HttpHeaders jsonHeaders = new HttpHeaders();
@@ -97,9 +97,9 @@ class ProtoFileUploadLimitIntegrationTest {
         TacticsConfigDTO dto = new TacticsConfigDTO(
                 500,
                 new ReliabilityTactics(true, true),
-                new TimeoutTactic(false, 0),
-                new RetryTactic(false, 0),
-                new CircuitBreakerTactic(false, 0, 0, 0, 0),
+                new TimeoutPattern(false, 0),
+                new RetryPattern(false, 0),
+                new CircuitBreakerPattern(false, 0, 0, 0, 0),
                 new SAGAPattern(false, 0, 0, 0)
         );
         HttpHeaders headers = new HttpHeaders();

@@ -1,7 +1,6 @@
 package com.calculator.domain.model.tactics.resiliency;
 
-public record TimeoutTactic(
+public record TimeoutPattern(
         boolean resiliencyTimeoutTactic,
-        int tacticTimeoutMilliseconds
-) {
-}
+        long tacticTimeoutMilliseconds
+) { }

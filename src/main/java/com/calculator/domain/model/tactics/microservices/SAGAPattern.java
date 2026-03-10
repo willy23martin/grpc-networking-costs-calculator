@@ -5,5 +5,4 @@ public record SAGAPattern(
         int sagaCompensatableTransactions,
         int sagaRetriableTransactions,
         int sagaPivotTransactions
-) {
-}
+) { }
