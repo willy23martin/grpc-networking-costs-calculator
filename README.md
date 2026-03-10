@@ -41,6 +41,7 @@ in the context of an **E-Commerce microservice**:
 11. **Resiliency tactics and patters**: Timeout, Retry and Circuit breaker. 
 12. **Microservices patterns**: SAGA Pattern.
 13. Some tests might be skipped as those are operating system dependent.
+14. **Security tactics**: TLS Certificate and OAuth2.0 + JWT Token. 
 
 ## How to run it?
 1. Execute ``mvn clean install -e`` from your terminal in order to generate the gRPCTCONetworkingCostCalculator **jar file**.
