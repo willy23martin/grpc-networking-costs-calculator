@@ -312,10 +312,10 @@ public class TCOCalculatorController implements ErrorController {
 
     private MessageSizeCalculationResult calculateResponseMessageSize(
             Model model, URLClassLoader classLoader, String fullClassName) {
-        MessageSizeCalculationResult result = new MessageSizeCalculationResult(null, 0);
+        MessageSizeCalculationResult messageSizeCalculationResult = new MessageSizeCalculationResult(null, 0);
         try {
-            result = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
-            model.addAttribute("responseSize", result.size());
+            messageSizeCalculationResult = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
+            model.addAttribute("responseSize", messageSizeCalculationResult.size());
         } catch (ClassNotFoundException e) {
             log.warning(e.getMessage());
             model.addAttribute("responseSize", 0);
@@ -331,7 +331,7 @@ public class TCOCalculatorController implements ErrorController {
             model.addAttribute("responseMessageError",
                     "An unexpected error occurred during response calculation: " + e.getMessage());
         }
-        return result;
+        return messageSizeCalculationResult;
     }
 
     private static void updateBytesSizeWithProtoFileSize(MultipartFile protoFile, Model model) {

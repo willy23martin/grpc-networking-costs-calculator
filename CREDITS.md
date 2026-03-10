@@ -25,8 +25,3 @@ AI assistant that contributed to the design and implementation of:
   corrected the calculation from additive to multiplicative
   (`effectiveRps = baseRps × stepsPerSagaInstance`), and introduced the educational
   explainer UI so interface users understand the concept when configuring the pattern.
-- Angular 19 frontend scaffold: standalone component architecture, RxJS Observable
-  HTTP layer (`BaseTacticHttpService<TRequest, TResponse>`), per-tactic feature modules
-  with stub/live switching, shared reactive state service (`CalculatorStateService`
-  with `effectiveRps$` derived stream), and full Thymeleaf-to-Angular component
-  migration preserving the original visual design.
