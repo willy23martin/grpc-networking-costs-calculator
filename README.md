@@ -1,4 +1,4 @@
-# gRPC TCO Networking Costs Calculator
+# gRPC TCO Networking Costs Calcul ator
 gRPC-based Microservices Networking Costs Calculator based on Protocol Buffer definitions and the AWS Pricing API.
 
 This service calculates the Networking costs in AWS for a gRPC-based Mircorservices by using the Protocol Buffers definition of the service.
@@ -48,6 +48,10 @@ in the context of an **E-Commerce microservice**:
 2. Execute ``aws login`` in your terminal. That will redirect you to your AWS logged account to get the **AWS SDK authenticated**.
 3. Execute in your terminal ``java -jar target\gRPCTCONetworkingCostCalculator-1.0-SNAPSHOT.jar``
 4. In your browser go to [Service URL](http://localhost:8080/).
+
+## Continuous Integration (CI):
+In the [ci.yml](.github/workflows/ci.yml) the CI pipeline has been defined.
+You can check the JaCoCo report along with its coverage as a result of the pipeline execution.
 
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
