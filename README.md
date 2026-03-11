@@ -1,4 +1,4 @@
-# gRPC TCO Networking Costs Calcul ator
+# gRPC TCO Networking Costs Calculator
 gRPC-based Microservices Networking Costs Calculator based on Protocol Buffer definitions and the AWS Pricing API.
 
 This service calculates the Networking costs in AWS for a gRPC-based Mircorservices by using the Protocol Buffers definition of the service.
