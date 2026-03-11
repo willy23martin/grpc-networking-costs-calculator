@@ -36,11 +36,6 @@ jobs:
         with:
           generate-branches-badge: true
 
-      - name: Add JaCoCo Coverage Summary
-        uses: jjmrocha/jacoco-summary@v1
-        with:
-          jacoco-csv-file: target/site/jacoco/jacoco.csv
-
       - name: Show test failures
         if: failure()
         run: find . -name "*.txt" -path "*/surefire-reports/*" | xargs cat
