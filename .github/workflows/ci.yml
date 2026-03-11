@@ -29,15 +29,12 @@ jobs:
             | xargs chmod +x 2>/dev/null || true
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn -B test
 
-      - name: Publish test coverage results
-        uses: PavanMudigonda/jacoco-reporter@v4.8
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
         with:
-          coverage_results_path: 'target/site/jacoco/jacoco.xml'
-          coverage_report_title: 'Test coverage results'
-          coverage_report_name: 'Test coverage results'
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          generate-branches-badge: true
 
       - name: Show test failures
         if: failure()
