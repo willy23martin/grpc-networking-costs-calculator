@@ -20,7 +20,6 @@ import java.util.logging.Logger;
 @Service
 public class AWSDataTransferCostCalculationService {
 
-
     @Value("${aws.pricing.ec2.rates}")
     List<Double> fallbackRates;
 
