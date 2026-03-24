@@ -1,11 +1,12 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.model.tactics.TacticsConfigDTO;
-import com.calculator.domain.model.tactics.microservices.SAGAPattern;
-import com.calculator.domain.model.tactics.reliability.ReliabilityTactics;
-import com.calculator.domain.model.tactics.resiliency.CircuitBreakerPattern;
-import com.calculator.domain.model.tactics.resiliency.RetryPattern;
-import com.calculator.domain.model.tactics.resiliency.TimeoutPattern;
+import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
+import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
+import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
+import com.calculator.domain.dto.tactics.resiliency.RetryPattern;
+import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
+import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,8 @@ class ProtoFileUploadLimitIntegrationTest {
                 new TimeoutPattern(true,  300),
                 new RetryPattern(true,  3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0)
+                new SAGAPattern(false, 0, 0, 0),
+                SecurityTactics.empty()
         );
 
         HttpHeaders headers = new HttpHeaders();
@@ -57,7 +59,8 @@ class ProtoFileUploadLimitIntegrationTest {
                 new TimeoutPattern(true, 300),
                 new RetryPattern(true, 3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0)
+                new SAGAPattern(false, 0, 0, 0),
+                SecurityTactics.empty()
         );
         HttpHeaders jsonHeaders = new HttpHeaders();
         jsonHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -100,7 +103,8 @@ class ProtoFileUploadLimitIntegrationTest {
                 new TimeoutPattern(false, 0),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0)
+                new SAGAPattern(false, 0, 0, 0),
+                SecurityTactics.empty()
         );
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

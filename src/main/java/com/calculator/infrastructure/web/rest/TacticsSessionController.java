@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.model.tactics.TacticsConfigDTO;
+import com.calculator.domain.dto.TacticsConfigDTO;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ public class TacticsSessionController {
 
     @PostMapping
     public ResponseEntity<Void> saveTactics(
-            @RequestBody com.calculator.domain.model.tactics.TacticsConfigDTO dto,
+            @RequestBody TacticsConfigDTO dto,
             HttpSession session) {
 
         session.setAttribute(SESSION_KEY, dto);

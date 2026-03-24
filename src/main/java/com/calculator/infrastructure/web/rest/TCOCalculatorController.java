@@ -1,17 +1,20 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.AWSDataTransferCostCalculationService;
-import com.calculator.application.services.compilator.CompilationService;
-import com.calculator.application.services.ProtocolBufferMessageSizeCalculationService;
-import com.calculator.application.services.ProtocolBufferService;
-import com.calculator.domain.model.compilers.ProtocCompiler;
-import com.calculator.domain.model.properties.ProtoFileFullyQualifiedProperties;
-import com.calculator.domain.model.protofiles.ParsedProtocolBufferFile;
-import com.calculator.domain.model.results.CompilationResult;
-import com.calculator.domain.model.results.JavaCompilationResult;
-import com.calculator.domain.model.results.MessageSizeCalculationResult;
-import com.calculator.domain.model.tactics.ArchitecturalTacticsContext;
-import com.calculator.domain.model.tactics.TacticsConfigDTO;
+import com.calculator.application.services.costcalculators.AWSDataTransferCostCalculationService;
+import com.calculator.application.services.compilators.CompilationService;
+import com.calculator.application.services.protobuf.ProtocolBufferMessageSizeCalculationService;
+import com.calculator.application.services.protobuf.ProtocolBufferService;
+import com.calculator.domain.dto.compilers.ProtocCompiler;
+import com.calculator.domain.dto.properties.ProtoFileFullyQualifiedProperties;
+import com.calculator.domain.dto.protofiles.ParsedProtocolBufferFile;
+import com.calculator.domain.dto.results.CompilationResult;
+import com.calculator.domain.dto.results.JavaCompilationResult;
+import com.calculator.domain.dto.results.MessageSizeCalculationResult;
+import com.calculator.domain.dto.tactics.ArchitecturalTacticsContext;
+import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
+import com.calculator.domain.dto.tactics.security.SecurityTactics;
+import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
@@ -28,10 +31,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.CompactNumberFormat;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static com.calculator.domain.dto.tactics.security.oauth.jwt.JWTOverhead.*;
 import static com.calculator.infrastructure.web.rest.TacticsSessionController.SESSION_KEY;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.initializeProtoFileFullyQualifiedProperties;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.isValid;
@@ -41,9 +47,10 @@ public class TCOCalculatorController implements ErrorController {
 
     private static final double SECONDS_PER_MONTH = 2_592_000.0;
     private static final double BYTES_PER_GB      = 1_073_741_824.0;
-    private static final Locale DISPLAY_LOCALE    = Locale.forLanguageTag("es-ES");
+    private static final Locale DISPLAY_LOCALE    = Locale.forLanguageTag("en-US");
+
     private static final String NO_TACTICS_CONFIGURATION_FOUND_MESSAGE =
-            """ 
+            """
             Note: No tactic configuration found in your session.
             Results are based on default settings (all tactics disabled).
             Configure tactics and re-upload to get accurate results.
@@ -55,21 +62,14 @@ public class TCOCalculatorController implements ErrorController {
             """;
     public static final String SAGA_PATTERN_COSTS_ALTER_MESSAGE =
             """
-            Each logical request triggers one SAGA instance. Every step in that instance 
+            Each logical request triggers one SAGA instance. Every step in that instance
             is an independent gRPC call, so actual traffic = base RPS × steps per instance.
             """;
 
-    @Autowired
-    AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
-
-    @Autowired
-    ProtocolBufferService protocolBufferService;
-
-    @Autowired
-    CompilationService compilationService;
-
-    @Autowired
-    ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
+    @Autowired AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
+    @Autowired ProtocolBufferService protocolBufferService;
+    @Autowired CompilationService compilationService;
+    @Autowired ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
 
     private final Logger log = Logger.getLogger(TCOCalculatorController.class.getName());
 
@@ -94,17 +94,17 @@ public class TCOCalculatorController implements ErrorController {
         TacticsConfigDTO tacticsConfiguration = (TacticsConfigDTO) session.getAttribute(SESSION_KEY);
         if (tacticsConfiguration == null) {
             tacticsConfiguration = TacticsConfigDTO.empty();
-            model.addAttribute("uploadMessage",
-                    NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
+            model.addAttribute("uploadMessage", NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
         }
 
-        ArchitecturalTacticsContext tactics = tacticsConfiguration.toTacticsContext();
-        String view = calculateTCO(tacticsConfiguration.requestsPerSecond(), protoFile, tactics, model);
+        ArchitecturalTacticsContext architecturalTacticsContext  = tacticsConfiguration.toTacticsContext();
+
+        String view = calculateTCO(tacticsConfiguration.requestsPerSecond(), protoFile, architecturalTacticsContext, model);
         return (view != null) ? view : "calculator";
     }
 
     private String calculateTCO(long requestsPerSecond, MultipartFile protoFile,
-                                ArchitecturalTacticsContext tactics, Model model) {
+                                ArchitecturalTacticsContext architecturalTacticsContext, Model model) {
         try {
             updateBytesSizeWithProtoFileSize(protoFile, model);
             Path protocolBufferFileDirectory = null;
@@ -124,16 +124,16 @@ public class TCOCalculatorController implements ErrorController {
                 ProtocCompiler protoCompiler = executeProtoc(model, parsed);
                 if (protoCompiler == null) return "calculator";
 
-                JavaCompilationResult javaResult =
+                JavaCompilationResult javaCompilationResult =
                         compile(model, protoCompiler, protoProps.fullRequestMessageClassName());
-                if (javaResult.errorCompilationMessage() != null)
-                    return javaResult.errorCompilationMessage();
+                if (javaCompilationResult.errorCompilationMessage() != null)
+                    return javaCompilationResult.errorCompilationMessage();
 
-                URLClassLoader classLoader = javaResult.compilationResult().classLoader();
+                URLClassLoader classLoader = javaCompilationResult.compilationResult().classLoader();
 
-                long effectiveRequestsPerSecond = compute(requestsPerSecond, tactics);
-                populateTacticsModel(tactics, requestsPerSecond, effectiveRequestsPerSecond, model);
-                showTCONetworkingCosts(effectiveRequestsPerSecond, classLoader, model, protoProps);
+                long effectiveRequestsPerSecond = effectiveRequestsPerSecond(requestsPerSecond, architecturalTacticsContext);
+                populateTacticsModel(architecturalTacticsContext, requestsPerSecond, effectiveRequestsPerSecond, model);
+                showTCONetworkingCosts(effectiveRequestsPerSecond, model, protoProps, classLoader, architecturalTacticsContext);
 
             } catch (Exception e) {
                 model.addAttribute("error", "Error: " + e.getMessage());
@@ -151,120 +151,263 @@ public class TCOCalculatorController implements ErrorController {
         return null;
     }
 
-    private long compute(long baseRequestsPerSecond, ArchitecturalTacticsContext architecturalTactics) {
-        long effectiveRequestsPerSecond = baseRequestsPerSecond;
+    // ── RPS computation ───────────────────────────────────────────────────────
 
-        if (architecturalTactics.microservicesSAGAPattern()) {
-            effectiveRequestsPerSecond = computeSAGAPattern(baseRequestsPerSecond, architecturalTactics, effectiveRequestsPerSecond);
+    private long effectiveRequestsPerSecond(long baseRequestsPerSecond, ArchitecturalTacticsContext architecturalTacticsContext) {
+        long effective = baseRequestsPerSecond;
+
+        if (architecturalTacticsContext.microservicesSAGAPattern()) {
+            effective = computeSAGAPattern(baseRequestsPerSecond, architecturalTacticsContext, effective);
+        }
+        if (architecturalTacticsContext.resiliencyRetryTactic() && architecturalTacticsContext.tacticRetryTimes() > 0) {
+            effective += baseRequestsPerSecond * architecturalTacticsContext.tacticRetryTimes();
         }
 
-        if (architecturalTactics.resiliencyRetryTactic() && architecturalTactics.tacticRetryTimes() > 0) {
-            effectiveRequestsPerSecond += baseRequestsPerSecond * architecturalTactics.tacticRetryTimes();
-        }
+        // Security: TLS/mTLS handshake messages + OAuth acquisition + introspection
+        effective += architecturalTacticsContext.securityTactics().tlsTactic().extraRequestsPerSecondFromTLSHandshakesAtTheConfiguredReconnectRate();
+        effective += architecturalTacticsContext.securityTactics().jwtTactic().extraRequestsPerSecondFromOAuthTokenAcquisitionCallsToTheAuthorisationServer(baseRequestsPerSecond);
+        effective += architecturalTacticsContext.securityTactics().jwtTactic().extraRequestsPerSecondFromRemoteTokenIntrospection(baseRequestsPerSecond);
 
-        return effectiveRequestsPerSecond;
-    }
-
-    private static long computeSAGAPattern(long baseRequestsPerSecond, ArchitecturalTacticsContext architecturalTactics, long effective) {
-        int steps = architecturalTactics.sagaCompensatableTransactions() + architecturalTactics.sagaRetriableTransactions() + architecturalTactics.sagaPivotTransactions();
-        if (steps > 0) {
-            effective = baseRequestsPerSecond * steps;
-        }
         return effective;
     }
 
-    private void populateTacticsModel(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, long effectiveRequestsPerSecond, Model model) {
+    private static long computeSAGAPattern(long baseRps, ArchitecturalTacticsContext t, long effective) {
+        int steps = t.sagaCompensatableTransactions() + t.sagaRetriableTransactions() + t.sagaPivotTransactions();
+        if (steps > 0) effective = baseRps * steps;
+        return effective;
+    }
+
+    // ── Tactics model population ──────────────────────────────────────────────
+
+    private void populateTacticsModel(ArchitecturalTacticsContext architecturalTacticsContext,
+                                      long baseRps, long effectiveRps, Model model) {
 
         List<Map<String, String>> infoTactics = new ArrayList<>();
-        List<Map<String, String>> requestsPerSecondsTactics  = new ArrayList<>();
+        List<Map<String, String>> rpsTactics  = new ArrayList<>();
 
-        if (architecturalTactics.reliabilityClientSideLoadBalancerTactic()) {
+        // Reliability
+        if (architecturalTacticsContext.reliabilityClientSideLoadBalancerTactic()) {
             infoTactics.add(tacticEntry("Client-side Load Balancing", null,
-                    "Balances the emission of gRPC packets across server instances."));
+                    "Balances the emission of gRPC packets across server instances.", null));
         }
-        if (architecturalTactics.reliabilityServerSideLoadBalancerTactic()) {
+        if (architecturalTacticsContext.reliabilityServerSideLoadBalancerTactic()) {
             infoTactics.add(tacticEntry("Server-side Load Balancing", null,
-                    "Balances the reception of gRPC packets across backend replicas."));
+                    "Balances the reception of gRPC packets across backend replicas.", null));
         }
-        if (architecturalTactics.resiliencyTimeoutTactic()) {
-            infoTactics.add(tacticEntry("Timeout", architecturalTactics.tacticTimeoutMilliseconds() + " ms",
-                    "Discards lost packets and frees the client thread after the configured wait."));
+        // Resiliency
+        if (architecturalTacticsContext.resiliencyTimeoutTactic()) {
+            infoTactics.add(tacticEntry("Timeout", architecturalTacticsContext.tacticTimeoutMilliseconds() + " ms",
+                    "Discards lost packets and frees the client thread after the configured wait.", null));
         }
-        if (architecturalTactics.resiliencyCircuitBreakerPattern()) {
-            populateCircuitBreakerPattern(architecturalTactics, infoTactics);
+        if (architecturalTacticsContext.resiliencyCircuitBreakerPattern()) {
+            populateCircuitBreakerPattern(architecturalTacticsContext, infoTactics);
         }
-
-        if (architecturalTactics.microservicesSAGAPattern()) {
-            populateSAGAPattern(architecturalTactics, baseRequestsPerSecond, requestsPerSecondsTactics);
+        // Microservices
+        if (architecturalTacticsContext.microservicesSAGAPattern()) {
+            populateSAGAPattern(architecturalTacticsContext, baseRps, rpsTactics);
         }
-
-        if (architecturalTactics.resiliencyRetryTactic()) {
-            populateRetryTactic(architecturalTactics, baseRequestsPerSecond, requestsPerSecondsTactics);
+        if (architecturalTacticsContext.resiliencyRetryTactic()) {
+            populateRetryTactic(architecturalTacticsContext, baseRps, rpsTactics);
         }
+        // Security
+        populateSecurityTactics(architecturalTacticsContext.securityTactics(), baseRps, infoTactics, rpsTactics);
 
         model.addAttribute("infoTactics",    infoTactics);
-        model.addAttribute("rpsTactics",     requestsPerSecondsTactics);
-        model.addAttribute("hasTactics",     !infoTactics.isEmpty() || !requestsPerSecondsTactics.isEmpty());
-        model.addAttribute("baseRps",        String.format(DISPLAY_LOCALE, "%,d", baseRequestsPerSecond));
-        model.addAttribute("effectiveRps",   String.format(DISPLAY_LOCALE, "%,d", effectiveRequestsPerSecond));
-        model.addAttribute("rpsWasAdjusted", effectiveRequestsPerSecond != baseRequestsPerSecond);
+        model.addAttribute("rpsTactics",     rpsTactics);
+        model.addAttribute("hasTactics",     !infoTactics.isEmpty() || !rpsTactics.isEmpty());
+        model.addAttribute("baseRps",        String.format(DISPLAY_LOCALE, "%,d", baseRps));
+        model.addAttribute("effectiveRps",   String.format(DISPLAY_LOCALE, "%,d", effectiveRps));
+        model.addAttribute("rpsWasAdjusted", effectiveRps != baseRps);
     }
 
-    private void populateCircuitBreakerPattern(ArchitecturalTacticsContext architecturalTactics, List<Map<String, String>> infoTactics) {
+    private void populateCircuitBreakerPattern(ArchitecturalTacticsContext t,
+                                               List<Map<String, String>> infoTactics) {
         String cbConfig = String.format(
                 "Min calls: %d | Half-open calls: %d | Wait: %d ms | Failure threshold: %d%%",
-                architecturalTactics.circuitBreakerPatternMinimumCalls(), architecturalTactics.circuitBreakerHalfOpen(), architecturalTactics.circuitBreakerWaitMilliseconds(), architecturalTactics.circuitBreakerFailureRate());
+                t.circuitBreakerPatternMinimumCalls(), t.circuitBreakerHalfOpen(),
+                t.circuitBreakerWaitMilliseconds(), t.circuitBreakerFailureRate());
         infoTactics.add(tacticEntry("Circuit Breaker", cbConfig,
-                "Opens the circuit when failure thresholds are exceeded, protecting downstream services."));
+                "Opens the circuit when failure thresholds are exceeded, protecting downstream services.", null));
     }
 
-    private void populateRetryTactic(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, List<Map<String, String>> requestsPerSecondTactics) {
-        long retryExtra = baseRequestsPerSecond * architecturalTactics.tacticRetryTimes();
-        requestsPerSecondTactics.add(tacticEntry("Retry", architecturalTactics.tacticRetryTimes() + " max retries",
+    private void populateRetryTactic(ArchitecturalTacticsContext t, long baseRps,
+                                     List<Map<String, String>> rpsTactics) {
+        long extra = baseRps * t.tacticRetryTimes();
+        rpsTactics.add(tacticEntry("Retry", t.tacticRetryTimes() + " max retries",
                 RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE,
-                "+" + String.format(DISPLAY_LOCALE, "%,d", retryExtra) + " req/s"));
+                "+" + String.format(DISPLAY_LOCALE, "%,d", extra) + " req/s"));
     }
 
-    private void populateSAGAPattern(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, List<Map<String, String>> requestsPerSecondTactics) {
-        int steps = architecturalTactics.sagaCompensatableTransactions() + architecturalTactics.sagaRetriableTransactions() + architecturalTactics.sagaPivotTransactions();
+    private void populateSAGAPattern(ArchitecturalTacticsContext t, long baseRps,
+                                     List<Map<String, String>> rpsTactics) {
+        int steps = t.sagaCompensatableTransactions() + t.sagaRetriableTransactions() + t.sagaPivotTransactions();
         String sagaConfig = String.format(
                 "Steps per SAGA instance — Compensatable: %d | Retriable: %d | Pivot: %d | Total: %d",
-                architecturalTactics.sagaCompensatableTransactions(), architecturalTactics.sagaRetriableTransactions(), architecturalTactics.sagaPivotTransactions(), steps);
+                t.sagaCompensatableTransactions(), t.sagaRetriableTransactions(),
+                t.sagaPivotTransactions(), steps);
         String impact = steps > 0
-                ? "×" + steps + " steps → " + String.format(DISPLAY_LOCALE, "%,d", baseRequestsPerSecond * steps) + " req/s"
+                ? "×" + steps + " steps → " + String.format(DISPLAY_LOCALE, "%,d", baseRps * steps) + " req/s"
                 : "No steps configured";
-        requestsPerSecondTactics.add(tacticEntry("SAGA Pattern", sagaConfig,
-                SAGA_PATTERN_COSTS_ALTER_MESSAGE,
-                impact));
+        rpsTactics.add(tacticEntry("SAGA Pattern", sagaConfig, SAGA_PATTERN_COSTS_ALTER_MESSAGE, impact));
     }
 
-    private Map<String, String> tacticEntry(String name, String value, String description) {
-        return tacticEntry(name, value, description, null);
+    private void populateSecurityTactics(SecurityTactics securityTactics, long baseRequestsPerSecond,
+                                         List<Map<String, String>> generalTactics,
+                                         List<Map<String, String>> requestsPerSecondModifierTactics) {
+        if (securityTactics == null) return;
+
+        // TLS — bytes overhead (per-message) + handshake extra requests
+        if (securityTactics.tlsTactic().tlsEnabled()) {
+            String tlsByteRange = TLSOverhead.RFC_8446_AES_GCM_AEAD_TLS_WITHOUT_PADDING_OVERHEAD_BYTES_MAX.getFormattedReference();
+            long handshakeRps = securityTactics.tlsTactic().extraRequestsPerSecondFromTLSHandshakesAtTheConfiguredReconnectRate();
+            if (handshakeRps > 0) {
+                requestsPerSecondModifierTactics.add(tacticEntry("TLS — handshake messages",
+                        securityTactics.tlsTactic().tlsReconnectsPerHour() + " reconnects/hr × " + TLSOverhead.TLS_HANDSHAKE_MESSAGES.getOverhead() + " messages",
+                        "TLS 1.3 handshake (ClientHello + ServerHello/Certificate/Finished) runs once per connection. " +
+                                tlsByteRange + ". AWS ACM issues and renews certificates at no additional cost.",
+                        "+" + String.format(DISPLAY_LOCALE, "%,d", handshakeRps) + " req/s"));
+            } else {
+                generalTactics.add(tacticEntry("TLS (one-way)",
+                        securityTactics.tlsTactic().tlsReconnectsPerHour() + " reconnects/hr",
+                        "TLS 1.3 encrypts every gRPC message. " + tlsByteRange +
+                                ". Handshake is connection-scoped — negligible RPS impact at this reconnect rate. AWS ACM certificates are free.", null));
+            }
+        }
+
+        // mTLS — same byte overhead as TLS, more handshake messages
+        if (securityTactics.tlsTactic().mtlsEnabled()) {
+            String mtlsByteRange = TLSOverhead.RFC_8446_AES_GCM_AEAD_TLS_WITHOUT_PADDING_OVERHEAD_BYTES_MAX.getFormattedReference();
+            long handshakeRps = securityTactics.tlsTactic().extraRequestsPerSecondFromTLSHandshakesAtTheConfiguredReconnectRate();
+            String handshakeDetail = String.format(
+                    "%d reconnects/hr × %d messages (ClientHello + ServerHello/Cert/CertReq + client Cert + CertVerify + Finished)",
+                    securityTactics.tlsTactic().tlsReconnectsPerHour(), TLSOverhead.MTLS_HANDSHAKE_MESSAGES.getOverhead());
+            if (handshakeRps > 0) {
+                requestsPerSecondModifierTactics.add(tacticEntry("mTLS — handshake messages",
+                        handshakeDetail,
+                        "mTLS adds client certificate exchange and CA validation to the TLS handshake. " +
+                                mtlsByteRange + ". Per-message overhead is identical to TLS. AWS ACM certificates are free.",
+                        "+" + String.format(DISPLAY_LOCALE, "%,d", handshakeRps) + " req/s"));
+            } else {
+                generalTactics.add(tacticEntry("mTLS (mutual TLS)",
+                        securityTactics.tlsTactic().tlsReconnectsPerHour() + " reconnects/hr",
+                        "Both client and server present X.509 certificates. CA validates both. " +
+                                mtlsByteRange + ". Handshake is connection-scoped — negligible RPS impact at this reconnect rate. AWS ACM certificates are free.",
+                        null));
+            }
+        }
+
+        // Basic Auth — bytes overhead only, no extra requests
+        if (securityTactics.basicAuthenticationPattern().basicAuthEnabled()) {
+            generalTactics.add(tacticEntry("Basic Authentication ⚠",
+                    "~50–100 bytes per request header",
+                    "Authorization: Basic base64(username:password) is sent with every request. " +
+                            "No extra requests, but the credential is valid until the password changes — " +
+                            "there is no token expiry or revocation mechanism. Not recommended for production gRPC APIs. " +
+                            "Prefer OAuth 2.0 + JWT for time-bounded, revocable access control.", null));
+        }
+
+        // OAuth 2.0 + JWT — bytes overhead on requests + extra requests for acquisition and introspection
+        if (securityTactics.jwtTactic().oauthJwtEnabled()) {
+            int ttl     = securityTactics.jwtTactic().tokenTtlSeconds()   > 0 ? securityTactics.jwtTactic().tokenTtlSeconds() : 3600;
+            int clients = securityTactics.jwtTactic().concurrentClients()  > 0 ? securityTactics.jwtTactic().concurrentClients() : 1;
+
+            String interceptorLabel = securityTactics.jwtTactic().interceptorType() == InterceptorType.UNARY
+                    ? "Unary interceptor" : "Stream interceptor";
+            String jwtByteRange = String.format(
+                    "JWT Bearer header \n RFC 7515 Section-7.1 \n BASE64URL(UTF8(JWS Protected Header)) \n || '.' || * BASE64URL(JWS Payload) \n || '.' || * BASE64URL(JWS Signature)  \n adds %d bytes typical \n due to %s \n",
+                    JWT_OVERHEAD_BYTES_TYPICAL.getOverhead(), JWT_OVERHEAD_BYTES_TYPICAL.getFormattedReference()
+            );
+
+            long tokenAcqRps      = securityTactics.jwtTactic().extraRequestsPerSecondFromOAuthTokenAcquisitionCallsToTheAuthorisationServer(baseRequestsPerSecond);
+            long introspectionRps = securityTactics.jwtTactic().extraRequestsPerSecondFromRemoteTokenIntrospection(baseRequestsPerSecond);
+
+            // JWT header byte overhead is always informational (bytes, not extra requests)
+            generalTactics.add(tacticEntry("OAuth 2.0 + JWT — bearer token",
+                    interceptorLabel + " | TTL " + ttl + "s | " + clients + " client(s)",
+                    jwtByteRange + ". The token travels in every request's Authorization metadata header. " +
+                            "Response messages carry no JWT overhead. Validation enforced by the configured gRPC interceptor.", null));
+
+            // Token acquisition — extra requests to the authorisation server
+            if (tokenAcqRps > 0) {
+                requestsPerSecondModifierTactics.add(tacticEntry("OAuth 2.0 — token acquisition",
+                        "1 call per TTL ÷ " + clients + " client(s) — RFC 6749 §4.1",
+                        "Periodic call to the authorisation server to obtain a new JWT. " +
+                                "Amortised across the token TTL and the number of concurrent clients sharing the token.",
+                        "+" + String.format(DISPLAY_LOCALE, "%,d", tokenAcqRps) + " req/s"));
+            }
+
+            // Remote introspection — one extra call per incoming gRPC request
+            if (introspectionRps > 0) {
+                requestsPerSecondModifierTactics.add(tacticEntry("OAuth 2.0 — remote introspection",
+                        "1 introspection call per gRPC request — RFC 7662",
+                        "Each incoming gRPC request triggers a synchronous token introspection call to the " +
+                                "authorisation server. This doubles outbound request volume. " +
+                                "Switching to local JWT signature validation eliminates this overhead entirely.",
+                        "+" + String.format(DISPLAY_LOCALE, "%,d", introspectionRps) + " req/s"));
+            }
+        }
     }
 
-    private Map<String, String> tacticEntry(String name, String value, String description, String requestsPerSecondImpact) {
+    private void showTCONetworkingCosts(long effectiveRps,
+                                        Model model, ProtoFileFullyQualifiedProperties protoProps, URLClassLoader classLoader, ArchitecturalTacticsContext architecturalTacticsContext) {
+
+        MessageSizeCalculationResult requestResult = calculateRequestMessageSize(model, classLoader, protoProps.fullRequestMessageClassName());
+        MessageSizeCalculationResult responseResult = calculateResponseMessageSize(model, classLoader, protoProps.fullResponseMessageClassName());
+
+        int tlsOverhead = architecturalTacticsContext.securityTactics().tlsTactic().effectiveTlsOverheadTypical();
+        int jwtOverhead = architecturalTacticsContext.securityTactics().jwtTactic().effectiveJwtOverheadTypical();
+
+        long effectiveRequestSize = requestResult.size() + tlsOverhead + jwtOverhead;
+        long effectiveResponseSize = responseResult.size() + tlsOverhead;
+
+        long requestsPerMonth = (long) (effectiveRps * SECONDS_PER_MONTH);
+        double requestGbPerMonth = (effectiveRequestSize  * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
+        double responseGbPerMonth = (effectiveResponseSize * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
+        double dataTransferCostUsd = awsDataTransferCostCalculationService.calculateDataTransferCost(responseGbPerMonth);
+
+        NumberFormat compactNumberFormat = CompactNumberFormat.getCompactNumberInstance(
+                Locale.US, NumberFormat.Style.SHORT
+        );
+
+        model.addAttribute("requestsPerMonth",    compactNumberFormat.format(requestsPerMonth));
+        model.addAttribute("requestGbPerMonth",   String.format(DISPLAY_LOCALE, "%,.4f",  requestGbPerMonth));
+        model.addAttribute("responseGbPerMonth",  String.format(DISPLAY_LOCALE, "%,.4f",  responseGbPerMonth));
+        model.addAttribute("dataTransferCostUsd", String.format(DISPLAY_LOCALE, "%,.2f", dataTransferCostUsd));
+
+        showEffectiveSizesAndSecurityOverheadDetailForResultsTable(model, architecturalTacticsContext.securityTactics(), requestResult, responseResult, effectiveRequestSize, effectiveResponseSize, tlsOverhead, jwtOverhead);
+    }
+
+    private static void showEffectiveSizesAndSecurityOverheadDetailForResultsTable(Model model, SecurityTactics security, MessageSizeCalculationResult requestResult, MessageSizeCalculationResult responseResult, long effectiveRequestSize, long effectiveResponseSize, int tlsOverhead, int jwtOverhead) {
+        model.addAttribute("requestSize",        requestResult.size());
+        model.addAttribute("responseSize",        responseResult.size());
+        model.addAttribute("requestSizeEffective", effectiveRequestSize);
+        model.addAttribute("responseSizeEffective", effectiveResponseSize);
+        model.addAttribute("securityByteOverheadApplied",
+                tlsOverhead > 0 || jwtOverhead > 0);
+        model.addAttribute("tlsOverheadBytes", tlsOverhead);
+        model.addAttribute("jwtOverheadBytes", jwtOverhead);
+        model.addAttribute("tlsOverheadRange",
+                security.tlsTactic().tlsEnabled() || security.tlsTactic().mtlsEnabled()
+                        ? TLSOverhead.RFC_8446_AES_GCM_AEAD_TLS_WITHOUT_PADDING_OVERHEAD_BYTES_MAX.getOverhead() + " / " +
+                         " bytes typical" : null);
+        model.addAttribute("jwtOverheadRange",
+                security.jwtTactic().oauthJwtEnabled()
+                        ? JWT_OVERHEAD_BYTES_MIN.getOverhead() + " / " +
+                        JWT_OVERHEAD_BYTES_TYPICAL.getOverhead() + " / " +
+                        JWT_OVERHEAD_BYTES_MAX.getOverhead() + " bytes (min/typical/max)"
+                        : null);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private Map<String, String> tacticEntry(String name, String value, String description,
+                                            String rpsImpact) {
         Map<String, String> entry = new LinkedHashMap<>();
         entry.put("name",        name);
         entry.put("value",       value != null ? value : "—");
         entry.put("description", description);
-        entry.put("rpsImpact",   requestsPerSecondImpact != null ? requestsPerSecondImpact : "");
+        entry.put("rpsImpact",   rpsImpact != null ? rpsImpact : "");
         return entry;
-    }
-
-    private void showTCONetworkingCosts(long effectiveRequestsPerSecond, URLClassLoader classLoader,
-                                        Model model, ProtoFileFullyQualifiedProperties protoProps) {
-        MessageSizeCalculationResult requestMessageSize  = calculateRequestMessageSize(model,  classLoader, protoProps.fullRequestMessageClassName());
-        MessageSizeCalculationResult responseMessageSize = calculateResponseMessageSize(model, classLoader, protoProps.fullResponseMessageClassName());
-
-        long requestsPerMonth = (long) (effectiveRequestsPerSecond * SECONDS_PER_MONTH);
-        double requestGbPerMonth   = (requestMessageSize.size()  * effectiveRequestsPerSecond * SECONDS_PER_MONTH) / BYTES_PER_GB;
-        double responseGbPerMonth  = (responseMessageSize.size() * effectiveRequestsPerSecond * SECONDS_PER_MONTH) / BYTES_PER_GB;
-        double dataTransferCostUsd = awsDataTransferCostCalculationService.calculateDataTransferCost(responseGbPerMonth);
-
-        model.addAttribute("requestsPerMonth",    String.format(DISPLAY_LOCALE, "%,d",   requestsPerMonth));
-        model.addAttribute("requestGbPerMonth",   String.format(DISPLAY_LOCALE, "%.4f",  requestGbPerMonth));
-        model.addAttribute("responseGbPerMonth",  String.format(DISPLAY_LOCALE, "%.4f",  responseGbPerMonth));
-        model.addAttribute("dataTransferCostUsd", String.format(DISPLAY_LOCALE, "%,.2f", dataTransferCostUsd));
     }
 
     private ProtocCompiler executeProtoc(Model model, ParsedProtocolBufferFile parsed)
@@ -298,24 +441,24 @@ public class TCOCalculatorController implements ErrorController {
 
     private MessageSizeCalculationResult calculateRequestMessageSize(
             Model model, URLClassLoader classLoader, String fullClassName) {
-        MessageSizeCalculationResult messageSizeCalculationResult = new MessageSizeCalculationResult(null, 0);
+        MessageSizeCalculationResult result = new MessageSizeCalculationResult(null, 0);
         try {
-            messageSizeCalculationResult = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
-            model.addAttribute("requestSize", messageSizeCalculationResult.size());
+            result = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
+            model.addAttribute("requestSize", result.size());
         } catch (Exception e) {
             log.warning(e.getMessage());
             model.addAttribute("requestSize", 0);
             model.addAttribute("requestMessageError", "Failed to calculate max request size: " + e.getMessage());
         }
-        return messageSizeCalculationResult;
+        return result;
     }
 
     private MessageSizeCalculationResult calculateResponseMessageSize(
             Model model, URLClassLoader classLoader, String fullClassName) {
-        MessageSizeCalculationResult messageSizeCalculationResult = new MessageSizeCalculationResult(null, 0);
+        MessageSizeCalculationResult result = new MessageSizeCalculationResult(null, 0);
         try {
-            messageSizeCalculationResult = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
-            model.addAttribute("responseSize", messageSizeCalculationResult.size());
+            result = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
+            model.addAttribute("responseSize", result.size());
         } catch (ClassNotFoundException e) {
             log.warning(e.getMessage());
             model.addAttribute("responseSize", 0);
@@ -331,7 +474,7 @@ public class TCOCalculatorController implements ErrorController {
             model.addAttribute("responseMessageError",
                     "An unexpected error occurred during response calculation: " + e.getMessage());
         }
-        return messageSizeCalculationResult;
+        return result;
     }
 
     private static void updateBytesSizeWithProtoFileSize(MultipartFile protoFile, Model model) {
@@ -347,12 +490,8 @@ public class TCOCalculatorController implements ErrorController {
         if (protocolBufferFileDirectory != null) {
             try (Stream<Path> walk = Files.walk(protocolBufferFileDirectory)) {
                 walk.sorted(Comparator.reverseOrder()).forEach(p -> {
-                    try {
-                        Files.deleteIfExists(p);
-                    }
-                    catch (IOException e) {
-                        throw new UncheckedIOException("Failed to delete: " + p, e);
-                    }
+                    try { Files.deleteIfExists(p); }
+                    catch (IOException e) { throw new UncheckedIOException("Failed to delete: " + p, e); }
                 });
             } catch (UncheckedIOException | IOException e) {
                 model.addAttribute("error", "Cleanup error: " + e.getMessage());

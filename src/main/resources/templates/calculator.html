@@ -52,13 +52,13 @@
         .results-section span { font-weight: 600; color: var(--custom-accent-blue); }
         .results-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 1rem; }
         .results-table thead tr { background-color: var(--custom-accent-blue); color: #FFFFFF; }
-        .results-table thead th { padding: 12px 16px; text-align: left; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em; }
+        .results-table thead th { padding: 8px 12px; text-align: center; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; letter-spacing: 0.02em; }
         .results-table thead th:not(:first-child) { text-align: right; }
         .results-table tbody tr { border-bottom: 1px solid var(--custom-border-subtle); transition: background-color 0.2s ease; }
         .results-table tbody tr:last-child { border-bottom: none; }
         .results-table tbody tr:hover { background-color: var(--custom-info-bg); }
-        .results-table tbody td { padding: 14px 16px; color: var(--custom-text-dark); font-size: 1rem; }
-        .results-table tbody td:not(:first-child) { text-align: right; font-weight: 600; color: var(--custom-accent-blue); }
+        .results-table tbody td { padding: 8px 12px; color: var(--custom-text-dark); font-size: 1rem; }
+        .results-table tbody td:not(:first-child) { text-align: center; font-weight: 600; color: var(--custom-accent-blue); }
         .results-table tbody td:first-child { font-weight: 500; color: var(--custom-text-medium); }
         .loading-bar-wrapper { display: none; width: 100%; margin-top: 18px; flex-direction: column; gap: 8px; }
         .loading-bar-wrapper.visible { display: flex; }
@@ -82,7 +82,7 @@
         .tactics-category-title .category-icon { font-size: 1.1rem; width: 22px; text-align: center; }
         .tactics-chevron { font-size: 0.9rem; color: var(--custom-text-medium); transition: transform 0.3s ease, color 0.2s ease; }
         .tactics-category-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.2s ease; padding: 0 20px; background-color: var(--custom-bg-card); }
-        .tactics-category-body.open { max-height: 1100px; padding: 18px 20px 20px; }
+        .tactics-category-body.open { max-height: 2400px; padding: 18px 20px 20px; }
         .tactic-row { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--custom-border-subtle); }
         .tactic-row:last-child { border-bottom: none; padding-bottom: 0; }
         .tactic-row:first-child { padding-top: 0; }
@@ -94,11 +94,12 @@
         .tactic-input-group input[type="number"] { width: 110px; padding: 7px 10px; border: 1px solid var(--custom-border-subtle); border-radius: 7px; font-size: 0.92rem; color: var(--custom-text-dark); background-color: var(--custom-bg-card); transition: border-color 0.2s ease, box-shadow 0.2s ease; box-sizing: border-box; -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         .tactic-input-group input[type="number"]:focus { border-color: var(--custom-accent-gold); box-shadow: 0 0 0 3px rgba(204,164,59,0.18); outline: none; }
         .tactic-input-group input[type="number"]:disabled { background-color: var(--custom-bg-light); color: #aaa; cursor: not-allowed; }
+        .tactic-input-group select { width: 170px; padding: 7px 10px; border: 1px solid var(--custom-border-subtle); border-radius: 7px; font-size: 0.88rem; }
         .tactic-unit { font-size: 0.75rem; color: var(--custom-text-medium); text-align: right; }
         .tactics-info-banner { display: none; align-items: center; gap: 12px; margin-top: 14px; padding: 13px 16px; border-radius: 8px; border: 1px solid var(--custom-info-text); background-color: var(--custom-info-bg); color: var(--custom-info-text); font-size: 0.88rem; line-height: 1.45; animation: fadeInSlideUp 0.3s forwards ease-out; }
         .tactics-info-banner.visible { display: flex; }
         .tactics-info-banner .info-icon { font-size: 1.2rem; flex-shrink: 0; }
-        .cb-sub-params, .saga-sub-params { display: none; padding-left: 30px; border-left: 3px solid var(--custom-accent-gold); margin: 4px 0 8px; }
+        .cb-sub-params, .saga-sub-params, .security-sub-params { display: none; padding-left: 30px; border-left: 3px solid var(--custom-accent-gold); margin: 4px 0 8px; }
         .rps-impact-summary { display: none; margin-top: 18px; padding: 14px 18px; border-radius: 9px; background: linear-gradient(135deg, #e8f0fa, #f0f5ff); border: 1px solid #b8cce8; font-size: 0.9rem; color: var(--custom-accent-blue); font-weight: 500; }
         .rps-impact-summary.visible { display: block; animation: fadeInSlideUp 0.3s forwards ease-out; }
         .rps-impact-summary .rps-total { font-size: 1.1rem; font-weight: 700; }
@@ -113,6 +114,17 @@
         .saga-explainer .example-row .ex-icon { flex-shrink: 0; margin-top: 1px; }
         .saga-live-preview { display: none; margin-top: 10px; padding: 9px 14px; border-radius: 7px; background-color: var(--custom-info-bg); border: 1px solid #b8cce8; font-size: 0.87rem; color: var(--custom-accent-blue); font-weight: 500; }
         .saga-live-preview.visible { display: block; }
+        .security-explainer { display: none; margin: 12px 0 4px; padding: 14px 16px; border-radius: 9px; background: linear-gradient(135deg, #f0f5f0, #e8f5e9); border: 1px solid #81c784; font-size: 0.88rem; line-height: 1.55; color: var(--custom-text-dark); animation: fadeInSlideUp 0.3s forwards ease-out; }
+        .security-explainer.visible { display: block; }
+        .security-explainer-title { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem; color: #2e7d32; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+        .security-explainer p { margin: 0 0 7px; }
+        .security-explainer p:last-child { margin-bottom: 0; }
+        .security-explainer .formula { font-family: monospace; background: rgba(46,125,50,0.10); padding: 5px 10px; border-radius: 5px; display: inline-block; margin: 4px 0; font-size: 0.87rem; color: #1b5e20; font-weight: 600; }
+        .byte-range-badge { display: inline-flex; gap: 6px; align-items: center; background: rgba(26,75,125,0.07); border: 1px solid #b8cce8; border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600; color: var(--custom-accent-blue); margin-top: 6px; }
+        .byte-range-badge .range-label { font-size: 0.72rem; font-weight: 400; color: var(--custom-text-medium); }
+        .acm-note { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0 4px; padding: 10px 14px; border-radius: 8px; background-color: var(--custom-success-bg); border: 1px solid var(--custom-success-text); font-size: 0.83rem; color: #2e7d32; line-height: 1.4; }
+        .acm-note i { flex-shrink: 0; margin-top: 1px; color: var(--custom-success-text); }
+        .warning-badge { display: inline-block; padding: 2px 7px; border-radius: 999px; background-color: #fff3cd; border: 1px solid #ffc107; color: #856404; font-size: 0.74rem; font-weight: 700; margin-left: 4px; }
         .tactics-summary-section { margin-bottom: 28px; padding-bottom: 24px; border-bottom: 2px solid var(--custom-border-subtle); }
         .tactics-summary-title { font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--custom-accent-blue); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         .tactics-group-label { font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--custom-text-medium); margin: 14px 0 8px; }
@@ -138,6 +150,15 @@
         .rps-val-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--custom-text-medium); font-weight: 600; }
         .rps-val-number { font-size: 1.05rem; font-weight: 700; color: var(--custom-accent-blue); }
         .rps-val-number.increased { color: #c0392b; }
+        .security-overhead-banner { display: flex; align-items: flex-start; gap: 14px; margin-top: 16px; padding: 14px 18px; border-radius: 9px; background: linear-gradient(135deg, #f0f5f0, #e8f5e9); border: 1px solid #81c784; font-size: 0.9rem; color: #2e7d32; }
+        .security-overhead-banner .banner-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+        .security-overhead-banner .banner-body { flex: 1; }
+        .security-overhead-banner .banner-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; }
+        .security-overhead-banner .overhead-grid { display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.86rem; }
+        .overhead-item { display: flex; flex-direction: column; gap: 2px; }
+        .overhead-item-label { font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--custom-text-medium); font-weight: 600; }
+        .overhead-item-value { font-weight: 700; color: #1b5e20; font-size: 0.97rem; }
+        .overhead-item-range { font-size: 0.75rem; color: var(--custom-text-medium); }
     </style>
 </head>
 <body>
@@ -167,8 +188,8 @@
 <div id="tacticsCard" class="tactics-card hidden">
     <h2>Architecture Tactics &amp; Patterns</h2>
     <p style="font-size:0.92rem;color:var(--custom-text-medium);margin-bottom:20px;text-align:center;">
-        Select the tactics and patterns applied to your gRPC service. Options that affect your RPS will
-        automatically adjust the estimated request volume shown below.
+        Select the tactics and patterns applied to your gRPC service. Options that affect your RPS or payload size will
+        automatically adjust the estimated request volume and throughput shown below.
     </p>
 
     <div class="tactics-category">
@@ -178,8 +199,7 @@
         </div>
         <div class="tactics-category-body" id="body-reliability">
             <div class="tactic-row">
-                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-client-lb"
-                       data-category="reliability"
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-client-lb" data-category="reliability"
                        data-info="Client-side load balancing distributes gRPC packets evenly across server instances. It does not change the total RPS your service receives.">
                 <div class="tactic-label-group">
                     <label class="tactic-label" for="tactic-client-lb">Client-side Load Balancing</label>
@@ -187,8 +207,7 @@
                 </div>
             </div>
             <div class="tactic-row">
-                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-server-lb"
-                       data-category="reliability"
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-server-lb" data-category="reliability"
                        data-info="Server-side load balancing distributes incoming traffic across backend replicas. It does not change the total RPS generated by clients.">
                 <div class="tactic-label-group">
                     <label class="tactic-label" for="tactic-server-lb">Server-side Load Balancing</label>
@@ -206,8 +225,7 @@
         </div>
         <div class="tactics-category-body" id="body-resiliency">
             <div class="tactic-row">
-                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-timeout"
-                       data-category="resiliency"
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-timeout" data-category="resiliency"
                        data-info="A timeout discards a lost packet and frees the client thread. It does not generate additional requests."
                        onchange="document.getElementById('input-timeout').disabled=!this.checked;">
                 <div class="tactic-label-group">
@@ -235,8 +253,7 @@
                 </div>
             </div>
             <div class="tactic-row">
-                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-cb"
-                       data-category="resiliency"
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-cb" data-category="resiliency"
                        data-info="The Circuit Breaker stops sending requests when failure thresholds are exceeded, reducing outbound packets. It does not add to your RPS."
                        onchange="toggleCbParams(this.checked)">
                 <div class="tactic-label-group">
@@ -282,74 +299,239 @@
                     </span>
                 </div>
             </div>
-
             <div class="saga-explainer" id="saga-explainer">
-                <div class="saga-explainer-title">
-                    <i class="fas fa-graduation-cap"></i> How SAGA affects your gRPC traffic
-                </div>
-                <p>
-                    <strong>RPS vs. SAGA steps are different concepts.</strong>
-                    Your RPS (e.g. 1,000 req/s) measures how many <em>logical business requests</em>
-                    arrive per second — for example, 1,000 customers placing an order per second.
-                </p>
-                <p>
-                    Each of those orders triggers <em>one SAGA instance</em>, which internally
-                    coordinates multiple microservices. Every step in that SAGA instance is a
-                    separate gRPC call to a different service:
-                </p>
-                <div class="example-row">
-                    <span class="ex-icon">↳</span>
-                    <span>
-                        <strong>Compensatable step</strong> (e.g. Reserve inventory) — can be undone if a later step fails.<br>
-                        <strong>Pivot step</strong> (e.g. Charge payment) — point of no return.<br>
-                        <strong>Retriable step</strong> (e.g. Ship order) — guaranteed to eventually succeed.
-                    </span>
-                </div>
-                <p style="margin-top:10px;">
-                    So the formula is <strong>multiplicative, not additive</strong>:
-                </p>
+                <div class="saga-explainer-title"><i class="fas fa-graduation-cap"></i> How SAGA affects your gRPC traffic</div>
+                <p><strong>RPS vs. SAGA steps are different concepts.</strong> Your RPS (e.g. 1,000 req/s) measures how many <em>logical business requests</em> arrive per second — for example, 1,000 customers placing an order per second.</p>
+                <p>Each of those orders triggers <em>one SAGA instance</em>, which internally coordinates multiple microservices. Every step in that SAGA instance is a separate gRPC call to a different service:</p>
+                <div class="example-row"><span class="ex-icon">↳</span><span><strong>Compensatable step</strong> (e.g. Reserve inventory) — can be undone if a later step fails.<br><strong>Pivot step</strong> (e.g. Charge payment) — point of no return.<br><strong>Retriable step</strong> (e.g. Ship order) — guaranteed to eventually succeed.</span></div>
+                <p style="margin-top:10px;">So the formula is <strong>multiplicative, not additive</strong>:</p>
                 <div class="formula">effective gRPC traffic = base RPS × steps per SAGA instance</div>
-                <p style="margin-top:8px; font-size:0.83rem; color:var(--custom-text-medium);">
-                    Example: 1,000 RPS × 3 steps = <strong>3,000 gRPC calls/sec</strong> — not 1,000 + 3,000 = 4,000.
-                    The 3 steps replace the single call; each of the 1,000 requests fans out into 3 independent calls.
-                </p>
+                <p style="margin-top:8px; font-size:0.83rem; color:var(--custom-text-medium);">Example: 1,000 RPS × 3 steps = <strong>3,000 gRPC calls/sec</strong> — not 1,000 + 3,000 = 4,000. The 3 steps replace the single call; each of the 1,000 requests fans out into 3 independent calls.</p>
             </div>
-
             <div class="saga-sub-params" id="saga-params">
                 <div class="tactic-row">
-                    <div class="tactic-label-group">
-                        <label class="tactic-label" for="input-saga-compensatable">Compensatable steps per SAGA instance</label>
-                        <span class="tactic-description">Steps that can be undone via a compensating action if a later step fails. Enter the number of such steps in <em>one</em> SAGA instance, not a total transaction count.</span>
-                    </div>
-                    <div class="tactic-input-group">
-                        <input type="number" id="input-saga-compensatable" min="0" placeholder="1" oninput="recalculateRps()">
-                        <span class="tactic-unit">steps</span>
-                    </div>
+                    <div class="tactic-label-group"><label class="tactic-label" for="input-saga-compensatable">Compensatable steps per SAGA instance</label><span class="tactic-description">Steps that can be undone via a compensating action if a later step fails. Enter the number of such steps in <em>one</em> SAGA instance, not a total transaction count.</span></div>
+                    <div class="tactic-input-group"><input type="number" id="input-saga-compensatable" min="0" placeholder="1" oninput="recalculateRps()"><span class="tactic-unit">steps</span></div>
                 </div>
                 <div class="tactic-row">
-                    <div class="tactic-label-group">
-                        <label class="tactic-label" for="input-saga-retriable">Retriable steps per SAGA instance</label>
-                        <span class="tactic-description">Steps guaranteed to eventually succeed after retries. Enter the number of such steps in <em>one</em> SAGA instance.</span>
-                    </div>
-                    <div class="tactic-input-group">
-                        <input type="number" id="input-saga-retriable" min="0" placeholder="1" oninput="recalculateRps()">
-                        <span class="tactic-unit">steps</span>
-                    </div>
+                    <div class="tactic-label-group"><label class="tactic-label" for="input-saga-retriable">Retriable steps per SAGA instance</label><span class="tactic-description">Steps guaranteed to eventually succeed after retries. Enter the number of such steps in <em>one</em> SAGA instance.</span></div>
+                    <div class="tactic-input-group"><input type="number" id="input-saga-retriable" min="0" placeholder="1" oninput="recalculateRps()"><span class="tactic-unit">steps</span></div>
                 </div>
                 <div class="tactic-row">
-                    <div class="tactic-label-group">
-                        <label class="tactic-label" for="input-saga-pivot">Pivot steps per SAGA instance</label>
-                        <span class="tactic-description">The go/no-go point — neither compensatable nor retriable. Enter the number of pivot steps in <em>one</em> SAGA instance.</span>
-                    </div>
-                    <div class="tactic-input-group">
-                        <input type="number" id="input-saga-pivot" min="0" placeholder="1" oninput="recalculateRps()">
-                        <span class="tactic-unit">steps</span>
-                    </div>
+                    <div class="tactic-label-group"><label class="tactic-label" for="input-saga-pivot">Pivot steps per SAGA instance</label><span class="tactic-description">The go/no-go point — neither compensatable nor retriable. Enter the number of pivot steps in <em>one</em> SAGA instance.</span></div>
+                    <div class="tactic-input-group"><input type="number" id="input-saga-pivot" min="0" placeholder="1" oninput="recalculateRps()"><span class="tactic-unit">steps</span></div>
                 </div>
                 <div class="saga-live-preview" id="saga-live-preview"></div>
             </div>
-
             <div class="tactics-info-banner" id="info-microservices"><i class="fas fa-info-circle info-icon"></i><span id="info-microservices-text"></span></div>
+        </div>
+    </div>
+    <div class="tactics-category">
+        <div class="tactics-category-header" onclick="toggleCategory('security')">
+            <span class="tactics-category-title"><span class="category-icon">🔒</span> Security Tactics</span>
+            <i class="fas fa-chevron-down tactics-chevron" id="chevron-security"></i>
+        </div>
+        <div class="tactics-category-body" id="body-security">
+
+            <div class="security-explainer" id="security-explainer" style="display:block;">
+                <div class="security-explainer-title"><i class="fas fa-shield-alt"></i> How security tactics affect your TCO</div>
+                <p>Security tactics impact costs in two independent dimensions — <strong>payload size</strong> and <strong>request count</strong> — depending on the mechanism involved:</p>
+                <p><strong>Byte overhead</strong> is added to every gRPC message frame and directly increases your monthly throughput (GB/month) and therefore your data transfer cost. The calculation uses the <em>typical</em> value from the RFC-grounded range.</p>
+                <div class="formula">effective message size = proto size + TLS overhead + JWT header overhead</div>
+                <p><strong>Extra requests</strong> are connection-setup messages (TLS/mTLS handshakes) or authorisation server calls (OAuth token acquisition, remote introspection) that add to your effective RPS count.</p>
+                <div class="formula">effective RPS = tactics-adjusted RPS + handshake msgs/s + token acquisition req/s + introspection req/s</div>
+                <p style="font-size:0.83rem;color:var(--custom-text-medium);margin-top:6px;">Ranges shown throughout this section are based on RFC 8446 (TLS 1.3), RFC 7519 (JWT), RFC 7523 (JWT Profile for OAuth 2.0), RFC 9101 (JWT-Secured OAuth 2.0 Requests), and RFC 6749 (OAuth 2.0).</p>
+            </div>
+
+            <!-- TLS (one-way) ─────────────────────────────────────────── -->
+            <div class="tactic-row" style="margin-top:12px;">
+                <input type="checkbox" class="tactic-check" id="tactic-tls" onchange="toggleTlsOptions()">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-tls">TLS (one-way) <span class="warning-badge">+ bytes</span></label>
+                    <span class="tactic-description">
+                        Encrypts every gRPC message using TLS 1.3 (RFC 8446). The server presents a certificate; the client verifies it against the CA.
+                        <strong style="color:#1b5e20;">⊕ Adds bytes to every message</strong> — the TLS record header and AEAD authentication tag wrap each gRPC frame.
+                        The TLS handshake is connection-scoped and only generates extra messages at reconnect time, not per request.
+                    </span>
+                    <div class="byte-range-badge" id="tls-byte-badge" style="display:none;">
+                        <i class="fas fa-weight-hanging" style="font-size:0.8rem;"></i>
+                        <span>Byte overhead per message:</span>
+                        <strong>21</strong> <span class="range-label">min</span> /
+                        <strong>29</strong> <span class="range-label">typical</span> /
+                        <strong>37</strong> <span class="range-label">max</span>
+                        <span class="range-label">bytes — RFC 8446</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-sub-params" id="tls-params">
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="input-tls-reconnects">Reconnects per hour</label>
+                        <span class="tactic-description">How often connections are re-established (e.g. due to load balancer cycling, pod restarts, or idle timeouts). Each reconnect triggers a new TLS handshake: <strong>ClientHello → ServerHello + Certificate + Finished</strong> — that is 2 extra message exchanges per reconnect. At 1 reconnect/hr this adds ≈ 0.0006 req/s — informational.</span>
+                        <span class="tactic-description">
+    How often connections are re-established (e.g. due to load balancer cycling, pod restarts, or idle timeouts).
+    Each reconnect triggers a new TLS handshake: <strong>ClientHello → ServerHello + Certificate + Finished</strong>
+    — that is 2 extra message exchanges per reconnect. At 1 reconnect/hr this adds ≈ 0.0006 req/s — informational.
+    <br><br>
+    <strong>AWS ALB reference:</strong> the <code>idle_timeout.timeout_seconds</code> attribute defaults to
+    <strong>60 seconds</strong>, configurable from 1 to 4,000 seconds
+    (<a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_LoadBalancerAttribute.html"
+        target="_blank" rel="noopener noreferrer"
+        style="color:var(--custom-accent-blue);font-weight:600;text-decoration:none;border-bottom:1px solid var(--custom-accent-gold);">
+        AWS API reference ↗
+    </a>).
+    A separate attribute, <code>client_keep_alive.seconds</code>, caps the total lifetime of a persistent
+    HTTP connection regardless of activity — it defaults to <strong>3,600 seconds</strong> and is configurable
+    from 60 to 604,800 seconds (7 days). A connection that goes quiet for 60 seconds is closed by the ALB
+    and the next gRPC call triggers a new handshake. As a practical guide: at the 60-second default idle
+    timeout with intermittent traffic, configure up to <strong>60 reconnects/hr</strong>; with continuous
+    traffic where connections are never idle, configure <strong>1 reconnect/hr</strong> (only pod restarts
+    and deployments matter).
+</span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <input type="number" id="input-tls-reconnects" min="0" placeholder="1" oninput="recalculateRps()">
+                        <span class="tactic-unit">reconnects/hr</span>
+                    </div>
+                </div>
+                <div class="acm-note">
+                    <i class="fas fa-check-circle"></i>
+                    <span><strong>AWS Certificate Manager (ACM) — no additional cost.</strong> ACM issues, deploys, and auto-renews TLS/mTLS certificates at no charge for AWS-managed resources. There is no per-certificate or per-renewal fee.</span>
+                </div>
+            </div>
+
+            <!-- mTLS ─────────────────────────────────────────────────── -->
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check" id="tactic-mtls" onchange="toggleTlsOptions()">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-mtls">mTLS (mutual TLS) <span class="warning-badge">+ bytes</span> <span class="warning-badge" style="background:#fce4ec;border-color:#e57373;color:#b71c1c;">+ requests</span></label>
+                    <span class="tactic-description">
+                        Extends TLS with <strong>client certificate authentication</strong>. The server also requests and validates the client's X.509 certificate against the CA.
+                        <strong style="color:#1b5e20;">⊕ Same byte overhead as TLS</strong> per message frame.
+                        <strong style="color:#c0392b;">⚠ More handshake messages per reconnect</strong> — the full mTLS exchange adds CertificateRequest, client Certificate, and CertificateVerify: <strong>5 messages per reconnect</strong> vs. 2 for plain TLS.
+                        The CA validation call, client certificate exchange, and server-side verification all happen at connection setup, not per gRPC call.
+                    </span>
+                    <div class="byte-range-badge" id="mtls-byte-badge" style="display:none;">
+                        <i class="fas fa-weight-hanging" style="font-size:0.8rem;"></i>
+                        <span>Byte overhead per message:</span>
+                        <strong>21</strong> <span class="range-label">min</span> /
+                        <strong>29</strong> <span class="range-label">typical</span> /
+                        <strong>37</strong> <span class="range-label">max</span>
+                        <span class="range-label">bytes — RFC 8446 (identical to TLS)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shared reconnect config shown when TLS or mTLS (or both) are active -->
+            <div class="security-sub-params" id="mtls-params" style="display:none;">
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label">mTLS handshake — 5 messages per reconnect</label>
+                        <span class="tactic-description">
+                            Full mTLS exchange: ClientHello → ServerHello + Certificate + CertificateRequest → client Certificate → CertificateVerify → Finished.
+                            Configure reconnects/hr in the TLS section above — the same value is used for mTLS.
+                            Each of the 5 messages counts as one request-equivalent in the RPS model.
+                        </span>
+                    </div>
+                </div>
+                <div class="acm-note">
+                    <i class="fas fa-check-circle"></i>
+                    <span><strong>AWS Certificate Manager (ACM) — no additional cost.</strong> Client and server certificates are both managed by ACM at no charge. The CA-signed certificate validation against the certificate authority is handled by ACM automatically.</span>
+                </div>
+            </div>
+
+            <!-- OAuth 2.0 + JWT ────────────────────────────────────────── -->
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check" id="tactic-oauth" onchange="toggleOAuthParams(this.checked)">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-oauth">OAuth 2.0 + JWT <span class="warning-badge">+ bytes</span> <span class="warning-badge" style="background:#fce4ec;border-color:#e57373;color:#b71c1c;">+ requests</span></label>
+                    <span class="tactic-description">
+                        Secures each gRPC call with a Bearer token in the <code>Authorization</code> gRPC metadata header (RFC 7519 / RFC 7523 / RFC 9101).
+                        <strong style="color:#1b5e20;">⊕ Adds JWT bytes to every request</strong> — the token travels as a metadata header; responses carry no JWT overhead.
+                        <strong style="color:#c0392b;">⚠ Adds extra requests</strong> — token acquisition calls to the authorisation server (RFC 6749 §4.1) and, if remote introspection is used, one additional call per incoming gRPC request.
+                        <br><em style="font-size:0.8rem;">Enforced server-side by a gRPC interceptor (unary or stream).</em>
+                    </span>
+                    <div class="byte-range-badge" id="jwt-byte-badge" style="display:none;">
+                        <i class="fas fa-weight-hanging" style="font-size:0.8rem;"></i>
+                        <span>JWT header overhead per request:</span>
+                        <strong>300</strong> <span class="range-label">min</span> /
+                        <strong>650</strong> <span class="range-label">typical</span> /
+                        <strong>1,200</strong> <span class="range-label">max</span>
+                        <span class="range-label">bytes — RFC 7519/7523/9101</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-sub-params" id="oauth-params">
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label">Token validation mode</label>
+                        <span class="tactic-description">
+                            <strong>Local signature verification (recommended):</strong> the gRPC server validates the JWT cryptographic signature locally using the authorisation server's public key. Zero extra requests per gRPC call. The only extra calls are periodic token acquisitions.<br>
+                            <strong>Remote introspection (RFC 7662):</strong> the server calls the authorisation server for every incoming gRPC request to verify the token is still active. This <em>doubles</em> outbound request volume. Use only when real-time revocation checking is a hard requirement.
+                        </span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <select id="input-token-validation" onchange="recalculateRps()">
+                            <option value="LOCAL">Local (recommended)</option>
+                            <option value="REMOTE_INTROSPECTION">Remote introspection</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="input-token-ttl">Token TTL</label>
+                        <span class="tactic-description">How long a JWT is valid before the client must acquire a new one (RFC 6749 §4.1 / RFC 7519 <code>exp</code> claim). Longer TTL = fewer token acquisition calls to the authorisation server per second.</span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <input type="number" id="input-token-ttl" min="60" placeholder="3600" oninput="recalculateRps()">
+                        <span class="tactic-unit">seconds</span>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="input-concurrent-clients">Concurrent clients</label>
+                        <span class="tactic-description">Number of independent client instances sharing a token pool. Token acquisition is amortised across all clients — more clients sharing the same token means fewer acquisition calls per client per second.</span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <input type="number" id="input-concurrent-clients" min="1" placeholder="1" oninput="recalculateRps()">
+                        <span class="tactic-unit">clients</span>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label">Interceptor type</label>
+                        <span class="tactic-description">
+                            <strong>Unary interceptor:</strong> validates the JWT on every individual RPC call. Suitable for request/response APIs where each call is independent.<br>
+                            <strong>Stream interceptor:</strong> validates once at stream open and covers all messages within that stream lifetime. Lower per-message cost for long-lived bidirectional or server-streaming RPCs.
+                        </span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <select id="input-interceptor-type">
+                            <option value="UNARY">Unary interceptor</option>
+                            <option value="STREAM">Stream interceptor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="saga-live-preview" id="oauth-live-preview"></div>
+            </div>
+
+            <!-- Basic Authentication ───────────────────────────────────── -->
+            <div class="tactic-row">
+                <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-basic-auth" data-category="security"
+                       data-info="Basic Authentication sends base64(username:password) in every request Authorization header. No extra requests are generated, but the credential is valid until the password changes — there is no token expiry or revocation. Not recommended for production gRPC APIs.">
+                <div class="tactic-label-group">
+                    <label class="tactic-label" for="tactic-basic-auth">Basic Authentication <span class="warning-badge">+ bytes</span> <span class="warning-badge" style="background:#fff3cd;border-color:#ffc107;color:#856404;">⚠ Not recommended</span></label>
+                    <span class="tactic-description">
+                        Sends <code>Authorization: Basic base64(username:password)</code> in every request header (50–100 bytes per request).
+                        <strong>No extra requests</strong> are generated, but the credential is valid until the password is changed — there is no expiry, no rotation, and no revocation mechanism short of a password reset.
+                        Use only for internal tooling or local development. For production, prefer OAuth 2.0 + JWT which provides time-bounded, revocable, fine-grained access control per RFC 6749.
+                    </span>
+                </div>
+            </div>
+
+            <div class="tactics-info-banner" id="info-security"><i class="fas fa-info-circle info-icon"></i><span id="info-security-text"></span></div>
         </div>
     </div>
 
@@ -358,7 +540,6 @@
         <div class="rps-breakdown" id="rps-breakdown-text"></div>
     </div>
 </div>
-
 <div id="grpcOptions" class="card hidden">
     <h2>gRPC ProtocolBuffer file definition (IDL)</h2>
     <p>You have selected gRPC. Please upload your .proto file.</p>
@@ -403,9 +584,7 @@
             <div th:if="${not #lists.isEmpty(infoTactics)}">
                 <div class="tactics-group-label">ℹ️ Informational — No RPS Impact</div>
                 <table class="tactics-summary-table">
-                    <thead><tr>
-                        <th>Tactic</th><th>Configured Value</th><th>Description</th><th class="col-impact">RPS Impact</th>
-                    </tr></thead>
+                    <thead><tr><th>Tactic</th><th>Configured Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
                     <tbody>
                     <tr th:each="tactic : ${infoTactics}">
                         <td class="tactic-name-cell"  th:text="${tactic['name']}"></td>
@@ -420,9 +599,7 @@
             <div th:if="${not #lists.isEmpty(rpsTactics)}">
                 <div class="tactics-group-label">⚠️ RPS-Impacting — Increases Networking Costs</div>
                 <table class="tactics-summary-table">
-                    <thead><tr>
-                        <th>Tactic</th><th>Configured Value</th><th>Description</th><th class="col-impact">RPS Impact</th>
-                    </tr></thead>
+                    <thead><tr><th>Tactic</th><th>Configured Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
                     <tbody>
                     <tr th:each="tactic : ${rpsTactics}">
                         <td class="tactic-name-cell"   th:text="${tactic['name']}"></td>
@@ -439,13 +616,34 @@
                 <div class="banner-body">
                     <div class="banner-title">RPS Adjusted by Active Tactics</div>
                     <div class="banner-values">
-                        <div class="rps-val">
-                            <span class="rps-val-label">Base RPS</span>
-                            <span class="rps-val-number" th:text="${baseRps}"></span>
+                        <div class="rps-val"><span class="rps-val-label">Base RPS</span><span class="rps-val-number" th:text="${baseRps}"></span></div>
+                        <div class="rps-val"><span class="rps-val-label">Effective RPS</span><span class="rps-val-number increased" th:text="${effectiveRps}"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-overhead-banner" th:if="${securityByteOverheadApplied}">
+                <i class="fas fa-lock banner-icon"></i>
+                <div class="banner-body">
+                    <div class="banner-title">Security Byte Overhead Applied to Message Sizes</div>
+                    <div class="overhead-grid">
+                        <div class="overhead-item" th:if="${tlsOverheadBytes > 0}">
+                            <span class="overhead-item-label">TLS per-message overhead</span>
+                            <span class="overhead-item-value" th:text="${tlsOverheadBytes} + ' bytes (typical)'"></span>
+                            <span class="overhead-item-range" th:text="${tlsOverheadRange}"></span>
                         </div>
-                        <div class="rps-val">
-                            <span class="rps-val-label">Effective RPS</span>
-                            <span class="rps-val-number increased" th:text="${effectiveRps}"></span>
+                        <div class="overhead-item" th:if="${jwtOverheadBytes > 0}">
+                            <span class="overhead-item-label">JWT per-request overhead</span>
+                            <span class="overhead-item-value" th:text="${jwtOverheadBytes} + ' bytes (typical)'"></span>
+                            <span class="overhead-item-range" th:text="${jwtOverheadRange}"></span>
+                        </div>
+                        <div class="overhead-item">
+                            <span class="overhead-item-label">Effective request size</span>
+                            <span class="overhead-item-value" th:text="${requestSizeEffective} + ' bytes'"></span>
+                        </div>
+                        <div class="overhead-item">
+                            <span class="overhead-item-label">Effective response size</span>
+                            <span class="overhead-item-value" th:text="${responseSizeEffective} + ' bytes'"></span>
                         </div>
                     </div>
                 </div>
@@ -455,15 +653,17 @@
         <table class="results-table">
             <thead><tr>
                 <th>Message Type</th>
-                <th>ProtocolBuffer size (bytes)</th>
+                <th>Proto size (bytes)</th>
+                <th>Effective size (bytes)</th>
                 <th>Requests/month</th>
                 <th>Throughput (GB/month)</th>
-                <th>Data Transfer Cost to Internet (USD/month)</th>
+                <th>Data Transfer Cost (USD/month)</th>
             </tr></thead>
             <tbody>
             <tr>
                 <td>Request</td>
                 <td th:text="${requestSize}"></td>
+                <td th:text="${requestSizeEffective}"></td>
                 <td th:text="${requestsPerMonth}"></td>
                 <td th:text="${requestGbPerMonth} + ' GB'"></td>
                 <td>—</td>
@@ -471,6 +671,7 @@
             <tr>
                 <td>Response</td>
                 <td th:text="${responseSize}"></td>
+                <td th:text="${responseSizeEffective}"></td>
                 <td th:text="${requestsPerMonth}"></td>
                 <td th:text="${responseGbPerMonth} + ' GB'"></td>
                 <td th:text="'$ ' + ${dataTransferCostUsd}"></td>
@@ -481,7 +682,7 @@
             * Data transfer cost applies to outbound (response) traffic only, using AWS standard
             internet egress tiered pricing for US East (N. Virginia):
             first 10 TB at $0.09/GB, next 40 TB at $0.085/GB, next 100 TB at $0.07/GB, beyond 150 TB at $0.05/GB.
-            Inbound (request) traffic is free.
+            Inbound (request) traffic is free. Effective size includes TLS record overhead (RFC 8446) and JWT bearer token header overhead (RFC 7519) where applicable, calculated using typical values.
             For more information check the
             <a href="https://calculator.aws/#/createCalculator/ec2-enhancement" target="_blank" rel="noopener noreferrer"
                style="color:var(--custom-accent-blue);font-weight:600;text-decoration:none;border-bottom:1px solid var(--custom-accent-gold);padding-bottom:1px;transition:color 0.2s ease,border-color 0.2s ease;"
@@ -492,7 +693,6 @@
         </p>
     </div>
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const grpcOptionsDiv          = document.getElementById('grpcOptions');
@@ -553,14 +753,13 @@
         });
 
         let saveTimer = null;
-
         function scheduleSave() {
             clearTimeout(saveTimer);
             saveTimer = setTimeout(saveTacticsToSession, 400);
         }
 
         function collectTacticsDTO() {
-            return {
+          dto = {
                 requestsPerSecond: parseInt(document.getElementById('requestsPerSecond').value) || 0,
                 reliabilityTactics: {
                     reliabilityClientSideLoadBalancerTactic: document.getElementById('tactic-client-lb').checked,
@@ -586,8 +785,27 @@
                     sagaCompensatableTransactions: parseInt(document.getElementById('input-saga-compensatable').value) || 0,
                     sagaRetriableTransactions:     parseInt(document.getElementById('input-saga-retriable').value) || 0,
                     sagaPivotTransactions:         parseInt(document.getElementById('input-saga-pivot').value) || 0
+                },
+                securityTactics: {
+                    tlsTactic: {
+                      tlsEnabled:           document.getElementById('tactic-tls').checked,
+                      mtlsEnabled:          document.getElementById('tactic-mtls').checked,
+                      tlsReconnectsPerHour: parseInt(document.getElementById('input-tls-reconnects').value) || 0
+                    },
+                    jwtTactic: {
+                      oauthJwtEnabled:      document.getElementById('tactic-oauth').checked,
+                      tokenValidationMode:  document.getElementById('input-token-validation').value,
+                      tokenTtlSeconds:      parseInt(document.getElementById('input-token-ttl').value) || 3600,
+                      concurrentClients:    parseInt(document.getElementById('input-concurrent-clients').value) || 1,
+                      interceptorType:      document.getElementById('input-interceptor-type').value
+                    },
+                    basicAuthenticationPattern: {
+                      basicAuthEnabled:     document.getElementById('tactic-basic-auth').checked
+                    }
                 }
             };
+            console.log(dto);
+            return dto;
         }
 
         async function saveTacticsToSession() {
@@ -606,7 +824,9 @@
             '#requestsPerSecond, .tactic-check, ' +
             '#input-timeout, #input-retry-times, ' +
             '#input-cb-min-calls, #input-cb-half-open, #input-cb-wait, #input-cb-failure-rate, ' +
-            '#input-saga-compensatable, #input-saga-retriable, #input-saga-pivot'
+            '#input-saga-compensatable, #input-saga-retriable, #input-saga-pivot, ' +
+            '#input-tls-reconnects, #input-token-ttl, #input-concurrent-clients, ' +
+            '#input-token-validation, #input-interceptor-type'
         ).forEach(el => {
             el.addEventListener('change', scheduleSave);
             el.addEventListener('input',  scheduleSave);
@@ -621,7 +841,7 @@
 
                 document.getElementById('requestsPerSecond').value = dto.requestsPerSecond;
 
-                const setCheck = (id, val) => { document.getElementById(id).checked = val; };
+                const setCheck = (id, val) => { document.getElementById(id).checked = !!val; };
                 const setVal   = (id, val) => { document.getElementById(id).value   = val || ''; };
 
                 setCheck('tactic-client-lb', dto.reliabilityTactics.reliabilityClientSideLoadBalancerTactic);
@@ -650,6 +870,25 @@
                     setVal('input-saga-compensatable', dto.sagaPattern.sagaCompensatableTransactions);
                     setVal('input-saga-retriable',     dto.sagaPattern.sagaRetriableTransactions);
                     setVal('input-saga-pivot',         dto.sagaPattern.sagaPivotTransactions);
+                }
+
+                if (dto.securityTactics) {
+                    const s = dto.securityTactics;
+                    setCheck('tactic-tls',        s.tlsEnabled);
+                    setCheck('tactic-mtls',        s.mtlsEnabled);
+                    setCheck('tactic-basic-auth',  s.basicAuthEnabled);
+                    if (s.tlsEnabled || s.mtlsEnabled) {
+                        toggleTlsOptions();
+                        setVal('input-tls-reconnects', s.tlsReconnectsPerHour);
+                    }
+                    setCheck('tactic-oauth', s.oauthJwtEnabled);
+                    if (s.oauthJwtEnabled) {
+                        toggleOAuthParams(true);
+                        document.getElementById('input-token-validation').value = s.tokenValidationMode || 'LOCAL';
+                        setVal('input-token-ttl',          s.tokenTtlSeconds);
+                        setVal('input-concurrent-clients', s.concurrentClients);
+                        document.getElementById('input-interceptor-type').value = s.interceptorType || 'UNARY';
+                    }
                 }
 
                 recalculateRps();
@@ -710,17 +949,35 @@
         recalculateRps();
     }
 
+    function toggleTlsOptions() {
+        const tlsOn  = document.getElementById('tactic-tls').checked;
+        const mtlsOn = document.getElementById('tactic-mtls').checked;
+        document.getElementById('tls-params').style.display   = tlsOn  ? 'block' : 'none';
+        document.getElementById('mtls-params').style.display  = mtlsOn ? 'block' : 'none';
+        document.getElementById('tls-byte-badge').style.display  = tlsOn  ? 'inline-flex' : 'none';
+        document.getElementById('mtls-byte-badge').style.display = mtlsOn ? 'inline-flex' : 'none';
+        recalculateRps();
+    }
+
+    function toggleOAuthParams(show) {
+        document.getElementById('oauth-params').style.display = show ? 'block' : 'none';
+        document.getElementById('jwt-byte-badge').style.display = show ? 'inline-flex' : 'none';
+        recalculateRps();
+    }
+
     function recalculateRps() {
         const baseRps = parseInt(document.getElementById('requestsPerSecond').value) || 0;
         if (baseRps === 0) {
             document.getElementById('rps-impact-summary').classList.remove('visible');
             document.getElementById('saga-live-preview').classList.remove('visible');
+            document.getElementById('oauth-live-preview').classList.remove('visible');
             return;
         }
 
         let effectiveRps = baseRps;
         const breakdown  = [];
 
+        // SAGA — multiplicative
         const sagaCb = document.getElementById('tactic-saga');
         if (sagaCb?.checked) {
             const comp  = parseInt(document.getElementById('input-saga-compensatable').value) || 0;
@@ -743,12 +1000,57 @@
             document.getElementById('saga-live-preview').classList.remove('visible');
         }
 
+        // Retry — additive
         const retryCb = document.getElementById('tactic-retry');
         if (retryCb?.checked) {
             const times = parseInt(document.getElementById('input-retry-times').value) || 1;
             const extra = baseRps * times;
             effectiveRps += extra;
             breakdown.push(`+${extra.toLocaleString()} from Retry (×${times})`);
+        }
+
+        // TLS/mTLS handshake messages — additive, reconnect-rate driven
+        const tlsOn  = document.getElementById('tactic-tls').checked;
+        const mtlsOn = document.getElementById('tactic-mtls').checked;
+        if (tlsOn || mtlsOn) {
+            const reconnects = parseInt(document.getElementById('input-tls-reconnects').value) || 0;
+            const msgs       = mtlsOn ? 5 : 2;
+            const handshakeRps = Math.round(reconnects * msgs / 3600);
+            if (handshakeRps > 0) {
+                effectiveRps += handshakeRps;
+                breakdown.push(`+${handshakeRps} from ${mtlsOn ? 'mTLS' : 'TLS'} handshakes`);
+            }
+        }
+
+        // OAuth 2.0 token acquisition + remote introspection
+        const oauthCb = document.getElementById('tactic-oauth');
+        if (oauthCb?.checked) {
+            const ttl     = parseInt(document.getElementById('input-token-ttl').value)         || 3600;
+            const clients = parseInt(document.getElementById('input-concurrent-clients').value) || 1;
+            const mode    = document.getElementById('input-token-validation').value;
+
+            const tokenAcq = Math.round(baseRps / (ttl * clients));
+            let oauthExtra = tokenAcq;
+
+            if (mode === 'REMOTE_INTROSPECTION') {
+                oauthExtra += baseRps;
+                breakdown.push(`+${baseRps.toLocaleString()} OAuth remote introspection`);
+            }
+            if (tokenAcq > 0) {
+                breakdown.push(`+${tokenAcq.toLocaleString()} OAuth token acquisition req/s`);
+            }
+
+            effectiveRps += oauthExtra;
+
+            const oauthPreview = document.getElementById('oauth-live-preview');
+            const introspNote  = mode === 'REMOTE_INTROSPECTION' ? ` + ${baseRps.toLocaleString()} introspection` : '';
+            const acqNote      = tokenAcq > 0 ? ` + ${tokenAcq.toLocaleString()} token acq` : '';
+            oauthPreview.innerHTML =
+                `<i class="fas fa-calculator" style="margin-right:6px;"></i>` +
+                `<strong>${baseRps.toLocaleString()} base${introspNote}${acqNote} = ${effectiveRps.toLocaleString()} total req/s</strong>`;
+            oauthPreview.classList.add('visible');
+        } else {
+            document.getElementById('oauth-live-preview').classList.remove('visible');
         }
 
         const summaryEl   = document.getElementById('rps-impact-summary');

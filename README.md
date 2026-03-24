@@ -52,7 +52,12 @@ in the context of an **E-Commerce microservice**:
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
 2. [Data Transfer OUT From Amazon EC2 To Internet](https://aws.amazon.com/ec2/pricing/on-demand/).
-3. [ArchUnit for Architectural Tests](https://www.archunit.org/userguide/html/000_Index.html)
+3. [ArchUnit for Architectural Tests](https://www.archunit.org/userguide/html/000_Index.html).
+4. [RFC 9113 - HTTP/2 and TLS 1.2 or higher](https://www.rfc-editor.org/rfc/rfc9113.html#TLSUsage).
+5. [RFC 8446 - TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446.html).
+6. [RFC 5116 - Authenticated Encryption with Associated Data](https://www.rfc-editor.org/rfc/rfc5116).
+7. [RFC 7519 - JSON Web Token (JWT) Overview](https://www.rfc-editor.org/rfc/rfc7519.html#section-3).
+8. [RFC 9101 - The OAuth 2.0 Authorization Framework: JWT-Secured Authorization Request (JAR)](https://www.rfc-editor.org/rfc/rfc9101).
 
 ## Credits
 [CREDITS.md](CREDITS.md)
