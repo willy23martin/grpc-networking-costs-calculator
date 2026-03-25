@@ -11,7 +11,7 @@ import com.calculator.domain.dto.results.CompilationResult;
 import com.calculator.domain.dto.results.JavaCompilationResult;
 import com.calculator.domain.dto.results.MessageSizeCalculationResult;
 import com.calculator.domain.dto.tactics.ArchitecturalTacticsContext;
-import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
@@ -91,9 +91,9 @@ public class TCOCalculatorController implements ErrorController {
             return "calculator";
         }
 
-        TacticsConfigDTO tacticsConfiguration = (TacticsConfigDTO) session.getAttribute(SESSION_KEY);
+        ArchitecturalDecisionsDTO tacticsConfiguration = (ArchitecturalDecisionsDTO) session.getAttribute(SESSION_KEY);
         if (tacticsConfiguration == null) {
-            tacticsConfiguration = TacticsConfigDTO.empty();
+            tacticsConfiguration = ArchitecturalDecisionsDTO.empty();
             model.addAttribute("uploadMessage", NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
         }
 

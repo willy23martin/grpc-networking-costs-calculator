@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/session/tactics")
 public class TacticsSessionController {
 
-    static final String SESSION_KEY = "tacticsConfig";
+    static final String SESSION_KEY = "architecturalDecisions";
 
     @PostMapping
     public ResponseEntity<Void> saveTactics(
-            @RequestBody TacticsConfigDTO dto,
+            @RequestBody ArchitecturalDecisionsDTO dto,
             HttpSession session) {
 
         session.setAttribute(SESSION_KEY, dto);
@@ -21,9 +21,9 @@ public class TacticsSessionController {
     }
 
     @GetMapping
-    public ResponseEntity<TacticsConfigDTO> getTactics(HttpSession session) {
-        TacticsConfigDTO dto = (TacticsConfigDTO) session.getAttribute(SESSION_KEY);
-        return ResponseEntity.ok(dto != null ? dto : TacticsConfigDTO.empty());
+    public ResponseEntity<ArchitecturalDecisionsDTO> getTactics(HttpSession session) {
+        ArchitecturalDecisionsDTO architecturalDecisionsDTO = (ArchitecturalDecisionsDTO) session.getAttribute(SESSION_KEY);
+        return ResponseEntity.ok(architecturalDecisionsDTO != null ? architecturalDecisionsDTO : ArchitecturalDecisionsDTO.empty());
     }
 
     @DeleteMapping

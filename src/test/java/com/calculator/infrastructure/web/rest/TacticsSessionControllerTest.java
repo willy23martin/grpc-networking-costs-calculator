@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
@@ -132,7 +132,7 @@ class TacticsSessionControllerTest {
 
     @Test
     void shouldSaveTacticsToSessionAndReturnNoContentWhenNoTacticsAreSelected() throws Exception {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
                 new TimeoutPattern(true, 300),
@@ -166,7 +166,7 @@ class TacticsSessionControllerTest {
 
     @Test
     void shouldReturnStoredTacticsFromSession() throws Exception {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 500,
                 new ReliabilityTactics(true, false),
                 new TimeoutPattern(true, 200),
@@ -191,7 +191,7 @@ class TacticsSessionControllerTest {
 
     @Test
     void shouldClearTacticsFromSessionAndReturnNoContent() throws Exception {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, true),
                 new TimeoutPattern(false, 0),

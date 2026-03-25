@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
@@ -31,7 +31,7 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldSaveTacticsToSessionAndReturnNoContent() throws Exception {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true,  false),
                 new TimeoutPattern(true,  300),
@@ -44,7 +44,7 @@ class ProtoFileUploadLimitIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<TacticsConfigDTO> request = new HttpEntity<>(dto, headers);
+        HttpEntity<ArchitecturalDecisionsDTO> request = new HttpEntity<>(dto, headers);
         ResponseEntity<Void> response =
                 restTemplate.postForEntity("/api/session/tactics", request, Void.class);
 
@@ -53,7 +53,7 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldNotThrowFileCountLimitExceededExceptionWhenUploadingProtoFileOnly() {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
                 new TimeoutPattern(true, 300),
@@ -85,8 +85,8 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldReturnEmptyTacticsWhenNoSessionExists() {
-        ResponseEntity<TacticsConfigDTO> response =
-                restTemplate.getForEntity("/api/session/tactics", TacticsConfigDTO.class);
+        ResponseEntity<ArchitecturalDecisionsDTO> response =
+                restTemplate.getForEntity("/api/session/tactics", ArchitecturalDecisionsDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -97,7 +97,7 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldClearTacticsFromSession() throws Exception {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 500,
                 new ReliabilityTactics(true, true),
                 new TimeoutPattern(false, 0),
@@ -112,8 +112,8 @@ class ProtoFileUploadLimitIntegrationTest {
 
         restTemplate.delete("/api/session/tactics");
 
-        ResponseEntity<TacticsConfigDTO> response =
-                restTemplate.getForEntity("/api/session/tactics", TacticsConfigDTO.class);
+        ResponseEntity<ArchitecturalDecisionsDTO> response =
+                restTemplate.getForEntity("/api/session/tactics", ArchitecturalDecisionsDTO.class);
         assertThat(response.getBody().requestsPerSecond()).isZero();
         assertThat(response.getBody().reliabilityTactics().reliabilityClientSideLoadBalancerTactic()).isFalse();
     }

@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.dto.tactics.security.authentication.BasicAuthenticationPattern;
@@ -40,12 +40,12 @@ public class SecurityTacticsSessionControllerTest {
                 new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(false)
         );
-        TacticsConfigDTO tacticsConfigDTO = setTacticsDto(1000, securityTactics);
+        ArchitecturalDecisionsDTO architecturalDecisionsDTO = setTacticsDto(1000, securityTactics);
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(setTacticsSessionJsonFrom(tacticsConfigDTO))
+                        .content(setTacticsSessionJsonFrom(architecturalDecisionsDTO))
                         .session(session))
                 .andExpect(status().isNoContent());
 
@@ -66,7 +66,7 @@ public class SecurityTacticsSessionControllerTest {
                 new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(false)
         );
-        TacticsConfigDTO dto = setTacticsDto(1000, mtls);
+        ArchitecturalDecisionsDTO dto = setTacticsDto(1000, mtls);
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
@@ -92,7 +92,7 @@ public class SecurityTacticsSessionControllerTest {
                 new JWTTactic(true, OAuthTokenValidationMode.LOCAL, 1800, 3, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(false)
         );
-        TacticsConfigDTO dto = setTacticsDto(2000, oauth);
+        ArchitecturalDecisionsDTO dto = setTacticsDto(2000, oauth);
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
@@ -120,7 +120,7 @@ public class SecurityTacticsSessionControllerTest {
                 new JWTTactic(true, OAuthTokenValidationMode.REMOTE_INTROSPECTION, 3600, 1, InterceptorType.STREAM),
                 new BasicAuthenticationPattern(false)
         );
-        TacticsConfigDTO dto = setTacticsDto(500, oauth);
+        ArchitecturalDecisionsDTO dto = setTacticsDto(500, oauth);
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
@@ -145,7 +145,7 @@ public class SecurityTacticsSessionControllerTest {
                 new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(true)
         );
-        TacticsConfigDTO dto = setTacticsDto(300, basicAuth);
+        ArchitecturalDecisionsDTO dto = setTacticsDto(300, basicAuth);
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
@@ -169,7 +169,7 @@ public class SecurityTacticsSessionControllerTest {
                 new JWTTactic(true, OAuthTokenValidationMode.REMOTE_INTROSPECTION, 900, 5, InterceptorType.STREAM),
                 new BasicAuthenticationPattern(false)
         );
-        TacticsConfigDTO dto = setTacticsDto(5000, allSecurityTactics);
+        ArchitecturalDecisionsDTO dto = setTacticsDto(5000, allSecurityTactics);
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")

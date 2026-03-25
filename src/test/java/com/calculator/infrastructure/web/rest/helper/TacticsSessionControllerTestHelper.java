@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest.helper;
 
-import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
@@ -10,8 +10,8 @@ import com.calculator.domain.dto.tactics.security.SecurityTactics;
 
 public class TacticsSessionControllerTestHelper {
 
-    public static TacticsConfigDTO setTacticsDto(long rps, SecurityTactics securityTactics) {
-        return new TacticsConfigDTO(
+    public static ArchitecturalDecisionsDTO setTacticsDto(long rps, SecurityTactics securityTactics) {
+        return new ArchitecturalDecisionsDTO(
                 rps,
                 new ReliabilityTactics(false, false),
                 new TimeoutPattern(false, 0),
@@ -22,8 +22,8 @@ public class TacticsSessionControllerTestHelper {
         );
     }
 
-    public static String setTacticsSessionJsonFrom(TacticsConfigDTO tacticsConfigDTO) {
-        SecurityTactics securityTactics = tacticsConfigDTO.securityTactics();
+    public static String setTacticsSessionJsonFrom(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
+        SecurityTactics securityTactics = architecturalDecisionsDTO.securityTactics();
         return """
                 {
                   "requestsPerSecond": %d,
@@ -71,22 +71,22 @@ public class TacticsSessionControllerTestHelper {
                   }
                 }
                 """.formatted(
-                tacticsConfigDTO.requestsPerSecond(),
-                tacticsConfigDTO.reliabilityTactics().reliabilityClientSideLoadBalancerTactic(),
-                tacticsConfigDTO.reliabilityTactics().reliabilityServerSideLoadBalancerTactic(),
-                tacticsConfigDTO.timeoutTactic().resiliencyTimeoutTactic(),
-                tacticsConfigDTO.timeoutTactic().tacticTimeoutMilliseconds(),
-                tacticsConfigDTO.retryTactic().resiliencyRetryTactic(),
-                tacticsConfigDTO.retryTactic().tacticRetryTimes(),
-                tacticsConfigDTO.circuitBreakerTactic().resiliencyCircuitBreakerPattern(),
-                tacticsConfigDTO.circuitBreakerTactic().circuitBreakerPatternMinimumCalls(),
-                tacticsConfigDTO.circuitBreakerTactic().circuitBreakerHalfOpen(),
-                tacticsConfigDTO.circuitBreakerTactic().circuitBreakerWaitMilliseconds(),
-                tacticsConfigDTO.circuitBreakerTactic().circuitBreakerFailureRate(),
-                tacticsConfigDTO.sagaPattern().microservicesSAGAPattern(),
-                tacticsConfigDTO.sagaPattern().sagaCompensatableTransactions(),
-                tacticsConfigDTO.sagaPattern().sagaRetriableTransactions(),
-                tacticsConfigDTO.sagaPattern().sagaPivotTransactions(),
+                architecturalDecisionsDTO.requestsPerSecond(),
+                architecturalDecisionsDTO.reliabilityTactics().reliabilityClientSideLoadBalancerTactic(),
+                architecturalDecisionsDTO.reliabilityTactics().reliabilityServerSideLoadBalancerTactic(),
+                architecturalDecisionsDTO.timeoutTactic().resiliencyTimeoutTactic(),
+                architecturalDecisionsDTO.timeoutTactic().tacticTimeoutMilliseconds(),
+                architecturalDecisionsDTO.retryTactic().resiliencyRetryTactic(),
+                architecturalDecisionsDTO.retryTactic().tacticRetryTimes(),
+                architecturalDecisionsDTO.circuitBreakerTactic().resiliencyCircuitBreakerPattern(),
+                architecturalDecisionsDTO.circuitBreakerTactic().circuitBreakerPatternMinimumCalls(),
+                architecturalDecisionsDTO.circuitBreakerTactic().circuitBreakerHalfOpen(),
+                architecturalDecisionsDTO.circuitBreakerTactic().circuitBreakerWaitMilliseconds(),
+                architecturalDecisionsDTO.circuitBreakerTactic().circuitBreakerFailureRate(),
+                architecturalDecisionsDTO.sagaPattern().microservicesSAGAPattern(),
+                architecturalDecisionsDTO.sagaPattern().sagaCompensatableTransactions(),
+                architecturalDecisionsDTO.sagaPattern().sagaRetriableTransactions(),
+                architecturalDecisionsDTO.sagaPattern().sagaPivotTransactions(),
                 securityTactics.tlsTactic().tlsEnabled(),
                 securityTactics.tlsTactic().mtlsEnabled(),
                 securityTactics.tlsTactic().tlsReconnectsPerHour(),

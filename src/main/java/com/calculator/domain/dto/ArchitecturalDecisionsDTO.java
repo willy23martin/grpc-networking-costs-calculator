@@ -8,7 +8,7 @@ import com.calculator.domain.dto.tactics.resiliency.RetryPattern;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
 
-public record TacticsConfigDTO(
+public record ArchitecturalDecisionsDTO(
         long requestsPerSecond,
         ReliabilityTactics reliabilityTactics,
         TimeoutPattern timeoutTactic,
@@ -17,8 +17,8 @@ public record TacticsConfigDTO(
         SAGAPattern sagaPattern,
         SecurityTactics securityTactics
 ) {
-    public static TacticsConfigDTO empty() {
-        return new TacticsConfigDTO(
+    public static ArchitecturalDecisionsDTO empty() {
+        return new ArchitecturalDecisionsDTO(
                 0,
                 ReliabilityTactics.empty(),
                 TimeoutPattern.empty(),

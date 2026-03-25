@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest.helper;
 
-import com.calculator.domain.dto.TacticsConfigDTO;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
@@ -11,12 +11,12 @@ import org.springframework.mock.web.MockMultipartFile;
 
 public class TCOCalculatorControllerTestsHelper {
 
-    public static TacticsConfigDTO noTactics(long rps) {
+    public static ArchitecturalDecisionsDTO noTactics(long rps) {
         return noTactics(rps, SecurityTactics.empty());
     }
 
-    public static TacticsConfigDTO noTactics(long rps, SecurityTactics security) {
-        return new TacticsConfigDTO(
+    public static ArchitecturalDecisionsDTO noTactics(long rps, SecurityTactics security) {
+        return new ArchitecturalDecisionsDTO(
                 rps,
                 new ReliabilityTactics(false, false),
                 new TimeoutPattern(false, 0),
@@ -27,8 +27,8 @@ public class TCOCalculatorControllerTestsHelper {
         );
     }
 
-    public static TacticsConfigDTO sagaOnly(int compensatable, int retriable, int pivot) {
-        return new TacticsConfigDTO(
+    public static ArchitecturalDecisionsDTO sagaOnly(int compensatable, int retriable, int pivot) {
+        return new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(false, false),
                 new TimeoutPattern(false, 0),
