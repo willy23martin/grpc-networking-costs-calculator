@@ -1,4 +1,4 @@
-package com.calculator.domain.dto.tactics.resiliency;
+package com.calculator.domain.dto.tactics.resiliency.retry;
 
 public record RetryPattern(
         boolean resiliencyRetryTactic,

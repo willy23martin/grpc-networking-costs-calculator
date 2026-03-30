@@ -37,6 +37,8 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static com.calculator.domain.dto.tactics.microservices.SAGAPatternCostMessages.SAGA_PATTERN_COSTS_ALTER_MESSAGE;
+import static com.calculator.domain.dto.tactics.resiliency.retry.RetryPatternCostMessages.RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE;
 import static com.calculator.domain.dto.tactics.security.oauth.jwt.JWTOverhead.*;
 import static com.calculator.infrastructure.web.rest.TacticsSessionController.SESSION_KEY;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.initializeProtoFileFullyQualifiedProperties;
@@ -55,21 +57,15 @@ public class TCOCalculatorController implements ErrorController {
             Results are based on default settings (all tactics disabled).
             Configure tactics and re-upload to get accurate results.
             """;
-    public static final String RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE =
-            """
-            Retries gRPC packet emission under temporary outages. Increases networking costs
-            as up to N additional packets may be sent per logical request.
-            """;
-    public static final String SAGA_PATTERN_COSTS_ALTER_MESSAGE =
-            """
-            Each logical request triggers one SAGA instance. Every step in that instance
-            is an independent gRPC call, so actual traffic = base RPS × steps per instance.
-            """;
 
-    @Autowired AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
-    @Autowired ProtocolBufferService protocolBufferService;
-    @Autowired CompilationService compilationService;
-    @Autowired ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
+    @Autowired
+    AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
+    @Autowired
+    ProtocolBufferService protocolBufferService;
+    @Autowired
+    CompilationService compilationService;
+    @Autowired
+    ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
 
     private final Logger log = Logger.getLogger(TCOCalculatorController.class.getName());
 
@@ -234,7 +230,7 @@ public class TCOCalculatorController implements ErrorController {
                                      List<Map<String, String>> rpsTactics) {
         long extra = baseRps * t.tacticRetryTimes();
         rpsTactics.add(tacticEntry("Retry", t.tacticRetryTimes() + " max retries",
-                RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE,
+                RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE.getMessage(),
                 "+" + String.format(DISPLAY_LOCALE, "%,d", extra) + " req/s"));
     }
 
@@ -248,7 +244,7 @@ public class TCOCalculatorController implements ErrorController {
         String impact = steps > 0
                 ? "×" + steps + " steps → " + String.format(DISPLAY_LOCALE, "%,d", baseRps * steps) + " req/s"
                 : "No steps configured";
-        rpsTactics.add(tacticEntry("SAGA Pattern", sagaConfig, SAGA_PATTERN_COSTS_ALTER_MESSAGE, impact));
+        rpsTactics.add(tacticEntry("SAGA Pattern", sagaConfig, SAGA_PATTERN_COSTS_ALTER_MESSAGE.getMessage(), impact));
     }
 
     private void populateSecurityTactics(SecurityTactics securityTactics, long baseRequestsPerSecond,

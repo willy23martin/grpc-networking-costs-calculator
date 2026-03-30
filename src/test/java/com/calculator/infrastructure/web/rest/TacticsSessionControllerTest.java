@@ -5,7 +5,7 @@ import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
-import com.calculator.domain.dto.tactics.resiliency.RetryPattern;
+import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.dto.tactics.security.oauth.OAuthTokenValidationMode;

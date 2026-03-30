@@ -1,23 +1,13 @@
-# gRPC TCO Networking Costs Calculator
-gRPC-based Microservices Networking Costs Calculator based on Protocol Buffer definitions and the AWS Pricing API.
+# gRPC TCO Costs Calculator
+gRPC-based MACH Microservice TCO Costs Calculator based on Protocol Buffer definitions and the AWS Pricing API.
 
-This service calculates the Networking costs in AWS for a gRPC-based Mircorservices by using the Protocol Buffers definition of the service.
+This service calculates the TCO costs for a gRPC-based Microservices MACH Architecture's service by using the Protocol Buffers definition of the service.
 
-![TCO Calculator select protocol.png](src/main/resources/images/TCO%20Calculator%20select%20protocol.png)
+![Toolkit-Header.png](src/main/resources/images/Toolkit-Header.png)
 
-![TCO Calculator gRPC selected and tactics.png](src/main/resources/images/TCO%20Calculator%20gRPC%20selected%20and%20tactics.png)
+![Toolkit-Phase1Body.png](src/main/resources/images/Toolkit-Phase1Body.png)
 
-![TCO Calculator reliability tactics.png](src/main/resources/images/TCO%20Calculator%20reliability%20tactics.png)
-
-![TCO Calculator resiliency tactics.png](src/main/resources/images/TCO%20Calculator%20resiliency%20tactics.png)
-
-![TCO Calculator microservices tactics.png](src/main/resources/images/TCO%20Calculator%20microservices%20tactics.png)
-
-![gRPC Protocol Buffer file uploader to calculate tco costs.png](src/main/resources/images/gRPC%20Protocol%20Buffer%20file%20uploader%20to%20calculate%20tco%20costs.png)
-
-![TCO Networking costs part I.png](src/main/resources/images/TCO%20Networking%20costs%20part%20I.png)
-
-![TCO Networking costs part II.png](src/main/resources/images/TCO%20Networking%20costs%20part%20II.png)
+![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
 ## Protocol Buffer files:
 You can find the **Protocol Buffers files** in the [protos](src/main/resources/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
@@ -48,6 +38,41 @@ in the context of an **E-Commerce microservice**:
 2. Execute ``aws login`` in your terminal. That will redirect you to your AWS logged account to get the **AWS SDK authenticated**.
 3. Execute in your terminal ``java -jar target\gRPCTCONetworkingCostCalculator-1.0-SNAPSHOT.jar``
 4. In your browser go to [Service URL](http://localhost:8080/).
+5. To interact with the functionalities you must take into account the FinOps-gRPC End2End Model Interaction Process described below.
+
+## FinOps - gRPC - End2End Model Interaction Process for Software Architects and FinOps Engineers
+![FinOps-gRPC-Architect-End2EndModel-Interaction-Process.png](src/main/resources/images/FinOps-gRPC-Architect-End2EndModel-Interaction-Process.png)
+
+### Identity of the service:
+![Phase1.png](src/main/resources/images/example/Phase1.png)
+
+### Select the use case, upload Protofile and define Consumers:
+![Toolkit-Phase2Body.png](src/main/resources/images/Toolkit-Phase2Body.png)
+
+### End2End Model Interaction Process
+
+#### Choose a Quality Attribute
+![Toolkit-Phase3Body.png](src/main/resources/images/Toolkit-Phase3Body.png)
+#### Choose Tactics to Promote Quality Attribute
+![Toolkit-Phase3TacticsSelectionBody.png](src/main/resources/images/Toolkit-Phase3TacticsSelectionBody.png)
+
+#### Map Cloud Services to Implement those tactics:
+![Toolkit-Phase3AWSServicesMappingBody.png](src/main/resources/images/Toolkit-Phase3AWSServicesMappingBody.png)
+
+#### Calculate Base Costs:
+![Toolkit-Phase3CalculateBaseCostsBody.png](src/main/resources/images/Toolkit-Phase3CalculateBaseCostsBody.png)
+
+#### Define costs optimization strategies (FinOps practices)}
+Pending
+
+#### Modify Configuration of Cloud Services based on FinOps practices
+Pending
+
+#### Calculate the new cost (TCO Costs) and Unit Economics:
+![Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png](src/main/resources/images/Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png)
+
+### Discernment with FinOps Personas and Engineering Teams:
+![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
