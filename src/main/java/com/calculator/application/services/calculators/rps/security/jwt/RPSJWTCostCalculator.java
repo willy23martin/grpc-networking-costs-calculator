@@ -16,15 +16,13 @@ public class RPSJWTCostCalculator implements RPSNetworkingCostCalculator<JWTTact
         return effectiveRequestsPerSecond;
     }
 
-    // TODO - convert to private
     public long extraRequestsPerSecondFromOAuthTokenAcquisitionCallsToTheAuthorisationServer(long baseRequestsPerSecond, JWTTactic jwtTactic) {
         if (!jwtTactic.oauthJwtEnabled()) return 0;
         int ttl = jwtTactic.tokenTtlSeconds() > 0 ? jwtTactic.tokenTtlSeconds() : 3600;
         int clients = jwtTactic.concurrentClients() > 0 ? jwtTactic.concurrentClients() : 1;
         return Math.round((double) baseRequestsPerSecond / ((double) ttl * clients));
     }
-
-    // TODO - convert to private
+    
     public long extraRequestsPerSecondFromRemoteTokenIntrospection(long baseRequestsPerSecond, JWTTactic jwtTactic) {
         if(isOAuthWithJWTAndRemoteIntrospection(jwtTactic)) {
             return baseRequestsPerSecond;

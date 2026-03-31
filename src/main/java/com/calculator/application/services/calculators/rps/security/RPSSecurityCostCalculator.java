@@ -16,7 +16,6 @@ public class RPSSecurityCostCalculator implements RPSNetworkingCostCalculator<Se
     public long calculateEffectiveRequestsPerSecond(long baseRequestsPerSecond, SecurityTactics securityTactics) {
         long effectiveRequestsPerSecond = 0L;
         effectiveRequestsPerSecond += securityTactics.tlsTactic().extraRequestsPerSecondFromTLSHandshakesAtTheConfiguredReconnectRate();
-        // TODO - Should be refactored to be delegated to the RPSJWTCostCalculator
         effectiveRequestsPerSecond += rpsjwtCostCalculator.extraRequestsPerSecondFromOAuthTokenAcquisitionCallsToTheAuthorisationServer(baseRequestsPerSecond, securityTactics.jwtTactic());
         effectiveRequestsPerSecond += rpsjwtCostCalculator.extraRequestsPerSecondFromRemoteTokenIntrospection(baseRequestsPerSecond, securityTactics.jwtTactic());
         return effectiveRequestsPerSecond;
