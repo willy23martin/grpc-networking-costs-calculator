@@ -2,6 +2,7 @@ package com.calculator.infrastructure.web.rest;
 
 import com.calculator.application.services.calculators.cost.AWSDataTransferCostCalculationService;
 import com.calculator.application.services.calculators.rps.RPSCostCostCalculatorService;
+import com.calculator.application.services.calculators.rps.security.jwt.RPSJWTCostCalculator;
 import com.calculator.application.services.compilators.CompilationService;
 import com.calculator.application.services.protobuf.ProtocolBufferMessageSizeCalculationService;
 import com.calculator.application.services.protobuf.ProtocolBufferService;
@@ -12,7 +13,7 @@ import com.calculator.domain.dto.results.CompilationResult;
 import com.calculator.domain.dto.results.JavaCompilationResult;
 import com.calculator.domain.dto.results.MessageSizeCalculationResult;
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
-import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
+import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
 import jakarta.servlet.http.HttpSession;
@@ -39,7 +40,7 @@ import java.util.stream.Stream;
 
 import static com.calculator.domain.dto.tactics.microservices.SAGAPatternCostMessages.SAGA_PATTERN_COSTS_ALTER_MESSAGE;
 import static com.calculator.domain.dto.tactics.resiliency.retry.RetryPatternCostMessages.RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE;
-import static com.calculator.domain.dto.tactics.security.oauth.jwt.JWTOverhead.*;
+import static com.calculator.domain.model.architecture.tactics.security.JWTOverhead.*;
 import static com.calculator.infrastructure.web.rest.TacticsSessionController.SESSION_KEY;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.initializeProtoFileFullyQualifiedProperties;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.isValid;
@@ -68,6 +69,8 @@ public class TCOCalculatorController implements ErrorController {
     ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
     @Autowired
     RPSCostCostCalculatorService requestsPerSecondCalculatorService;
+    @Autowired
+    RPSJWTCostCalculator rpsjwtCostCalculator;
 
     private final Logger log = Logger.getLogger(TCOCalculatorController.class.getName());
 
@@ -145,8 +148,6 @@ public class TCOCalculatorController implements ErrorController {
         }
         return null;
     }
-
-    // ── Tactics model population ──────────────────────────────────────────────
 
     private void populateTacticsModel(ArchitecturalDecisionsDTO architecturalDecisionsDTO, long effectiveRps, Model model) {
 
@@ -286,8 +287,8 @@ public class TCOCalculatorController implements ErrorController {
                     JWT_OVERHEAD_BYTES_TYPICAL.getOverhead(), JWT_OVERHEAD_BYTES_TYPICAL.getFormattedReference()
             );
 
-            long tokenAcqRps      = securityTactics.jwtTactic().extraRequestsPerSecondFromOAuthTokenAcquisitionCallsToTheAuthorisationServer(baseRequestsPerSecond);
-            long introspectionRps = securityTactics.jwtTactic().extraRequestsPerSecondFromRemoteTokenIntrospection(baseRequestsPerSecond);
+            long tokenAcqRps = rpsjwtCostCalculator.extraRequestsPerSecondFromOAuthTokenAcquisitionCallsToTheAuthorisationServer(baseRequestsPerSecond, securityTactics.jwtTactic());
+            long introspectionRps = rpsjwtCostCalculator.extraRequestsPerSecondFromRemoteTokenIntrospection(baseRequestsPerSecond, securityTactics.jwtTactic());
 
             // JWT header byte overhead is always informational (bytes, not extra requests)
             generalTactics.add(tacticEntry("OAuth 2.0 + JWT — bearer token",

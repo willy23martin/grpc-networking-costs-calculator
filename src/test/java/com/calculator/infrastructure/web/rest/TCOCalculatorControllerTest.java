@@ -1,7 +1,7 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
-import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
+import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
@@ -9,7 +9,7 @@ import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.dto.tactics.security.authentication.BasicAuthenticationPattern;
-import com.calculator.domain.dto.tactics.security.oauth.OAuthTokenValidationMode;
+import com.calculator.domain.model.architecture.tactics.security.OAuthTokenValidationModes;
 import com.calculator.domain.dto.tactics.security.oauth.jwt.JWTTactic;
 import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
 import com.calculator.domain.dto.tactics.security.tls.TLSTactic;
@@ -442,7 +442,7 @@ class TCOCalculatorControllerTest {
     void calculateProtoFileTCONetworkingCosts_AppliesTlsByteOverhead_WhenTlsIsEnabled() throws Exception {
         SecurityTactics tls = new SecurityTactics(
                 new TLSTactic(true, false, 0),
-                new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1,
+                new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1,
                         InterceptorType.UNARY), new BasicAuthenticationPattern(false)
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -473,7 +473,7 @@ class TCOCalculatorControllerTest {
     void calculateProtoFileTCONetworkingCosts_AppliesMtlsByteOverhead_WhenMtlsIsEnabled() throws Exception {
         SecurityTactics mtls = new SecurityTactics(
                 new TLSTactic(true, true, 0),
-                new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1,
+                new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1,
                         InterceptorType.UNARY), new BasicAuthenticationPattern(false)
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -501,7 +501,7 @@ class TCOCalculatorControllerTest {
     void calculateProtoFileTCONetworkingCosts_AddsHandshakeRps_WhenMtlsReconnectRateIsHigh() throws Exception {
         SecurityTactics mtls = new SecurityTactics(
                 new TLSTactic(true, true, 720),
-                new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1,
+                new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1,
                         InterceptorType.UNARY), new BasicAuthenticationPattern(false)
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -531,7 +531,7 @@ class TCOCalculatorControllerTest {
     void calculateProtoFileTCONetworkingCosts_AppliesJwtByteOverhead_WhenOAuthLocalValidationIsEnabled() throws Exception {
         SecurityTactics oauth = new SecurityTactics(
                 new TLSTactic(false, false, 0),
-                new JWTTactic(true, OAuthTokenValidationMode.LOCAL, 3600, 1,
+                new JWTTactic(true, OAuthTokenValidationModes.LOCAL, 3600, 1,
                         InterceptorType.UNARY), new BasicAuthenticationPattern(false)
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -568,7 +568,7 @@ class TCOCalculatorControllerTest {
     void calculateProtoFileTCONetworkingCosts_AddsIntrospectionRps_WhenOAuthRemoteIntrospectionIsEnabled() throws Exception {
         SecurityTactics oauth = new SecurityTactics(
                 new TLSTactic(false, false, 0),
-                new JWTTactic(true, OAuthTokenValidationMode.REMOTE_INTROSPECTION, 3600, 1,
+                new JWTTactic(true, OAuthTokenValidationModes.REMOTE_INTROSPECTION, 3600, 1,
                         InterceptorType.UNARY), new BasicAuthenticationPattern(false)
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -600,7 +600,7 @@ class TCOCalculatorControllerTest {
     void calculateProtoFileTCONetworkingCosts_AppliesBothTlsAndJwtOverhead_WhenCombined() throws Exception {
         SecurityTactics combined = new SecurityTactics(
                 new TLSTactic(true, false, 0),
-                new JWTTactic(true, OAuthTokenValidationMode.LOCAL, 3600, 1,
+                new JWTTactic(true, OAuthTokenValidationModes.LOCAL, 3600, 1,
                         InterceptorType.UNARY), new BasicAuthenticationPattern(false)
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -629,7 +629,7 @@ class TCOCalculatorControllerTest {
     void calculateProtoFileTCONetworkingCosts_ShowsBasicAuthAsInformational_WhenBasicAuthIsEnabled() throws Exception {
         SecurityTactics basicAuth = new SecurityTactics(
                 new TLSTactic(false, false, 0),
-                new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1,
+                new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1,
                         InterceptorType.UNARY), new BasicAuthenticationPattern(true)
         );
         mockMvc.perform(multipart("/calculateTCO")

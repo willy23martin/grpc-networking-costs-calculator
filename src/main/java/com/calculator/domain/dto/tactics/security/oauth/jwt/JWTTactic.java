@@ -1,16 +1,18 @@
 package com.calculator.domain.dto.tactics.security.oauth.jwt;
 
-import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
-import com.calculator.domain.dto.tactics.security.oauth.OAuthTokenValidationMode;
+import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
+import com.calculator.domain.model.architecture.tactics.security.OAuthTokenValidationModes;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 
-import static com.calculator.domain.dto.tactics.security.oauth.jwt.JWTOverhead.JWT_OVERHEAD_BYTES_TYPICAL;
+import static com.calculator.domain.model.architecture.tactics.security.JWTOverhead.JWT_OVERHEAD_BYTES_TYPICAL;
 
+@Builder
 public record JWTTactic(
         @JsonProperty("oauthJwtEnabled")
         boolean oauthJwtEnabled,
         @JsonProperty("tokenValidationMode")
-        OAuthTokenValidationMode tokenValidationMode,
+        OAuthTokenValidationModes tokenValidationMode,
         @JsonProperty("tokenTtlSeconds")
         int tokenTtlSeconds,
         @JsonProperty("concurrentClients")
@@ -20,22 +22,10 @@ public record JWTTactic(
 ) {
 
     public static JWTTactic empty() {
-        return new JWTTactic(false, OAuthTokenValidationMode.LOCAL, 3600, 1, InterceptorType.UNARY);
+        return new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1, InterceptorType.UNARY);
     }
 
     public int effectiveJwtOverheadTypical()  {
         return oauthJwtEnabled ? JWT_OVERHEAD_BYTES_TYPICAL.getOverhead(): 0;
-    }
-
-    public long extraRequestsPerSecondFromOAuthTokenAcquisitionCallsToTheAuthorisationServer(long baseRequestsPerSecond) {
-        if (!oauthJwtEnabled) return 0;
-        int ttl = tokenTtlSeconds > 0 ? tokenTtlSeconds   : 3600;
-        int clients = concurrentClients > 0 ? concurrentClients : 1;
-        return Math.round((double) baseRequestsPerSecond / ((double) ttl * clients));
-    }
-
-    public long extraRequestsPerSecondFromRemoteTokenIntrospection(long baseRequestsPerSecond) {
-        return (oauthJwtEnabled && tokenValidationMode == OAuthTokenValidationMode.REMOTE_INTROSPECTION)
-                ? baseRequestsPerSecond : 0;
     }
 }

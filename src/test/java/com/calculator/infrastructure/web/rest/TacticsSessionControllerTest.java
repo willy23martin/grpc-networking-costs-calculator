@@ -1,14 +1,14 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
-import com.calculator.domain.dto.tactics.gRPC.interceptor.InterceptorType;
+import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
-import com.calculator.domain.dto.tactics.security.oauth.OAuthTokenValidationMode;
+import com.calculator.domain.model.architecture.tactics.security.OAuthTokenValidationModes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -123,7 +123,7 @@ class TacticsSessionControllerTest {
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.mtlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsReconnectsPerHour").value(2))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.oauthJwtEnabled").value(true))
-                .andExpect(jsonPath("$.securityTactics.jwtTactic.tokenValidationMode").value(OAuthTokenValidationMode.LOCAL.toString()))
+                .andExpect(jsonPath("$.securityTactics.jwtTactic.tokenValidationMode").value(OAuthTokenValidationModes.LOCAL.toString()))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.tokenTtlSeconds").value(3600))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.concurrentClients").value(4))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.interceptorType").value(InterceptorType.UNARY.toString()))

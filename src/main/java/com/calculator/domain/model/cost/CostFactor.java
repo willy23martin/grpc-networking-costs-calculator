@@ -1,7 +1,9 @@
 package com.calculator.domain.model.cost;
 
-public sealed class CostFactor permits InfrastructureCost, NetworkingCost {
-    private String criteria;
-    private long value;
-    private String units;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public abstract sealed class CostFactor permits InfrastructureCost, NetworkingCost {
 }

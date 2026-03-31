@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.repositories;
 
-import com.calculator.domain.model.architecture.saga.SAGATactics;
+import com.calculator.domain.model.architecture.tactics.SAGATactics;
 import com.calculator.infrastructure.repositories.jpa.ArchitecturalTacticJPARepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
