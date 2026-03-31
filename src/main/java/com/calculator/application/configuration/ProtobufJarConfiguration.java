@@ -1,4 +1,4 @@
-package com.calculator.application.configuration.configuration;
+package com.calculator.application.configuration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

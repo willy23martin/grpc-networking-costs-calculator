@@ -1,0 +1,25 @@
+package com.calculator.domain.model.architecture;
+
+import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
+import lombok.*;
+
+import java.util.List;
+
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Getter
+@Setter
+public final class ArchitecturalPattern extends ArchitecturalDecision {
+
+    private String name;
+
+    private List<ArchitecturalTactic> architecturalTactics;
+
+    @Builder // DESIGN PATTERN: BUILDER
+    public ArchitecturalPattern(String name, List<ArchitecturalTactic> architecturalTactics, ArchitecturalCharacteristic architecturalCharacteristic) {
+        super(architecturalCharacteristic);
+        this.name = name;
+        this.architecturalTactics = architecturalTactics;
+    }
+
+}

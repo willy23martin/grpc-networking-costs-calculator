@@ -1,0 +1,12 @@
+package com.calculator.infrastructure.repositories.impl;
+
+import com.calculator.domain.repository.secondaryports.ArchitecturalCharacteristicRepository;
+import com.calculator.infrastructure.repositories.jpa.ArchitecturalCharacteristicsJPARepository;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
+public class ArchitecturalCharacteristicRepositoryImpl implements ArchitecturalCharacteristicRepository {
+
+    private final ArchitecturalCharacteristicsJPARepository architecturalCharacteristicsJPARepository;
+
+}

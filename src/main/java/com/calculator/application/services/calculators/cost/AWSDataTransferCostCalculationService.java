@@ -1,4 +1,4 @@
-package com.calculator.application.services.costcalculators;
+package com.calculator.application.services.calculators.cost;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

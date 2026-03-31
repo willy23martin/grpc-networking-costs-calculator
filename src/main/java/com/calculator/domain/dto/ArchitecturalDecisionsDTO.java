@@ -1,6 +1,5 @@
 package com.calculator.domain.dto;
 
-import com.calculator.domain.dto.tactics.ArchitecturalTacticsContext;
 import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
@@ -26,27 +25,6 @@ public record ArchitecturalDecisionsDTO(
                 CircuitBreakerPattern.empty(),
                 SAGAPattern.empty(),
                 SecurityTactics.empty()
-        );
-    }
-
-    public ArchitecturalTacticsContext toTacticsContext() {
-        return new ArchitecturalTacticsContext(
-                reliabilityTactics.reliabilityClientSideLoadBalancerTactic(),
-                reliabilityTactics.reliabilityServerSideLoadBalancerTactic(),
-                timeoutTactic.resiliencyTimeoutTactic(),
-                timeoutTactic.tacticTimeoutMilliseconds(),
-                retryTactic.resiliencyRetryTactic(),
-                retryTactic.tacticRetryTimes(),
-                circuitBreakerTactic.resiliencyCircuitBreakerPattern(),
-                circuitBreakerTactic.circuitBreakerPatternMinimumCalls(),
-                circuitBreakerTactic.circuitBreakerHalfOpen(),
-                circuitBreakerTactic.circuitBreakerWaitMilliseconds(),
-                circuitBreakerTactic.circuitBreakerFailureRate(),
-                sagaPattern.microservicesSAGAPattern(),
-                sagaPattern.sagaCompensatableTransactions(),
-                sagaPattern.sagaRetriableTransactions(),
-                sagaPattern.sagaPivotTransactions(),
-                securityTactics
         );
     }
 }
