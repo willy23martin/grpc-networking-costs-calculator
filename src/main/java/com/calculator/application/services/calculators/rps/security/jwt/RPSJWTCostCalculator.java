@@ -22,7 +22,7 @@ public class RPSJWTCostCalculator implements RPSNetworkingCostCalculator<JWTTact
         int clients = jwtTactic.concurrentClients() > 0 ? jwtTactic.concurrentClients() : 1;
         return Math.round((double) baseRequestsPerSecond / ((double) ttl * clients));
     }
-    
+
     public long extraRequestsPerSecondFromRemoteTokenIntrospection(long baseRequestsPerSecond, JWTTactic jwtTactic) {
         if(isOAuthWithJWTAndRemoteIntrospection(jwtTactic)) {
             return baseRequestsPerSecond;

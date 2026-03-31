@@ -129,9 +129,9 @@ public class TCOCalculatorController implements ErrorController {
 
                 URLClassLoader classLoader = javaCompilationResult.compilationResult().classLoader();
 
-                long effectiveRequestsPerSecond = requestsPerSecondCalculatorService.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO); // TODO REFACTOR
-                populateTacticsModel(architecturalDecisionsDTO, effectiveRequestsPerSecond, model); // TODO REFACTOR
-                showTCOCosts(effectiveRequestsPerSecond, model, protoProps, classLoader, architecturalDecisionsDTO); // TODO REFACTOR
+                long effectiveRequestsPerSecond = requestsPerSecondCalculatorService.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO);
+                populateTacticsModel(architecturalDecisionsDTO, effectiveRequestsPerSecond, model);
+                showTCOCosts(effectiveRequestsPerSecond, model, protoProps, classLoader, architecturalDecisionsDTO);
 
             } catch (Exception e) {
                 model.addAttribute("error", "Error: " + e.getMessage());
