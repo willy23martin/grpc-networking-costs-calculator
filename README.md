@@ -64,7 +64,7 @@ in the context of an **E-Commerce microservice**:
 ![Toolkit-Phase3CalculateBaseCostsBody.png](src/main/resources/images/Toolkit-Phase3CalculateBaseCostsBody.png)
 
 #### Define costs optimization strategies (FinOps practices)}
-Pending
+![Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png](src/main/resources/images/Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png)
 
 #### Modify Configuration of Cloud Services based on FinOps practices
 Pending
@@ -95,6 +95,16 @@ Pending
 16. [Mach Architecture: Microservices, API-first, Cloud-native, and Headless principles](https://a.co/d/0aqCTQKt).
 17. [Cloud FinOps, 2nd Edition: Collaborative, Real-Time Cloud Value Decision Making](https://a.co/d/0f8kkjcU).
 18. [Migrating to AWS: A Manager's Guide: How to Foster Agility, Reduce Costs, and Bring a Competitive Edge to Your Business](https://a.co/d/0bCjXIW5).
+19. [Building Microservices, 2nd Edition](https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/).
+20. [Monolith to Microservices](https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/).
+21. [Communication Patterns](https://www.oreilly.com/library/view/communication-patterns/9781098140533/).
+22. [UML for Java Programmers](https://www.oreilly.com/library/view/uml-for-javatm/0131428489/).
+23. [AWS FinOps Simplified](https://www.oreilly.com/library/view/aws-finops-simplified/9781803247236/).
+24. [Engineering Resilient Systems on AWS](https://www.oreilly.com/library/view/engineering-resilient-systems/9781098162412/).
+25. [Building Resilient Architectures on AWS](https://www.oreilly.com/library/view/building-resilient-architectures/9781835887103/).
+26. [System Design on AWS](https://www.oreilly.com/library/view/system-design-on/9781098146887/).
+27. [Efficient Cloud FinOps](https://www.oreilly.com/library/view/efficient-cloud-finops/9781805122579/).
+28. [AWS Certified Solutions Architect](https://www.oreilly.com/library/view/aws-certified-solutions/9781119982623/).
 
 ## Credits
 [CREDITS.md](CREDITS.md)
