@@ -14,7 +14,6 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.assertj.core.api.Assertions;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 
@@ -26,11 +25,10 @@ public class OAuthJWTTacticRPSCostCalculationStepDefinition {
     private ArchitecturalTactic architecturalTactic;
     private CostFactor costFactor;
 
-    @Autowired
-    private RPSJWTCostCalculator rpsjwtCostCalculator;
+    private final RPSJWTCostCalculator rpsjwtCostCalculator = new RPSJWTCostCalculator();
 
-    @Given("a basis requests per second of {long} rps")
-    public void a_basis_requests_per_second_of_rps(Long requestsPerSecond) {
+    @Given("a basis requests per second of {int} rps")
+    public void a_basis_requests_per_second_of_rps(int requestsPerSecond) {
         this.requestsPerSecond = requestsPerSecond;
     }
 
@@ -59,9 +57,8 @@ public class OAuthJWTTacticRPSCostCalculationStepDefinition {
                 .build();
     }
 
-    @Then("the requests per second should increase up to {long} rps")
-    public void the_requests_per_second_should_increase_up_to_rps(Long effectiveRequestsPerSecond) {
-        NetworkingCost networkingCost = (NetworkingCost) this.architecturalTactic.getCostFactors().get(CostFactors.RPS.name());
+    @Then("the requests per second should increase up to {int} rps")
+    public void the_requests_per_second_should_increase_up_to_rps(int effectiveRequestsPerSecond) {
         Assertions.assertThat(
                 rpsjwtCostCalculator.extraRequestsPerSecondFromRemoteTokenIntrospection(this.requestsPerSecond,
                         JWTTactic.builder()
