@@ -1,7 +1,7 @@
 package com.calculator.shared;
 
-import com.calculator.domain.model.protofiles.JavaParsedProtoFile;
-import com.calculator.domain.model.properties.ProtoFileFullyQualifiedProperties;
+import com.calculator.domain.dto.protofiles.JavaParsedProtoFile;
+import com.calculator.domain.dto.properties.ProtoFileFullyQualifiedProperties;
 
 public class ProtocolBufferParsedFileUtils {
 

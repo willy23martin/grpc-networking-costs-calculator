@@ -1,6 +1,6 @@
 package com.calculator.shared;
 
-import com.calculator.domain.model.protofiles.JavaParsedProtoFile;
+import com.calculator.domain.dto.protofiles.JavaParsedProtoFile;
 
 import java.io.BufferedReader;
 import java.io.IOException;

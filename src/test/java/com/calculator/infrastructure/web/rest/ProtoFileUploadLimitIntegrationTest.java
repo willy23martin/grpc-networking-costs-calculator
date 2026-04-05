@@ -1,11 +1,12 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.model.tactics.TacticsConfigDTO;
-import com.calculator.domain.model.tactics.microservices.SAGAPattern;
-import com.calculator.domain.model.tactics.reliability.ReliabilityTactics;
-import com.calculator.domain.model.tactics.resiliency.CircuitBreakerPattern;
-import com.calculator.domain.model.tactics.resiliency.RetryPattern;
-import com.calculator.domain.model.tactics.resiliency.TimeoutPattern;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
+import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
+import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
+import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
+import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
+import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
+import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,19 +31,20 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldSaveTacticsToSessionAndReturnNoContent() throws Exception {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true,  false),
                 new TimeoutPattern(true,  300),
                 new RetryPattern(true,  3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0)
+                new SAGAPattern(false, 0, 0, 0),
+                SecurityTactics.empty()
         );
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<TacticsConfigDTO> request = new HttpEntity<>(dto, headers);
+        HttpEntity<ArchitecturalDecisionsDTO> request = new HttpEntity<>(dto, headers);
         ResponseEntity<Void> response =
                 restTemplate.postForEntity("/api/session/tactics", request, Void.class);
 
@@ -51,13 +53,14 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldNotThrowFileCountLimitExceededExceptionWhenUploadingProtoFileOnly() {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
                 new TimeoutPattern(true, 300),
                 new RetryPattern(true, 3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0)
+                new SAGAPattern(false, 0, 0, 0),
+                SecurityTactics.empty()
         );
         HttpHeaders jsonHeaders = new HttpHeaders();
         jsonHeaders.setContentType(MediaType.APPLICATION_JSON);
@@ -82,8 +85,8 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldReturnEmptyTacticsWhenNoSessionExists() {
-        ResponseEntity<TacticsConfigDTO> response =
-                restTemplate.getForEntity("/api/session/tactics", TacticsConfigDTO.class);
+        ResponseEntity<ArchitecturalDecisionsDTO> response =
+                restTemplate.getForEntity("/api/session/tactics", ArchitecturalDecisionsDTO.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -94,13 +97,14 @@ class ProtoFileUploadLimitIntegrationTest {
 
     @Test
     void shouldClearTacticsFromSession() throws Exception {
-        TacticsConfigDTO dto = new TacticsConfigDTO(
+        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 500,
                 new ReliabilityTactics(true, true),
                 new TimeoutPattern(false, 0),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0)
+                new SAGAPattern(false, 0, 0, 0),
+                SecurityTactics.empty()
         );
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -108,8 +112,8 @@ class ProtoFileUploadLimitIntegrationTest {
 
         restTemplate.delete("/api/session/tactics");
 
-        ResponseEntity<TacticsConfigDTO> response =
-                restTemplate.getForEntity("/api/session/tactics", TacticsConfigDTO.class);
+        ResponseEntity<ArchitecturalDecisionsDTO> response =
+                restTemplate.getForEntity("/api/session/tactics", ArchitecturalDecisionsDTO.class);
         assertThat(response.getBody().requestsPerSecond()).isZero();
         assertThat(response.getBody().reliabilityTactics().reliabilityClientSideLoadBalancerTactic()).isFalse();
     }

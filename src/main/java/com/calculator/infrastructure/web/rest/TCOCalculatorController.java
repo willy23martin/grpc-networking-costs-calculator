@@ -1,17 +1,22 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.AWSDataTransferCostCalculationService;
-import com.calculator.application.services.compilator.CompilationService;
-import com.calculator.application.services.ProtocolBufferMessageSizeCalculationService;
-import com.calculator.application.services.ProtocolBufferService;
-import com.calculator.domain.model.compilers.ProtocCompiler;
-import com.calculator.domain.model.properties.ProtoFileFullyQualifiedProperties;
-import com.calculator.domain.model.protofiles.ParsedProtocolBufferFile;
-import com.calculator.domain.model.results.CompilationResult;
-import com.calculator.domain.model.results.JavaCompilationResult;
-import com.calculator.domain.model.results.MessageSizeCalculationResult;
-import com.calculator.domain.model.tactics.ArchitecturalTacticsContext;
-import com.calculator.domain.model.tactics.TacticsConfigDTO;
+import com.calculator.application.services.calculators.cost.AWSDataTransferCostCalculationService;
+import com.calculator.application.services.calculators.rps.RPSCostCostCalculatorService;
+import com.calculator.application.services.calculators.rps.security.jwt.RPSJWTCostCalculator;
+import com.calculator.application.services.compilators.CompilationService;
+import com.calculator.application.services.mapper.tactics.TacticsMapperService;
+import com.calculator.application.services.populator.TacticsPopulatorService;
+import com.calculator.application.services.protobuf.ProtocolBufferMessageSizeCalculationService;
+import com.calculator.application.services.protobuf.ProtocolBufferService;
+import com.calculator.domain.dto.compilers.ProtocCompiler;
+import com.calculator.domain.dto.properties.ProtoFileFullyQualifiedProperties;
+import com.calculator.domain.dto.protofiles.ParsedProtocolBufferFile;
+import com.calculator.domain.dto.results.CompilationResult;
+import com.calculator.domain.dto.results.JavaCompilationResult;
+import com.calculator.domain.dto.results.MessageSizeCalculationResult;
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
+import com.calculator.domain.dto.tactics.security.SecurityTactics;
+import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
@@ -28,10 +33,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.CompactNumberFormat;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static com.calculator.domain.model.architecture.tactics.security.JWTOverhead.*;
 import static com.calculator.infrastructure.web.rest.TacticsSessionController.SESSION_KEY;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.initializeProtoFileFullyQualifiedProperties;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.isValid;
@@ -39,37 +47,33 @@ import static com.calculator.shared.ProtocolBufferParsedFileUtils.isValid;
 @Controller
 public class TCOCalculatorController implements ErrorController {
 
-    private static final double SECONDS_PER_MONTH = 2_592_000.0;
-    private static final double BYTES_PER_GB      = 1_073_741_824.0;
-    private static final Locale DISPLAY_LOCALE    = Locale.forLanguageTag("es-ES");
+    public static final double SECONDS_PER_MONTH = 2_592_000.0;
+    public static final double BYTES_PER_GB      = 1_073_741_824.0;
+    public static final Locale DISPLAY_LOCALE    = Locale.forLanguageTag("en-US");
+
     private static final String NO_TACTICS_CONFIGURATION_FOUND_MESSAGE =
-            """ 
+            """
             Note: No tactic configuration found in your session.
             Results are based on default settings (all tactics disabled).
             Configure tactics and re-upload to get accurate results.
             """;
-    public static final String RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE =
-            """
-            Retries gRPC packet emission under temporary outages. Increases networking costs
-            as up to N additional packets may be sent per logical request.
-            """;
-    public static final String SAGA_PATTERN_COSTS_ALTER_MESSAGE =
-            """
-            Each logical request triggers one SAGA instance. Every step in that instance 
-            is an independent gRPC call, so actual traffic = base RPS × steps per instance.
-            """;
 
     @Autowired
     AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
-
     @Autowired
     ProtocolBufferService protocolBufferService;
-
     @Autowired
     CompilationService compilationService;
-
     @Autowired
     ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
+    @Autowired
+    RPSCostCostCalculatorService requestsPerSecondCalculatorService;
+    @Autowired
+    RPSJWTCostCalculator rpsjwtCostCalculator;
+    @Autowired
+    TacticsMapperService tacticsMapperService;
+    @Autowired
+    TacticsPopulatorService tacticsModelPopulatorService;
 
     private final Logger log = Logger.getLogger(TCOCalculatorController.class.getName());
 
@@ -91,20 +95,17 @@ public class TCOCalculatorController implements ErrorController {
             return "calculator";
         }
 
-        TacticsConfigDTO tacticsConfiguration = (TacticsConfigDTO) session.getAttribute(SESSION_KEY);
-        if (tacticsConfiguration == null) {
-            tacticsConfiguration = TacticsConfigDTO.empty();
-            model.addAttribute("uploadMessage",
-                    NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
+        ArchitecturalDecisionsDTO architecturalDecisionsDTO = (ArchitecturalDecisionsDTO) session.getAttribute(SESSION_KEY);
+        if (architecturalDecisionsDTO == null) {
+            architecturalDecisionsDTO = ArchitecturalDecisionsDTO.empty();
+            model.addAttribute("uploadMessage", NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
         }
 
-        ArchitecturalTacticsContext tactics = tacticsConfiguration.toTacticsContext();
-        String view = calculateTCO(tacticsConfiguration.requestsPerSecond(), protoFile, tactics, model);
+        String view = calculateTCO(protoFile, architecturalDecisionsDTO, model);
         return (view != null) ? view : "calculator";
     }
 
-    private String calculateTCO(long requestsPerSecond, MultipartFile protoFile,
-                                ArchitecturalTacticsContext tactics, Model model) {
+    private String calculateTCO(MultipartFile protoFile, ArchitecturalDecisionsDTO architecturalDecisionsDTO, Model model) {
         try {
             updateBytesSizeWithProtoFileSize(protoFile, model);
             Path protocolBufferFileDirectory = null;
@@ -124,16 +125,16 @@ public class TCOCalculatorController implements ErrorController {
                 ProtocCompiler protoCompiler = executeProtoc(model, parsed);
                 if (protoCompiler == null) return "calculator";
 
-                JavaCompilationResult javaResult =
+                JavaCompilationResult javaCompilationResult =
                         compile(model, protoCompiler, protoProps.fullRequestMessageClassName());
-                if (javaResult.errorCompilationMessage() != null)
-                    return javaResult.errorCompilationMessage();
+                if (javaCompilationResult.errorCompilationMessage() != null)
+                    return javaCompilationResult.errorCompilationMessage();
 
-                URLClassLoader classLoader = javaResult.compilationResult().classLoader();
+                URLClassLoader classLoader = javaCompilationResult.compilationResult().classLoader();
 
-                long effectiveRequestsPerSecond = compute(requestsPerSecond, tactics);
-                populateTacticsModel(tactics, requestsPerSecond, effectiveRequestsPerSecond, model);
-                showTCONetworkingCosts(effectiveRequestsPerSecond, classLoader, model, protoProps);
+                long effectiveRequestsPerSecond = requestsPerSecondCalculatorService.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO);
+                populateTactics(architecturalDecisionsDTO, effectiveRequestsPerSecond, model);
+                showTCOCosts(effectiveRequestsPerSecond, model, protoProps, classLoader, architecturalDecisionsDTO);
 
             } catch (Exception e) {
                 model.addAttribute("error", "Error: " + e.getMessage());
@@ -151,120 +152,70 @@ public class TCOCalculatorController implements ErrorController {
         return null;
     }
 
-    private long compute(long baseRequestsPerSecond, ArchitecturalTacticsContext architecturalTactics) {
-        long effectiveRequestsPerSecond = baseRequestsPerSecond;
-
-        if (architecturalTactics.microservicesSAGAPattern()) {
-            effectiveRequestsPerSecond = computeSAGAPattern(baseRequestsPerSecond, architecturalTactics, effectiveRequestsPerSecond);
-        }
-
-        if (architecturalTactics.resiliencyRetryTactic() && architecturalTactics.tacticRetryTimes() > 0) {
-            effectiveRequestsPerSecond += baseRequestsPerSecond * architecturalTactics.tacticRetryTimes();
-        }
-
-        return effectiveRequestsPerSecond;
-    }
-
-    private static long computeSAGAPattern(long baseRequestsPerSecond, ArchitecturalTacticsContext architecturalTactics, long effective) {
-        int steps = architecturalTactics.sagaCompensatableTransactions() + architecturalTactics.sagaRetriableTransactions() + architecturalTactics.sagaPivotTransactions();
-        if (steps > 0) {
-            effective = baseRequestsPerSecond * steps;
-        }
-        return effective;
-    }
-
-    private void populateTacticsModel(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, long effectiveRequestsPerSecond, Model model) {
-
+    private void populateTactics(ArchitecturalDecisionsDTO architecturalDecisionsDTO, long effectiveRequestsPerSecond, Model model) {
         List<Map<String, String>> infoTactics = new ArrayList<>();
-        List<Map<String, String>> requestsPerSecondsTactics  = new ArrayList<>();
-
-        if (architecturalTactics.reliabilityClientSideLoadBalancerTactic()) {
-            infoTactics.add(tacticEntry("Client-side Load Balancing", null,
-                    "Balances the emission of gRPC packets across server instances."));
-        }
-        if (architecturalTactics.reliabilityServerSideLoadBalancerTactic()) {
-            infoTactics.add(tacticEntry("Server-side Load Balancing", null,
-                    "Balances the reception of gRPC packets across backend replicas."));
-        }
-        if (architecturalTactics.resiliencyTimeoutTactic()) {
-            infoTactics.add(tacticEntry("Timeout", architecturalTactics.tacticTimeoutMilliseconds() + " ms",
-                    "Discards lost packets and frees the client thread after the configured wait."));
-        }
-        if (architecturalTactics.resiliencyCircuitBreakerPattern()) {
-            populateCircuitBreakerPattern(architecturalTactics, infoTactics);
-        }
-
-        if (architecturalTactics.microservicesSAGAPattern()) {
-            populateSAGAPattern(architecturalTactics, baseRequestsPerSecond, requestsPerSecondsTactics);
-        }
-
-        if (architecturalTactics.resiliencyRetryTactic()) {
-            populateRetryTactic(architecturalTactics, baseRequestsPerSecond, requestsPerSecondsTactics);
-        }
-
-        model.addAttribute("infoTactics",    infoTactics);
-        model.addAttribute("rpsTactics",     requestsPerSecondsTactics);
-        model.addAttribute("hasTactics",     !infoTactics.isEmpty() || !requestsPerSecondsTactics.isEmpty());
-        model.addAttribute("baseRps",        String.format(DISPLAY_LOCALE, "%,d", baseRequestsPerSecond));
-        model.addAttribute("effectiveRps",   String.format(DISPLAY_LOCALE, "%,d", effectiveRequestsPerSecond));
-        model.addAttribute("rpsWasAdjusted", effectiveRequestsPerSecond != baseRequestsPerSecond);
+        List<Map<String, String>> rpsTactics  = new ArrayList<>();
+        tacticsModelPopulatorService.populateTacticsModel(architecturalDecisionsDTO, rpsTactics, infoTactics);
+        updateViewInfoAffectedByTactics(architecturalDecisionsDTO.requestsPerSecond(), effectiveRequestsPerSecond, model, infoTactics, rpsTactics);
     }
 
-    private void populateCircuitBreakerPattern(ArchitecturalTacticsContext architecturalTactics, List<Map<String, String>> infoTactics) {
-        String cbConfig = String.format(
-                "Min calls: %d | Half-open calls: %d | Wait: %d ms | Failure threshold: %d%%",
-                architecturalTactics.circuitBreakerPatternMinimumCalls(), architecturalTactics.circuitBreakerHalfOpen(), architecturalTactics.circuitBreakerWaitMilliseconds(), architecturalTactics.circuitBreakerFailureRate());
-        infoTactics.add(tacticEntry("Circuit Breaker", cbConfig,
-                "Opens the circuit when failure thresholds are exceeded, protecting downstream services."));
+    private static void updateViewInfoAffectedByTactics(long requestsPerSecond, long effectiveRps, Model model, List<Map<String, String>> infoTactics, List<Map<String, String>> rpsTactics) {
+        model.addAttribute("infoTactics", infoTactics);
+        model.addAttribute("rpsTactics", rpsTactics);
+        model.addAttribute("hasTactics",     !infoTactics.isEmpty() || !rpsTactics.isEmpty());
+        model.addAttribute("baseRps",        String.format(DISPLAY_LOCALE, "%,d", requestsPerSecond));
+        model.addAttribute("effectiveRps",   String.format(DISPLAY_LOCALE, "%,d", effectiveRps));
+        model.addAttribute("rpsWasAdjusted", effectiveRps != requestsPerSecond);
     }
 
-    private void populateRetryTactic(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, List<Map<String, String>> requestsPerSecondTactics) {
-        long retryExtra = baseRequestsPerSecond * architecturalTactics.tacticRetryTimes();
-        requestsPerSecondTactics.add(tacticEntry("Retry", architecturalTactics.tacticRetryTimes() + " max retries",
-                RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE,
-                "+" + String.format(DISPLAY_LOCALE, "%,d", retryExtra) + " req/s"));
-    }
+    private void showTCOCosts(long effectiveRps,
+                              Model model, ProtoFileFullyQualifiedProperties protoProps, URLClassLoader classLoader, ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
 
-    private void populateSAGAPattern(ArchitecturalTacticsContext architecturalTactics, long baseRequestsPerSecond, List<Map<String, String>> requestsPerSecondTactics) {
-        int steps = architecturalTactics.sagaCompensatableTransactions() + architecturalTactics.sagaRetriableTransactions() + architecturalTactics.sagaPivotTransactions();
-        String sagaConfig = String.format(
-                "Steps per SAGA instance — Compensatable: %d | Retriable: %d | Pivot: %d | Total: %d",
-                architecturalTactics.sagaCompensatableTransactions(), architecturalTactics.sagaRetriableTransactions(), architecturalTactics.sagaPivotTransactions(), steps);
-        String impact = steps > 0
-                ? "×" + steps + " steps → " + String.format(DISPLAY_LOCALE, "%,d", baseRequestsPerSecond * steps) + " req/s"
-                : "No steps configured";
-        requestsPerSecondTactics.add(tacticEntry("SAGA Pattern", sagaConfig,
-                SAGA_PATTERN_COSTS_ALTER_MESSAGE,
-                impact));
-    }
+        MessageSizeCalculationResult requestResult = calculateRequestMessageSize(model, classLoader, protoProps.fullRequestMessageClassName());
+        MessageSizeCalculationResult responseResult = calculateResponseMessageSize(model, classLoader, protoProps.fullResponseMessageClassName());
 
-    private Map<String, String> tacticEntry(String name, String value, String description) {
-        return tacticEntry(name, value, description, null);
-    }
+        int tlsOverhead = architecturalDecisionsDTO.securityTactics().tlsTactic().effectiveTlsOverheadTypical();
+        int jwtOverhead = architecturalDecisionsDTO.securityTactics().jwtTactic().effectiveJwtOverheadTypical();
 
-    private Map<String, String> tacticEntry(String name, String value, String description, String requestsPerSecondImpact) {
-        Map<String, String> entry = new LinkedHashMap<>();
-        entry.put("name",        name);
-        entry.put("value",       value != null ? value : "—");
-        entry.put("description", description);
-        entry.put("rpsImpact",   requestsPerSecondImpact != null ? requestsPerSecondImpact : "");
-        return entry;
-    }
+        long effectiveRequestSize = requestResult.size() + tlsOverhead + jwtOverhead;
+        long effectiveResponseSize = responseResult.size() + tlsOverhead;
 
-    private void showTCONetworkingCosts(long effectiveRequestsPerSecond, URLClassLoader classLoader,
-                                        Model model, ProtoFileFullyQualifiedProperties protoProps) {
-        MessageSizeCalculationResult requestMessageSize  = calculateRequestMessageSize(model,  classLoader, protoProps.fullRequestMessageClassName());
-        MessageSizeCalculationResult responseMessageSize = calculateResponseMessageSize(model, classLoader, protoProps.fullResponseMessageClassName());
-
-        long requestsPerMonth = (long) (effectiveRequestsPerSecond * SECONDS_PER_MONTH);
-        double requestGbPerMonth   = (requestMessageSize.size()  * effectiveRequestsPerSecond * SECONDS_PER_MONTH) / BYTES_PER_GB;
-        double responseGbPerMonth  = (responseMessageSize.size() * effectiveRequestsPerSecond * SECONDS_PER_MONTH) / BYTES_PER_GB;
+        long requestsPerMonth = (long) (effectiveRps * SECONDS_PER_MONTH);
+        double requestGbPerMonth = (effectiveRequestSize  * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
+        double responseGbPerMonth = (effectiveResponseSize * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
         double dataTransferCostUsd = awsDataTransferCostCalculationService.calculateDataTransferCost(responseGbPerMonth);
 
-        model.addAttribute("requestsPerMonth",    String.format(DISPLAY_LOCALE, "%,d",   requestsPerMonth));
-        model.addAttribute("requestGbPerMonth",   String.format(DISPLAY_LOCALE, "%.4f",  requestGbPerMonth));
-        model.addAttribute("responseGbPerMonth",  String.format(DISPLAY_LOCALE, "%.4f",  responseGbPerMonth));
+        NumberFormat compactNumberFormat = CompactNumberFormat.getCompactNumberInstance(
+                Locale.US, NumberFormat.Style.SHORT
+        );
+
+        model.addAttribute("requestsPerMonth",    compactNumberFormat.format(requestsPerMonth));
+        model.addAttribute("requestGbPerMonth",   String.format(DISPLAY_LOCALE, "%,.4f",  requestGbPerMonth));
+        model.addAttribute("responseGbPerMonth",  String.format(DISPLAY_LOCALE, "%,.4f",  responseGbPerMonth));
         model.addAttribute("dataTransferCostUsd", String.format(DISPLAY_LOCALE, "%,.2f", dataTransferCostUsd));
+
+        showEffectiveSizesAndSecurityOverheadDetailForResultsTable(model, architecturalDecisionsDTO.securityTactics(), requestResult, responseResult, effectiveRequestSize, effectiveResponseSize, tlsOverhead, jwtOverhead);
+    }
+
+    private static void showEffectiveSizesAndSecurityOverheadDetailForResultsTable(Model model, SecurityTactics security, MessageSizeCalculationResult requestResult, MessageSizeCalculationResult responseResult, long effectiveRequestSize, long effectiveResponseSize, int tlsOverhead, int jwtOverhead) {
+        model.addAttribute("requestSize",        requestResult.size());
+        model.addAttribute("responseSize",        responseResult.size());
+        model.addAttribute("requestSizeEffective", effectiveRequestSize);
+        model.addAttribute("responseSizeEffective", effectiveResponseSize);
+        model.addAttribute("securityByteOverheadApplied",
+                tlsOverhead > 0 || jwtOverhead > 0);
+        model.addAttribute("tlsOverheadBytes", tlsOverhead);
+        model.addAttribute("jwtOverheadBytes", jwtOverhead);
+        model.addAttribute("tlsOverheadRange",
+                security.tlsTactic().tlsEnabled() || security.tlsTactic().mtlsEnabled()
+                        ? TLSOverhead.RFC_8446_AES_GCM_AEAD_TLS_WITHOUT_PADDING_OVERHEAD_BYTES_MAX.getOverhead() + " / " +
+                         " bytes typical" : null);
+        model.addAttribute("jwtOverheadRange",
+                security.jwtTactic().oauthJwtEnabled()
+                        ? JWT_OVERHEAD_BYTES_MIN.getOverhead() + " / " +
+                        JWT_OVERHEAD_BYTES_TYPICAL.getOverhead() + " / " +
+                        JWT_OVERHEAD_BYTES_MAX.getOverhead() + " bytes (min/typical/max)"
+                        : null);
     }
 
     private ProtocCompiler executeProtoc(Model model, ParsedProtocolBufferFile parsed)
@@ -298,24 +249,24 @@ public class TCOCalculatorController implements ErrorController {
 
     private MessageSizeCalculationResult calculateRequestMessageSize(
             Model model, URLClassLoader classLoader, String fullClassName) {
-        MessageSizeCalculationResult messageSizeCalculationResult = new MessageSizeCalculationResult(null, 0);
+        MessageSizeCalculationResult result = new MessageSizeCalculationResult(null, 0);
         try {
-            messageSizeCalculationResult = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
-            model.addAttribute("requestSize", messageSizeCalculationResult.size());
+            result = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
+            model.addAttribute("requestSize", result.size());
         } catch (Exception e) {
             log.warning(e.getMessage());
             model.addAttribute("requestSize", 0);
             model.addAttribute("requestMessageError", "Failed to calculate max request size: " + e.getMessage());
         }
-        return messageSizeCalculationResult;
+        return result;
     }
 
     private MessageSizeCalculationResult calculateResponseMessageSize(
             Model model, URLClassLoader classLoader, String fullClassName) {
-        MessageSizeCalculationResult messageSizeCalculationResult = new MessageSizeCalculationResult(null, 0);
+        MessageSizeCalculationResult result = new MessageSizeCalculationResult(null, 0);
         try {
-            messageSizeCalculationResult = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
-            model.addAttribute("responseSize", messageSizeCalculationResult.size());
+            result = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
+            model.addAttribute("responseSize", result.size());
         } catch (ClassNotFoundException e) {
             log.warning(e.getMessage());
             model.addAttribute("responseSize", 0);
@@ -331,7 +282,7 @@ public class TCOCalculatorController implements ErrorController {
             model.addAttribute("responseMessageError",
                     "An unexpected error occurred during response calculation: " + e.getMessage());
         }
-        return messageSizeCalculationResult;
+        return result;
     }
 
     private static void updateBytesSizeWithProtoFileSize(MultipartFile protoFile, Model model) {
@@ -347,12 +298,8 @@ public class TCOCalculatorController implements ErrorController {
         if (protocolBufferFileDirectory != null) {
             try (Stream<Path> walk = Files.walk(protocolBufferFileDirectory)) {
                 walk.sorted(Comparator.reverseOrder()).forEach(p -> {
-                    try {
-                        Files.deleteIfExists(p);
-                    }
-                    catch (IOException e) {
-                        throw new UncheckedIOException("Failed to delete: " + p, e);
-                    }
+                    try { Files.deleteIfExists(p); }
+                    catch (IOException e) { throw new UncheckedIOException("Failed to delete: " + p, e); }
                 });
             } catch (UncheckedIOException | IOException e) {
                 model.addAttribute("error", "Cleanup error: " + e.getMessage());
