@@ -17,6 +17,10 @@ in the context of an **E-Commerce microservice**:
 3. **BUC3**: **gRPC Client Streaming pattern**: Update a set of orders.
 4. **BUC4**: **gRPC Bi-Directional Streaming pattern**: Send  a continuous set of orders and process them into combined shipments based on the delivery date.
 
+## Application Profiles:
+The service can be parametrized before building it to use a Cloud Service Provider to calculate costs.
+**Application Profiles**: In order to provide Networking calculation costs and Cloud Costs the user should specify one of the three [ApplicationProfile.java](src/main/java/com/calculator/application/configuration/ApplicationProfile.java) for it before deploying the service: **aws (for Amazon Web Service)**, **azure (for Microsoft Azure)** or **gcp (for Google Cloud Platform)**.
+
 ## Constraints:
 * **protoc dependency version supported**: **4.29.4** - used to load protocol buffer files and process them following the **protoc syntax v3**. Check [pom.xml](pom.xml)
 * Java AWS SDK and **Java 21+**
@@ -33,6 +37,7 @@ in the context of an **E-Commerce microservice**:
 * **Security tactics**: TLS Certificate and OAuth2.0 + JWT Token. 
 * **Software Design Patterns that have been implemented**: **Composed Method** and **Builder**. Check for `// DESIGN PATTERN` comments.
 * **NOTE**:Some tests might be skipped as those are operating system dependent.
+* **Application Profiles**: Only **aws** is enabled.
 
 ## How to run it?
 1. Execute ``mvn clean install -e`` from your terminal in order to generate the gRPCTCONetworkingCostCalculator **jar file**.

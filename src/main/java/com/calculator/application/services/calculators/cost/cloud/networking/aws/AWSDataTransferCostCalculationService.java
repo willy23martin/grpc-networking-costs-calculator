@@ -1,9 +1,9 @@
-package com.calculator.application.services.calculators.cost;
+package com.calculator.application.services.calculators.cost.cloud.networking.aws;
 
+import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.pricing.PricingClient;
@@ -17,9 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
-@Service
-public class AWSDataTransferCostCalculationService {
-
+public class AWSDataTransferCostCalculationService implements NetworkingCostCalculator {
 
     @Value("${aws.pricing.ec2.rates}")
     List<Double> fallbackRates;
@@ -42,6 +40,7 @@ public class AWSDataTransferCostCalculationService {
                 .build();
     }
 
+    @Override
     public double calculateDataTransferCost(double responseGbPerMonth) {
         List<Double> rates = getDataTransferRates();
 

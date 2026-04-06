@@ -1,10 +1,8 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.AWSDataTransferCostCalculationService;
+import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
 import com.calculator.application.services.calculators.rps.RPSCostCostCalculatorService;
-import com.calculator.application.services.calculators.rps.security.jwt.RPSJWTCostCalculator;
 import com.calculator.application.services.compilators.CompilationService;
-import com.calculator.application.services.mapper.tactics.TacticsMapperService;
 import com.calculator.application.services.populator.TacticsPopulatorService;
 import com.calculator.application.services.protobuf.ProtocolBufferMessageSizeCalculationService;
 import com.calculator.application.services.protobuf.ProtocolBufferService;
@@ -59,19 +57,20 @@ public class TCOCalculatorController implements ErrorController {
             """;
 
     @Autowired
-    AWSDataTransferCostCalculationService awsDataTransferCostCalculationService;
+    NetworkingCostCalculator networkingCostCalculator;
+
     @Autowired
     ProtocolBufferService protocolBufferService;
+
     @Autowired
     CompilationService compilationService;
+
     @Autowired
     ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
+
     @Autowired
     RPSCostCostCalculatorService requestsPerSecondCalculatorService;
-    @Autowired
-    RPSJWTCostCalculator rpsjwtCostCalculator;
-    @Autowired
-    TacticsMapperService tacticsMapperService;
+
     @Autowired
     TacticsPopulatorService tacticsModelPopulatorService;
 
@@ -183,7 +182,7 @@ public class TCOCalculatorController implements ErrorController {
         long requestsPerMonth = (long) (effectiveRps * SECONDS_PER_MONTH);
         double requestGbPerMonth = (effectiveRequestSize  * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
         double responseGbPerMonth = (effectiveResponseSize * effectiveRps * SECONDS_PER_MONTH) / BYTES_PER_GB;
-        double dataTransferCostUsd = awsDataTransferCostCalculationService.calculateDataTransferCost(responseGbPerMonth);
+        double dataTransferCostUsd = networkingCostCalculator.calculateDataTransferCost(responseGbPerMonth);
 
         NumberFormat compactNumberFormat = CompactNumberFormat.getCompactNumberInstance(
                 Locale.US, NumberFormat.Style.SHORT
