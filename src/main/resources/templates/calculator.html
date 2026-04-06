@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>gRPC MACH Architecture — TCO Costs Calculator</title>
+    <title>gRPC MACH Architecture — TCO Networking Costs Calculator</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <style>
@@ -1120,7 +1120,25 @@
         .tbd-cost.tbd-cost-impact { color: var(--red); }
 
 
-    </style>
+
+        /* Cloud Tactics Group */
+        .cloud-tactics-group>.tactics-category-header {
+          background: linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);
+          color:#fff; border-radius:var(--r-lg) var(--r-lg) 0 0; padding:14px 20px;
+        }
+        .cloud-tactics-group>.tactics-category-header:hover {
+          background:linear-gradient(135deg,#1e293b 0%,#1d4ed8 100%);
+        }
+        .cloud-tactics-group>.tactics-category-header .tactics-category-title { color:#f0f9ff; font-size:.95rem; }
+        .cloud-tactics-group>.tactics-category-header .tactics-chevron { color:#93c5fd; }
+        .cloud-tactics-inner { border:2px solid #3b82f6; border-top:none; border-radius:0 0 var(--r-lg) var(--r-lg); overflow:hidden; }
+        .cloud-tactics-inner>.tactics-category { border-radius:0; border:none; border-bottom:1px solid rgba(59,130,246,.15); }
+        .cloud-tactics-inner>.tactics-category:last-child { border-bottom:none; }
+        .badge-cloud-count { background:var(--blue-deep);color:#fff;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:8px;vertical-align:middle; }
+
+        .badge-dr{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+        .badge-bc{background:#DBEAFE;border:1px solid #93C5FD;color:#1E40AF;}
+    </style></style></style></style>
 </head>
 <body>
 <!-- ═══════════════ ARCHITECT BANNER ═══════════════ -->
@@ -1132,10 +1150,11 @@
             <div class="arch-banner-title">Software Architect &amp; FinOps Engineering Toolkit</div>
             <div class="arch-banner-subtitle">
                 This tool is designed for <strong>Software Architects acting as FinOps Engineers</strong> — bridging the gap between
-                Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
+                Information Technology and Finance. Model your gRPC microservice's networking Total Cost of Ownership (TCO)
                 with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
                 in the language of business.
             </div>
+            <div style="margin-top:9px;padding:7px 13px;background:rgba(212,160,23,.18);border:1px solid rgba(212,160,23,.4);border-radius:7px;font-size:.74rem;color:#F5ECD7;line-height:1.5;"><i class="fas fa-circle-info" style="margin-right:5px;"></i><strong>Current Support:</strong> gRPC &amp; AWS&nbsp;&bull;&nbsp;<strong>Roadmap:</strong> Azure, GCP &bull; GraphQL &amp; REST &bull; Multi-region pricing &mdash; 2025&#x2013;2026</div>
         </div>
     </div>
 </div>
@@ -1144,7 +1163,7 @@
 <div class="page-shell">
 
     <div class="main-title">
-        <h1>gRPC MACH Architecture<br>TCO Costs Calculator</h1>
+        <h1>gRPC MACH Architecture<br>TCO Networking Costs Calculator</h1>
         <div class="subtitle">Point-to-Point Integration Pattern · Protocol Buffer IDL · AWS Egress Pricing</div>
     </div>
 
@@ -1187,7 +1206,7 @@
                 <strong>gRPC implements the Point-to-Point Integration Pattern</strong> for inter-service communication in
                 MACH architectures. Each service exposes a strongly-typed contract via Protocol Buffers (IDL), enabling
                 direct, low-latency, binary-serialised messaging between bounded contexts. This calculator models the
-                TCO of that communication link.
+                networking TCO of that communication link.
             </div>
         </div>
 
@@ -1214,6 +1233,11 @@
             <div class="field-hint">Peak-load RPS this service handles. This is your baseline for all cost calculations — architecture tactics will adjust this figure incrementally.</div>
         </div>
 
+        <div class="field">
+            <label>Expected Revenue per Transaction (USD) <span style="font-weight:400;text-transform:none;font-size:.79rem;color:var(--ink-light);">for ROI &amp; ARPU</span></label>
+            <input type="number" id="revenuePerTransaction" placeholder="e.g. 0.50" min="0" step="0.01">
+            <div class="field-hint">Revenue per successful transaction (e.g. $0.50/order). Used to compute ARPU, ROI and break-even in the TCO report. Leave blank to skip.</div>
+        </div>
         <div style="margin-top: 24px; display:flex; gap:12px; flex-wrap:wrap;">
             <button class="btn btn-primary" id="btn-phase1-continue">
                 <i class="fas fa-arrow-right"></i> Continue to Use Case
@@ -1403,13 +1427,18 @@
                     <div class="tactic-label-group">
                         <label class="tactic-label" for="tactic-retry">Retry <span class="warning-badge badge-red">+ RPS</span></label>
                         <span class="tactic-description">
-              Retries under transient failures. <strong style="color:var(--red);">Increases networking costs.</strong>
-              <em style="display:block;margin-top:3px;font-size:.76rem;">Effective RPS = base RPS + (base RPS × max retries)</em>
+              Retries failed requests. <strong style="color:var(--red);">Increases networking costs.</strong>
+              <em style="display:block;margin-top:3px;font-size:.76rem;">Extra RPS = base RPS &times; (error&nbsp;rate&nbsp;% &divide; 100)</em>
             </span>
                     </div>
-                    <div class="tactic-input-group">
-                        <input type="number" id="input-retry-times" min="1" max="10" placeholder="3" disabled>
-                        <span class="tactic-unit">max retries</span>
+                    <div class="tactic-input-group" style="flex-direction:column;gap:6px;align-items:flex-start;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <input type="number" id="input-retry-error-pct" min="0.1" max="100" step="0.1" placeholder="5" disabled style="width:72px;">
+                            <span class="tactic-unit">% error rate</span>
+                        </div>
+                        <div id="retry-disclaimer" style="display:none;font-size:.7rem;color:var(--ink-light);padding:5px 8px;background:rgba(153,27,27,.07);border-radius:var(--r);border-left:3px solid var(--red);max-width:300px;line-height:1.5;">
+                            &#9432; <strong>Error margin:</strong> This represents the estimated % of requests that fail and are retried. Extra load = <strong id="retry-extra-rps-preview">—</strong>.
+                        </div>
                     </div>
                 </div>
                 <div class="tactic-row">
@@ -1604,193 +1633,211 @@
             </div>
         </div>
 
-        <!-- Scalability & Replica Sizing -->
-        <div class="tactics-category">
-            <div class="tactics-category-header" onclick="toggleCategory('scalability')">
-                <span class="tactics-category-title"><span>⚖️</span> Scalability &amp; Replica Sizing</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-scalability"></i>
-            </div>
-            <div class="tactics-category-body" id="body-scalability">
-                <div class="security-explainer" style="display:block;">
-                    <div class="explainer-title"><i class="fas fa-server"></i> Replica count formula</div>
-                    <p><strong>N = max( ⌈R / C_req⌉, ⌈(R×S_req) / C_in⌉, ⌈(R×S_res) / C_out⌉ )</strong></p>
-                    <p style="margin-top:6px;font-size:.78rem;color:var(--ink-light);">R = base RPS &nbsp;·&nbsp; S_req / S_res = proto bytes (backend-derived once uploaded) &nbsp;·&nbsp; C_req / C_in / C_out = per-replica capacity from EC2 instance type.</p>
-                </div>
-                <div class="tactic-row" style="margin-top:12px;">
-                    <div class="tactic-label-group"><label class="tactic-label">EC2 Instance Type</label><span class="tactic-description">Sets C_in and C_out from AWS network specs.</span></div>
-                    <div class="tactic-input-group" style="min-width:220px;">
-                        <select id="input-ec2-instance" style="width:220px;">
-                            <option value="">&#8212; Select instance &#8212;</option>
-                            <optgroup label="General Purpose">
-                                <option value="t3.micro|1000|62500000|62500000">t3.micro (2 vCPU / 1 GiB / 5 Gbps)</option>
-                                <option value="t3.small|1500|62500000|62500000">t3.small (2 vCPU / 2 GiB / 5 Gbps)</option>
-                                <option value="t3.medium|2500|62500000|62500000">t3.medium (2 vCPU / 4 GiB / 5 Gbps)</option>
-                                <option value="m6i.large|5000|156250000|156250000">m6i.large (2 vCPU / 8 GiB / 12.5 Gbps)</option>
-                                <option value="m6i.xlarge|10000|156250000|156250000">m6i.xlarge (4 vCPU / 16 GiB / 12.5 Gbps)</option>
-                                <option value="m6i.2xlarge|20000|312500000|312500000">m6i.2xlarge (8 vCPU / 32 GiB / 25 Gbps)</option>
-                                <option value="m6i.4xlarge|40000|625000000|625000000">m6i.4xlarge (16 vCPU / 64 GiB / 50 Gbps)</option>
-                            </optgroup>
-                            <optgroup label="Compute Optimised">
-                                <option value="c6i.large|8000|156250000|156250000">c6i.large (2 vCPU / 4 GiB / 12.5 Gbps)</option>
-                                <option value="c6i.xlarge|16000|156250000|156250000">c6i.xlarge (4 vCPU / 8 GiB / 12.5 Gbps)</option>
-                                <option value="c6i.2xlarge|32000|312500000|312500000">c6i.2xlarge (8 vCPU / 16 GiB / 25 Gbps)</option>
-                            </optgroup>
-                            <optgroup label="Memory Optimised">
-                                <option value="r6i.large|5000|156250000|156250000">r6i.large (2 vCPU / 16 GiB / 12.5 Gbps)</option>
-                                <option value="r6i.xlarge|10000|156250000|156250000">r6i.xlarge (4 vCPU / 32 GiB / 12.5 Gbps)</option>
-                            </optgroup>
-                        </select>
-                        <span class="tactic-unit">instance type</span>
-                    </div>
-                </div>
-                <div class="tactic-row">
-                    <div class="tactic-label-group"><label class="tactic-label" for="input-max-req-per-replica">C_req override (req/s per replica)</label><span class="tactic-description">Override if profiled. Leave blank to use instance default.</span></div>
-                    <div class="tactic-input-group"><input type="number" id="input-max-req-per-replica" min="1" placeholder="from instance"><span class="tactic-unit">req/s</span></div>
-                </div>
-                <div id="replica-result" style="display:none;margin-top:14px;padding:16px 18px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#FFFDF5);border:1px solid var(--gold-border);">
-                    <div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;"><i class="fas fa-layer-group" style="margin-right:6px;"></i>Replica Sizing Result</div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="replica-grid"></div>
-                    <div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(212,160,23,.3);">
-                        <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;">Recommended minimum replicas</div>
-                        <div style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--blue-deep);" id="replica-count-display">—</div>
-                        <div style="font-size:.74rem;color:var(--ink-light);margin-top:3px;" id="replica-bottleneck">—</div>
-                    </div>
-                    <p style="font-size:.74rem;color:var(--ink-light);margin-top:8px;">S_req/S_res use placeholders (200B/1200B) until .proto uploaded.</p>
+        <!-- ══════ CLOUD TACTICS & PATTERNS ══════════════════════════════ -->
+        <div class="tactics-category cloud-tactics-group" id="cat-cloud-tactics">
+            <div class="tactics-category-header cloud-tactics-header" onclick="toggleCategory('cloud-tactics')">
+        <span class="tactics-category-title">
+          <span>&#9729;&#65039;</span> Cloud Tactics &amp; Patterns
+          <span class="badge-cloud-count" id="cloud-tactics-badge" style="display:none;"></span>
+        </span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:.72rem;font-weight:500;opacity:.75;font-style:italic;">Scalability &bull; Load Balancing &bull; Availability &bull; Backup &bull; Security &bull; Cost Opt &bull; Caching</span>
+                    <i class="fas fa-chevron-down tactics-chevron" id="chevron-cloud-tactics"></i>
                 </div>
             </div>
-        </div>
-
-
-        <!-- ══════════ ALB & LOAD BALANCER COSTS ══════════════════════════════ -->
-        <div class="tactics-category" id="cat-alb">
-            <div class="tactics-category-header" onclick="toggleCategory('alb')">
-                <span class="tactics-category-title"><span>⚡</span> ALB &amp; Load Balancer Costs</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-alb"></i>
-            </div>
-            <div class="tactics-category-body" id="body-alb">
-                <div class="notice notice-blue" style="margin-bottom:12px;">
-                    <i class="fas fa-info-circle"></i>
-                    <div>If you selected <strong>Client-side or Server-side Load Balancing</strong> above, an Application Load Balancer is likely part of your architecture. ALB costs have two components: a fixed hourly charge per ALB, and a Load Capacity Unit (LCU) charge based on traffic volume.</div>
-                </div>
-                <div id="alb-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching ALB pricing from AWS…</div>
-                <div id="alb-content" style="display:none;">
-                    <div class="tactic-row">
-                        <input type="checkbox" class="tactic-check" id="tactic-alb">
-                        <div class="tactic-label-group">
-                            <label class="tactic-label" for="tactic-alb">Include ALB in TCO estimate <span class="warning-badge badge-red">+ cost</span></label>
-                            <span class="tactic-description" id="alb-price-desc">Loading…</span>
+            <div class="tactics-category-body" id="body-cloud-tactics">
+                <div class="cloud-tactics-inner">
+                    <!-- Scalability & Replica Sizing -->
+                    <div class="tactics-category">
+                        <div class="tactics-category-header" onclick="toggleCategory('scalability')">
+                            <span class="tactics-category-title"><span>⚖️</span> Scalability &amp; Replica Sizing</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-scalability"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-scalability">
+                            <div class="security-explainer" style="display:block;">
+                                <div class="explainer-title"><i class="fas fa-server"></i> Replica count formula</div>
+                                <p><strong>N = max( ⌈R / C_req⌉, ⌈(R×S_req) / C_in⌉, ⌈(R×S_res) / C_out⌉ )</strong></p>
+                                <p style="margin-top:6px;font-size:.78rem;color:var(--ink-light);">R = base RPS &nbsp;·&nbsp; S_req / S_res = proto bytes (backend-derived once uploaded) &nbsp;·&nbsp; C_req / C_in / C_out = per-replica capacity from EC2 instance type.</p>
+                            </div>
+                            <div class="tactic-row" style="margin-top:12px;">
+                                <div class="tactic-label-group"><label class="tactic-label">EC2 Instance Type</label><span class="tactic-description">Sets C_in and C_out from AWS network specs.</span></div>
+                                <div class="tactic-input-group" style="min-width:220px;">
+                                    <select id="input-ec2-instance" style="width:220px;">
+                                        <option value="">&#8212; Select instance &#8212;</option>
+                                        <optgroup label="General Purpose">
+                                            <option value="t3.micro|1000|62500000|62500000">t3.micro (2 vCPU / 1 GiB / 5 Gbps)</option>
+                                            <option value="t3.small|1500|62500000|62500000">t3.small (2 vCPU / 2 GiB / 5 Gbps)</option>
+                                            <option value="t3.medium|2500|62500000|62500000">t3.medium (2 vCPU / 4 GiB / 5 Gbps)</option>
+                                            <option value="m6i.large|5000|156250000|156250000">m6i.large (2 vCPU / 8 GiB / 12.5 Gbps)</option>
+                                            <option value="m6i.xlarge|10000|156250000|156250000">m6i.xlarge (4 vCPU / 16 GiB / 12.5 Gbps)</option>
+                                            <option value="m6i.2xlarge|20000|312500000|312500000">m6i.2xlarge (8 vCPU / 32 GiB / 25 Gbps)</option>
+                                            <option value="m6i.4xlarge|40000|625000000|625000000">m6i.4xlarge (16 vCPU / 64 GiB / 50 Gbps)</option>
+                                        </optgroup>
+                                        <optgroup label="Compute Optimised">
+                                            <option value="c6i.large|8000|156250000|156250000">c6i.large (2 vCPU / 4 GiB / 12.5 Gbps)</option>
+                                            <option value="c6i.xlarge|16000|156250000|156250000">c6i.xlarge (4 vCPU / 8 GiB / 12.5 Gbps)</option>
+                                            <option value="c6i.2xlarge|32000|312500000|312500000">c6i.2xlarge (8 vCPU / 16 GiB / 25 Gbps)</option>
+                                        </optgroup>
+                                        <optgroup label="Memory Optimised">
+                                            <option value="r6i.large|5000|156250000|156250000">r6i.large (2 vCPU / 16 GiB / 12.5 Gbps)</option>
+                                            <option value="r6i.xlarge|10000|156250000|156250000">r6i.xlarge (4 vCPU / 32 GiB / 12.5 Gbps)</option>
+                                        </optgroup>
+                                    </select>
+                                    <span class="tactic-unit">instance type</span>
+                                </div>
+                            </div>
+                            <div class="tactic-row">
+                                <div class="tactic-label-group"><label class="tactic-label" for="input-max-req-per-replica">C_req override (req/s per replica)</label><span class="tactic-description">Override if profiled. Leave blank to use instance default.</span></div>
+                                <div class="tactic-input-group"><input type="number" id="input-max-req-per-replica" min="1" placeholder="from instance"><span class="tactic-unit">req/s</span></div>
+                            </div>
+                            <div id="replica-result" style="display:none;margin-top:14px;padding:16px 18px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#FFFDF5);border:1px solid var(--gold-border);">
+                                <div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;"><i class="fas fa-layer-group" style="margin-right:6px;"></i>Replica Sizing Result</div>
+                                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="replica-grid"></div>
+                                <div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(212,160,23,.3);">
+                                    <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;">Recommended minimum replicas</div>
+                                    <div style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--blue-deep);" id="replica-count-display">—</div>
+                                    <div style="font-size:.74rem;color:var(--ink-light);margin-top:3px;" id="replica-bottleneck">—</div>
+                                </div>
+                                <p style="font-size:.74rem;color:var(--ink-light);margin-top:8px;">S_req/S_res use placeholders (200B/1200B) until .proto uploaded.</p>
+                            </div>
                         </div>
                     </div>
-                    <div id="alb-params" style="display:none;padding-left:28px;border-left:3px solid var(--gold-border);margin:4px 0 8px;">
-                        <div class="tactic-row">
-                            <div class="tactic-label-group"><label class="tactic-label" for="input-alb-count">Number of ALBs</label><span class="tactic-description">Each ALB incurs a fixed monthly charge.</span></div>
-                            <div class="tactic-input-group"><input type="number" id="input-alb-count" min="1" placeholder="1"><span class="tactic-unit">ALBs</span></div>
-                        </div>
-                        <div class="tactic-row">
-                            <div class="tactic-label-group"><label class="tactic-label" for="input-alb-lcu">Estimated LCUs per hour</label><span class="tactic-description">1 LCU = 25 new connections/s OR 3,000 active connections OR 1 GB/hr processed OR 1,000 rule evaluations/s. Use the max of these dimensions.</span></div>
-                            <div class="tactic-input-group"><input type="number" id="input-alb-lcu" min="0" placeholder="5"><span class="tactic-unit">LCUs/hr</span></div>
-                        </div>
-                        <div id="alb-result" class="live-preview visible" style="display:block;margin-top:8px;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- ══════════ AVAILABILITY SLA ═══════════════════════════════════════ -->
-        <div class="tactics-category" id="cat-availability">
-            <div class="tactics-category-header" onclick="toggleCategory('availability')">
-                <span class="tactics-category-title"><span>📊</span> Availability SLA</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-availability"></i>
-            </div>
-            <div class="tactics-category-body" id="body-availability">
-                <div class="notice notice-blue" style="margin-bottom:12px;">
-                    <i class="fas fa-info-circle"></i>
-                    <div>Higher availability tiers require redundant infrastructure (Multi-AZ deployments, additional replicas, failover ALBs). Select your SLA target to see the approximate infrastructure cost multiplier and the maximum allowed downtime per month.</div>
-                </div>
-                <div class="tactic-row">
-                    <div class="tactic-label-group"><label class="tactic-label">SLA Target</label></div>
-                    <div class="tactic-input-group" style="min-width:200px;">
-                        <select id="input-sla" style="width:200px;">
-                            <option value="0">— No SLA target —</option>
-                            <option value="99">99% (7.2 hr downtime/mo)</option>
-                            <option value="99.5">99.5% (3.6 hr downtime/mo)</option>
-                            <option value="99.9">99.9% (43.8 min downtime/mo)</option>
-                            <option value="99.95">99.95% (21.9 min downtime/mo)</option>
-                            <option value="99.99">99.99% (4.4 min downtime/mo)</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="availability-result" style="display:none;margin-top:12px;"></div>
-            </div>
-        </div>
 
-        <!-- ══════════ DATABASE BACKUP & RECOVERY ═════════════════════════════ -->
-        <div class="tactics-category" id="cat-dbbackup">
-            <div class="tactics-category-header" onclick="toggleCategory('dbbackup')">
-                <span class="tactics-category-title"><span>🗃️</span> Database Backup &amp; Recovery</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-dbbackup"></i>
-            </div>
-            <div class="tactics-category-body" id="body-dbbackup">
-                <div id="dbbackup-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching DB backup pricing from AWS…</div>
-                <div id="dbbackup-content" style="display:none;">
-                    <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label">Database engine</label><span class="tactic-description">Select the database that backs this microservice to see relevant backup / DR options.</span></div>
-                        <div class="tactic-input-group" style="min-width:200px;">
-                            <select id="input-db-engine" style="width:200px;">
-                                <option value="">— Select engine —</option>
-                                <option value="rds-mysql">RDS MySQL / PostgreSQL</option>
-                                <option value="aurora">Aurora (MySQL / PostgreSQL)</option>
-                                <option value="dynamodb">DynamoDB</option>
-                                <option value="none">No persistent database</option>
-                            </select>
+                    <!-- ══════════ ALB & LOAD BALANCER COSTS ══════════════════════════════ -->
+                    <div class="tactics-category" id="cat-alb">
+                        <div class="tactics-category-header" onclick="toggleCategory('alb')">
+                            <span class="tactics-category-title"><span>⚡</span> ALB &amp; Load Balancer Costs</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-alb"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-alb">
+                            <div class="notice notice-blue" style="margin-bottom:12px;">
+                                <i class="fas fa-info-circle"></i>
+                                <div>If you selected <strong>Client-side or Server-side Load Balancing</strong> above, an Application Load Balancer is likely part of your architecture. ALB costs have two components: a fixed hourly charge per ALB, and a Load Capacity Unit (LCU) charge based on traffic volume.</div>
+                            </div>
+                            <div id="alb-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching ALB pricing from AWS…</div>
+                            <div id="alb-content" style="display:none;">
+                                <div class="tactic-row">
+                                    <input type="checkbox" class="tactic-check" id="tactic-alb">
+                                    <div class="tactic-label-group">
+                                        <label class="tactic-label" for="tactic-alb">Include ALB in TCO estimate <span class="warning-badge badge-red">+ cost</span></label>
+                                        <span class="tactic-description" id="alb-price-desc">Loading…</span>
+                                    </div>
+                                </div>
+                                <div id="alb-params" style="display:none;padding-left:28px;border-left:3px solid var(--gold-border);margin:4px 0 8px;">
+                                    <div class="tactic-row">
+                                        <div class="tactic-label-group"><label class="tactic-label" for="input-alb-count">Number of ALBs</label><span class="tactic-description">Each ALB incurs a fixed monthly charge.</span></div>
+                                        <div class="tactic-input-group"><input type="number" id="input-alb-count" min="1" placeholder="1"><span class="tactic-unit">ALBs</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <div class="tactic-label-group"><label class="tactic-label" for="input-alb-lcu">Estimated LCUs per hour</label><span class="tactic-description">1 LCU = 25 new connections/s OR 3,000 active connections OR 1 GB/hr processed OR 1,000 rule evaluations/s. Use the max of these dimensions.</span></div>
+                                        <div class="tactic-input-group"><input type="number" id="input-alb-lcu" min="0" placeholder="5"><span class="tactic-unit">LCUs/hr</span></div>
+                                    </div>
+                                    <div id="alb-result" class="live-preview visible" style="display:block;margin-top:8px;"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div id="db-options" style="margin-top:8px;"></div>
-                    <div id="dbbackup-result" class="live-preview" style="margin-top:10px;"></div>
+
+                    <!-- ══════════ AVAILABILITY SLA ═══════════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-availability">
+                        <div class="tactics-category-header" onclick="toggleCategory('availability')">
+                            <span class="tactics-category-title"><span>📊</span> Availability SLA</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-availability"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-availability">
+                            <div class="notice notice-blue" style="margin-bottom:12px;">
+                                <i class="fas fa-info-circle"></i>
+                                <div>Higher availability tiers require redundant infrastructure (Multi-AZ deployments, additional replicas, failover ALBs). Select your SLA target to see the approximate infrastructure cost multiplier and the maximum allowed downtime per month.</div>
+                            </div>
+                            <div class="tactic-row">
+                                <div class="tactic-label-group"><label class="tactic-label">SLA Target</label></div>
+                                <div class="tactic-input-group" style="min-width:200px;">
+                                    <select id="input-sla" style="width:200px;">
+                                        <option value="0">— No SLA target —</option>
+                                        <option value="99">99% (7.2 hr downtime/mo)</option>
+                                        <option value="99.5">99.5% (3.6 hr downtime/mo)</option>
+                                        <option value="99.9">99.9% (43.8 min downtime/mo)</option>
+                                        <option value="99.95">99.95% (21.9 min downtime/mo)</option>
+                                        <option value="99.99">99.99% (4.4 min downtime/mo)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="availability-result" style="display:none;margin-top:12px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ DATABASE BACKUP & RECOVERY ═════════════════════════════ -->
+                    <div class="tactics-category" id="cat-dbbackup">
+                        <div class="tactics-category-header" onclick="toggleCategory('dbbackup')">
+                            <span class="tactics-category-title"><span>🗃️</span> Database Backup &amp; Recovery</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-dbbackup"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-dbbackup">
+                            <div id="dbbackup-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching DB backup pricing from AWS…</div>
+                            <div id="dbbackup-content" style="display:none;">
+                                <div class="tactic-row">
+                                    <div class="tactic-label-group"><label class="tactic-label">Database engine</label><span class="tactic-description">Select the database that backs this microservice to see relevant backup / DR options.</span></div>
+                                    <div class="tactic-input-group" style="min-width:200px;">
+                                        <select id="input-db-engine" style="width:200px;">
+                                            <option value="">— Select engine —</option>
+                                            <option value="rds-mysql">RDS MySQL / PostgreSQL</option>
+                                            <option value="aurora">Aurora (MySQL / PostgreSQL)</option>
+                                            <option value="dynamodb">DynamoDB</option>
+                                            <option value="none">No persistent database</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="db-options" style="margin-top:8px;"></div>
+                                <div id="dbbackup-result" class="live-preview" style="margin-top:10px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ CLOUD SECURITY SERVICES ════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-cloudsec">
+                        <div class="tactics-category-header" onclick="toggleCategory('cloudsec')">
+                            <span class="tactics-category-title"><span>🛡️</span> Cloud Security Services</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-cloudsec"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-cloudsec">
+                            <div id="cloudsec-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching security service pricing from AWS…</div>
+                            <div id="cloudsec-content" style="display:none;"></div>
+                            <div id="cloudsec-total" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid var(--green-border);font-size:.88rem;color:var(--green);"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ COST OPTIMISATION ══════════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-costopt">
+                        <div class="tactics-category-header" onclick="toggleCategory('costopt')">
+                            <span class="tactics-category-title"><span>💰</span> Cost Optimisation</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-costopt"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-costopt">
+                            <div id="costopt-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching cost optimisation data from AWS…</div>
+                            <div id="costopt-content" style="display:none;"></div>
+                            <div id="costopt-result" style="display:none;margin-top:10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ HIGH-PERFORMANCE CACHING ════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-caching">
+                        <div class="tactics-category-header" onclick="toggleCategory('caching')">
+                            <span class="tactics-category-title"><span>⚡</span> High-Performance Caching</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-caching"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-caching">
+                            <div id="caching-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching ElastiCache pricing from AWS…</div>
+                            <div id="caching-content" style="display:none;"></div>
+                            <div id="caching-result" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;font-size:.88rem;color:var(--blue-deep);"></div>
+                        </div>
+                    </div>
+
+
+
                 </div>
             </div>
         </div>
-
-        <!-- ══════════ CLOUD SECURITY SERVICES ════════════════════════════════ -->
-        <div class="tactics-category" id="cat-cloudsec">
-            <div class="tactics-category-header" onclick="toggleCategory('cloudsec')">
-                <span class="tactics-category-title"><span>🛡️</span> Cloud Security Services</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-cloudsec"></i>
-            </div>
-            <div class="tactics-category-body" id="body-cloudsec">
-                <div id="cloudsec-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching security service pricing from AWS…</div>
-                <div id="cloudsec-content" style="display:none;"></div>
-                <div id="cloudsec-total" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid var(--green-border);font-size:.88rem;color:var(--green);"></div>
-            </div>
-        </div>
-
-        <!-- ══════════ COST OPTIMISATION ══════════════════════════════════════ -->
-        <div class="tactics-category" id="cat-costopt">
-            <div class="tactics-category-header" onclick="toggleCategory('costopt')">
-                <span class="tactics-category-title"><span>💰</span> Cost Optimisation</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-costopt"></i>
-            </div>
-            <div class="tactics-category-body" id="body-costopt">
-                <div id="costopt-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching cost optimisation data from AWS…</div>
-                <div id="costopt-content" style="display:none;"></div>
-                <div id="costopt-result" style="display:none;margin-top:10px;"></div>
-            </div>
-        </div>
-
-        <!-- ══════════ HIGH-PERFORMANCE CACHING ════════════════════════════════ -->
-        <div class="tactics-category" id="cat-caching">
-            <div class="tactics-category-header" onclick="toggleCategory('caching')">
-                <span class="tactics-category-title"><span>⚡</span> High-Performance Caching</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-caching"></i>
-            </div>
-            <div class="tactics-category-body" id="body-caching">
-                <div id="caching-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching ElastiCache pricing from AWS…</div>
-                <div id="caching-content" style="display:none;"></div>
-                <div id="caching-result" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;font-size:.88rem;color:var(--blue-deep);"></div>
-            </div>
-        </div>
-
-
         <!-- Live RPS summary -->
         <div class="rps-summary-bar" id="rps-impact-summary">
             <div>Estimated effective RPS: <span class="rps-total" id="rps-adjusted-display">—</span></div>
@@ -1842,167 +1889,174 @@
             </button>
         </div>
 
-        <div class="loading-bar-wrapper" id="loadingBar" style="margin-top:16px;">
-            <div class="loading-bar-label"><span class="spinner"></span> Uploading and calculating, please wait…</div>
-            <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+    </div>
+</div>
+</div>
+
+<div class="loading-bar-wrapper" id="loadingBar" style="margin-top:16px;">
+    <div class="loading-bar-label"><span class="spinner"></span> Uploading and calculating, please wait…</div>
+    <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+</div>
+</div>
+
+<!-- Hidden form that submits to backend — input populated from phase 2 file picker -->
+<form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data" style="display:none;">
+    <input type="file" id="protoFile" name="protoFile" accept=".proto">
+</form>
+
+<!-- Server messages (Thymeleaf) -->
+<div id="serverUploadMessage" th:if="${uploadMessage != null}" style="display:none; margin-top:16px;"
+     th:class="'message ' + ${uploadMessage.contains('successfully') ? 'msg-success' : 'msg-error'}">
+    <i class="fas msg-icon" th:classappend="${uploadMessage.contains('successfully') ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+    <p th:text="${uploadMessage}"></p>
+</div>
+
+<!-- ═══ PHASE 4 — TCO Results (was Phase 5) ═══ -->
+
+<div id="serverResultsSection" th:if="${error != null || requestSize != null}" class="card results-section hidden">
+    <div class="card-header">
+        <div class="card-header-icon icon-gold"><i class="fas fa-chart-bar"></i></div>
+        <div class="card-header-text">
+            <h2>Phase 4 — TCO Networking Costs Report</h2>
+            <p>Full cost breakdown including architecture tactics, unit economics, and stakeholder summary.</p>
         </div>
     </div>
 
-    <!-- Hidden form that submits to backend — input populated from phase 2 file picker -->
-    <form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data" style="display:none;">
-        <input type="file" id="protoFile" name="protoFile" accept=".proto">
-    </form>
-
-    <!-- Server messages (Thymeleaf) -->
-    <div id="serverUploadMessage" th:if="${uploadMessage != null}" style="display:none; margin-top:16px;"
-         th:class="'message ' + ${uploadMessage.contains('successfully') ? 'msg-success' : 'msg-error'}">
-        <i class="fas msg-icon" th:classappend="${uploadMessage.contains('successfully') ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-        <p th:text="${uploadMessage}"></p>
+    <!-- Error -->
+    <div th:if="${error != null}" class="message msg-error" style="margin-top:0;">
+        <i class="fas fa-exclamation-circle msg-icon"></i>
+        <p th:text="${error}"></p>
     </div>
 
-    <!-- ═══ PHASE 4 — TCO Results (was Phase 5) ═══ -->
+    <!-- Results body -->
+    <div th:if="${requestSize != null}">
 
-    <div id="serverResultsSection" th:if="${error != null || requestSize != null}" class="card results-section hidden">
-        <div class="card-header">
-            <div class="card-header-icon icon-gold"><i class="fas fa-chart-bar"></i></div>
-            <div class="card-header-text">
-                <h2>Phase 4 — TCO Networking Costs Report</h2>
-                <p>Full cost breakdown including architecture tactics, unit economics, and stakeholder summary.</p>
+        <!-- Service identity summary — populated by JS from phase 1 inputs -->
+        <div id="reportServiceSummary" style="margin-bottom:20px;"></div>
+
+        <!-- Tactics summary section -->
+        <div class="tactics-summary-section" th:if="${hasTactics}">
+            <div class="tactics-summary-title"><i class="fas fa-layer-group"></i> Applied Architecture Tactics &amp; Patterns</div>
+            <div th:if="${not #lists.isEmpty(infoTactics)}">
+                <div class="tactics-group-label">ℹ️ Informational — No RPS Impact</div>
+                <table class="tactics-summary-table">
+                    <thead><tr><th>Tactic</th><th>Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
+                    <tbody>
+                    <tr th:each="tactic : ${infoTactics}">
+                        <td class="tactic-name-cell" th:text="${tactic['name']}"></td>
+                        <td class="tactic-value-cell" th:text="${tactic['value']}"></td>
+                        <td class="tactic-desc-cell"  th:text="${tactic['description']}"></td>
+                        <td class="tactic-impact-cell"><span class="no-impact-badge">None</span></td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
-        </div>
+            <div th:if="${not #lists.isEmpty(rpsTactics)}">
+                <div class="tactics-group-label">⚠️ RPS-Impacting — Increases Networking Costs</div>
+                <table class="tactics-summary-table">
+                    <thead><tr><th>Tactic</th><th>Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
+                    <tbody>
+                    <tr th:each="tactic : ${rpsTactics}">
+                        <td class="tactic-name-cell"   th:text="${tactic['name']}"></td>
+                        <td class="tactic-value-cell"  th:text="${tactic['value']}"></td>
+                        <td class="tactic-desc-cell"   th:text="${tactic['description']}"></td>
+                        <td class="tactic-impact-cell" th:text="${tactic['rpsImpact']}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- Error -->
-        <div th:if="${error != null}" class="message msg-error" style="margin-top:0;">
-            <i class="fas fa-exclamation-circle msg-icon"></i>
-            <p th:text="${error}"></p>
-        </div>
-
-        <!-- Results body -->
-        <div th:if="${requestSize != null}">
-
-            <!-- Service identity summary — populated by JS from phase 1 inputs -->
-            <div id="reportServiceSummary" style="margin-bottom:20px;"></div>
-
-            <!-- Tactics summary section -->
-            <div class="tactics-summary-section" th:if="${hasTactics}">
-                <div class="tactics-summary-title"><i class="fas fa-layer-group"></i> Applied Architecture Tactics &amp; Patterns</div>
-                <div th:if="${not #lists.isEmpty(infoTactics)}">
-                    <div class="tactics-group-label">ℹ️ Informational — No RPS Impact</div>
-                    <table class="tactics-summary-table">
-                        <thead><tr><th>Tactic</th><th>Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
-                        <tbody>
-                        <tr th:each="tactic : ${infoTactics}">
-                            <td class="tactic-name-cell" th:text="${tactic['name']}"></td>
-                            <td class="tactic-value-cell" th:text="${tactic['value']}"></td>
-                            <td class="tactic-desc-cell"  th:text="${tactic['description']}"></td>
-                            <td class="tactic-impact-cell"><span class="no-impact-badge">None</span></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div th:if="${not #lists.isEmpty(rpsTactics)}">
-                    <div class="tactics-group-label">⚠️ RPS-Impacting — Increases Networking Costs</div>
-                    <table class="tactics-summary-table">
-                        <thead><tr><th>Tactic</th><th>Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
-                        <tbody>
-                        <tr th:each="tactic : ${rpsTactics}">
-                            <td class="tactic-name-cell"   th:text="${tactic['name']}"></td>
-                            <td class="tactic-value-cell"  th:text="${tactic['value']}"></td>
-                            <td class="tactic-desc-cell"   th:text="${tactic['description']}"></td>
-                            <td class="tactic-impact-cell" th:text="${tactic['rpsImpact']}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="rps-adjustment-banner" th:if="${rpsWasAdjusted}">
-                    <i class="fas fa-chart-line banner-icon"></i>
-                    <div>
-                        <div class="banner-title">RPS Adjusted by Active Tactics</div>
-                        <div class="banner-values">
-                            <div class="rps-val"><span class="rps-val-label">Base RPS</span><span class="rps-val-number" th:text="${baseRps}"></span></div>
-                            <div class="rps-val"><span class="rps-val-label">Effective RPS</span><span class="rps-val-number increased" th:text="${effectiveRps}"></span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="security-overhead-banner" th:if="${securityByteOverheadApplied}">
-                    <i class="fas fa-lock banner-icon"></i>
-                    <div>
-                        <div class="banner-title">Security Byte Overhead Applied to Message Sizes</div>
-                        <div class="overhead-grid">
-                            <div class="overhead-item" th:if="${tlsOverheadBytes > 0}">
-                                <span class="overhead-item-label">TLS overhead / message</span>
-                                <span class="overhead-item-value" th:text="${tlsOverheadBytes} + ' bytes (typical)'"></span>
-                                <span class="overhead-item-range" th:text="${tlsOverheadRange}"></span>
-                            </div>
-                            <div class="overhead-item" th:if="${jwtOverheadBytes > 0}">
-                                <span class="overhead-item-label">JWT overhead / request</span>
-                                <span class="overhead-item-value" th:text="${jwtOverheadBytes} + ' bytes (typical)'"></span>
-                                <span class="overhead-item-range" th:text="${jwtOverheadRange}"></span>
-                            </div>
-                            <div class="overhead-item">
-                                <span class="overhead-item-label">Effective request size</span>
-                                <span class="overhead-item-value" th:text="${requestSizeEffective} + ' bytes'"></span>
-                            </div>
-                            <div class="overhead-item">
-                                <span class="overhead-item-label">Effective response size</span>
-                                <span class="overhead-item-value" th:text="${responseSizeEffective} + ' bytes'"></span>
-                            </div>
-                        </div>
+            <div class="rps-adjustment-banner" th:if="${rpsWasAdjusted}">
+                <i class="fas fa-chart-line banner-icon"></i>
+                <div>
+                    <div class="banner-title">RPS Adjusted by Active Tactics</div>
+                    <div class="banner-values">
+                        <div class="rps-val"><span class="rps-val-label">Base RPS</span><span class="rps-val-number" th:text="${baseRps}"></span></div>
+                        <div class="rps-val"><span class="rps-val-label">Effective RPS</span><span class="rps-val-number increased" th:text="${effectiveRps}"></span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Main costs table -->
-            <table class="results-table">
-                <thead><tr>
-                    <th>Message Type</th>
-                    <th>Proto size (bytes)</th>
-                    <th>Effective size (bytes)</th>
-                    <th>Requests / month</th>
-                    <th>Throughput (GB/month)</th>
-                    <th>Transfer Cost (USD/month)</th>
-                </tr></thead>
-                <tbody>
-                <tr>
-                    <td>Request</td>
-                    <td th:text="${requestSize}"></td>
-                    <td th:text="${requestSizeEffective}"></td>
-                    <td th:text="${requestsPerMonth}"></td>
-                    <td th:text="${requestGbPerMonth} + ' GB'"></td>
-                    <td>—</td>
-                </tr>
-                <tr>
-                    <td>Response</td>
-                    <td th:text="${responseSize}"></td>
-                    <td th:text="${responseSizeEffective}"></td>
-                    <td th:text="${requestsPerMonth}"></td>
-                    <td th:text="${responseGbPerMonth} + ' GB'"></td>
-                    <td th:text="'$ ' + ${dataTransferCostUsd}"></td>
-                </tr>
-                </tbody>
-            </table>
-
-            <!-- Unit Economics -->
-            <div class="unit-econ-section" id="reportUnitEcon">
-                <div class="unit-econ-title"><i class="fas fa-coins"></i> Unit Economics</div>
-                <div class="unit-econ-grid" id="unitEconGrid">
-                    <!-- populated by JS -->
+            <div class="security-overhead-banner" th:if="${securityByteOverheadApplied}">
+                <i class="fas fa-lock banner-icon"></i>
+                <div>
+                    <div class="banner-title">Security Byte Overhead Applied to Message Sizes</div>
+                    <div class="overhead-grid">
+                        <div class="overhead-item" th:if="${tlsOverheadBytes > 0}">
+                            <span class="overhead-item-label">TLS overhead / message</span>
+                            <span class="overhead-item-value" th:text="${tlsOverheadBytes} + ' bytes (typical)'"></span>
+                            <span class="overhead-item-range" th:text="${tlsOverheadRange}"></span>
+                        </div>
+                        <div class="overhead-item" th:if="${jwtOverheadBytes > 0}">
+                            <span class="overhead-item-label">JWT overhead / request</span>
+                            <span class="overhead-item-value" th:text="${jwtOverheadBytes} + ' bytes (typical)'"></span>
+                            <span class="overhead-item-range" th:text="${jwtOverheadRange}"></span>
+                        </div>
+                        <div class="overhead-item">
+                            <span class="overhead-item-label">Effective request size</span>
+                            <span class="overhead-item-value" th:text="${requestSizeEffective} + ' bytes'"></span>
+                        </div>
+                        <div class="overhead-item">
+                            <span class="overhead-item-label">Effective response size</span>
+                            <span class="overhead-item-value" th:text="${responseSizeEffective} + ' bytes'"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <p style="font-size:.76rem;color:var(--ink-light);margin-top:14px;line-height:1.6;">
-                * Outbound (response) data transfer cost uses AWS standard internet egress tiered pricing for US East (N. Virginia):
-                first 10 TB at $0.09/GB, next 40 TB at $0.085/GB, next 100 TB at $0.07/GB, beyond 150 TB at $0.05/GB.
-                Inbound (request) traffic is free. Effective sizes include TLS (RFC 8446) and JWT (RFC 7519) overhead where applicable.
-                <a href="https://calculator.aws/#/createCalculator/ec2-enhancement" target="_blank" rel="noopener noreferrer"
-                   style="color:var(--blue-mid);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold-border);">
-                    AWS Pricing Calculator ↗
-                </a>
-            </p>
         </div>
+
+        <!-- Main costs table -->
+        <table class="results-table">
+            <thead><tr>
+                <th>Message Type</th>
+                <th>Proto size (bytes)</th>
+                <th>Effective size (bytes)</th>
+                <th>Requests / month</th>
+                <th>Throughput (GB/month)</th>
+                <th>Transfer Cost (USD/month)</th>
+            </tr></thead>
+            <tbody>
+            <tr>
+                <td>Request</td>
+                <td th:text="${requestSize}"></td>
+                <td th:text="${requestSizeEffective}"></td>
+                <td th:text="${requestsPerMonth}"></td>
+                <td th:text="${requestGbPerMonth} + ' GB'"></td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td>Response</td>
+                <td th:text="${responseSize}"></td>
+                <td th:text="${responseSizeEffective}"></td>
+                <td th:text="${requestsPerMonth}"></td>
+                <td th:text="${responseGbPerMonth} + ' GB'"></td>
+                <td th:text="'$ ' + ${dataTransferCostUsd}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Cloud TCO Breakdown (populated by JS) -->
+        <div id="cloudTcoBreakdown" style="margin-top:20px;"></div>
+
+        <!-- Unit Economics -->
+        <div class="unit-econ-section" id="reportUnitEcon">
+            <div class="unit-econ-title"><i class="fas fa-coins"></i> Unit Economics</div>
+            <div class="unit-econ-grid" id="unitEconGrid">
+                <!-- populated by JS -->
+            </div>
+        </div>
+
+        <p style="font-size:.76rem;color:var(--ink-light);margin-top:14px;line-height:1.6;">
+            * Outbound (response) data transfer cost uses AWS standard internet egress tiered pricing for US East (N. Virginia):
+            first 10 TB at $0.09/GB, next 40 TB at $0.085/GB, next 100 TB at $0.07/GB, beyond 150 TB at $0.05/GB.
+            Inbound (request) traffic is free. Effective sizes include TLS (RFC 8446) and JWT (RFC 7519) overhead where applicable.
+            <a href="https://calculator.aws/#/createCalculator/ec2-enhancement" target="_blank" rel="noopener noreferrer"
+               style="color:var(--blue-mid);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold-border);">
+                AWS Pricing Calculator ↗
+            </a>
+        </p>
     </div>
+</div>
 
 </div><!-- /page-shell -->
 
@@ -2028,6 +2082,9 @@
     </div>
 </div>
 <script>
+
+
+
 
 
 
@@ -2238,7 +2295,30 @@
         else if (id === 'cloudsec') loadCloudSecSection();
         else if (id === 'costopt')  loadCostOptSection();
         else if (id === 'caching')  loadCachingSection();
+        else if (id === 'cloud-tactics') {
+          ['alb','dbbackup','cloudsec','costopt','caching'].forEach(function(cid) {
+            if (!_awsLoaded[cid]) { _awsLoaded[cid]=true;
+              if(cid==='alb') loadAlbSection();
+              else if(cid==='dbbackup') loadDbBackupSection();
+              else if(cid==='cloudsec') loadCloudSecSection();
+              else if(cid==='costopt')  loadCostOptSection();
+              else if(cid==='caching')  loadCachingSection();
+            }
+          });
+        }
       }
+      updateCloudTacticsBadge();
+    }
+
+    function updateCloudTacticsBadge() {
+      var badge = document.getElementById('cloud-tactics-badge');
+      if (!badge) return;
+      var ids=['tactic-alb','tactic-cache','sec-guardduty','sec-inspector','sec-waf','sec-macie',
+        'sec-cloudwatch','sec-audit','sec-kms','opt-ri-standard','opt-ri-3yr','opt-ri-convertible',
+        'opt-savings-plan-1yr','opt-savings-plan-3yr','opt-trusted-advisor',
+        'tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz','tactic-aurora-replica','tactic-dynamo-global'];
+      var n=ids.filter(function(i){var e=document.getElementById(i);return e&&e.checked;}).length;
+      if(n>0){badge.textContent=n+' active';badge.style.display='inline';}else{badge.style.display='none';}
     }
 
     function toggleCbParams(show) {
@@ -2246,8 +2326,10 @@
       if (el) el.style.display = show ? 'block' : 'none';
     }
     function toggleRetry(checked) {
-      var el = document.getElementById('input-retry-times');
+      var el = document.getElementById('input-retry-error-pct');
       if (el) el.disabled = !checked;
+      var disc = document.getElementById('retry-disclaimer');
+      if (disc) disc.style.display = checked ? 'block' : 'none';
       recalculateRps();
       scheduleSessionSave();
     }
@@ -2381,13 +2463,15 @@
         } else { if (sagaPrv) sagaPrv.classList.remove('visible'); }
       } else { if (sagaPrv) sagaPrv.classList.remove('visible'); }
 
-      /* Retry — additive */
+      /* Retry — additive: % error rate applied to current effectiveRps */
       var retryCb = document.getElementById('tactic-retry');
       if (retryCb && retryCb.checked) {
-        var times = parseInt((document.getElementById('input-retry-times') || {value:'1'}).value) || 1;
-        var extra = baseRps * times;
+        var errPct = parseFloat((document.getElementById('input-retry-error-pct') || {value:'5'}).value) || 5;
+        var extra = Math.round(effectiveRps * errPct / 100);
         effectiveRps += extra;
-        breakdown.push('+' + extra.toLocaleString() + ' Retry (\u00d7' + times + ')');
+        breakdown.push('+' + extra.toLocaleString() + ' Retry (' + errPct + '% of ' + (effectiveRps - extra).toLocaleString() + ' eff.RPS)');
+        var prev = document.getElementById('retry-extra-rps-preview');
+        if (prev) prev.textContent = '+' + extra.toLocaleString() + ' req/s (' + errPct + '% of effective RPS)';
       }
 
       /* TLS/mTLS handshakes */
@@ -2614,9 +2698,18 @@
 
       var retryCb = document.getElementById('tactic-retry');
       if (retryCb && retryCb.checked) {
-        var times = parseInt((document.getElementById('input-retry-times') || {value:'1'}).value) || 1;
-        contribs.push({ label:'Retry (max '+times+')', rpsAdded:baseRps*times, bytesAdded:0, kind:'rps', baseRespBytes:respB,
-          detail:'+'+( baseRps*times).toLocaleString()+' req/s' });
+        var errPct2 = parseFloat((document.getElementById('input-retry-error-pct') || {value:'5'}).value) || 5;
+        /* Apply % to effective RPS after SAGA (if any) */
+        var _sagaCb2 = document.getElementById('tactic-saga');
+        var _sagaExt2 = !!(document.getElementById('tactic-saga-external-vpc')&&document.getElementById('tactic-saga-external-vpc').checked);
+        var _sagaSteps2 = (_sagaCb2&&_sagaCb2.checked&&_sagaExt2)
+          ? ((parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)
+            +(parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)
+            +(parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0)) : 0;
+        var _effBeforeRetry = _sagaSteps2 > 0 ? baseRps * _sagaSteps2 : baseRps;
+        var rExtra = Math.round(_effBeforeRetry * errPct2 / 100);
+        contribs.push({ label:'Retry ('+errPct2+'% of eff. RPS)', rpsAdded:rExtra, bytesAdded:0, kind:'rps', baseRespBytes:respB,
+          detail:'+'+rExtra.toLocaleString()+' req/s ('+errPct2+'% of '+_effBeforeRetry.toLocaleString()+' eff.RPS after SAGA)' });
       }
 
       var tlsOn  = !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked);
@@ -2653,12 +2746,15 @@
        COMPARISON RENDER
     ===================================================================== */
     function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEstimate, contribs) {
-      var totalDelta = tactics.cost - base.cost;
+      var totalDelta = (tactics.cost + computeCloudInfraCost()) - base.cost;
       var el;
+      /* Base = networking only (no tactics). Tactics total = networking + cloud infra */
+      var _cloudInfraForCmp = computeCloudInfraCost();
+      var _tacticsTotalCost = tactics.cost + _cloudInfraForCmp;
       el = document.getElementById('cmp-base-cost');    if (el) el.textContent = '$' + base.cost.toFixed(2) + ' / mo';
-      el = document.getElementById('cmp-base-rps');     if (el) el.textContent = baseRps.toLocaleString() + ' RPS' + (base.respGb ? ' \u00b7 ' + base.respGb.toFixed(1) + ' GB/mo' : '');
-      el = document.getElementById('cmp-tactics-cost'); if (el) el.textContent = '$' + tactics.cost.toFixed(2) + ' / mo';
-      el = document.getElementById('cmp-tactics-rps');  if (el) el.textContent = effectiveRps.toLocaleString() + ' RPS' + (tactics.respGb ? ' \u00b7 ' + tactics.respGb.toFixed(1) + ' GB/mo' : '');
+      el = document.getElementById('cmp-base-rps');     if (el) el.textContent = baseRps.toLocaleString() + ' RPS (networking only, no tactics)';
+      el = document.getElementById('cmp-tactics-cost'); if (el) el.textContent = '$' + _tacticsTotalCost.toFixed(2) + ' / mo';
+      el = document.getElementById('cmp-tactics-rps');  if (el) el.textContent = effectiveRps.toLocaleString() + ' RPS + $' + _cloudInfraForCmp.toFixed(2) + ' cloud infra';
 
       var bEl = document.getElementById('cmp-tactic-breakdown');
       if (bEl) {
@@ -2689,7 +2785,61 @@
               + '</td><td class="tbd-badges">'+badge+'</td>'
               + '<td class="tbd-cost'+(c.kind!=='info'&&costImpact!=='\u2014'?' tbd-cost-impact':'')+'">'+costImpact+'</td></tr>';
           }
-          bEl.innerHTML = '<table class="tbd-table"><thead><tr><th>Tactic</th><th>Type</th><th>Est. Cost Impact</th></tr></thead><tbody>'+rHtml+'</tbody></table>';
+          /* Add cloud tactic rows */
+          var _cloudRows = '';
+          var _ci = computeCloudInfraCost();
+          if (_ci > 0) {
+            if (window._albData && document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
+              var _ac=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
+              var _al=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
+              var _albC=window._albData.fixedPerMonthUsd*_ac+window._albData.lcuPerHourUsd*_al*730*_ac;
+              _cloudRows += '<tr><td class="tbd-name">ALB ('+_ac+' load balancer'+(+_ac>1?'s':'')+')'+            '<div class="tbd-detail">$'+window._albData.fixedPerMonthUsd.toFixed(4)+'/hr fixed + LCU charges</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_albC.toFixed(2)+'/mo</td></tr>';
+            }
+            if (window._cacheData && document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
+              var _ce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
+              var _cns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
+              var _cn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
+              var _cpmap={'redisr6glarge':window._cacheData.redisR6gLargePerHour,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour,
+                'redisr6g2xlarge':window._cacheData.redisR6g2xlargePerHour,
+                'memcachedr6glarge':window._cacheData.memcachedR6gLargePerHour,'memcachedr6gxlarge':window._cacheData.memcachedR6gXlargePerHour};
+              var _cpr=_cpmap[_ce+_cn.replace(/\./g,'').replace('cache','')] || _cpmap[_ce+'r6glarge'] || 0.166;
+              var _cacheC=_cpr*730*_cns;
+              _cloudRows += '<tr><td class="tbd-name">ElastiCache '+_ce+' ('+_cns+' node'+(+_cns>1?'s':'')+')'+            '<div class="tbd-detail">$'+_cpr.toFixed(4)+'/hr × '+_cns+' × 730 hr</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_cacheC.toFixed(2)+'/mo</td></tr>';
+            }
+            if (window._dbData && document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
+              var _gbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
+              var _s3C=_gbv*(window._dbData.s3StandardPerGbMonth||0.023);
+              _cloudRows += '<tr><td class="tbd-name">S3 Backup ('+_gbv+' GB)'+            '<div class="tbd-detail">$'+(window._dbData.s3StandardPerGbMonth||0.023).toFixed(4)+'/GB-mo</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_s3C.toFixed(2)+'/mo</td></tr>';
+            }
+            if (window._dbData && document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
+              var _arc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
+              var _auroraC=(window._dbData.auroraReplicaPerHour||0.26)*730*_arc;
+              _cloudRows += '<tr><td class="tbd-name">Aurora Read Replica ('+_arc+' node'+(+_arc>1?'s':'')+')'+            '<div class="tbd-detail">$'+(window._dbData.auroraReplicaPerHour||0.26).toFixed(4)+'/hr × 730 hr</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_auroraC.toFixed(2)+'/mo</td></tr>';
+            }
+            /* Cloud security */
+            var _secTotal=0;
+            if (window._secData) {
+              var _rps2=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+              var _rpm=_rps2*2592000;
+              var _g=function(id){return document.getElementById(id)||{};};
+              if(_g('sec-guardduty').checked){var _gd=Math.max(0,(parseFloat(_g('input-guardduty-gb').value)||0)-500)*window._secData.guardDutyPerGbLogs;_secTotal+=_gd;}
+              if(_g('sec-inspector').checked){_secTotal+=(parseInt(_g('input-inspector-instances').value)||1)*window._secData.inspectorPerInstanceMonth;}
+              if(_g('sec-waf').checked){_secTotal+=window._secData.wafWebAclPerMonth+(parseInt(_g('input-waf-rules').value)||5)*window._secData.wafRulePerMonth+(_rpm/1000000)*window._secData.wafPer1MRequests;}
+              if(_g('sec-macie').checked){_secTotal+=Math.max(0,(parseFloat(_g('input-macie-gb').value)||0)-1)*window._secData.maciePerGbClassified;}
+              if(_g('sec-cloudwatch').checked){var _cwg=parseFloat(_g('input-cw-gb').value)||1;_secTotal+=_cwg*window._secData.cloudwatchLogsIngestionPerGb+_cwg*window._secData.cloudwatchLogsStoragePerGbMonth;}
+              if(_g('sec-audit').checked){_secTotal+=(parseInt(_g('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;}
+              if(_g('sec-kms').checked){var _kk=parseInt(_g('input-kms-keys').value)||1;_secTotal+=_kk*window._secData.kmsCmkPerMonth+(_rpm/10000)*window._secData.kmsApiCallsPer10k;}
+            }
+            if (_secTotal > 0) {
+              _cloudRows += '<tr><td class="tbd-name">Cloud Security Services'+            '<div class="tbd-detail">GuardDuty, WAF, Inspector, KMS, Macie, CloudWatch, Audit</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_secTotal.toFixed(2)+'/mo</td></tr>';
+            }
+            if (_ci > 0) {
+              _cloudRows += '<tr style="background:var(--paper);font-weight:700;border-top:2px solid var(--rule);">'
+                + '<td class="tbd-name" colspan="2">Total Cloud Infra Cost</td>'
+                + '<td class="tbd-cost tbd-cost-impact">+$'+_ci.toFixed(2)+'/mo</td></tr>';
+            }
+          }
+          bEl.innerHTML = '<table class="tbd-table"><thead><tr><th>Tactic</th><th>Type</th><th>Est. Cost Impact</th></tr></thead><tbody>'+rHtml+_cloudRows+'</tbody></table>';
         } else {
           bEl.innerHTML = '<div style="font-size:.8rem;color:var(--ink-light);padding:8px 0;">No tactics selected yet.</div>';
         }
@@ -2766,8 +2916,12 @@
       var _rpsImpacts = [];
       var _rpsNum = parseInt(rps) || 0;
       if (document.getElementById('tactic-retry')&&document.getElementById('tactic-retry').checked) {
-        var _rt=parseInt((document.getElementById('input-retry-times')||{value:'1'}).value)||1;
-        _rpsImpacts.push('Retry: +'+((_rpsNum*_rt).toLocaleString())+' req/s (x'+_rt+')');
+        var _rErrPct=parseFloat((document.getElementById('input-retry-error-pct')||{value:'5'}).value)||5;
+        var _sagaOnR=!!(document.getElementById('tactic-saga')&&document.getElementById('tactic-saga').checked&&document.getElementById('tactic-saga-external-vpc')&&document.getElementById('tactic-saga-external-vpc').checked);
+        var _ssR=_sagaOnR?((parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)+(parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)+(parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0)):0;
+        var _effBaseR=_ssR>0?_rpsNum*_ssR:_rpsNum;
+        var _rExtra=Math.round(_effBaseR*_rErrPct/100);
+        _rpsImpacts.push('Retry: +'+_rExtra.toLocaleString()+' req/s ('+_rErrPct+'% of '+_effBaseR.toLocaleString()+' eff.RPS)');
       }
       if (document.getElementById('tactic-saga')&&document.getElementById('tactic-saga').checked) {
         var _sc=parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0;
@@ -2808,10 +2962,40 @@
         + '</div></div></div>';
     }
 
+    function computeCloudInfraCost() {
+      var t = 0;
+      if (document.getElementById('tactic-alb')&&document.getElementById('tactic-alb').checked&&window._albData) {
+        var ac=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
+        var al=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
+        t += window._albData.fixedPerMonthUsd*ac + window._albData.lcuPerHourUsd*al*730*ac;
+      }
+      if (document.getElementById('tactic-cache')&&document.getElementById('tactic-cache').checked&&window._cacheData) {
+        var ce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
+        var cn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
+        var cns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
+        var cpmap={'redisr6glarge':window._cacheData.redisR6gLargePerHour,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour,
+          'redisr6g2xlarge':window._cacheData.redisR6g2xlargePerHour,
+          'memcachedr6glarge':window._cacheData.memcachedR6gLargePerHour,'memcachedr6gxlarge':window._cacheData.memcachedR6gXlargePerHour};
+        var cpr=cpmap[ce+cn.replace(/\./g,'').replace('cache','')] || cpmap[ce+'r6glarge'] || 0.166;
+        t += cpr*730*cns;
+      }
+      if (document.getElementById('tactic-s3-backup')&&document.getElementById('tactic-s3-backup').checked&&window._dbData) {
+        var gbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
+        t += gbv*(window._dbData.s3StandardPerGbMonth||0.023);
+      }
+      if (document.getElementById('tactic-aurora-replica')&&document.getElementById('tactic-aurora-replica').checked&&window._dbData) {
+        var arc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
+        t += (window._dbData.auroraReplicaPerHour||0.26)*730*arc;
+      }
+      return Math.round(t*100)/100;
+    }
+
     function populateUnitEcon(transferCostUsd, effectiveRps, requestsPerMonthRaw) {
       var grid = document.getElementById('unitEconGrid');
       if (!grid || !transferCostUsd) return;
       var cost      = parseFloat(transferCostUsd);
+      var infraCost = computeCloudInfraCost();
+      var totalCost = Math.round((cost + infraCost)*100)/100;
       var _ncEl = document.getElementById('numConsumers');
       var _ncVal = (_ncEl && _ncEl.value) ? _ncEl.value : (sessionStorage.getItem('svc_consumers') || '1');
       var consumers = parseInt(_ncVal) || 1;
@@ -2826,16 +3010,168 @@
       var ctL = _ctLmap[_ctVal] || 'consumers';
       var cpcLabel    = _ctVal==='SERVICES' ? 'Cost / Microservice / Month' : _ctVal==='USERS' ? 'Cost / End User / Month' : 'Cost / Consumer / Month';
       var cpcDayLabel = _ctVal==='SERVICES' ? 'Cost / Microservice / Day'  : _ctVal==='USERS' ? 'Cost / End User / Day'   : 'Cost / Consumer / Day';
-      var cPc = cost / consumers;
-      var cPr = cost / reqMonth;
+      var cPc = totalCost / consumers;
+      var cPr = totalCost / reqMonth;
       var fmt = function(v, d) { return (v > 0 && v < Math.pow(10, -(d-1))) ? v.toExponential(4) : v.toFixed(d); };
+      /* Populate Phase 4 cloud TCO breakdown table */
+      var _tcoDiv = document.getElementById('cloudTcoBreakdown');
+      if (_tcoDiv) {
+        var _tcoRows = '<tr><td style="padding:8px 12px;font-weight:600;">AWS Egress (Response Transfer)</td>'
+          + '<td style="padding:8px 12px;text-align:center;">—</td>'
+          + '<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+cost.toFixed(2)+'</td>'
+          + '<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+((cost/Math.max(totalCost,0.001))*100).toFixed(1)+'%</td></tr>';
+        if (window._albData && document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
+          var _tac2=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
+          var _tal2=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
+          var _talbC=window._albData.fixedPerMonthUsd*_tac2+window._albData.lcuPerHourUsd*_tal2*730*_tac2;
+          if(_talbC>0)_tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">ALB ('+_tac2+' LB)</td>'
+            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
+            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_talbC.toFixed(2)+'</td>'
+            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_talbC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+        }
+        if (window._cacheData && document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
+          var _tce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
+          var _tcns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
+          var _tcn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
+          var _tcp={'redisr6glarge':window._cacheData.redisR6gLargePerHour||0.166,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour||0.332};
+          var _tcpr=_tcp[_tce+_tcn.replace(/\./g,'').replace('cache','')] || _tcp[_tce+'r6glarge'] || 0.166;
+          var _tcC=_tcpr*730*_tcns;
+          _tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">ElastiCache '+_tce+' ('+_tcns+' node'+(+_tcns>1?'s':'')+')</td>'
+            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
+            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_tcC.toFixed(2)+'</td>'
+            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_tcC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+        }
+        if (window._dbData && document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
+          var _tgbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
+          var _ts3C=_tgbv*(window._dbData.s3StandardPerGbMonth||0.023);
+          _tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">S3 DB Backup ('+_tgbv+' GB)</td>'
+            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
+            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_ts3C.toFixed(2)+'</td>'
+            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_ts3C/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+        }
+        if (window._dbData && document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
+          var _tarc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
+          var _taC=(window._dbData.auroraReplicaPerHour||0.26)*730*_tarc;
+          _tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">Aurora Replica ('+_tarc+' node'+(+_tarc>1?'s':'')+')</td>'
+            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
+            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_taC.toFixed(2)+'</td>'
+            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_taC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+        }
+        /* Security services aggregate */
+        var _tSecT=0;
+        if(window._secData){
+          var _trps2=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+          var _trpm=_trps2*2592000; var _tgg=function(id){return document.getElementById(id)||{};};
+          if(_tgg('sec-guardduty').checked)_tSecT+=Math.max(0,(parseFloat(_tgg('input-guardduty-gb').value)||0)-500)*window._secData.guardDutyPerGbLogs;
+          if(_tgg('sec-inspector').checked)_tSecT+=(parseInt(_tgg('input-inspector-instances').value)||1)*window._secData.inspectorPerInstanceMonth;
+          if(_tgg('sec-waf').checked)_tSecT+=window._secData.wafWebAclPerMonth+(parseInt(_tgg('input-waf-rules').value)||5)*window._secData.wafRulePerMonth+(_trpm/1000000)*window._secData.wafPer1MRequests;
+          if(_tgg('sec-macie').checked)_tSecT+=Math.max(0,(parseFloat(_tgg('input-macie-gb').value)||0)-1)*window._secData.maciePerGbClassified;
+          if(_tgg('sec-cloudwatch').checked){var _tcwg=parseFloat(_tgg('input-cw-gb').value)||1;_tSecT+=_tcwg*window._secData.cloudwatchLogsIngestionPerGb+_tcwg*window._secData.cloudwatchLogsStoragePerGbMonth;}
+          if(_tgg('sec-audit').checked)_tSecT+=(parseInt(_tgg('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;
+          if(_tgg('sec-kms').checked){var _tkk=parseInt(_tgg('input-kms-keys').value)||1;_tSecT+=_tkk*window._secData.kmsCmkPerMonth+(_trpm/10000)*window._secData.kmsApiCallsPer10k;}
+        }
+        if(_tSecT>0)_tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">Cloud Security Services</td>'
+          +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
+          +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_tSecT.toFixed(2)+'</td>'
+          +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_tSecT/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+        _tcoRows += '<tr style="background:var(--blue-deep);color:#fff;font-weight:700;">'
+          +'<td style="padding:9px 12px;" colspan="2">Total Cost of Ownership (TCO)</td>'
+          +'<td style="padding:9px 12px;text-align:right;font-family:monospace;">$'+totalCost.toFixed(2)+'/mo</td>'
+          +'<td style="padding:9px 12px;text-align:right;">100%</td></tr>';
+        _tcoDiv.innerHTML = '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;'
+          + 'color:var(--blue-deep);margin-bottom:10px;display:flex;align-items:center;gap:8px;">'
+          + '<i class="fas fa-table"></i> Total Cost of Ownership (TCO) Breakdown</div>'
+          + '<table style="width:100%;border-collapse:collapse;font-size:.84rem;margin-bottom:4px;">'
+          + '<thead><tr style="background:var(--paper);">'
+          + '<th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--rule);">Cost Component</th>'
+          + '<th style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--rule);">Category</th>'
+          + '<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">Monthly Cost</th>'
+          + '<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">% of TCO</th>'
+          + '</tr></thead><tbody>'+_tcoRows+'</tbody></table>'
+          + '<p style="font-size:.73rem;color:var(--ink-light);margin-top:6px;">'
+          + '* Networking costs calculated from proto file + effective RPS. '
+          + 'Cloud infra costs from tactic selections above. Total TCO = Networking + Cloud Infra.</p>';
+      }
+
       grid.innerHTML =
-        '<div class="unit-econ-item"><div class="unit-econ-label">Total Transfer Cost / Month</div><div class="unit-econ-value">$' + cost.toFixed(2) + '</div><div class="unit-econ-sub">AWS egress \u00b7 response only</div></div>'
+        (infraCost > 0
+          ? '<div class="unit-econ-item" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;"><div class="unit-econ-label">Total Monthly Cost (Networking + Cloud Infra)</div>'
+            + '<div class="unit-econ-value" style="color:var(--blue-deep);">$' + totalCost.toFixed(2) + '</div>'
+            + '<div class="unit-econ-sub">$' + cost.toFixed(2) + ' egress + $' + infraCost.toFixed(2) + ' cloud infra</div></div>'
+          : '<div class="unit-econ-item"><div class="unit-econ-label">Total Transfer Cost / Month</div><div class="unit-econ-value">$' + cost.toFixed(2) + '</div><div class="unit-econ-sub">AWS egress \u00b7 response only</div></div>'
+        )
         + '<div class="unit-econ-item"><div class="unit-econ-label">' + cpcLabel + '</div><div class="unit-econ-value">$' + fmt(cPc,4) + '</div><div class="unit-econ-sub">' + consumers.toLocaleString() + ' ' + ctL + ' \u00b7 total \u00f7 ' + consumers + '</div></div>'
         + '<div class="unit-econ-item"><div class="unit-econ-label">Cost / Request</div><div class="unit-econ-value">$' + fmt(cPr,8) + '</div><div class="unit-econ-sub">' + reqMonth.toLocaleString() + ' req/mo \u00b7 tactics-adjusted RPS</div></div>'
         + '<div class="unit-econ-item"><div class="unit-econ-label">Business Use Case</div><div class="unit-econ-value" style="font-size:.85rem;">' + buc + '</div><div class="unit-econ-sub">Pattern cost attribution</div></div>'
         + '<div class="unit-econ-item"><div class="unit-econ-label">' + cpcDayLabel + '</div><div class="unit-econ-value">$' + fmt(cPc/30,6) + '</div><div class="unit-econ-sub">Daily unit economics</div></div>'
         + '<div class="unit-econ-item"><div class="unit-econ-label">Annual Projection</div><div class="unit-econ-value">$' + (cost*12).toFixed(2) + '</div><div class="unit-econ-sub">12 \u00d7 monthly cost</div></div>';
+
+      /* ROI / ARPU section */
+      var _revEl = document.getElementById('revenuePerTransaction');
+      var _rev   = (_revEl && _revEl.value) ? (parseFloat(_revEl.value) || 0)
+                 : (parseFloat(sessionStorage.getItem('svc_revenue_per_tx')) || 0);
+      var _roiEl = document.getElementById('ue-roi-section');
+      if (!_roiEl) {
+        _roiEl = document.createElement('div');
+        _roiEl.id = 'ue-roi-section';
+        _roiEl.style.cssText = 'margin-top:16px;padding:16px 20px;border-radius:var(--r);'
+          + 'background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid var(--amber-border);';
+        if (grid && grid.parentElement) grid.parentElement.appendChild(_roiEl);
+      }
+      var _guide = '<div style="font-size:.79rem;color:var(--ink-medium);margin-bottom:12px;line-height:1.55;'
+        + 'padding:10px 12px;background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(212,160,23,.2);">'
+        + '<strong>How these metrics help estimate ARPU &amp; ROI:</strong> '
+        + 'The Cost/Consumer and Cost/Request figures above show infrastructure acquisition cost per unit. '
+        + 'Comparing against your revenue per transaction lets you compute '
+        + '<strong>ARPU</strong> and <strong>ROI</strong>, '
+        + 'validating whether this architecture is financially justified. '
+        + 'Break-even shows the minimum monthly transaction volume to cover infrastructure costs. '
+        + 'Present these to Finance and Leadership to frame TCO as an investment, not a cost.'
+        + '</div>';
+      if (_rev > 0) {
+        var _mRev  = _rev * reqMonth;
+        var _arpu  = _mRev / consumers;
+        var _roi   = totalCost > 0 ? ((_mRev - totalCost) / totalCost * 100).toFixed(1) : '--';
+        var _roiA  = totalCost > 0 ? ((_mRev*12 - totalCost*12) / (totalCost*12) * 100).toFixed(1) : '--';
+        var _brk   = (_rev > 0 && totalCost > 0) ? Math.ceil(totalCost / _rev).toLocaleString() : '--';
+        var _eff   = (totalCost > 0) ? (_mRev / totalCost).toFixed(2) : '--';
+        var _rc    = (parseFloat(_roi) >= 0) ? 'var(--green)' : 'var(--red)';
+        _roiEl.innerHTML =
+          '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;color:var(--amber);'
+          + 'margin-bottom:10px;display:flex;align-items:center;gap:8px;">'
+          + '<i class="fas fa-chart-line"></i> Revenue, ARPU &amp; ROI Analysis</div>'
+          + _guide
+          + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Monthly Revenue</div>'
+          +   '<div class="unit-econ-value">$' + _mRev.toLocaleString(undefined,{maximumFractionDigits:2}) + '</div>'
+          +   '<div class="unit-econ-sub">$' + _rev.toFixed(4) + ' \u00d7 ' + reqMonth.toLocaleString() + ' tx/mo</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">ARPU / Month</div>'
+          +   '<div class="unit-econ-value">$' + _arpu.toLocaleString(undefined,{maximumFractionDigits:2}) + '</div>'
+          +   '<div class="unit-econ-sub">Revenue \u00f7 ' + consumers.toLocaleString() + ' consumers</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Monthly ROI</div>'
+          +   '<div class="unit-econ-value" style="color:' + _rc + ';">' + _roi + '%</div>'
+          +   '<div class="unit-econ-sub">(Revenue \u2212 Cost) \u00f7 Cost</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Annual ROI</div>'
+          +   '<div class="unit-econ-value" style="color:' + _rc + ';">' + _roiA + '%</div>'
+          +   '<div class="unit-econ-sub">12\u00d7 monthly projection</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Break-even Tx/mo</div>'
+          +   '<div class="unit-econ-value">' + _brk + '</div>'
+          +   '<div class="unit-econ-sub">tx to cover infra cost</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Revenue / $1 Infra</div>'
+          +   '<div class="unit-econ-value">$' + _eff + '</div>'
+          +   '<div class="unit-econ-sub">Revenue efficiency</div></div>'
+          + '</div>';
+      } else {
+        _roiEl.innerHTML =
+          '<div style="font-family:\'DM Serif Display\',serif;font-size:.95rem;color:var(--amber);'
+          + 'margin-bottom:8px;"><i class="fas fa-chart-line" style="margin-right:6px;"></i>'
+          + 'Revenue, ARPU &amp; ROI Analysis</div>'
+          + _guide
+          + '<div style="font-size:.79rem;color:var(--ink-light);">'
+          + '<i class="fas fa-circle-info" style="margin-right:5px;color:var(--gold);"></i>'
+          + 'Enter <strong>Expected Revenue per Transaction</strong> in Phase\u00a01 to unlock '
+          + 'ROI, ARPU, break-even and revenue efficiency analysis.</div>';
+      }
     }
 
     /* =====================================================================
@@ -2850,6 +3186,9 @@
       if (n) sessionStorage.setItem('svc_name', n.value);
       if (p) sessionStorage.setItem('svc_purpose', p.value);
       if (r) sessionStorage.setItem('svc_rps', r.value);
+      var _revI = document.getElementById('revenuePerTransaction');
+      if (_revI && _revI.value) sessionStorage.setItem('svc_revenue_per_tx', _revI.value);
+      else sessionStorage.removeItem('svc_revenue_per_tx');
     }
     function schedulePhase2Save() {
       scheduleSessionSave();
@@ -2869,7 +3208,16 @@
           reliabilityServerSideLoadBalancerTactic: !!(g('tactic-server-lb').checked)
         },
         timeoutTactic: { resiliencyTimeoutTactic: !!(g('tactic-timeout').checked), tacticTimeoutMilliseconds: parseInt(g('input-timeout').value) || 0 },
-        retryTactic:   { resiliencyRetryTactic: !!(g('tactic-retry').checked), tacticRetryTimes: parseInt(g('input-retry-times').value) || 0 },
+        retryTactic:   (function(){
+          var _errP = parseFloat(g('input-retry-error-pct').value)||5;
+          var _bRps = parseInt(g('requestsPerSecond').value)||1000;
+          var _sagaOn = !!(g('tactic-saga').checked) && !!(g('tactic-saga-external-vpc').checked);
+          var _ss = _sagaOn ? ((parseInt(g('input-saga-compensatable').value)||0)+(parseInt(g('input-saga-retriable').value)||0)+(parseInt(g('input-saga-pivot').value)||0)) : 0;
+          var _effBase = _ss > 0 ? _bRps * _ss : _bRps;
+          return { resiliencyRetryTactic: !!(g('tactic-retry').checked),
+                   tacticRetryErrorPct: _errP,
+                   tacticRetryTimes: Math.round(_effBase * _errP / 100) };
+        })(),
         circuitBreakerTactic: { resiliencyCircuitBreakerPattern: !!(g('tactic-cb').checked),
           circuitBreakerPatternMinimumCalls: parseInt(g('input-cb-min-calls').value) || 0,
           circuitBreakerHalfOpen: parseInt(g('input-cb-half-open').value) || 0,
@@ -2926,6 +3274,26 @@
       var lcuM   = _albData.lcuPerHourUsd * lcu * 730 * count;
       var res    = document.getElementById('alb-result');
       if (res) res.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>' + count + ' ALB(s): $' + fixedM.toFixed(2) + '/mo fixed' + (lcu>0?' + $'+lcuM.toFixed(2)+'/mo LCUs = <span style="color:var(--red);">$'+(fixedM+lcuM).toFixed(2)+'/mo</span>':'') + '</strong>';
+
+      /* Refresh live comparison when cloud tactic cost changes */
+      var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+      if (_bRpsR) {
+        var _effR = _bRpsR;
+        var _sagaCbR = document.getElementById('tactic-saga');
+        if (_sagaCbR && _sagaCbR.checked) {
+          var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0);
+          var _extR = !!(document.getElementById('tactic-saga-external-vpc')&&document.getElementById('tactic-saga-external-vpc').checked);
+          if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
+        }
+        var _retryCbR = document.getElementById('tactic-retry');
+        if (_retryCbR && _retryCbR.checked) {
+          var _errPR = parseFloat((document.getElementById('input-retry-error-pct')||{value:'5'}).value)||5;
+          _effR += Math.round(_effR * _errPR / 100);
+        }
+        updateLiveComparison(_bRpsR, _effR);
+      }
     }
 
     function recalculateAvailability() {
@@ -3001,6 +3369,26 @@
       res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
         + lines.map(function(l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 '+l+'</div>'; }).join('')
         + (total>0?'<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $'+total.toFixed(2)+'/mo</div>':'');
+
+      /* Refresh live comparison when cloud tactic cost changes */
+      var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+      if (_bRpsR) {
+        var _effR = _bRpsR;
+        var _sagaCbR = document.getElementById('tactic-saga');
+        if (_sagaCbR && _sagaCbR.checked) {
+          var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0);
+          var _extR = !!(document.getElementById('tactic-saga-external-vpc')&&document.getElementById('tactic-saga-external-vpc').checked);
+          if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
+        }
+        var _retryCbR = document.getElementById('tactic-retry');
+        if (_retryCbR && _retryCbR.checked) {
+          var _errPR = parseFloat((document.getElementById('input-retry-error-pct')||{value:'5'}).value)||5;
+          _effR += Math.round(_effR * _errPR / 100);
+        }
+        updateLiveComparison(_bRpsR, _effR);
+      }
     }
 
     function loadCloudSecSection() {
@@ -3048,6 +3436,26 @@
       tot.style.display='block';
       tot.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;"></i><strong>Cloud security: <span style="color:var(--red);">$'+total.toFixed(2)+'/mo</span></strong>'
         + lines.map(function(l) { return '<div style="font-size:.78rem;margin-top:4px;color:var(--ink-medium);">\u2022 '+l+'</div>'; }).join('');
+
+      /* Refresh live comparison when cloud tactic cost changes */
+      var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+      if (_bRpsR) {
+        var _effR = _bRpsR;
+        var _sagaCbR = document.getElementById('tactic-saga');
+        if (_sagaCbR && _sagaCbR.checked) {
+          var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0);
+          var _extR = !!(document.getElementById('tactic-saga-external-vpc')&&document.getElementById('tactic-saga-external-vpc').checked);
+          if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
+        }
+        var _retryCbR = document.getElementById('tactic-retry');
+        if (_retryCbR && _retryCbR.checked) {
+          var _errPR = parseFloat((document.getElementById('input-retry-error-pct')||{value:'5'}).value)||5;
+          _effR += Math.round(_effR * _errPR / 100);
+        }
+        updateLiveComparison(_bRpsR, _effR);
+      }
     }
 
     function loadCostOptSection() {
@@ -3097,11 +3505,44 @@
       addOpt(g('opt-savings-plan-3yr').checked, _coData.savingsPlan3yrSavingsPct,      'Savings Plan 3-yr');
       if (g('opt-trusted-advisor').checked) { var tc=Math.max(_coData.businessSupportMinMonthUsd, spend*_coData.businessSupportPctMonthlyUsage/100); lines.push('Trusted Advisor: +$'+tc.toFixed(2)+'/mo'); }
       res.style.display='block';
+      var _fpRows=[];
+      if(g('opt-ri-standard').checked)    _fpRows.push({s:'EC2 On-Demand (Standard RI 1-yr)',    p:_coData.reservedInstance1yrSavingsPct});
+      if(g('opt-ri-3yr').checked)         _fpRows.push({s:'EC2 On-Demand (Standard RI 3-yr)',    p:_coData.reservedInstance3yrSavingsPct});
+      if(g('opt-ri-convertible').checked) _fpRows.push({s:'EC2 On-Demand (Convertible RI 1-yr)',p:_coData.convertibleRi1yrSavingsPct});
+      if(g('opt-savings-plan-1yr').checked) _fpRows.push({s:'EC2+Lambda+Fargate (SP 1-yr)',p:_coData.savingsPlan1yrSavingsPct});
+      if(g('opt-savings-plan-3yr').checked) _fpRows.push({s:'EC2+Lambda+Fargate (SP 3-yr)',p:_coData.savingsPlan3yrSavingsPct});
+      var _fpHtml = _fpRows.length>0
+        ? '<div style="margin-top:14px;padding:12px 14px;border-radius:var(--r);'
+        +   'background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid var(--green-border);">'
+        + '<div style="font-family:\'DM Serif Display\',serif;font-size:.9rem;color:var(--green);margin-bottom:9px;">'
+        + '<i class="fas fa-tags" style="margin-right:6px;"></i>Configuration of Cloud Services based on FinOps Practices</div>'
+        + '<table style="width:100%;border-collapse:collapse;font-size:.8rem;">'
+        + '<thead><tr style="background:rgba(22,101,52,.1);">'
+        + '<th style="padding:6px 10px;text-align:left;">AWS Service</th>'
+        + '<th style="padding:6px 10px;text-align:center;">Saving %</th>'
+        + '<th style="padding:6px 10px;text-align:right;">On-Demand</th>'
+        + '<th style="padding:6px 10px;text-align:right;">Adjusted Cost</th>'
+        + '</tr></thead><tbody>'
+        + _fpRows.map(function(r){
+            var sv=spend*r.p/100;
+            return '<tr style="border-bottom:1px solid rgba(22,101,52,.12);">'
+              +'<td style="padding:6px 10px;font-weight:600;">'+r.s+'</td>'
+              +'<td style="padding:6px 10px;text-align:center;color:var(--green);font-weight:700;">'+r.p+'%</td>'
+              +'<td style="padding:6px 10px;text-align:right;color:var(--ink-light);text-decoration:line-through;">$'+spend.toFixed(2)+'/mo</td>'
+              +'<td style="padding:6px 10px;text-align:right;font-weight:700;color:var(--green);">$'+(spend-sv).toFixed(2)+'/mo</td>'
+              +'</tr>';
+          }).join('')
+        + '</tbody></table>'
+        + '<div style="font-size:.73rem;color:var(--ink-light);margin-top:7px;">'
+        + '&#9432; Applies to EC2 compute costs only. '
+        + 'Data transfer (egress) costs cannot be discounted via Reserved Instances or Savings Plans.</div></div>'
+        : '';
       res.innerHTML = '<div style="padding:14px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#fffdf5);border:1px solid var(--gold-border);">'
         + '<div style="font-family:\'DM Serif Display\',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;"><i class="fas fa-coins" style="margin-right:6px;"></i>Cost Optimisation Summary</div>'
         + lines.map(function(l){return '<div style="font-size:.82rem;margin-top:6px;color:var(--ink-medium);">\u2022 '+l+'</div>';}).join('')
         + (best>0?'<div style="margin-top:10px;font-weight:700;color:var(--green);">Best monthly saving: $'+best.toFixed(2)+'/mo \u2192 $'+((spend-best)*12).toFixed(2)+'/yr</div>':'')
-        + '</div>';
+        + '</div>'
+        + _fpHtml;
     }
 
     function loadCachingSection() {
@@ -3149,6 +3590,26 @@
       var outer = document.getElementById('caching-result');
       if (inner) { inner.style.display='block'; inner.innerHTML='<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>'+nodes+' x cache.'+node+' ('+engine+'): $'+prHr.toFixed(4)+'/hr x '+nodes+' x 730 hr = <span style="color:var(--red);">$'+prMo.toFixed(2)+'/mo</span></strong>'; }
       if (outer) { outer.style.display='block'; outer.innerHTML='<i class="fas fa-bolt" style="margin-right:6px;"></i><strong>ElastiCache '+engine+': $'+prMo.toFixed(2)+'/mo</strong><br><span style="font-size:.76rem;color:var(--ink-light);">Reserved 1-yr: ~$'+(prMo*0.45).toFixed(2)+'/mo (55% saving) | 3-yr: ~$'+(prMo*0.30).toFixed(2)+'/mo (70% saving)</span>'; }
+
+      /* Refresh live comparison when cloud tactic cost changes */
+      var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+      if (_bRpsR) {
+        var _effR = _bRpsR;
+        var _sagaCbR = document.getElementById('tactic-saga');
+        if (_sagaCbR && _sagaCbR.checked) {
+          var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)
+                   + (parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0);
+          var _extR = !!(document.getElementById('tactic-saga-external-vpc')&&document.getElementById('tactic-saga-external-vpc').checked);
+          if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
+        }
+        var _retryCbR = document.getElementById('tactic-retry');
+        if (_retryCbR && _retryCbR.checked) {
+          var _errPR = parseFloat((document.getElementById('input-retry-error-pct')||{value:'5'}).value)||5;
+          _effR += Math.round(_effR * _errPR / 100);
+        }
+        updateLiveComparison(_bRpsR, _effR);
+      }
     }
 
     /* =====================================================================
@@ -3160,6 +3621,10 @@
       on('serviceName',       'input',  function() { schedulePhase1Save(); });
       on('servicePurpose',    'input',  function() { schedulePhase1Save(); });
       on('requestsPerSecond', 'input',  function() { recalculateRps(); schedulePhase1Save(); });
+      on('revenuePerTransaction', 'input', function() {
+        if (this.value) sessionStorage.setItem('svc_revenue_per_tx', this.value);
+        else sessionStorage.removeItem('svc_revenue_per_tx');
+      });
 
       on('customBucName',     'input',  function() { selectBUC('CUSTOM', null); });
       on('protoFilePhase2',   'change', function() { handlePhase2ProtoSelect(this); });
@@ -3175,7 +3640,7 @@
       on('tactic-timeout',  'change', function() { var el=document.getElementById('input-timeout'); if(el) el.disabled=!this.checked; scheduleSessionSave(); });
       on('input-timeout',   'input',  function() { scheduleSessionSave(); });
       on('tactic-retry',    'change', function() { toggleRetry(this.checked); });
-      on('input-retry-times','input', function() { recalculateRps(); scheduleSessionSave(); });
+      on('input-retry-error-pct','input', function() { recalculateRps(); scheduleSessionSave(); });
       on('tactic-cb',       'change', function() { toggleCbParams(this.checked); scheduleSessionSave(); });
       ['input-cb-min-calls','input-cb-half-open','input-cb-wait','input-cb-failure-rate'].forEach(function(id) {
         on(id, 'input', function() { scheduleSessionSave(); });
@@ -3208,7 +3673,7 @@
       on('tactic-client-lb', 'change', function() { scheduleSessionSave(); });
       on('tactic-server-lb', 'change', function() { scheduleSessionSave(); });
 
-      on('tactic-alb',      'change', function() { recalculateAlb(); });
+      on('tactic-alb',      'change', function() { recalculateAlb(); updateCloudTacticsBadge(); recalculateRps(); });
       on('input-alb-count', 'input',  function() { recalculateAlb(); });
       on('input-alb-lcu',   'input',  function() { recalculateAlb(); });
 
@@ -3319,9 +3784,9 @@
           v('input-timeout',  dto.timeoutTactic.tacticTimeoutMilliseconds);
           var tout = document.getElementById('input-timeout'); if(tout) tout.disabled = !dto.timeoutTactic.resiliencyTimeoutTactic;
 
-          s('tactic-retry',    dto.retryTactic.resiliencyRetryTactic);
-          v('input-retry-times', dto.retryTactic.tacticRetryTimes);
-          var ri = document.getElementById('input-retry-times'); if(ri) ri.disabled = !dto.retryTactic.resiliencyRetryTactic;
+          s('tactic-retry', dto.retryTactic.resiliencyRetryTactic);
+          if(dto.retryTactic.tacticRetryErrorPct) v('input-retry-error-pct', dto.retryTactic.tacticRetryErrorPct);
+          var ri=document.getElementById('input-retry-error-pct'); if(ri) ri.disabled=!dto.retryTactic.resiliencyRetryTactic;
 
           s('tactic-cb', dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern);
           if (dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern) {
@@ -3363,10 +3828,16 @@
 
           recalculateRps();
           if (currentPhase === 4) populateReportSummary();
+          var _sr=sessionStorage.getItem('svc_revenue_per_tx');
+          if(_sr){var _rfe=document.getElementById('revenuePerTransaction');
+            if(_rfe&&!_rfe.value)_rfe.value=_sr;}
         }).catch(function() {});
       })();
 
     });
+
+
+
 
 
 
