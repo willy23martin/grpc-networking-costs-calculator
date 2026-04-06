@@ -22,49 +22,49 @@ import org.springframework.context.annotation.Profile;
 public class CostCalculatorsConfiguration {
 
     @Bean
-    @Profile(ApplicationProfile.AWS)
+    @Profile(CloudProvider.AWS)
     public NetworkingCostCalculator networkingCostCalculator(){
         NetworkingCostCalculator networkingCostCalculator = new AWSDataTransferCostCalculationService();
         return networkingCostCalculator;
     }
 
     @Bean
-    @Profile(ApplicationProfile.AWS)
+    @Profile(CloudProvider.AWS)
     public CloudComputeCostCalculator cloudComputeCostCalculator() {
         CloudComputeCostCalculator cloudComputeCostCalculator = new EC2ComputeCostCalculator();
         return cloudComputeCostCalculator;
     }
 
     @Bean
-    @Profile(ApplicationProfile.AWS)
+    @Profile(CloudProvider.AWS)
     public ALBCostCalculator albCostCalculator(){
         ALBCostCalculator albCostCalculator = new AWSALBCostCalculator();
         return albCostCalculator;
     }
 
     @Bean
-    @Profile(ApplicationProfile.AWS)
+    @Profile(CloudProvider.AWS)
     public DatabaseCostCalculator databaseCostCalculator() {
         DatabaseCostCalculator databaseCostCalculator = new AWSDatabaseCostCalculator();
         return databaseCostCalculator;
     }
 
     @Bean
-    @Profile(ApplicationProfile.AWS)
+    @Profile(CloudProvider.AWS)
     public SecurityCostCalculator securityCostCalculator() {
         SecurityCostCalculator securityCostCalculator = new AWSSecurityCostCalculator();
         return securityCostCalculator;
     }
 
     @Bean
-    @Profile(ApplicationProfile.AWS)
+    @Profile(CloudProvider.AWS)
     FinOpsStrategyCostCalculator finOpsStrategyCostCalculator(){
         FinOpsStrategyCostCalculator finOpsStrategyCostCalculator = new AWSFinOpsStrategyCostCalculator();
         return finOpsStrategyCostCalculator;
     }
 
     @Bean
-    @Profile(ApplicationProfile.AWS)
+    @Profile(CloudProvider.AWS)
     CachingCostCalculator cachingCostCalculator() {
         CachingCostCalculator cachingCostCalculator = new ElastiCacheCostCalculator();
         return cachingCostCalculator;

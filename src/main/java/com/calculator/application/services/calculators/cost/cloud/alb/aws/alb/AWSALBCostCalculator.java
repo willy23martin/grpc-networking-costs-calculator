@@ -16,13 +16,26 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
 
     private static final Logger log = Logger.getLogger(AWSALBCostCalculator.class.getName());
 
+    // TODO Get from AWS
+    /**
+     * AWS SDK, you must use the AWS Price List Query API.
+     * 1. Prerequisites
+     * Service Code: For Elastic Load Balancing, the service code is AmazonElasticLoadBalancing.
+     * API Endpoint: The Price List API is only available in the us-east-1 (N. Virginia) and ap-south-1 regions. You must configure your client to use one of these regions regardless of your target resource's region.
+     * Amazon AWS Documentation
+     * Amazon AWS Documentation
+     *  +3
+     */
+    private static final double ALB_FIXED_CHARGE_PER_HOUR = 0.008;
+
+    private static final double LCU_FIXED_CHARGE_PER_HOUR = 0.008; // Because: (1 LCU = 25 new connections/s OR 3000 active connections OR 1 GB/hr processed OR 1000 rule evaluations/s)
+
     @Override
     public Map<String, Object> calculateALBCosts() {
+
         Map<String, Object> result = new LinkedHashMap<>();
         try {
-            // ALB fixed charge: $0.008/hr per ALB
-            // LCU charge: $0.008/LCU-hr  (1 LCU = 25 new connections/s OR 3000 active connections
-            //              OR 1 GB/hr processed OR 1000 rule evaluations/s)
+
             GetProductsRequest req = GetProductsRequest.builder()
                     .serviceCode("AWSElasticLoadBalancing")
                     .filters(
@@ -41,15 +54,15 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
                 if (usageType.contains("LoadBalancerUsage") && fixedPerHour == 0) fixedPerHour = price;
                 if (usageType.contains("LCUUsage") && lcuPerHour == 0) lcuPerHour = price;
             }
-            result.put("fixedPerHourUsd",   fixedPerHour > 0 ? fixedPerHour : 0.008);
-            result.put("lcuPerHourUsd",     lcuPerHour   > 0 ? lcuPerHour   : 0.008);
-            result.put("fixedPerMonthUsd",  Math.round((fixedPerHour > 0 ? fixedPerHour : 0.008) * 730 * 100) / 100.0);
-            result.put("lcuPerMonthBase",   Math.round((lcuPerHour   > 0 ? lcuPerHour   : 0.008) * 730 * 100) / 100.0);
+            result.put("fixedPerHourUsd",   fixedPerHour > 0 ? fixedPerHour : ALB_FIXED_CHARGE_PER_HOUR);
+            result.put("lcuPerHourUsd",     lcuPerHour   > 0 ? lcuPerHour   : LCU_FIXED_CHARGE_PER_HOUR);
+            result.put("fixedPerMonthUsd",  Math.round((fixedPerHour > 0 ? fixedPerHour : ALB_FIXED_CHARGE_PER_HOUR) * 730 * 100) / 100.0);
+            result.put("lcuPerMonthBase",   Math.round((lcuPerHour   > 0 ? lcuPerHour   : LCU_FIXED_CHARGE_PER_HOUR) * 730 * 100) / 100.0);
             result.put("source", "AWS Pricing API");
         } catch (Exception e) {
             log.warning("ALB pricing fetch failed: " + e.getMessage());
-            result.put("fixedPerHourUsd",  0.008);
-            result.put("lcuPerHourUsd",    0.008);
+            result.put("fixedPerHourUsd",  ALB_FIXED_CHARGE_PER_HOUR);
+            result.put("lcuPerHourUsd",    LCU_FIXED_CHARGE_PER_HOUR);
             result.put("fixedPerMonthUsd", 5.84);
             result.put("lcuPerMonthBase",  5.84);
             result.put("source", "fallback");
