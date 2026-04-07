@@ -17,12 +17,12 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
         result.put("reservedInstance3yrSavingsPct",  57);
         result.put("convertibleRi1yrSavingsPct",     28);
         result.put("convertibleRi3yrSavingsPct",     47);
-        result.put("riNote","Standard RIs offer the highest discount but cannot be exchanged. Convertible RIs can be exchanged for different instance families.");
+        result.put("riNote","Reserved Instances (RIs) suit predictable, constant workloads like servers that must stay active around the clock. \n Standard RIs offer the highest discount but cannot be exchanged. Convertible RIs can be exchanged for different instance families.");
 
         // Compute Savings Plans (covers EC2 + Lambda + Fargate)
         result.put("savingsPlan1yrSavingsPct", 31);
         result.put("savingsPlan3yrSavingsPct", 50);
-        result.put("savingsPlanNote","Savings Plans apply automatically to the highest compute usage. Commitment is $/hour not to a specific instance type.");
+        result.put("savingsPlanNote","They're not locked to a specific instance type. AWS automatically applies the discount to any compute usage during the commitment period. \n Savings Plans apply automatically to the highest compute usage. Commitment is $/hour not to a specific instance type.");
 
         // EC2 Instance Savings Plans
         result.put("ec2SavingsPlan1yrPct", 36);

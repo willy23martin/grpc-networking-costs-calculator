@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>gRPC MACH Architecture — TCO Networking Costs Calculator</title>
+    <title>gRPC MACH Architecture — TCO Costs Calculator</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <style>
@@ -1138,7 +1138,7 @@
 
         .badge-dr{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
         .badge-bc{background:#DBEAFE;border:1px solid #93C5FD;color:#1E40AF;}
-    </style></style></style></style>
+    </style></style></style></style></style>
 </head>
 <body>
 <!-- ═══════════════ ARCHITECT BANNER ═══════════════ -->
@@ -1150,9 +1150,13 @@
             <div class="arch-banner-title">Software Architect &amp; FinOps Engineering Toolkit</div>
             <div class="arch-banner-subtitle">
                 This tool is designed for <strong>Software Architects acting as FinOps Engineers</strong> — bridging the gap between
-                Information Technology and Finance. Model your gRPC microservice's networking Total Cost of Ownership (TCO)
+                Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
                 with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
                 in the language of business.
+            </div>
+            <div class="arch-banner-subtitle">
+                TCO calculations are key part of the FinOps Inform pillar as it shows cost optimization opportunities and projected costs.
+                For AWS Cloud Provider this solution is using the AWS Pricing API, AWS Price List Query API, and AWS Price List Bulk API.
             </div>
             <div style="margin-top:9px;padding:7px 13px;background:rgba(212,160,23,.18);border:1px solid rgba(212,160,23,.4);border-radius:7px;font-size:.74rem;color:#F5ECD7;line-height:1.5;"><i class="fas fa-circle-info" style="margin-right:5px;"></i><strong>Current Support:</strong> gRPC &amp; AWS&nbsp;&bull;&nbsp;<strong>Roadmap:</strong> Azure, GCP &bull; GraphQL &amp; REST &bull; Multi-region pricing &mdash; 2025&#x2013;2026</div>
         </div>
@@ -1163,7 +1167,7 @@
 <div class="page-shell">
 
     <div class="main-title">
-        <h1>gRPC MACH Architecture<br>TCO Networking Costs Calculator</h1>
+        <h1>gRPC MACH Architecture<br>TCO Costs Calculator</h1>
         <div class="subtitle">Point-to-Point Integration Pattern · Protocol Buffer IDL · AWS Egress Pricing</div>
     </div>
 
@@ -1234,9 +1238,9 @@
         </div>
 
         <div class="field">
-            <label>Expected Revenue per Transaction (USD) <span style="font-weight:400;text-transform:none;font-size:.79rem;color:var(--ink-light);">for ROI &amp; ARPU</span></label>
-            <input type="number" id="revenuePerTransaction" placeholder="e.g. 0.50" min="0" step="0.01">
-            <div class="field-hint">Revenue per successful transaction (e.g. $0.50/order). Used to compute ARPU, ROI and break-even in the TCO report. Leave blank to skip.</div>
+            <label>Expected Monthly Revenue per End User (USD) <span style="font-weight:400;text-transform:none;font-size:.79rem;color:var(--ink-light);">for ROI &amp; ARPU</span></label>
+            <input type="number" id="revenuePerTransaction" placeholder="e.g. 9.99" min="0" step="0.01">
+            <div class="field-hint">How much monthly revenue does this service generate per end user? (e.g. $9.99/month subscription, $2.50/month average order value). Total monthly revenue = this value × number of end users entered in Phase 2. Leave blank to skip ROI analysis.</div>
         </div>
         <div style="margin-top: 24px; display:flex; gap:12px; flex-wrap:wrap;">
             <button class="btn btn-primary" id="btn-phase1-continue">
@@ -1332,21 +1336,12 @@
         <!-- Consumers — shown only after BUC is selected -->
         <div id="phase2-consumers-section" style="display:none; margin-top:8px;">
             <div class="section-divider">Consumers</div>
-            <div class="consumers-row">
-                <div class="field">
-                    <label>Number of Consumers (Users / Services)</label>
-                    <input type="number" id="numConsumers" placeholder="e.g. 12" min="1" step="1">
-                    <div class="field-hint">How many upstream services, clients, or end-users consume this gRPC microservice.</div>
-                </div>
-                <div class="field">
-                    <label>Consumer Type</label>
-                    <select id="consumerType">
-                        <option value="SERVICES">Microservices / APIs</option>
-                        <option value="USERS">End Users</option>
-                        <option value="BOTH">Mixed (Services + Users)</option>
-                    </select>
-                    <div class="field-hint">Characterise the nature of the consuming entities for the unit economics report.</div>
-                </div>
+            <div class="field">
+                <label>Number of End Users</label>
+                <input type="number" id="numConsumers" placeholder="e.g. 12000" min="1" step="1">
+                <div class="field-hint">How many end users (customers) consume this service per month. Used for per-user unit economics, ARPU, and ROI calculations.</div>
+                <!-- hidden: always USERS -->
+                <input type="hidden" id="consumerType" value="USERS">
             </div>
         </div>
 
@@ -2082,6 +2077,7 @@
     </div>
 </div>
 <script>
+
 
 
 
@@ -2964,28 +2960,64 @@
 
     function computeCloudInfraCost() {
       var t = 0;
-      if (document.getElementById('tactic-alb')&&document.getElementById('tactic-alb').checked&&window._albData) {
-        var ac=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
-        var al=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
-        t += window._albData.fixedPerMonthUsd*ac + window._albData.lcuPerHourUsd*al*730*ac;
+      /* ALB: live data preferred, fallback to sessionStorage */
+      if (document.getElementById('tactic-alb')&&document.getElementById('tactic-alb').checked) {
+        if (window._albData) {
+          var ac=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
+          var al=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
+          t += window._albData.fixedPerMonthUsd*ac + window._albData.lcuPerHourUsd*al*730*ac;
+        } else {
+          t += parseFloat(sessionStorage.getItem('tco_alb_cost')||'0');
+        }
       }
-      if (document.getElementById('tactic-cache')&&document.getElementById('tactic-cache').checked&&window._cacheData) {
-        var ce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
-        var cn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
-        var cns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
-        var cpmap={'redisr6glarge':window._cacheData.redisR6gLargePerHour,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour,
-          'redisr6g2xlarge':window._cacheData.redisR6g2xlargePerHour,
-          'memcachedr6glarge':window._cacheData.memcachedR6gLargePerHour,'memcachedr6gxlarge':window._cacheData.memcachedR6gXlargePerHour};
-        var cpr=cpmap[ce+cn.replace(/\./g,'').replace('cache','')] || cpmap[ce+'r6glarge'] || 0.166;
-        t += cpr*730*cns;
+      /* Cache */
+      if (document.getElementById('tactic-cache')&&document.getElementById('tactic-cache').checked) {
+        if (window._cacheData) {
+          var ce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
+          var cn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
+          var cns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
+          var cpmap={'redisr6glarge':window._cacheData.redisR6gLargePerHour,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour,
+            'redisr6g2xlarge':window._cacheData.redisR6g2xlargePerHour,
+            'memcachedr6glarge':window._cacheData.memcachedR6gLargePerHour,'memcachedr6gxlarge':window._cacheData.memcachedR6gXlargePerHour};
+          var cpr=cpmap[ce+cn.replace(/\./g,'').replace('cache','')] || cpmap[ce+'r6glarge'] || 0.166;
+          t += cpr*730*cns;
+        } else {
+          t += parseFloat(sessionStorage.getItem('tco_cache_cost')||'0');
+        }
       }
-      if (document.getElementById('tactic-s3-backup')&&document.getElementById('tactic-s3-backup').checked&&window._dbData) {
-        var gbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
-        t += gbv*(window._dbData.s3StandardPerGbMonth||0.023);
+      /* DB backup */
+      if (document.getElementById('tactic-s3-backup')&&document.getElementById('tactic-s3-backup').checked) {
+        if (window._dbData) {
+          var gbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
+          t += gbv*(window._dbData.s3StandardPerGbMonth||0.023);
+        } else {
+          t += parseFloat(sessionStorage.getItem('tco_db_cost')||'0') * 0.5;
+        }
       }
-      if (document.getElementById('tactic-aurora-replica')&&document.getElementById('tactic-aurora-replica').checked&&window._dbData) {
-        var arc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
-        t += (window._dbData.auroraReplicaPerHour||0.26)*730*arc;
+      /* Aurora replica */
+      if (document.getElementById('tactic-aurora-replica')&&document.getElementById('tactic-aurora-replica').checked) {
+        if (window._dbData) {
+          var arc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
+          t += (window._dbData.auroraReplicaPerHour||0.26)*730*arc;
+        } else {
+          t += parseFloat(sessionStorage.getItem('tco_db_cost')||'0');
+        }
+      }
+      /* Security from sessionStorage if _secData not loaded */
+      if (!window._secData) {
+        t += parseFloat(sessionStorage.getItem('tco_sec_cost')||'0');
+      } else {
+        var _rps2x=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+        var _rpmx=_rps2x*2592000; var _gx=function(id){return document.getElementById(id)||{};};
+        var _sx=0;
+        if(_gx('sec-guardduty').checked)_sx+=Math.max(0,(parseFloat(_gx('input-guardduty-gb').value)||0)-500)*window._secData.guardDutyPerGbLogs;
+        if(_gx('sec-inspector').checked)_sx+=(parseInt(_gx('input-inspector-instances').value)||1)*window._secData.inspectorPerInstanceMonth;
+        if(_gx('sec-waf').checked)_sx+=window._secData.wafWebAclPerMonth+(parseInt(_gx('input-waf-rules').value)||5)*window._secData.wafRulePerMonth+(_rpmx/1000000)*window._secData.wafPer1MRequests;
+        if(_gx('sec-macie').checked)_sx+=Math.max(0,(parseFloat(_gx('input-macie-gb').value)||0)-1)*window._secData.maciePerGbClassified;
+        if(_gx('sec-cloudwatch').checked){var _cwgx=parseFloat(_gx('input-cw-gb').value)||1;_sx+=_cwgx*window._secData.cloudwatchLogsIngestionPerGb+_cwgx*window._secData.cloudwatchLogsStoragePerGbMonth;}
+        if(_gx('sec-audit').checked)_sx+=(parseInt(_gx('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;
+        if(_gx('sec-kms').checked){var _kkx=parseInt(_gx('input-kms-keys').value)||1;_sx+=_kkx*window._secData.kmsCmkPerMonth+(_rpmx/10000)*window._secData.kmsApiCallsPer10k;}
+        t += _sx;
       }
       return Math.round(t*100)/100;
     }
@@ -3014,51 +3046,79 @@
       var cPr = totalCost / reqMonth;
       var fmt = function(v, d) { return (v > 0 && v < Math.pow(10, -(d-1))) ? v.toExponential(4) : v.toFixed(d); };
       /* Populate Phase 4 cloud TCO breakdown table */
+      /* Recompute totalCost with all cloud costs from sessionStorage for Phase 4 */
       var _tcoDiv = document.getElementById('cloudTcoBreakdown');
       if (_tcoDiv) {
-        var _tcoRows = '<tr><td style="padding:8px 12px;font-weight:600;">AWS Egress (Response Transfer)</td>'
-          + '<td style="padding:8px 12px;text-align:center;">—</td>'
+        /* Use definitive totalCost which already includes computeCloudInfraCost() */
+        var _tcoRows = '<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">AWS Egress (Response Transfer)</td>'
+          + '<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bytes">Networking</span></td>'
           + '<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+cost.toFixed(2)+'</td>'
           + '<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+((cost/Math.max(totalCost,0.001))*100).toFixed(1)+'%</td></tr>';
-        if (window._albData && document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
-          var _tac2=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
-          var _tal2=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
-          var _talbC=window._albData.fixedPerMonthUsd*_tac2+window._albData.lcuPerHourUsd*_tal2*730*_tac2;
-          if(_talbC>0)_tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">ALB ('+_tac2+' LB)</td>'
+        var _talbC=0, _talbLabel='ALB';
+        if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
+          if (window._albData) {
+            var _tac2=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
+            var _tal2=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
+            _talbC=window._albData.fixedPerMonthUsd*_tac2+window._albData.lcuPerHourUsd*_tal2*730*_tac2;
+            _talbLabel='ALB ('+_tac2+' LB)';
+          } else {
+            _talbC=parseFloat(sessionStorage.getItem('tco_alb_cost')||'0');
+            _talbLabel=sessionStorage.getItem('tco_alb_label')||'ALB';
+          }
+          if(_talbC>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">'+_talbLabel+'</td>'
             +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
             +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_talbC.toFixed(2)+'</td>'
             +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_talbC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
         }
-        if (window._cacheData && document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
-          var _tce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
-          var _tcns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
-          var _tcn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
-          var _tcp={'redisr6glarge':window._cacheData.redisR6gLargePerHour||0.166,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour||0.332};
-          var _tcpr=_tcp[_tce+_tcn.replace(/\./g,'').replace('cache','')] || _tcp[_tce+'r6glarge'] || 0.166;
-          var _tcC=_tcpr*730*_tcns;
-          _tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">ElastiCache '+_tce+' ('+_tcns+' node'+(+_tcns>1?'s':'')+')</td>'
+        var _tcC=0, _tcLabel='ElastiCache';
+        if (document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
+          if (window._cacheData) {
+            var _tce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
+            var _tcns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
+            var _tcn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
+            var _tcp2={'redisr6glarge':window._cacheData.redisR6gLargePerHour||0.166,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour||0.332};
+            var _tcpr=_tcp2[_tce+_tcn.replace(/\./g,'').replace('cache','')] || _tcp2[_tce+'r6glarge'] || 0.166;
+            _tcC=_tcpr*730*_tcns;
+            _tcLabel='ElastiCache '+_tce+' ('+_tcns+' node'+(+_tcns>1?'s':'')+')';
+          } else {
+            _tcC=parseFloat(sessionStorage.getItem('tco_cache_cost')||'0');
+            _tcLabel=sessionStorage.getItem('tco_cache_label')||'ElastiCache';
+          }
+          if(_tcC>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">'+_tcLabel+'</td>'
             +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
             +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_tcC.toFixed(2)+'</td>'
             +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_tcC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
         }
-        if (window._dbData && document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
-          var _tgbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
-          var _ts3C=_tgbv*(window._dbData.s3StandardPerGbMonth||0.023);
-          _tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">S3 DB Backup ('+_tgbv+' GB)</td>'
+        /* DB backup: live or sessionStorage */
+        var _dbCostTotal=0;
+        if (!window._dbData) {
+          _dbCostTotal=parseFloat(sessionStorage.getItem('tco_db_cost')||'0');
+          if(_dbCostTotal>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">Database Backup / DR</td>'
             +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
-            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_ts3C.toFixed(2)+'</td>'
-            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_ts3C/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_dbCostTotal.toFixed(2)+'</td>'
+            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_dbCostTotal/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+        } else {
+          if (document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
+            var _tgbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
+            var _ts3C=_tgbv*(window._dbData.s3StandardPerGbMonth||0.023);
+            _dbCostTotal+=_ts3C;
+            _tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">S3 DB Backup ('+_tgbv+' GB)</td>'
+              +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
+              +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_ts3C.toFixed(2)+'</td>'
+              +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_ts3C/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+          }
+          if (document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
+            var _tarc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
+            var _taC=(window._dbData.auroraReplicaPerHour||0.26)*730*_tarc;
+            _dbCostTotal+=_taC;
+            _tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">Aurora Replica ('+_tarc+' node'+(+_tarc>1?'s':'')+')</td>'
+              +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
+              +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_taC.toFixed(2)+'</td>'
+              +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_taC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+          }
         }
-        if (window._dbData && document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
-          var _tarc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
-          var _taC=(window._dbData.auroraReplicaPerHour||0.26)*730*_tarc;
-          _tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">Aurora Replica ('+_tarc+' node'+(+_tarc>1?'s':'')+')</td>'
-            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
-            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_taC.toFixed(2)+'</td>'
-            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_taC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
-        }
-        /* Security services aggregate */
-        var _tSecT=0;
+        /* Security: live or sessionStorage */
+        var _tSecT = window._secData ? 0 : parseFloat(sessionStorage.getItem('tco_sec_cost')||'0');
         if(window._secData){
           var _trps2=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
           var _trpm=_trps2*2592000; var _tgg=function(id){return document.getElementById(id)||{};};
@@ -3070,7 +3130,7 @@
           if(_tgg('sec-audit').checked)_tSecT+=(parseInt(_tgg('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;
           if(_tgg('sec-kms').checked){var _tkk=parseInt(_tgg('input-kms-keys').value)||1;_tSecT+=_tkk*window._secData.kmsCmkPerMonth+(_trpm/10000)*window._secData.kmsApiCallsPer10k;}
         }
-        if(_tSecT>0)_tcoRows+='<tr><td style="padding:8px 12px;font-weight:600;">Cloud Security Services</td>'
+        if(_tSecT>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">Cloud Security Services</td>'
           +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
           +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_tSecT.toFixed(2)+'</td>'
           +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_tSecT/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
@@ -3093,18 +3153,57 @@
           + 'Cloud infra costs from tactic selections above. Total TCO = Networking + Cloud Infra.</p>';
       }
 
+      /* Unit Economics: TCO = totalCost (networking + cloud infra) */
+      var cPuMonthly = totalCost / consumers;       /* cost per end user per month */
+      var cPr        = totalCost / reqMonth;         /* cost per request */
+      var cPuDay     = cPuMonthly / 30;             /* cost per end user per day */
+
       grid.innerHTML =
-        (infraCost > 0
-          ? '<div class="unit-econ-item" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;"><div class="unit-econ-label">Total Monthly Cost (Networking + Cloud Infra)</div>'
-            + '<div class="unit-econ-value" style="color:var(--blue-deep);">$' + totalCost.toFixed(2) + '</div>'
-            + '<div class="unit-econ-sub">$' + cost.toFixed(2) + ' egress + $' + infraCost.toFixed(2) + ' cloud infra</div></div>'
-          : '<div class="unit-econ-item"><div class="unit-econ-label">Total Transfer Cost / Month</div><div class="unit-econ-value">$' + cost.toFixed(2) + '</div><div class="unit-econ-sub">AWS egress \u00b7 response only</div></div>'
-        )
-        + '<div class="unit-econ-item"><div class="unit-econ-label">' + cpcLabel + '</div><div class="unit-econ-value">$' + fmt(cPc,4) + '</div><div class="unit-econ-sub">' + consumers.toLocaleString() + ' ' + ctL + ' \u00b7 total \u00f7 ' + consumers + '</div></div>'
-        + '<div class="unit-econ-item"><div class="unit-econ-label">Cost / Request</div><div class="unit-econ-value">$' + fmt(cPr,8) + '</div><div class="unit-econ-sub">' + reqMonth.toLocaleString() + ' req/mo \u00b7 tactics-adjusted RPS</div></div>'
-        + '<div class="unit-econ-item"><div class="unit-econ-label">Business Use Case</div><div class="unit-econ-value" style="font-size:.85rem;">' + buc + '</div><div class="unit-econ-sub">Pattern cost attribution</div></div>'
-        + '<div class="unit-econ-item"><div class="unit-econ-label">' + cpcDayLabel + '</div><div class="unit-econ-value">$' + fmt(cPc/30,6) + '</div><div class="unit-econ-sub">Daily unit economics</div></div>'
-        + '<div class="unit-econ-item"><div class="unit-econ-label">Annual Projection</div><div class="unit-econ-value">$' + (cost*12).toFixed(2) + '</div><div class="unit-econ-sub">12 \u00d7 monthly cost</div></div>';
+        /* Row 1: TCO total (full-width) */
+        '<div class="unit-econ-item" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;">'
+        + '<div class="unit-econ-label">Total Monthly TCO (Networking + Cloud Infra)</div>'
+        + '<div class="unit-econ-value" style="color:var(--blue-deep);">$' + totalCost.toFixed(2) + '</div>'
+        + '<div class="unit-econ-sub">'
+        + (infraCost > 0 ? '$'+cost.toFixed(2)+' egress + $'+infraCost.toFixed(2)+' cloud infra' : '$'+cost.toFixed(2)+' egress networking only')
+        + '</div></div>'
+
+        /* ── Per-Microservice section header ── */
+        + '<div class="unit-econ-item" style="grid-column:1/-1;background:var(--paper);border:none;padding:10px 0 4px;">'
+        + '<div style="font-family:\'DM Serif Display\',serif;font-size:.9rem;color:var(--blue-deep);'
+        + 'border-bottom:1px solid var(--rule);padding-bottom:6px;display:flex;align-items:center;gap:8px;">'
+        + '<i class="fas fa-microchip" style="font-size:.85rem;"></i> Per-Microservice Cost Metrics</div></div>'
+
+        + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / Microservice / Month</div>'
+        + '<div class="unit-econ-value">$' + totalCost.toFixed(2) + '</div>'
+        + '<div class="unit-econ-sub">This service · full TCO</div></div>'
+
+        + '<div class="unit-econ-item"><div class="unit-econ-label">Cost / Request</div>'
+        + '<div class="unit-econ-value">$' + fmt(cPr,8) + '</div>'
+        + '<div class="unit-econ-sub">' + reqMonth.toLocaleString() + ' req/mo</div></div>'
+
+        + '<div class="unit-econ-item"><div class="unit-econ-label">Annual Projection</div>'
+        + '<div class="unit-econ-value">$' + (totalCost*12).toFixed(2) + '</div>'
+        + '<div class="unit-econ-sub">12× monthly TCO</div></div>'
+
+        /* ── Per-End-User section header ── */
+        + '<div class="unit-econ-item" style="grid-column:1/-1;background:var(--paper);border:none;padding:10px 0 4px;">'
+        + '<div style="font-family:\'DM Serif Display\',serif;font-size:.9rem;color:var(--blue-deep);'
+        + 'border-bottom:1px solid var(--rule);padding-bottom:6px;display:flex;align-items:center;gap:8px;">'
+        + '<i class="fas fa-users" style="font-size:.85rem;"></i> Per-End-User Cost Metrics'
+        + ' <span style="font-size:.72rem;font-weight:400;color:var(--ink-light);">(' + consumers.toLocaleString() + ' end users)</span></div></div>'
+
+        + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User (Customer Acquisition Costs)/ Month</div>'
+        + '<div class="unit-econ-value">$' + fmt(cPuMonthly,4) + '</div>'
+        + '<div class="unit-econ-sub">$'+totalCost.toFixed(2)+' ÷ '+consumers.toLocaleString()+' users</div></div>'
+
+        + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User (Customer Acquisition Costs) / Day</div>'
+        + '<div class="unit-econ-value">$' + fmt(cPuDay,6) + '</div>'
+        + '<div class="unit-econ-sub">Monthly ÷ 30</div></div>'
+
+        + '<div class="unit-econ-item"><div class="unit-econ-label">Business Use Case</div>'
+        + '<div class="unit-econ-value" style="font-size:.85rem;">' + buc + '</div>'
+        + '<div class="unit-econ-sub">Pattern cost attribution</div></div>';
+
 
       /* ROI / ARPU section */
       var _revEl = document.getElementById('revenuePerTransaction');
@@ -3120,46 +3219,57 @@
       }
       var _guide = '<div style="font-size:.79rem;color:var(--ink-medium);margin-bottom:12px;line-height:1.55;'
         + 'padding:10px 12px;background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(212,160,23,.2);">'
-        + '<strong>How these metrics help estimate ARPU &amp; ROI:</strong> '
-        + 'The Cost/Consumer and Cost/Request figures above show infrastructure acquisition cost per unit. '
-        + 'Comparing against your revenue per transaction lets you compute '
-        + '<strong>ARPU</strong> and <strong>ROI</strong>, '
-        + 'validating whether this architecture is financially justified. '
-        + 'Break-even shows the minimum monthly transaction volume to cover infrastructure costs. '
-        + 'Present these to Finance and Leadership to frame TCO as an investment, not a cost.'
+        + '<strong>Revenue model:</strong> The value entered in Phase\u00a01 is the '
+        + '<em>expected monthly revenue per end user</em> for this service. '
+        + 'Total monthly revenue\u00a0= that value\u00a0\u00d7\u00a0number of end users. '
+        + '<strong>ARPU</strong>\u00a0= revenue per user per month. '
+        + '<strong>ROI</strong>\u00a0= (total revenue\u00a0\u2212\u00a0TCO) \u00f7 TCO. '
+        + '<strong>Break-even users</strong>\u00a0= minimum end users needed to cover full TCO at current ARPU. '
+        + 'Net Margin per user = ARPU\u00a0\u2212\u00a0TCO per user. '
+        + 'Present to Finance and Leadership to frame architecture cost as a revenue-generating investment.'
         + '</div>';
       if (_rev > 0) {
-        var _mRev  = _rev * reqMonth;
-        var _arpu  = _mRev / consumers;
+        /* _rev = expected monthly revenue per end user for this service */
+        var _mRev  = _rev * consumers;              /* total monthly revenue = rev/user × users */
+        var _arpu  = _rev;                          /* ARPU = revenue per user per month */
         var _roi   = totalCost > 0 ? ((_mRev - totalCost) / totalCost * 100).toFixed(1) : '--';
         var _roiA  = totalCost > 0 ? ((_mRev*12 - totalCost*12) / (totalCost*12) * 100).toFixed(1) : '--';
+        /* break-even: how many users needed to cover TCO at _rev per user */
         var _brk   = (_rev > 0 && totalCost > 0) ? Math.ceil(totalCost / _rev).toLocaleString() : '--';
         var _eff   = (totalCost > 0) ? (_mRev / totalCost).toFixed(2) : '--';
+        var _profitUser = _rev - cPuMonthly;        /* net margin per user per month */
         var _rc    = (parseFloat(_roi) >= 0) ? 'var(--green)' : 'var(--red)';
+        var _pcol  = _profitUser >= 0 ? 'var(--green)' : 'var(--red)';
         _roiEl.innerHTML =
           '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;color:var(--amber);'
           + 'margin-bottom:10px;display:flex;align-items:center;gap:8px;">'
           + '<i class="fas fa-chart-line"></i> Revenue, ARPU &amp; ROI Analysis</div>'
           + _guide
           + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">'
-          + '<div class="unit-econ-item"><div class="unit-econ-label">Monthly Revenue</div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Total Monthly Revenue</div>'
           +   '<div class="unit-econ-value">$' + _mRev.toLocaleString(undefined,{maximumFractionDigits:2}) + '</div>'
-          +   '<div class="unit-econ-sub">$' + _rev.toFixed(4) + ' \u00d7 ' + reqMonth.toLocaleString() + ' tx/mo</div></div>'
+          +   '<div class="unit-econ-sub">$' + _rev.toFixed(2) + '/user \u00d7 ' + consumers.toLocaleString() + ' users</div></div>'
           + '<div class="unit-econ-item"><div class="unit-econ-label">ARPU / Month</div>'
           +   '<div class="unit-econ-value">$' + _arpu.toLocaleString(undefined,{maximumFractionDigits:2}) + '</div>'
-          +   '<div class="unit-econ-sub">Revenue \u00f7 ' + consumers.toLocaleString() + ' consumers</div></div>'
+          +   '<div class="unit-econ-sub">Revenue per end user / month</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Net Margin / User / mo</div>'
+          +   '<div class="unit-econ-value" style="color:' + _pcol + ';">$' + _profitUser.toFixed(4) + '</div>'
+          +   '<div class="unit-econ-sub">ARPU \u2212 TCO/user</div></div>'
           + '<div class="unit-econ-item"><div class="unit-econ-label">Monthly ROI</div>'
           +   '<div class="unit-econ-value" style="color:' + _rc + ';">' + _roi + '%</div>'
-          +   '<div class="unit-econ-sub">(Revenue \u2212 Cost) \u00f7 Cost</div></div>'
+          +   '<div class="unit-econ-sub">(Revenue \u2212 TCO) \u00f7 TCO</div></div>'
           + '<div class="unit-econ-item"><div class="unit-econ-label">Annual ROI</div>'
           +   '<div class="unit-econ-value" style="color:' + _rc + ';">' + _roiA + '%</div>'
           +   '<div class="unit-econ-sub">12\u00d7 monthly projection</div></div>'
-          + '<div class="unit-econ-item"><div class="unit-econ-label">Break-even Tx/mo</div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Break-even Users</div>'
           +   '<div class="unit-econ-value">' + _brk + '</div>'
-          +   '<div class="unit-econ-sub">tx to cover infra cost</div></div>'
+          +   '<div class="unit-econ-sub">users to cover full TCO</div></div>'
           + '<div class="unit-econ-item"><div class="unit-econ-label">Revenue / $1 Infra</div>'
           +   '<div class="unit-econ-value">$' + _eff + '</div>'
           +   '<div class="unit-econ-sub">Revenue efficiency</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Annual Revenue</div>'
+          +   '<div class="unit-econ-value">$' + (_mRev*12).toLocaleString(undefined,{maximumFractionDigits:2}) + '</div>'
+          +   '<div class="unit-econ-sub">12\u00d7 monthly revenue</div></div>'
           + '</div>';
       } else {
         _roiEl.innerHTML =
@@ -3274,6 +3384,8 @@
       var lcuM   = _albData.lcuPerHourUsd * lcu * 730 * count;
       var res    = document.getElementById('alb-result');
       if (res) res.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>' + count + ' ALB(s): $' + fixedM.toFixed(2) + '/mo fixed' + (lcu>0?' + $'+lcuM.toFixed(2)+'/mo LCUs = <span style="color:var(--red);">$'+(fixedM+lcuM).toFixed(2)+'/mo</span>':'') + '</strong>';
+      sessionStorage.setItem('tco_alb_cost', (fixedM+lcuM).toFixed(4));
+      sessionStorage.setItem('tco_alb_label', count+' ALB'+(count>1?'s':''));
 
       /* Refresh live comparison when cloud tactic cost changes */
       var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
@@ -3369,6 +3481,8 @@
       res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
         + lines.map(function(l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 '+l+'</div>'; }).join('')
         + (total>0?'<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $'+total.toFixed(2)+'/mo</div>':'');
+      if(total>0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
+      else sessionStorage.removeItem('tco_db_cost');
 
       /* Refresh live comparison when cloud tactic cost changes */
       var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
@@ -3401,7 +3515,7 @@
           { id:'sec-inspector',  icon:'fa-magnifying-glass', label:'Amazon Inspector',         iId:'input-inspector-instances', iL:'instances',    desc:'$'+data.inspectorPerInstanceMonth+'/instance/mo' },
           { id:'sec-waf',        icon:'fa-shield',           label:'AWS WAF',                  iId:'input-waf-rules',           iL:'rules',        desc:'$'+data.wafWebAclPerMonth+'/WebACL + $'+data.wafRulePerMonth+'/rule + $'+data.wafPer1MRequests+'/1M req' },
           { id:'sec-macie',      icon:'fa-eye',              label:'Amazon Macie',             iId:'input-macie-gb',            iL:'GB S3 data',   desc:'$'+data.maciePerGbClassified+'/GB. '+data.macieFirstGbFreeNote },
-          { id:'sec-cloudwatch', icon:'fa-chart-line',       label:'CloudWatch Logs',          iId:'input-cw-gb',              iL:'GB logs/mo',   desc:'Ingestion: $'+data.cloudwatchLogsIngestionPerGb+'/GB + Storage: $'+data.cloudwatchLogsStoragePerGbMonth+'/GB-mo' },
+          { id:'sec-cloudwatch', icon:'fa-chart-line',       label:'CloudWatch Logs',          iId:'input-cw-gb',              iL:'GB logs/mo',   desc:'For Observability - Ingestion: $'+data.cloudwatchLogsIngestionPerGb+'/GB + Storage: $'+data.cloudwatchLogsStoragePerGbMonth+'/GB-mo' },
           { id:'sec-audit',      icon:'fa-clipboard-check',  label:'AWS Audit Manager',        iId:'input-audit-assessments',  iL:'assessments',  desc:'$'+data.auditManagerPerAssessmentMonth+'/assessment/mo' },
           { id:'sec-kms',        icon:'fa-key',              label:'KMS (Encryption at Rest)', iId:'input-kms-keys',           iL:'CMKs',         desc:data.kmsNote }
         ];
@@ -3436,6 +3550,7 @@
       tot.style.display='block';
       tot.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;"></i><strong>Cloud security: <span style="color:var(--red);">$'+total.toFixed(2)+'/mo</span></strong>'
         + lines.map(function(l) { return '<div style="font-size:.78rem;margin-top:4px;color:var(--ink-medium);">\u2022 '+l+'</div>'; }).join('');
+      sessionStorage.setItem('tco_sec_cost', total.toFixed(4));
 
       /* Refresh live comparison when cloud tactic cost changes */
       var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
@@ -3590,6 +3705,8 @@
       var outer = document.getElementById('caching-result');
       if (inner) { inner.style.display='block'; inner.innerHTML='<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>'+nodes+' x cache.'+node+' ('+engine+'): $'+prHr.toFixed(4)+'/hr x '+nodes+' x 730 hr = <span style="color:var(--red);">$'+prMo.toFixed(2)+'/mo</span></strong>'; }
       if (outer) { outer.style.display='block'; outer.innerHTML='<i class="fas fa-bolt" style="margin-right:6px;"></i><strong>ElastiCache '+engine+': $'+prMo.toFixed(2)+'/mo</strong><br><span style="font-size:.76rem;color:var(--ink-light);">Reserved 1-yr: ~$'+(prMo*0.45).toFixed(2)+'/mo (55% saving) | 3-yr: ~$'+(prMo*0.30).toFixed(2)+'/mo (70% saving)</span>'; }
+      sessionStorage.setItem('tco_cache_cost', prMo.toFixed(4));
+      sessionStorage.setItem('tco_cache_label', nodes+'x cache.'+node+' ('+engine+')');
 
       /* Refresh live comparison when cloud tactic cost changes */
       var _bRpsR = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
@@ -3835,6 +3952,7 @@
       })();
 
     });
+
 
 
 
