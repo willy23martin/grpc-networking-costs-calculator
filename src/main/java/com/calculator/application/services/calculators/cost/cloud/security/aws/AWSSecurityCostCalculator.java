@@ -12,6 +12,7 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
     public Map<String, Object> calculateSecurityCosts() {
         Map<String, Object> result = new LinkedHashMap<>();
 
+        // TODO Get from AWS
         // GuardDuty — per GB of CloudTrail/VPC flow logs analysed
         result.put("guardDutyPerGbLogs",       fetchSimplePrice("AmazonGuardDuty", "Logs", "Security", 1.00));
         result.put("guardDutyFirstGbFreeNote", "First 500 GB/month free. $1.00/GB thereafter (tiered).");

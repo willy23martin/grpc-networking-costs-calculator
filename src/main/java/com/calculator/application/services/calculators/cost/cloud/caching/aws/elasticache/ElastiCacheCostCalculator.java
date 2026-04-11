@@ -16,6 +16,7 @@ public class ElastiCacheCostCalculator extends AWSCloudCalculator implements Cac
     @Override
     public Map<String, Object> calculateCachingCosts() {
         Map<String, Object> result = new LinkedHashMap<>();
+        // TODO Get from AWS
         // ElastiCache Redis — cache.r6g.large, us-east-1 on-demand
         result.put("redisR6gLargePerHour",       fetchElastiCachePrice("cache.r6g.large",   "redis"));
         result.put("redisR6gXlargePerHour",      fetchElastiCachePrice("cache.r6g.xlarge",  "redis"));

@@ -21,6 +21,7 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
     public Map<String, Object> calculateDatabaseBackupPricing() {
         Map<String, Object> result = new LinkedHashMap<>();
 
+        // TODO Get from AWS
         // S3 Standard storage for backups
         result.put("s3StandardPerGbMonth",   fetchSimplePrice("AmazonS3",  "S3 Standard", "Storage", 0.023));
         // RDS Snapshot storage

@@ -1138,7 +1138,9 @@
 
         .badge-dr{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
         .badge-bc{background:#DBEAFE;border:1px solid #93C5FD;color:#1E40AF;}
-    </style></style></style></style></style>
+
+        .notice.notice-red { background:var(--red-bg); border:1px solid var(--red-border); color:var(--red); }
+    </style></style></style></style></style></style></style>
 </head>
 <body>
 <!-- ═══════════════ ARCHITECT BANNER ═══════════════ -->
@@ -1153,10 +1155,6 @@
                 Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
                 with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
                 in the language of business.
-            </div>
-            <div class="arch-banner-subtitle">
-                TCO calculations are key part of the FinOps Inform pillar as it shows cost optimization opportunities and projected costs.
-                For AWS Cloud Provider this solution is using the AWS Pricing API, AWS Price List Query API, and AWS Price List Bulk API.
             </div>
             <div style="margin-top:9px;padding:7px 13px;background:rgba(212,160,23,.18);border:1px solid rgba(212,160,23,.4);border-radius:7px;font-size:.74rem;color:#F5ECD7;line-height:1.5;"><i class="fas fa-circle-info" style="margin-right:5px;"></i><strong>Current Support:</strong> gRPC &amp; AWS&nbsp;&bull;&nbsp;<strong>Roadmap:</strong> Azure, GCP &bull; GraphQL &amp; REST &bull; Multi-region pricing &mdash; 2025&#x2013;2026</div>
         </div>
@@ -1210,7 +1208,7 @@
                 <strong>gRPC implements the Point-to-Point Integration Pattern</strong> for inter-service communication in
                 MACH architectures. Each service exposes a strongly-typed contract via Protocol Buffers (IDL), enabling
                 direct, low-latency, binary-serialised messaging between bounded contexts. This calculator models the
-                networking TCO of that communication link.
+                TCO of that communication link.
             </div>
         </div>
 
@@ -1642,6 +1640,43 @@
             </div>
             <div class="tactics-category-body" id="body-cloud-tactics">
                 <div class="cloud-tactics-inner">
+                    <!-- ══════════ AVAILABILITY SLA ═══════════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-availability">
+                        <div class="tactics-category-header" onclick="toggleCategory('availability')">
+                            <span class="tactics-category-title"><span>📊</span> Availability SLA</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-availability"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-availability">
+                            <div class="notice notice-blue" style="margin-bottom:12px;">
+                                <i class="fas fa-info-circle"></i>
+                                <div><strong>AWS Best Practice — Define availability SLA first.</strong> Your SLA target determines the entire infrastructure pattern: redundancy, database topology, DR/BC strategy, and cost multiplier.</div>
+                            </div>
+                            <div class="tactic-row">
+                                <div class="tactic-label-group">
+                                    <label class="tactic-label">Availability SLA Target</label>
+                                    <span class="tactic-description">Each tier shows the recommended AWS architecture, DR &amp; BC classification, RTO/RPO estimates, and cost multiplier.</span>
+                                </div>
+                                <div class="tactic-input-group" style="min-width:230px;">
+                                    <select id="input-sla" style="width:230px;" onchange="recalculateAvailability()">
+                                        <option value="0">— No SLA target —</option>
+                                        <option value="99">99% — 3.5 days/yr downtime (DR)</option>
+                                        <option value="99.9">99.9% — 8.7 hrs/yr downtime (BC)</option>
+                                        <option value="99.99">99.99% — 52 min/yr downtime (BC+DR)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tactic-row" style="margin-top:6px;">
+                                <input type="checkbox" class="tactic-check" id="tactic-mission-critical" onchange="recalculateAvailability()">
+                                <div class="tactic-label-group">
+                                    <label class="tactic-label" for="tactic-mission-critical" style="color:var(--red);"><i class="fas fa-triangle-exclamation" style="margin-right:5px;"></i>Mission-critical service <span class="warning-badge badge-red">external connectivity options</span></label>
+                                    <span class="tactic-description">Check to reveal Direct Connect / VPC Peering / VPN connectivity disclaimers for external access.</span>
+                                </div>
+                            </div>
+                            <div id="availability-result" style="display:none;margin-top:12px;"></div>
+                        </div>
+                    </div>
+
+
                     <!-- Scalability & Replica Sizing -->
                     <div class="tactics-category">
                         <div class="tactics-category-header" onclick="toggleCategory('scalability')">
@@ -1702,7 +1737,7 @@
                     <!-- ══════════ ALB & LOAD BALANCER COSTS ══════════════════════════════ -->
                     <div class="tactics-category" id="cat-alb">
                         <div class="tactics-category-header" onclick="toggleCategory('alb')">
-                            <span class="tactics-category-title"><span>⚡</span> ALB &amp; Load Balancer Costs</span>
+                            <span class="tactics-category-title"><span>⚡</span> ALB &amp; Load Balancer Costs <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
                             <i class="fas fa-chevron-down tactics-chevron" id="chevron-alb"></i>
                         </div>
                         <div class="tactics-category-body" id="body-alb">
@@ -1734,38 +1769,10 @@
                         </div>
                     </div>
 
-                    <!-- ══════════ AVAILABILITY SLA ═══════════════════════════════════════ -->
-                    <div class="tactics-category" id="cat-availability">
-                        <div class="tactics-category-header" onclick="toggleCategory('availability')">
-                            <span class="tactics-category-title"><span>📊</span> Availability SLA</span>
-                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-availability"></i>
-                        </div>
-                        <div class="tactics-category-body" id="body-availability">
-                            <div class="notice notice-blue" style="margin-bottom:12px;">
-                                <i class="fas fa-info-circle"></i>
-                                <div>Higher availability tiers require redundant infrastructure (Multi-AZ deployments, additional replicas, failover ALBs). Select your SLA target to see the approximate infrastructure cost multiplier and the maximum allowed downtime per month.</div>
-                            </div>
-                            <div class="tactic-row">
-                                <div class="tactic-label-group"><label class="tactic-label">SLA Target</label></div>
-                                <div class="tactic-input-group" style="min-width:200px;">
-                                    <select id="input-sla" style="width:200px;">
-                                        <option value="0">— No SLA target —</option>
-                                        <option value="99">99% (7.2 hr downtime/mo)</option>
-                                        <option value="99.5">99.5% (3.6 hr downtime/mo)</option>
-                                        <option value="99.9">99.9% (43.8 min downtime/mo)</option>
-                                        <option value="99.95">99.95% (21.9 min downtime/mo)</option>
-                                        <option value="99.99">99.99% (4.4 min downtime/mo)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div id="availability-result" style="display:none;margin-top:12px;"></div>
-                        </div>
-                    </div>
-
                     <!-- ══════════ DATABASE BACKUP & RECOVERY ═════════════════════════════ -->
                     <div class="tactics-category" id="cat-dbbackup">
                         <div class="tactics-category-header" onclick="toggleCategory('dbbackup')">
-                            <span class="tactics-category-title"><span>🗃️</span> Database Backup &amp; Recovery</span>
+                            <span class="tactics-category-title"><span>🗃️</span> Database Backup &amp; Recovery <span class="warning-badge badge-dr" style="font-size:.62rem;">DR</span></span>
                             <i class="fas fa-chevron-down tactics-chevron" id="chevron-dbbackup"></i>
                         </div>
                         <div class="tactics-category-body" id="body-dbbackup">
@@ -1792,7 +1799,7 @@
                     <!-- ══════════ CLOUD SECURITY SERVICES ════════════════════════════════ -->
                     <div class="tactics-category" id="cat-cloudsec">
                         <div class="tactics-category-header" onclick="toggleCategory('cloudsec')">
-                            <span class="tactics-category-title"><span>🛡️</span> Cloud Security Services</span>
+                            <span class="tactics-category-title"><span>🛡️</span> Cloud Security Services <span class="warning-badge badge-dr" style="font-size:.62rem;">DR</span></span>
                             <i class="fas fa-chevron-down tactics-chevron" id="chevron-cloudsec"></i>
                         </div>
                         <div class="tactics-category-body" id="body-cloudsec">
@@ -1805,7 +1812,7 @@
                     <!-- ══════════ COST OPTIMISATION ══════════════════════════════════════ -->
                     <div class="tactics-category" id="cat-costopt">
                         <div class="tactics-category-header" onclick="toggleCategory('costopt')">
-                            <span class="tactics-category-title"><span>💰</span> Cost Optimisation</span>
+                            <span class="tactics-category-title"><span>💰</span> Cost Optimisation <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
                             <i class="fas fa-chevron-down tactics-chevron" id="chevron-costopt"></i>
                         </div>
                         <div class="tactics-category-body" id="body-costopt">
@@ -1818,7 +1825,7 @@
                     <!-- ══════════ HIGH-PERFORMANCE CACHING ════════════════════════════════ -->
                     <div class="tactics-category" id="cat-caching">
                         <div class="tactics-category-header" onclick="toggleCategory('caching')">
-                            <span class="tactics-category-title"><span>⚡</span> High-Performance Caching</span>
+                            <span class="tactics-category-title"><span>⚡</span> High-Performance Caching <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
                             <i class="fas fa-chevron-down tactics-chevron" id="chevron-caching"></i>
                         </div>
                         <div class="tactics-category-body" id="body-caching">
@@ -1827,12 +1834,78 @@
                             <div id="caching-result" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;font-size:.88rem;color:var(--blue-deep);"></div>
                         </div>
                     </div>
+                    <!-- ══════════ FINOPS ARCHITECTURE NOTES ═══════════════════════════════ -->
+                    <div class="tactics-category" id="cat-finops-notes">
+                        <div class="tactics-category-header" onclick="toggleCategory('finops-notes')">
+                            <span class="tactics-category-title"><span>📐</span> FinOps Architecture Notes &amp; Disclaimers</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-finops-notes"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-finops-notes">
+                            <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0;">
+                                <div class="notice notice-gold"><i class="fas fa-network-wired"></i><div>
+                                    <strong>1 &mdash; IP Address Planning (CIDR Sizing)</strong><br>
+                                    <span style="font-size:.82rem;">The more redundancy you build into AWS (Multi-AZ, replicas, NAT Gateways, ENIs), the more private IP addresses are consumed. Plan your VPC CIDR block generously (e.g. /16 = 65,536 IPs) and <strong>leave enough address space within each subnet CIDR for auto-scaling headroom</strong>. A /24 subnet provides only 251 usable IPs &mdash; this can be exhausted quickly in a multi-tier, auto-scaled architecture.</span>
+                                </div></div>
+                                <div class="notice notice-blue"><i class="fas fa-layer-group"></i><div>
+                                    <strong>2 &mdash; Multi-Tier Architecture in AWS Terms</strong><br>
+                                    <span style="font-size:.82rem;">If you separate your MACH Architecture components (frontend, API gateway, gRPC services, databases) into <strong>different subnets</strong>, AWS classifies this as a <strong>multi-tier architecture</strong>. Each tier should reside in dedicated subnets with its own Security Groups and NACLs. This is the AWS recommended pattern for defence in depth and least-privilege network access.</span>
+                                </div></div>
+                                <div class="notice notice-green"><i class="fas fa-sitemap"></i><div>
+                                    <strong>3 &mdash; Connectivity Architecture</strong><br>
+                                    <span style="font-size:.82rem;">When using multiple AWS services in separate subnets, consider: <strong>VPC Endpoints</strong> (PrivateLink) to access AWS services privately without internet routing; <strong>Transit Gateway</strong> for connecting multiple VPCs; <strong>VPC Flow Logs</strong> for network traffic monitoring. Each component in a separate subnet requires route table entries to communicate.</span>
+                                </div></div>
+                                <div class="notice notice-red" id="finops-mission-critical-note" style="display:none;"><i class="fas fa-satellite-dish"></i><div>
+                                    <strong>4 &mdash; Mission-Critical External Connectivity Options</strong><br>
+                                    <span style="font-size:.82rem;">Since this service is marked as <strong>mission-critical</strong>, evaluate these AWS external connectivity options:<br>
+                    &bull; <strong>AWS Direct Connect</strong> &mdash; dedicated private fibre to AWS (1&ndash;100 Gbps). Eliminates internet variability. Best for latency-sensitive gRPC.<br>
+                    &bull; <strong>VPC Peering</strong> &mdash; private routing between VPCs (same or cross-account/region). No NAT, no internet gateway.<br>
+                    &bull; <strong>AWS Site-to-Site VPN</strong> &mdash; encrypted IPSec over internet. Lower cost than Direct Connect.<br>
+                    <em>Evaluate based on latency, bandwidth, budget, and compliance requirements.</em></span>
+                                </div></div>
+                            </div>
+                        </div>
+                    </div>
+
 
 
 
                 </div>
             </div>
         </div>
+        <!-- ══ IMPLEMENTATION TIMELINE — Phase 3 standalone ══ -->
+        <div class="card" style="margin-bottom:16px;padding:24px 28px;" id="phase3-timeline-card">
+            <div class="card-header" style="margin-bottom:14px;padding-bottom:12px;">
+                <div class="card-header-icon icon-gold"><i class="fas fa-calendar-days"></i></div>
+                <div class="card-header-text">
+                    <h2>Implementation Timeline Estimator</h2>
+                    <p>Estimate delivery effort. Result shows in the Phase 4 TCO Report.</p>
+                </div>
+            </div>
+            <div class="notice notice-blue" style="margin-bottom:14px;">
+                <i class="fas fa-info-circle"></i>
+                <div><strong>Formula:</strong> &#8968;(Services &divide; (Engineers &times; Svcs/day)) &times; Buffer&#8969; &divide; WorkDays/week<br>
+                    <em style="font-size:.78rem;">Default buffer 1.20 (20% margin) is recommended for less experienced teams.</em></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="field"><label>Number of AWS Services / Components</label>
+                    <input type="number" id="input-num-services" min="1" placeholder="e.g. 10" oninput="recalculateTimeline()">
+                    <div class="field-hint">Total AWS services to implement.</div></div>
+                <div class="field"><label>Number of Engineers</label>
+                    <input type="number" id="input-num-engineers" min="1" placeholder="e.g. 3" oninput="recalculateTimeline()">
+                    <div class="field-hint">Engineers available for this sprint.</div></div>
+                <div class="field"><label>AWS Services per Engineer per Day</label>
+                    <input type="number" id="input-services-per-day" min="0.1" step="0.1" placeholder="e.g. 1" oninput="recalculateTimeline()">
+                    <div class="field-hint">Delivery throughput per engineer per day.</div></div>
+                <div class="field"><label>Buffer Multiplier</label>
+                    <input type="number" id="input-timeline-buffer" min="1" max="2" step="0.05" value="1.20" oninput="recalculateTimeline()">
+                    <div class="field-hint">1.20 = less experienced (default) &nbsp;|&nbsp; 1.10 = experienced team.</div></div>
+                <div class="field"><label>Working Days per Week</label>
+                    <input type="number" id="input-work-days" min="1" max="7" value="5" oninput="recalculateTimeline()">
+                    <div class="field-hint">Default 5 (Monday–Friday).</div></div>
+            </div>
+            <div id="timeline-result" style="display:none;margin-top:16px;"></div>
+        </div>
+
         <!-- Live RPS summary -->
         <div class="rps-summary-bar" id="rps-impact-summary">
             <div>Estimated effective RPS: <span class="rps-total" id="rps-adjusted-display">—</span></div>
@@ -1912,7 +1985,7 @@
     <div class="card-header">
         <div class="card-header-icon icon-gold"><i class="fas fa-chart-bar"></i></div>
         <div class="card-header-text">
-            <h2>Phase 4 — TCO Networking Costs Report</h2>
+            <h2>Phase 4 — TCO Costs Report</h2>
             <p>Full cost breakdown including architecture tactics, unit economics, and stakeholder summary.</p>
         </div>
     </div>
@@ -2041,6 +2114,33 @@
             </div>
         </div>
 
+        <div id="p4-finops-notes" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--rule);">
+            <div style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--blue-deep);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-drafting-compass"></i> FinOps Architecture Notes &amp; Disclaimers
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div class="notice notice-gold"><i class="fas fa-network-wired"></i><div>
+                    <strong>1 &mdash; IP Address Planning (CIDR Sizing)</strong><br>
+                    <span style="font-size:.82rem;">The more redundancy you build into AWS (Multi-AZ, replicas, NAT Gateways, ENIs), the more private IP addresses are consumed. Plan your VPC CIDR block generously (e.g. /16 = 65,536 IPs) and <strong>leave enough address space within each subnet CIDR for auto-scaling headroom</strong>. A /24 subnet provides only 251 usable IPs &mdash; exhausted quickly in a multi-tier, auto-scaled architecture.</span>
+                </div></div>
+                <div class="notice notice-blue"><i class="fas fa-layer-group"></i><div>
+                    <strong>2 &mdash; Multi-Tier Architecture in AWS Terms</strong><br>
+                    <span style="font-size:.82rem;">Separating MACH components (frontend, API gateway, gRPC services, databases) into <strong>different subnets</strong> makes this a <strong>multi-tier architecture</strong> in AWS terms. Each tier needs dedicated subnets with its own Security Groups and NACLs.</span>
+                </div></div>
+                <div class="notice notice-green"><i class="fas fa-sitemap"></i><div>
+                    <strong>3 &mdash; Intra-VPC Connectivity</strong><br>
+                    <span style="font-size:.82rem;">Use <strong>VPC Endpoints</strong> (PrivateLink) to access AWS services without internet routing; <strong>Transit Gateway</strong> for cross-VPC connectivity; <strong>VPC Flow Logs</strong> for visibility. Each component in a separate subnet requires explicit route table entries.</span>
+                </div></div>
+                <div class="notice notice-red" id="p4-mission-critical-note" style="display:none;"><i class="fas fa-satellite-dish"></i><div>
+                    <strong>4 &mdash; Mission-Critical External Connectivity Options</strong><br>
+                    <span style="font-size:.82rem;">Since this service is marked mission-critical, evaluate:<br>
+            &bull; <strong>AWS Direct Connect</strong> &mdash; dedicated private fibre (1&ndash;100 Gbps).<br>
+            &bull; <strong>VPC Peering</strong> &mdash; private routing between VPCs, no NAT or internet gateway.<br>
+            &bull; <strong>AWS Site-to-Site VPN</strong> &mdash; encrypted IPSec over internet, lower cost than Direct Connect.</span>
+                </div></div>
+            </div>
+        </div>
+
         <p style="font-size:.76rem;color:var(--ink-light);margin-top:14px;line-height:1.6;">
             * Outbound (response) data transfer cost uses AWS standard internet egress tiered pricing for US East (N. Virginia):
             first 10 TB at $0.09/GB, next 40 TB at $0.085/GB, next 100 TB at $0.07/GB, beyond 150 TB at $0.05/GB.
@@ -2062,10 +2162,15 @@
             <i class="fas fa-triangle-exclamation" style="color:var(--gold);"></i>
             Important: Validate This TCO Report Before Acting On It
         </div>
-        <div class="footer-warning-body">
-            This tool provides an <strong>architectural estimate</strong> of networking TCO based on the parameters you have modelled.
-            It is a starting point for financial planning — not a final procurement decision. Before presenting, approving, or budgeting
-            based on these figures, you should present, validate, and discuss this report with all relevant stakeholders.
+        <div class="arch-banner-subtitle">
+            This tool is designed for <strong>Software Architects acting as FinOps Engineers</strong> — bridging the gap between
+            Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
+            with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
+            in the language of business.
+        </div>
+        <div class="arch-banner-subtitle">
+            TCO calculations are key part of the FinOps Inform pillar as it shows cost optimization opportunities and projected costs.
+            For AWS Cloud Provider this solution is using the AWS Pricing API, AWS Price List Query API, and AWS Price List Bulk API.
         </div>
         <div class="stakeholder-pills">
             <span class="stakeholder-pill"><i class="fas fa-gears"></i> Engineering Teams</span>
@@ -2077,6 +2182,8 @@
     </div>
 </div>
 <script>
+
+
 
 
 
@@ -3045,15 +3152,11 @@
       var cPc = totalCost / consumers;
       var cPr = totalCost / reqMonth;
       var fmt = function(v, d) { return (v > 0 && v < Math.pow(10, -(d-1))) ? v.toExponential(4) : v.toFixed(d); };
-      /* Populate Phase 4 cloud TCO breakdown table */
-      /* Recompute totalCost with all cloud costs from sessionStorage for Phase 4 */
+      /* Build component array, compute true total, render correct % */
       var _tcoDiv = document.getElementById('cloudTcoBreakdown');
       if (_tcoDiv) {
-        /* Use definitive totalCost which already includes computeCloudInfraCost() */
-        var _tcoRows = '<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">AWS Egress (Response Transfer)</td>'
-          + '<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bytes">Networking</span></td>'
-          + '<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+cost.toFixed(2)+'</td>'
-          + '<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+((cost/Math.max(totalCost,0.001))*100).toFixed(1)+'%</td></tr>';
+        var _comps = [];
+        _comps.push({label:'AWS Egress (Response Transfer)', cat:'Networking', badge:'badge-bytes', cost:cost});
         var _talbC=0, _talbLabel='ALB';
         if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
           if (window._albData) {
@@ -3065,10 +3168,7 @@
             _talbC=parseFloat(sessionStorage.getItem('tco_alb_cost')||'0');
             _talbLabel=sessionStorage.getItem('tco_alb_label')||'ALB';
           }
-          if(_talbC>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">'+_talbLabel+'</td>'
-            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
-            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_talbC.toFixed(2)+'</td>'
-            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_talbC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+          if(_talbC>0) _comps.push({label:_talbLabel, cat:'Business Continuity', badge:'badge-bc', cost:_talbC});
         }
         var _tcC=0, _tcLabel='ElastiCache';
         if (document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
@@ -3084,37 +3184,25 @@
             _tcC=parseFloat(sessionStorage.getItem('tco_cache_cost')||'0');
             _tcLabel=sessionStorage.getItem('tco_cache_label')||'ElastiCache';
           }
-          if(_tcC>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">'+_tcLabel+'</td>'
-            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
-            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_tcC.toFixed(2)+'</td>'
-            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_tcC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+          if(_tcC>0) _comps.push({label:_tcLabel, cat:'Business Continuity', badge:'badge-bc', cost:_tcC});
         }
         /* DB backup: live or sessionStorage */
         var _dbCostTotal=0;
         if (!window._dbData) {
           _dbCostTotal=parseFloat(sessionStorage.getItem('tco_db_cost')||'0');
-          if(_dbCostTotal>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">Database Backup / DR</td>'
-            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
-            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_dbCostTotal.toFixed(2)+'</td>'
-            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_dbCostTotal/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+          if(_dbCostTotal>0) _comps.push({label:'Database Backup / DR', cat:'Disaster Recovery', badge:'badge-dr', cost:_dbCostTotal});
         } else {
           if (document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
             var _tgbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
             var _ts3C=_tgbv*(window._dbData.s3StandardPerGbMonth||0.023);
             _dbCostTotal+=_ts3C;
-            _tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">S3 DB Backup ('+_tgbv+' GB)</td>'
-              +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
-              +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_ts3C.toFixed(2)+'</td>'
-              +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_ts3C/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+            _comps.push({label:'S3 DB Backup ('+_tgbv+' GB)', cat:'Disaster Recovery', badge:'badge-dr', cost:_ts3C});
           }
           if (document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
             var _tarc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
             var _taC=(window._dbData.auroraReplicaPerHour||0.26)*730*_tarc;
             _dbCostTotal+=_taC;
-            _tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">Aurora Replica ('+_tarc+' node'+(+_tarc>1?'s':'')+')</td>'
-              +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-bc">BC</span></td>'
-              +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_taC.toFixed(2)+'</td>'
-              +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_taC/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+            _comps.push({label:'Aurora Replica ('+_tarc+' node'+(+_tarc>1?'s':'')+') — BC', cat:'Business Continuity', badge:'badge-bc', cost:_taC});
           }
         }
         /* Security: live or sessionStorage */
@@ -3130,27 +3218,34 @@
           if(_tgg('sec-audit').checked)_tSecT+=(parseInt(_tgg('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;
           if(_tgg('sec-kms').checked){var _tkk=parseInt(_tgg('input-kms-keys').value)||1;_tSecT+=_tkk*window._secData.kmsCmkPerMonth+(_trpm/10000)*window._secData.kmsApiCallsPer10k;}
         }
-        if(_tSecT>0)_tcoRows+='<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">Cloud Security Services</td>'
-          +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge badge-dr">DR</span></td>'
-          +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+_tSecT.toFixed(2)+'</td>'
-          +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+(_tSecT/Math.max(totalCost,0.001)*100).toFixed(1)+'%</td></tr>';
+        if(_tSecT>0) _comps.push({label:'Cloud Security Services', cat:'Disaster Recovery', badge:'badge-dr', cost:_tSecT});
+        /* Compute true total from all collected components */
+        var _realTco = Math.round(_comps.reduce(function(s,c){return s+c.cost;},0)*100)/100;
+        /* Render rows with percentages based on _realTco (guaranteed to sum to 100%) */
+        var _tcoRows = _comps.map(function(c) {
+          var pct = (_realTco > 0 ? (c.cost/_realTco*100).toFixed(1) : '0.0');
+          return '<tr style="border-bottom:1px solid var(--rule);"><td style="padding:8px 12px;font-weight:600;">'+c.label+'</td>'
+            +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge '+c.badge+'">'+c.cat+'</span></td>'
+            +'<td style="padding:8px 12px;text-align:right;font-family:monospace;color:var(--blue-deep);">$'+c.cost.toFixed(2)+'</td>'
+            +'<td style="padding:8px 12px;text-align:right;color:var(--ink-light);">'+pct+'%</td></tr>';
+        }).join('');
         _tcoRows += '<tr style="background:var(--blue-deep);color:#fff;font-weight:700;">'
           +'<td style="padding:9px 12px;" colspan="2">Total Cost of Ownership (TCO)</td>'
-          +'<td style="padding:9px 12px;text-align:right;font-family:monospace;">$'+totalCost.toFixed(2)+'/mo</td>'
-          +'<td style="padding:9px 12px;text-align:right;">100%</td></tr>';
+          +'<td style="padding:9px 12px;text-align:right;font-family:monospace;">$'+_realTco.toFixed(2)+'/mo</td>'
+          +'<td style="padding:9px 12px;text-align:right;">100.0%</td></tr>';
         _tcoDiv.innerHTML = '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;'
           + 'color:var(--blue-deep);margin-bottom:10px;display:flex;align-items:center;gap:8px;">'
           + '<i class="fas fa-table"></i> Total Cost of Ownership (TCO) Breakdown</div>'
           + '<table style="width:100%;border-collapse:collapse;font-size:.84rem;margin-bottom:4px;">'
           + '<thead><tr style="background:var(--paper);">'
           + '<th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--rule);">Cost Component</th>'
-          + '<th style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--rule);">Category</th>'
+          + '<th style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--rule);">DR / BC</th>'
           + '<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">Monthly Cost</th>'
           + '<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">% of TCO</th>'
           + '</tr></thead><tbody>'+_tcoRows+'</tbody></table>'
           + '<p style="font-size:.73rem;color:var(--ink-light);margin-top:6px;">'
-          + '* Networking costs calculated from proto file + effective RPS. '
-          + 'Cloud infra costs from tactic selections above. Total TCO = Networking + Cloud Infra.</p>';
+          + '* % of TCO is calculated against the sum of ALL cost rows shown above (must total 100%). '
+          + 'DR = Disaster Recovery &nbsp;|&nbsp; BC = Business Continuity.</p>';
       }
 
       /* Unit Economics: TCO = totalCost (networking + cloud infra) */
@@ -3192,11 +3287,11 @@
         + '<i class="fas fa-users" style="font-size:.85rem;"></i> Per-End-User Cost Metrics'
         + ' <span style="font-size:.72rem;font-weight:400;color:var(--ink-light);">(' + consumers.toLocaleString() + ' end users)</span></div></div>'
 
-        + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User (Customer Acquisition Costs)/ Month</div>'
+        + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User / Month</div>'
         + '<div class="unit-econ-value">$' + fmt(cPuMonthly,4) + '</div>'
         + '<div class="unit-econ-sub">$'+totalCost.toFixed(2)+' ÷ '+consumers.toLocaleString()+' users</div></div>'
 
-        + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User (Customer Acquisition Costs) / Day</div>'
+        + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User / Day</div>'
         + '<div class="unit-econ-value">$' + fmt(cPuDay,6) + '</div>'
         + '<div class="unit-econ-sub">Monthly ÷ 30</div></div>'
 
@@ -3411,20 +3506,74 @@
     function recalculateAvailability() {
       var sla = parseFloat((document.getElementById('input-sla') || {value:'0'}).value) || 0;
       var res = document.getElementById('availability-result');
+      var mc  = !!(document.getElementById('tactic-mission-critical') && document.getElementById('tactic-mission-critical').checked);
+      var mcNote = document.getElementById('finops-mission-critical-note');
+      if (mcNote) mcNote.style.display = mc ? 'flex' : 'none';
+      var mcNoteP4 = document.getElementById('p4-mission-critical-note');
+      if (mcNoteP4) mcNoteP4.style.display = mc ? 'flex' : 'none';
       if (!res) return;
       if (!sla) { res.style.display = 'none'; return; }
-      var dtMin = ((1 - sla/100) * 30 * 24 * 60).toFixed(1);
-      var mult  = sla >= 99.99 ? 2.0 : sla >= 99.95 ? 1.75 : sla >= 99.9 ? 1.5 : sla >= 99.5 ? 1.25 : 1.0;
-      var reqR  = sla >= 99.9 ? 'Multi-AZ deployment recommended (\u2265 2 replicas in separate AZs)' : 'Single-AZ acceptable';
-      var rdsN  = sla >= 99.9 ? 'Multi-AZ RDS strongly recommended (~2\u00d7 RDS instance cost)' : 'Single-AZ RDS may be acceptable';
-      res.innerHTML = '<div style="padding:14px;border-radius:var(--r);background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;">'
-        + '<div style="font-family:\'DM Serif Display\',serif;font-size:.95rem;color:var(--blue-deep);margin-bottom:10px;"><i class="fas fa-shield-halved" style="margin-right:6px;"></i>SLA '+sla+'% Analysis</div>'
-        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-        + '<div class="unit-econ-item"><div class="unit-econ-label">Max downtime / month</div><div class="unit-econ-value">'+dtMin+' min</div></div>'
-        + '<div class="unit-econ-item"><div class="unit-econ-label">Infra cost multiplier</div><div class="unit-econ-value">'+mult+'\u00d7</div><div class="unit-econ-sub">vs single-AZ base</div></div>'
-        + '<div class="unit-econ-item" style="grid-column:1/-1;"><div class="unit-econ-label">Deployment requirement</div><div class="unit-econ-value" style="font-size:.82rem;">'+reqR+'</div></div>'
-        + '<div class="unit-econ-item" style="grid-column:1/-1;"><div class="unit-econ-label">Database recommendation</div><div class="unit-econ-value" style="font-size:.82rem;">'+rdsN+'</div></div>'
-        + '</div></div>';
+      var dtMo  = ((1 - sla/100) * 30 * 24 * 60).toFixed(1);
+      var dtYr  = ((1 - sla/100) * 365 * 24).toFixed(1);
+      var mult  = sla >= 99.99 ? 2.5 : sla >= 99.9 ? 1.8 : 1.2;
+      var badge, arch;
+      if (sla <= 99) {
+        badge = '<span class="tbd-badge badge-dr" style="margin-left:5px;">DR</span>';
+        arch  =
+          '<div class="notice notice-gold" style="margin-top:10px;"><i class="fas fa-server"></i><div>'
+          + '<strong>Recommended Architecture \u2014 99% SLA (Disaster Recovery)</strong>'
+          + '<ul style="margin:6px 0 0 14px;font-size:.79rem;line-height:1.7;">'
+          + '<li>Single EC2 instance with self-hosted SQL database</li>'
+          + '<li>Automated DB backup to S3; S3 Lifecycle Policies to move older backups to <strong>S3 Glacier</strong></li>'
+          + '<li><strong>Route 53 Health Check</strong> to monitor service health and trigger DNS failover</li>'
+          + '</ul>'
+          + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Downtime / year</div><div class="unit-econ-value" style="font-size:.9rem;">'+dtYr+' hr</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">RTO</div><div class="unit-econ-value" style="font-size:.9rem;">~70 min</div><div class="unit-econ-sub">30 min analysis + 40 min recovery</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">RPO</div><div class="unit-econ-value" style="font-size:.9rem;">~4.8 hrs</div><div class="unit-econ-sub">1 failure/quarter assumption</div></div>'
+          + '</div>'
+          + '<div style="font-size:.74rem;color:var(--amber);margin-top:8px;padding:6px 10px;background:rgba(212,160,23,.12);border-radius:var(--r);">'
+          + '\u2139 Assumptions: 1 failure/quarter. 30 min to analyze, 40 min to restore. RPO of 4.8 hrs based on backup frequency.</div>'
+          + '</div></div>';
+      } else if (sla <= 99.9) {
+        badge = '<span class="tbd-badge badge-bc" style="margin-left:5px;">BC</span>';
+        arch  =
+          '<div class="notice notice-blue" style="margin-top:10px;"><i class="fas fa-layer-group"></i><div>'
+          + '<strong>Recommended Architecture \u2014 99.9% SLA (Business Continuity)</strong>'
+          + '<ul style="margin:6px 0 0 14px;font-size:.79rem;line-height:1.7;">'
+          + '<li><strong>ALB</strong> proxying traffic with health checks across multiple AZs</li>'
+          + '<li><strong>Auto Scaling Group</strong> with minimum <strong>6 running instances</strong> across \u22652 Availability Zones</li>'
+          + '<li><strong>Multi-AZ RDS</strong> (standby in separate AZ) \u2014 RPO reduced to 5 min</li>'
+          + '</ul>'
+          + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Downtime / year</div><div class="unit-econ-value" style="font-size:.9rem;">'+dtYr+' hr</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Cost multiplier</div><div class="unit-econ-value" style="font-size:.9rem;">'+mult+'\u00d7</div><div class="unit-econ-sub">vs single-AZ base</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">RPO target</div><div class="unit-econ-value" style="font-size:.9rem;">~5 min</div><div class="unit-econ-sub">Multi-AZ RDS failover</div></div>'
+          + '</div></div></div>';
+      } else {
+        badge = '<span class="tbd-badge badge-dr" style="margin-left:4px;">DR</span><span class="tbd-badge badge-bc" style="margin-left:4px;">BC</span>';
+        arch  =
+          '<div class="notice notice-green" style="margin-top:10px;"><i class="fas fa-earth-americas"></i><div>'
+          + '<strong>Recommended Architecture \u2014 99.99% SLA (BC + DR)</strong>'
+          + '<ul style="margin:6px 0 0 14px;font-size:.79rem;line-height:1.7;">'
+          + '<li><strong>Two simultaneous instances of the service in two separate AWS Regions</strong></li>'
+          + '<li><strong>Active/Passive</strong> regional setup \u2014 Route 53 Failover routing for region-level DNS failover</li>'
+          + '<li>Multi-AZ RDS per region (primary + secondary in the same region per deployment)</li>'
+          + '<li>Cross-region Read Replicas or <strong>Aurora Global Database</strong> \u2014 RPO ~10 min</li>'
+          + '</ul>'
+          + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;">'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Downtime / year</div><div class="unit-econ-value" style="font-size:.9rem;">'+dtYr+' hr</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">Cost multiplier</div><div class="unit-econ-value" style="font-size:.9rem;">'+mult+'\u00d7</div><div class="unit-econ-sub">multi-region overhead</div></div>'
+          + '<div class="unit-econ-item"><div class="unit-econ-label">RPO target</div><div class="unit-econ-value" style="font-size:.9rem;">~10 min</div><div class="unit-econ-sub">Aurora Global / cross-region RR</div></div>'
+          + '</div></div></div>';
+      }
+      res.innerHTML =
+        '<div style="padding:14px;border-radius:var(--r);background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;">'
+        + '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;color:var(--blue-deep);margin-bottom:4px;">'
+        + '<i class="fas fa-shield-halved" style="margin-right:6px;"></i>SLA '+sla+'% Analysis '+badge+'</div>'
+        + '<div style="font-size:.78rem;color:var(--ink-light);margin-bottom:8px;">Max downtime: <strong>'+dtMo+' min/month</strong> \u00b7 '+dtYr+' hr/year \u00b7 Cost multiplier <strong>'+mult+'\u00d7</strong></div>'
+        + arch
+        + '</div>';
       res.style.display = 'block';
     }
 
@@ -3515,7 +3664,7 @@
           { id:'sec-inspector',  icon:'fa-magnifying-glass', label:'Amazon Inspector',         iId:'input-inspector-instances', iL:'instances',    desc:'$'+data.inspectorPerInstanceMonth+'/instance/mo' },
           { id:'sec-waf',        icon:'fa-shield',           label:'AWS WAF',                  iId:'input-waf-rules',           iL:'rules',        desc:'$'+data.wafWebAclPerMonth+'/WebACL + $'+data.wafRulePerMonth+'/rule + $'+data.wafPer1MRequests+'/1M req' },
           { id:'sec-macie',      icon:'fa-eye',              label:'Amazon Macie',             iId:'input-macie-gb',            iL:'GB S3 data',   desc:'$'+data.maciePerGbClassified+'/GB. '+data.macieFirstGbFreeNote },
-          { id:'sec-cloudwatch', icon:'fa-chart-line',       label:'CloudWatch Logs',          iId:'input-cw-gb',              iL:'GB logs/mo',   desc:'For Observability - Ingestion: $'+data.cloudwatchLogsIngestionPerGb+'/GB + Storage: $'+data.cloudwatchLogsStoragePerGbMonth+'/GB-mo' },
+          { id:'sec-cloudwatch', icon:'fa-chart-line',       label:'CloudWatch Logs',          iId:'input-cw-gb',              iL:'GB logs/mo',   desc:'Ingestion: $'+data.cloudwatchLogsIngestionPerGb+'/GB + Storage: $'+data.cloudwatchLogsStoragePerGbMonth+'/GB-mo' },
           { id:'sec-audit',      icon:'fa-clipboard-check',  label:'AWS Audit Manager',        iId:'input-audit-assessments',  iL:'assessments',  desc:'$'+data.auditManagerPerAssessmentMonth+'/assessment/mo' },
           { id:'sec-kms',        icon:'fa-key',              label:'KMS (Encryption at Rest)', iId:'input-kms-keys',           iL:'CMKs',         desc:data.kmsNote }
         ];
@@ -3732,6 +3881,41 @@
     /* =====================================================================
        EVENT WIRING — called once from DOMContentLoaded
     ===================================================================== */
+
+    function recalculateTimeline() {
+      var svcs   = parseFloat((document.getElementById('input-num-services')    || {value:'0'}).value) || 0;
+      var engs   = parseFloat((document.getElementById('input-num-engineers')   || {value:'0'}).value) || 0;
+      var perDay = parseFloat((document.getElementById('input-services-per-day')|| {value:'0'}).value) || 0;
+      var buffer = parseFloat((document.getElementById('input-timeline-buffer') || {value:'1.20'}).value) || 1.20;
+      var wkDays = parseFloat((document.getElementById('input-work-days')       || {value:'5'}).value) || 5;
+      var res    = document.getElementById('timeline-result');
+      if (!res || !svcs || !engs || !perDay || !wkDays) { if(res) res.style.display='none'; return; }
+      var totalDays = Math.ceil((svcs / (engs * perDay)) * buffer);
+      var weeks     = (totalDays / wkDays).toFixed(1);
+      var months    = (totalDays / (wkDays * 4.33)).toFixed(1);
+      var bufPct    = Math.round((buffer - 1) * 100);
+      var bufNote   = buffer >= 1.2
+        ? '<span style="color:var(--amber);font-weight:600;">'+bufPct+'% buffer \u2014 recommended for less experienced teams</span>'
+        : '<span style="color:var(--green);font-weight:600;">'+bufPct+'% buffer \u2014 experienced team</span>';
+      res.style.display = 'block';
+      res.innerHTML =
+        '<div style="padding:14px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#fffdf5);border:1px solid var(--gold-border);">'
+        + '<div style="font-family:\'DM Serif Display\',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;">'
+        + '<i class="fas fa-calendar-days" style="margin-right:6px;"></i>Implementation Timeline Estimate</div>'
+        + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">'
+        + '<div class="unit-econ-item"><div class="unit-econ-label">Total Working Days</div>'
+        +   '<div class="unit-econ-value">'+totalDays+'</div>'
+        +   '<div class="unit-econ-sub">\u2308 '+svcs+'\u00f7('+engs+'\u00d7'+perDay+')\u00d7'+buffer+'\u2309</div></div>'
+        + '<div class="unit-econ-item"><div class="unit-econ-label">Weeks ('+wkDays+'-day week)</div>'
+        +   '<div class="unit-econ-value">'+weeks+'</div></div>'
+        + '<div class="unit-econ-item"><div class="unit-econ-label">Months</div>'
+        +   '<div class="unit-econ-value">'+months+'</div><div class="unit-econ-sub">@ 4.33 wks/month</div></div>'
+        + '</div>'
+        + '<div style="font-size:.78rem;padding:8px 12px;background:rgba(255,255,255,.6);border-radius:var(--r);color:var(--ink-medium);">'
+        + 'Buffer: '+bufNote+'<br>'
+        + '<strong>Formula:</strong> \u2308 '+svcs+' \u00f7 ('+engs+' \u00d7 '+perDay+') \u00d7 '+buffer+' \u2309 \u00f7 '+wkDays+' days/week'
+        + '</div></div>';
+    }
     function wireAllHandlers() {
       function on(id, ev, fn) { var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
 
@@ -3952,6 +4136,8 @@
       })();
 
     });
+
+
 
 
 

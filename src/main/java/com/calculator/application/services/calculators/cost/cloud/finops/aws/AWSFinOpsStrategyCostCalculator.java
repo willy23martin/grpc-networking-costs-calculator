@@ -12,6 +12,7 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
     public Map<String, Object> calculateFinOpsStrategiesCosts() {
         Map<String, Object> result = new LinkedHashMap<>();
 
+        // TODO Get from AWS
         // Reserved Instance savings vs On-Demand (typical 1-yr no upfront)
         result.put("reservedInstance1yrSavingsPct",  36);
         result.put("reservedInstance3yrSavingsPct",  57);

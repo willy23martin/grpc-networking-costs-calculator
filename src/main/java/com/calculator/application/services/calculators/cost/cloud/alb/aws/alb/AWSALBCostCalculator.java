@@ -28,6 +28,7 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
      */
     private static final double ALB_FIXED_CHARGE_PER_HOUR = 0.008;
 
+    // TODO Get from AWS
     private static final double LCU_FIXED_CHARGE_PER_HOUR = 0.008; // Because: (1 LCU = 25 new connections/s OR 3000 active connections OR 1 GB/hr processed OR 1000 rule evaluations/s)
 
     @Override
