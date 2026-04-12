@@ -15,19 +15,26 @@ public class ElastiCacheCostCalculator extends AWSCloudCalculator implements Cac
 
     @Override
     public Map<String, Object> calculateCachingCosts() {
-        Map<String, Object> result = new LinkedHashMap<>();
-        // TODO Get from AWS
-        // ElastiCache Redis — cache.r6g.large, us-east-1 on-demand
-        result.put("redisR6gLargePerHour",       fetchElastiCachePrice("cache.r6g.large",   "redis"));
-        result.put("redisR6gXlargePerHour",      fetchElastiCachePrice("cache.r6g.xlarge",  "redis"));
-        result.put("redisR6g2xlargePerHour",     fetchElastiCachePrice("cache.r6g.2xlarge", "redis"));
-        // ElastiCache Memcached
-        result.put("memcachedR6gLargePerHour",   fetchElastiCachePrice("cache.r6g.large",   "memcached"));
-        result.put("memcachedR6gXlargePerHour",  fetchElastiCachePrice("cache.r6g.xlarge",  "memcached"));
-        // Backup storage for Redis snapshots — same as S3 standard
+        Map<String, Object> cachingCosts = new LinkedHashMap<>();
+        mapCacheRG6Large(cachingCosts);
+        mapMemcached(cachingCosts, "memcachedR6gLargePerHour", "memcached", "memcachedR6gXlargePerHour");
+        mapBackupStorageForRedisSnapshots(cachingCosts);
+        return cachingCosts;
+    }
+
+    private static void mapBackupStorageForRedisSnapshots(Map<String, Object> result) {
         result.put("snapshotStoragePerGbMonth", 0.085);
         result.put("note","ElastiCache on-demand prices shown. Reserved Nodes offer up to 55% savings (1yr) or 70% (3yr) for committed workloads.");
-        return result;
+    }
+
+    private void mapMemcached(Map<String, Object> result, String memcachedR6gLargePerHour, String memcached, String memcachedR6gXlargePerHour) {
+        result.put(memcachedR6gLargePerHour, fetchElastiCachePrice("cache.r6g.large", memcached));
+        result.put(memcachedR6gXlargePerHour, fetchElastiCachePrice("cache.r6g.xlarge", memcached));
+    }
+
+    private void mapCacheRG6Large(Map<String, Object> result) {
+        mapMemcached(result, "redisR6gLargePerHour", "redis", "redisR6gXlargePerHour");
+        result.put("redisR6g2xlargePerHour",     fetchElastiCachePrice("cache.r6g.2xlarge", "redis"));
     }
 
     private double fetchElastiCachePrice(String nodeType, String engine) {

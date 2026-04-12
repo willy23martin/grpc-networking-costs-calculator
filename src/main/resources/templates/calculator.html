@@ -1148,13 +1148,17 @@
     <div class="arch-banner-inner">
         <div class="arch-banner-icon">🏛️</div>
         <div>
-            <div class="arch-banner-pill"><i class="fas fa-bridge"></i>&nbsp; Architecture × Finance</div>
+            <div class="arch-banner-pill"><i class="fas fa-bridge"></i>&nbsp; Software Architecture × Finance</div>
             <div class="arch-banner-title">Software Architect &amp; FinOps Engineering Toolkit</div>
             <div class="arch-banner-subtitle">
                 This tool is designed for <strong>Software Architects acting as FinOps Engineers</strong> — bridging the gap between
                 Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
                 with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
                 in the language of business.
+            </div>
+            <div class="arch-banner-subtitle">
+                TCO calculations are key part of the FinOps Inform pillar as it shows cost optimization opportunities and projected costs.
+                For AWS Cloud Provider this solution is using the AWS Pricing API, AWS Price List Query API, and AWS Price List Bulk API.
             </div>
             <div style="margin-top:9px;padding:7px 13px;background:rgba(212,160,23,.18);border:1px solid rgba(212,160,23,.4);border-radius:7px;font-size:.74rem;color:#F5ECD7;line-height:1.5;"><i class="fas fa-circle-info" style="margin-right:5px;"></i><strong>Current Support:</strong> gRPC &amp; AWS&nbsp;&bull;&nbsp;<strong>Roadmap:</strong> Azure, GCP &bull; GraphQL &amp; REST &bull; Multi-region pricing &mdash; 2025&#x2013;2026</div>
         </div>
@@ -1165,7 +1169,7 @@
 <div class="page-shell">
 
     <div class="main-title">
-        <h1>gRPC MACH Architecture<br>TCO Costs Calculator</h1>
+        <h1>gRPC MACH Architecture<br>TCO Costs Calculator - FinOps Inform Phase</h1>
         <div class="subtitle">Point-to-Point Integration Pattern · Protocol Buffer IDL · AWS Egress Pricing</div>
     </div>
 
@@ -2162,15 +2166,10 @@
             <i class="fas fa-triangle-exclamation" style="color:var(--gold);"></i>
             Important: Validate This TCO Report Before Acting On It
         </div>
-        <div class="arch-banner-subtitle">
-            This tool is designed for <strong>Software Architects acting as FinOps Engineers</strong> — bridging the gap between
-            Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
-            with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
-            in the language of business.
-        </div>
-        <div class="arch-banner-subtitle">
-            TCO calculations are key part of the FinOps Inform pillar as it shows cost optimization opportunities and projected costs.
-            For AWS Cloud Provider this solution is using the AWS Pricing API, AWS Price List Query API, and AWS Price List Bulk API.
+        <div class="footer-warning-body">
+            This tool provides an <strong>architectural estimate</strong> of TCO based on the parameters you have modelled.
+            It is a starting point for financial planning — not a final procurement decision. Before presenting, approving, or budgeting
+            based on these figures, you should present, validate, and discuss this report with all relevant stakeholders.
         </div>
         <div class="stakeholder-pills">
             <span class="stakeholder-pill"><i class="fas fa-gears"></i> Engineering Teams</span>
@@ -2546,7 +2545,7 @@
         var comp  = parseInt((document.getElementById('input-saga-compensatable') || {value:'0'}).value) || 0;
         var ret   = parseInt((document.getElementById('input-saga-retriable')     || {value:'0'}).value) || 0;
         var pivot = parseInt((document.getElementById('input-saga-pivot')         || {value:'0'}).value) || 0;
-        var steps = comp + ret + pivot;
+        var steps = comp;
         var sagaExtVpc = !!(document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
         if (steps > 0) {
           if (sagaExtVpc) {
@@ -2570,7 +2569,7 @@
       var retryCb = document.getElementById('tactic-retry');
       if (retryCb && retryCb.checked) {
         var errPct = parseFloat((document.getElementById('input-retry-error-pct') || {value:'5'}).value) || 5;
-        var extra = Math.round(effectiveRps * errPct / 100);
+        var extra = Math.round(effectiveRps * (errPct / 100));
         effectiveRps += extra;
         breakdown.push('+' + extra.toLocaleString() + ' Retry (' + errPct + '% of ' + (effectiveRps - extra).toLocaleString() + ' eff.RPS)');
         var prev = document.getElementById('retry-extra-rps-preview');
@@ -2809,7 +2808,7 @@
           ? ((parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)
             +(parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)
             +(parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0)) : 0;
-        var _effBeforeRetry = _sagaSteps2 > 0 ? baseRps * _sagaSteps2 : baseRps;
+        var _effBeforeRetry = _sagaSteps2 > 0 ? baseRps : baseRps;
         var rExtra = Math.round(_effBeforeRetry * errPct2 / 100);
         contribs.push({ label:'Retry ('+errPct2+'% of eff. RPS)', rpsAdded:rExtra, bytesAdded:0, kind:'rps', baseRespBytes:respB,
           detail:'+'+rExtra.toLocaleString()+' req/s ('+errPct2+'% of '+_effBeforeRetry.toLocaleString()+' eff.RPS after SAGA)' });
@@ -3421,7 +3420,7 @@
           var _effBase = _ss > 0 ? _bRps * _ss : _bRps;
           return { resiliencyRetryTactic: !!(g('tactic-retry').checked),
                    tacticRetryErrorPct: _errP,
-                   tacticRetryTimes: Math.round(_effBase * _errP / 100) };
+                   tacticRetryTimes: _errP };
         })(),
         circuitBreakerTactic: { resiliencyCircuitBreakerPattern: !!(g('tactic-cb').checked),
           circuitBreakerPatternMinimumCalls: parseInt(g('input-cb-min-calls').value) || 0,

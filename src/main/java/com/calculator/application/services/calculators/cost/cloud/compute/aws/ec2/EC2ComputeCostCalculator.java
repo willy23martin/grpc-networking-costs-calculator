@@ -3,7 +3,6 @@ package com.calculator.application.services.calculators.cost.cloud.compute.aws.e
 import com.calculator.application.services.calculators.cost.cloud.aws.AWSCloudCalculator;
 import com.calculator.application.services.calculators.cost.cloud.compute.CloudComputeCostCalculator;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.pricing.model.Filter;
 import software.amazon.awssdk.services.pricing.model.FilterType;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
@@ -19,53 +18,59 @@ public class EC2ComputeCostCalculator extends AWSCloudCalculator implements Clou
 
     private static final Logger log = Logger.getLogger(EC2ComputeCostCalculator.class.getName());
 
+    public static final int GIGA_BITS = 1_000_000_000;
+    public static final int BITS_PER_BYTE = 8;
+    public static final int HOURS_PER_MONTH = 740;
+
     @Override
     public List<Map<String, Object>> calculatePriceByComputeInstance() {
-        // TODO replace the constants with the implementation for getting them directly from AWS:
-        // - https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html
-        // - Java SDK: https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/examples-ec2-instances.html
-        // Curated families relevant for gRPC workloads
-        List<String> families = List.of(
+        List<String> ec2ComputeFamilies = List.of(
                 "t3.micro","t3.small","t3.medium","t3.large",
                 "m6i.large","m6i.xlarge","m6i.2xlarge","m6i.4xlarge","m6i.8xlarge",
                 "c6i.large","c6i.xlarge","c6i.2xlarge","c6i.4xlarge","c6i.8xlarge",
                 "r6i.large","r6i.xlarge","r6i.2xlarge","r6i.4xlarge"
         );
 
-        // TODO: Java SDK https://docs.aws.amazon.com/ec2/latest/devguide/example_ec2_DescribeInstanceTypes_section.html for Network bandwidth Gbps)
-        // Network bandwidth map (Gbps) — from AWS published specs
-        Map<String,Double> networkGbps = Map.ofEntries(
-                Map.entry("t3.micro",   0.5), Map.entry("t3.small",   0.5),
-                Map.entry("t3.medium",  0.5), Map.entry("t3.large",   0.5),
-                Map.entry("m6i.large",  12.5), Map.entry("m6i.xlarge",  12.5),
-                Map.entry("m6i.2xlarge",12.5), Map.entry("m6i.4xlarge",  25.0),
+        Map<String,Double> networkGbpsPerEc2InstanceMap = Map.ofEntries(
+                Map.entry("t3.micro",   0.5),
+                Map.entry("t3.small",   0.5),
+                Map.entry("t3.medium",  0.5),
+                Map.entry("t3.large",   0.5),
+                Map.entry("m6i.large",  12.5),
+                Map.entry("m6i.xlarge",  12.5),
+                Map.entry("m6i.2xlarge",12.5),
+                Map.entry("m6i.4xlarge",  25.0),
                 Map.entry("m6i.8xlarge",25.0),
-                Map.entry("c6i.large",  12.5), Map.entry("c6i.xlarge",  12.5),
-                Map.entry("c6i.2xlarge",12.5), Map.entry("c6i.4xlarge",  25.0),
+                Map.entry("c6i.large",  12.5),
+                Map.entry("c6i.xlarge",  12.5),
+                Map.entry("c6i.2xlarge",12.5),
+                Map.entry("c6i.4xlarge",  25.0),
                 Map.entry("c6i.8xlarge",25.0),
-                Map.entry("r6i.large",  12.5), Map.entry("r6i.xlarge",  12.5),
-                Map.entry("r6i.2xlarge",12.5), Map.entry("r6i.4xlarge",  25.0)
+                Map.entry("r6i.large",  12.5),
+                Map.entry("r6i.xlarge",  12.5),
+                Map.entry("r6i.2xlarge",12.5),
+                Map.entry("r6i.4xlarge",  25.0)
         );
 
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (String instanceType : families) {
+        List<Map<String, Object>> priceByComputeInstance = new ArrayList<>();
+        for (String instanceType : ec2ComputeFamilies) {
             try {
                 double price  = fetchEc2OnDemandPrice(instanceType);
-                double bwGbps = networkGbps.getOrDefault(instanceType, 1.0);
-                long   bwBytes= (long)(bwGbps * 1_000_000_000 / 8); // bytes/sec
+                double gigaBitsPerSecond = networkGbpsPerEc2InstanceMap.getOrDefault(instanceType, 1.0);
+                long bytesPerSecond= (long)(gigaBitsPerSecond * GIGA_BITS / BITS_PER_BYTE);
 
                 Map<String, Object> entry = new LinkedHashMap<>();
                 entry.put("instanceType", instanceType);
-                entry.put("networkGbps",  bwGbps);
-                entry.put("networkBytesPerSec", bwBytes);
+                entry.put("networkGbps",  gigaBitsPerSecond);
+                entry.put("networkBytesPerSec", bytesPerSecond);
                 entry.put("pricePerHourUsd", price);
-                entry.put("pricePerMonthUsd", Math.round(price * 730 * 100.0) / 100.0);
-                result.add(entry);
+                entry.put("pricePerMonthUsd", Math.round(price * HOURS_PER_MONTH));
+                priceByComputeInstance.add(entry);
             } catch (Exception e) {
                 log.warning("Failed to fetch price for " + instanceType + ": " + e.getMessage());
             }
         }
-        return result;
+        return priceByComputeInstance;
     }
 
     private double fetchEc2OnDemandPrice(String instanceType) {
@@ -90,7 +95,6 @@ public class EC2ComputeCostCalculator extends AWSCloudCalculator implements Clou
                     .getValue().path("priceDimensions").fields().next()
                     .getValue().path("pricePerUnit").path("USD").asDouble(0.0);
         } catch (Exception e) {
-            // Fallback table for offline/test environments
             Map<String,Double> fallback = Map.of(
                     "t3.micro",0.0104, "t3.small",0.0208, "t3.medium",0.0416,
                     "m6i.large",0.096, "m6i.xlarge",0.192, "c6i.large",0.085,

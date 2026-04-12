@@ -16,19 +16,8 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
 
     private static final Logger log = Logger.getLogger(AWSALBCostCalculator.class.getName());
 
-    // TODO Get from AWS
-    /**
-     * AWS SDK, you must use the AWS Price List Query API.
-     * 1. Prerequisites
-     * Service Code: For Elastic Load Balancing, the service code is AmazonElasticLoadBalancing.
-     * API Endpoint: The Price List API is only available in the us-east-1 (N. Virginia) and ap-south-1 regions. You must configure your client to use one of these regions regardless of your target resource's region.
-     * Amazon AWS Documentation
-     * Amazon AWS Documentation
-     *  +3
-     */
     private static final double ALB_FIXED_CHARGE_PER_HOUR = 0.008;
 
-    // TODO Get from AWS
     private static final double LCU_FIXED_CHARGE_PER_HOUR = 0.008; // Because: (1 LCU = 25 new connections/s OR 3000 active connections OR 1 GB/hr processed OR 1000 rule evaluations/s)
 
     @Override

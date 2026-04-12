@@ -10,37 +10,51 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
 
     @Override
     public Map<String, Object> calculateSecurityCosts() {
-        Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> securityCosts = new LinkedHashMap<>();
 
-        // TODO Get from AWS
-        // GuardDuty — per GB of CloudTrail/VPC flow logs analysed
-        result.put("guardDutyPerGbLogs",       fetchSimplePrice("AmazonGuardDuty", "Logs", "Security", 1.00));
+        mapGuardDutyPerGBCloudTrailVPCForLogsAnalysedCosts(securityCosts);
+        mapAmazonInspectorPerEC2Instance(securityCosts);
+        mapAWSWAFPerACLAndRuleAndMillionRequestsCosts(securityCosts);
+        mapMaciePerGBOfS3DataClassifiedCosts(securityCosts);
+        mapCloudWatchLogsIngestionAndStorageCosts(securityCosts);
+        mapAWSAuditManagerPerAssessmentCosts(securityCosts);
+        mapKMSCMKPerMonthAndPerTenThousendAPICallsCosts(securityCosts);
+
+        return securityCosts;
+    }
+
+    private static void mapKMSCMKPerMonthAndPerTenThousendAPICallsCosts(Map<String, Object> securityCosts) {
+        securityCosts.put("kmsCmkPerMonth",            1.00);
+        securityCosts.put("kmsApiCallsPer10k",         0.03);
+        securityCosts.put("kmsNote",                   "Data encryption at rest via KMS. $1/CMK/month + $0.03 per 10,000 API calls.");
+    }
+
+    private void mapAWSAuditManagerPerAssessmentCosts(Map<String, Object> securityCosts) {
+        securityCosts.put("auditManagerPerAssessmentMonth", fetchSimplePrice("AWSAuditManager","Assessment", 6.00));
+    }
+
+    private static void mapCloudWatchLogsIngestionAndStorageCosts(Map<String, Object> securityCosts) {
+        securityCosts.put("cloudwatchLogsIngestionPerGb", 0.50);
+        securityCosts.put("cloudwatchLogsStoragePerGbMonth", 0.03);
+    }
+
+    private void mapMaciePerGBOfS3DataClassifiedCosts(Map<String, Object> securityCosts) {
+        securityCosts.put("maciePerGbClassified",      fetchSimplePrice("AmazonMacie", "Data Classification", 1.00));
+        securityCosts.put("macieFirstGbFreeNote",      "First 1 GB/month free. $1.00/GB thereafter.");
+    }
+
+    private void mapAWSWAFPerACLAndRuleAndMillionRequestsCosts(Map<String, Object> securityCosts) {
+        securityCosts.put("wafWebAclPerMonth",         fetchSimplePrice("awswaf", "WebACL", 5.00));
+        securityCosts.put("wafRulePerMonth",            fetchSimplePrice("awswaf", "Rule", 1.00));
+        securityCosts.put("wafPer1MRequests",           fetchSimplePrice("awswaf", "Request", 0.60));
+    }
+
+    private void mapAmazonInspectorPerEC2Instance(Map<String, Object> result) {
+        result.put("inspectorPerInstanceMonth", fetchSimplePrice("AmazonInspector", "EC2 Instance", 1.178));
+    }
+
+    private void mapGuardDutyPerGBCloudTrailVPCForLogsAnalysedCosts(Map<String, Object> result) {
+        result.put("guardDutyPerGbLogs",       fetchSimplePrice("AmazonGuardDuty", "Logs", 1.00));
         result.put("guardDutyFirstGbFreeNote", "First 500 GB/month free. $1.00/GB thereafter (tiered).");
-
-        // Amazon Inspector — per EC2 instance
-        result.put("inspectorPerInstanceMonth", fetchSimplePrice("AmazonInspector", "EC2 Instance", "Security", 1.178));
-
-        // AWS WAF — per WebACL + per rule + per million requests
-        result.put("wafWebAclPerMonth",         fetchSimplePrice("awswaf", "WebACL", "Security", 5.00));
-        result.put("wafRulePerMonth",            fetchSimplePrice("awswaf", "Rule",   "Security", 1.00));
-        result.put("wafPer1MRequests",           fetchSimplePrice("awswaf", "Request","Security", 0.60));
-
-        // Macie — per GB of S3 data classified
-        result.put("maciePerGbClassified",      fetchSimplePrice("AmazonMacie", "Data Classification", "Security", 1.00));
-        result.put("macieFirstGbFreeNote",      "First 1 GB/month free. $1.00/GB thereafter.");
-
-        // CloudWatch Logs — ingestion + storage
-        result.put("cloudwatchLogsIngestionPerGb", 0.50);
-        result.put("cloudwatchLogsStoragePerGbMonth", 0.03);
-
-        // AWS Audit Manager — per assessment
-        result.put("auditManagerPerAssessmentMonth", fetchSimplePrice("AWSAuditManager","Assessment","Security",6.00));
-
-        // KMS — CMK per month + per 10k API calls
-        result.put("kmsCmkPerMonth",            1.00);
-        result.put("kmsApiCallsPer10k",         0.03);
-        result.put("kmsNote",                   "Data encryption at rest via KMS. $1/CMK/month + $0.03 per 10,000 API calls.");
-
-        return result;
     }
 }

@@ -27,7 +27,6 @@ public abstract class AWSCloudCalculator extends CloudCalculator {
     protected double fetchSimplePrice(
             String serviceCode,
             String productFamily,
-            String group,
             double fallback
     ) {
         try {

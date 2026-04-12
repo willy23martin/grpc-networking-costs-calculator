@@ -3,7 +3,6 @@ package com.calculator.application.services.calculators.cost.cloud.database.aws;
 import com.calculator.application.services.calculators.cost.cloud.aws.AWSCloudCalculator;
 import com.calculator.application.services.calculators.cost.cloud.database.DatabaseCostCalculator;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.pricing.model.Filter;
 import software.amazon.awssdk.services.pricing.model.FilterType;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
@@ -19,21 +18,41 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
 
     @Override
     public Map<String, Object> calculateDatabaseBackupPricing() {
-        Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> databaseBackupCosts = new LinkedHashMap<>();
 
-        // TODO Get from AWS
-        // S3 Standard storage for backups
-        result.put("s3StandardPerGbMonth",   fetchSimplePrice("AmazonS3",  "S3 Standard", "Storage", 0.023));
-        // RDS Snapshot storage
-        result.put("rdsSnapshotPerGbMonth",  fetchSimplePrice("AmazonRDS", "RDS Snapshot", "Database Storage", 0.095));
-        // RDS Multi-AZ surcharge (approx 2× Single-AZ)
+        mapS3StandardStorageForBackupsCosts(databaseBackupCosts);
+        mapRDSSnapshotStorageCosts(databaseBackupCosts);
+        mapRDSMultiAZSurchargeCosts(databaseBackupCosts);
+        mapAuroraReplicaPerReplicaPerHourCosts(databaseBackupCosts);
+        mapDynamoDBGlobalTablesReplicatedWriteCosts(databaseBackupCosts);
+
+        return databaseBackupCosts;
+    }
+
+    private void mapS3StandardStorageForBackupsCosts(Map<String, Object> result) {
+        result.put("s3StandardPerGbMonth",   fetchSimplePrice("AmazonS3",  "S3 Standard", 0.023));
+        log.info("S3 Standard Storage For Backups Costs have been mapped");
+    }
+
+    private void mapRDSSnapshotStorageCosts(Map<String, Object> result) {
+        result.put("rdsSnapshotPerGbMonth",  fetchSimplePrice("AmazonRDS", "RDS Snapshot", 0.095));
+        log.info("RDS Snapshot Storage Costs have been mapped");
+    }
+
+    private static void mapRDSMultiAZSurchargeCosts(Map<String, Object> result) {
         result.put("rdsMultiAzSurchargeNote","Multi-AZ roughly doubles the RDS instance cost. Select instance above to compute.");
-        // Aurora replica — per replica per hour (us-east-1, db.r6g.large as reference)
+        log.info("RDS MultiAZ Surcharge Costs have been mapped.");
+    }
+
+    private void mapAuroraReplicaPerReplicaPerHourCosts(Map<String, Object> result) {
         result.put("auroraReplicaPerHour",   fetchAuroraReplicaPrice());
-        // DynamoDB Global Tables — replicated write cost $0.000975/WRU additional per region
+        log.info("Aurora Replica Per Hour Costs have been mapped.");
+    }
+
+    private static void mapDynamoDBGlobalTablesReplicatedWriteCosts(Map<String, Object> result) {
         result.put("dynamoGlobalTablePerWruUsd", 0.000975);
         result.put("dynamoGlobalTableNote",  "Add ~$0.000975/WRU per extra replication region beyond the primary.");
-        return result;
+        log.info("Dynamo DB Global Tables Replicated Write Costs have been mapped.");
     }
 
     private double fetchAuroraReplicaPrice() {
