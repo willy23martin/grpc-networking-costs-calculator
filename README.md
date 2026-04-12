@@ -9,6 +9,7 @@ This service calculates the TCO costs for a gRPC-based Microservices MACH Archit
 
 ![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
+
 ## Protocol Buffer files:
 You can find the **Protocol Buffers files** in the [protos](src/main/resources/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
 in the context of an **E-Commerce microservice**:
