@@ -24,27 +24,12 @@ jobs:
 
       - name: Make protoc executable
         run: |
-            find ~/.m2 -name "protoc-*-linux-x86_64" \
+          find ~/.m2 -name "protoc-*-linux-x86_64" \
             ! -name "*.jar" ! -name "*.sha1" ! -name "*.md5" \
             | xargs chmod +x 2>/dev/null || true
 
       - name: Build with Maven
-        run: |
-            mvn dependency:get -Dartifact=com.google.protobuf:protoc:4.29.4:exe:${{ runner.os == 'Windows' && 'windows-x86_64' || (runner.arch == 'ARM64' && 'linux-aarch_64' || 'linux-x86_64') }}
-            find ~/.m2/repository/com/google/protobuf/protoc -type f -name "protoc-*" -exec chmod +x {} + || true
-            mvn -B test
-
-      - name: Generate JaCoCo Badge
-        uses: cicirello/jacoco-badge-generator@v2
-        with:
-          generate-branches-badge: true
-
-      - name: Upload JaCoCo report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-report
-          path: target/site/jacoco/
+        run: mvn test
 
       - name: Show test failures
         if: failure()
