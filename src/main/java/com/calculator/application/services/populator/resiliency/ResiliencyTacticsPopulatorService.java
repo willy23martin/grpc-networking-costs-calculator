@@ -1,5 +1,6 @@
 package com.calculator.application.services.populator.resiliency;
 
+import com.calculator.application.services.calculators.rps.resiliency.RPSResiliencyCostCalculator;
 import com.calculator.application.services.mapper.tactics.TacticsMapperService;
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
@@ -18,6 +19,9 @@ public class ResiliencyTacticsPopulatorService {
 
     @Autowired
     TacticsMapperService tacticsMapperService;
+
+    @Autowired
+    RPSResiliencyCostCalculator rpsResiliencyCostCalculator;
 
     public void populate(
             ArchitecturalDecisionsDTO architecturalDecisionsDTO,
@@ -48,8 +52,8 @@ public class ResiliencyTacticsPopulatorService {
 
     private void populateRetryPattern(RetryPattern retryPattern, long baseRps,
                                      List<Map<String, String>> rpsTactics) {
-        long extra = baseRps * retryPattern.tacticRetryTimes();
-        rpsTactics.add(tacticsMapperService.tacticEntry("Retry", retryPattern.tacticRetryTimes() + " max retries",
+        long extra = rpsResiliencyCostCalculator.calculateEffectiveRequestsPerSecond(baseRps, retryPattern);
+        rpsTactics.add(tacticsMapperService.tacticEntry("Retry", retryPattern.tacticRetryTimes() + "% max retries",
                 RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE.getMessage(),
                 "+" + String.format(DISPLAY_LOCALE, "%,d", extra) + " req/s"));
     }
