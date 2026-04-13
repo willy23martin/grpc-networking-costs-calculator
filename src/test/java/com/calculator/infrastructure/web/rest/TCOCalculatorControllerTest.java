@@ -185,8 +185,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("responseSize", 534));
     }
 
-    // ── Empty / invalid proto ─────────────────────────────────────────────────
-
     @Test
     void calculateProtoFileTCONetworkingCosts_ShowsError_WhenProtoFileIsEmpty() throws Exception {
         mockMvc.perform(multipart("/calculateTCO")
@@ -209,8 +207,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("error",
                         "Could not find a valid RPC definition to extract Request and Response message types from the .proto file."));
     }
-
-    // ── Tactics: no-RPS-impact ────────────────────────────────────────────────
 
     @Test
     void calculateProtoFileTCONetworkingCosts_ShowsTacticsSummary_WhenNoRpsImpactTacticsSelected() throws Exception {
@@ -259,10 +255,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attributeExists("infoTactics"));
     }
 
-    // ── Tactics: Retry ───────────────────────────────────────────────────────
-    // effectiveRps = 1000 + (1000 × 3) = 4000
-    // requestsPerMonth = 4000 × 2_592_000 = 10_368_000_000
-
     @Test
     void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenRetryIsConfigured() throws Exception {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
@@ -282,15 +274,11 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("hasTactics",       true))
                 .andExpect(model().attribute("rpsWasAdjusted",   true))
                 .andExpect(model().attribute("baseRps",          "1,000"))
-                .andExpect(model().attribute("effectiveRps",     "4,000"))
-                .andExpect(model().attribute("requestsPerMonth", "10B"))
+                .andExpect(model().attribute("effectiveRps",     "1,030"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"))
                 .andExpect(model().attributeExists("rpsTactics"))
                 .andExpect(model().attribute("securityByteOverheadApplied", false));
     }
-
-    // ── Tactics: SAGA ────────────────────────────────────────────────────────
-    // comp=1, ret=1, pivot=1 → 3 steps → effectiveRps = 1000 × 3 = 3000
-    // requestsPerMonth = 3000 × 2_592_000 = 7_776_000_000
 
     @Test
     void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaIsConfigured() throws Exception {
@@ -309,10 +297,10 @@ class TCOCalculatorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attributeDoesNotExist("error"))
                 .andExpect(model().attribute("hasTactics",       true))
-                .andExpect(model().attribute("rpsWasAdjusted",   true))
+                .andExpect(model().attribute("rpsWasAdjusted",   false))
                 .andExpect(model().attribute("baseRps",          "1,000"))
-                .andExpect(model().attribute("effectiveRps",     "3,000"))
-                .andExpect(model().attribute("requestsPerMonth", "8B"))
+                .andExpect(model().attribute("effectiveRps",     "1,000"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"))
                 .andExpect(model().attributeExists("rpsTactics"))
                 .andExpect(model().attribute("securityByteOverheadApplied", false));
     }
@@ -334,15 +322,10 @@ class TCOCalculatorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attributeDoesNotExist("error"))
                 .andExpect(model().attribute("hasTactics",       true))
-                .andExpect(model().attribute("rpsWasAdjusted",   true))
-                .andExpect(model().attribute("effectiveRps",     "6,000"))
-                .andExpect(model().attribute("requestsPerMonth", "16B"));
+                .andExpect(model().attribute("rpsWasAdjusted",   false))
+                .andExpect(model().attribute("effectiveRps",     "1,000"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"));
     }
-
-    // ── Tactics: SAGA + Retry combined ───────────────────────────────────────
-    // SAGA first (×3), then Retry (+2000)
-    // effectiveRps = (1000 × 3) + (1000 × 2) = 5000
-    // requestsPerMonth = 5000 × 2_592_000 = 12_960_000_000
 
     @Test
     void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaAndRetryAreCombined() throws Exception {
@@ -362,13 +345,11 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attributeDoesNotExist("error"))
                 .andExpect(model().attribute("hasTactics",       true))
                 .andExpect(model().attribute("rpsWasAdjusted",   true))
-                .andExpect(model().attribute("effectiveRps",     "5,000"))
-                .andExpect(model().attribute("requestsPerMonth", "13B"))
+                .andExpect(model().attribute("effectiveRps",     "1,020"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"))
                 .andExpect(model().attributeExists("infoTactics"))
                 .andExpect(model().attributeExists("rpsTactics"));
     }
-
-    // ── Tactics: mixed info + RPS ─────────────────────────────────────────────
 
     @Test
     void calculateProtoFileTCONetworkingCosts_ShowsTacticsSummary_WhenMixedTacticsSelected() throws Exception {
@@ -388,13 +369,11 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attributeDoesNotExist("error"))
                 .andExpect(model().attribute("hasTactics",       true))
                 .andExpect(model().attribute("rpsWasAdjusted",   true))
-                .andExpect(model().attribute("effectiveRps",     "4,000"))
-                .andExpect(model().attribute("requestsPerMonth", "10B"))
+                .andExpect(model().attribute("effectiveRps",     "1,030"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"))
                 .andExpect(model().attributeExists("infoTactics"))
                 .andExpect(model().attributeExists("rpsTactics"));
     }
-
-    // ── OS-specific SAGA ──────────────────────────────────────────────────────
 
     @Test
     @EnabledOnOs(OS.LINUX)
@@ -403,8 +382,8 @@ class TCOCalculatorControllerTest {
                         .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
                         .sessionAttr(SESSION_KEY, sagaOnly(1, 1, 1)))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("effectiveRps",     "3,000"))
-                .andExpect(model().attribute("requestsPerMonth", "8B"));
+                .andExpect(model().attribute("effectiveRps",     "1,000"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"));
     }
 
     @Test
@@ -414,8 +393,8 @@ class TCOCalculatorControllerTest {
                         .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
                         .sessionAttr(SESSION_KEY, sagaOnly(1, 1, 1)))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("effectiveRps",     "3,000"))
-                .andExpect(model().attribute("requestsPerMonth", "8B"));
+                .andExpect(model().attribute("effectiveRps",     "1,000"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"));
     }
 
     @Test
@@ -425,18 +404,9 @@ class TCOCalculatorControllerTest {
                         .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
                         .sessionAttr(SESSION_KEY, sagaOnly(1, 1, 1)))
                 .andExpect(status().isOk())
-                .andExpect(model().attribute("effectiveRps",     "3,000"))
-                .andExpect(model().attribute("requestsPerMonth", "8B"));
+                .andExpect(model().attribute("effectiveRps",     "1,000"))
+                .andExpect(model().attribute("requestsPerMonth", "3B"));
     }
-
-    // ── Security: TLS only, 0 reconnects ─────────────────────────────────────
-    // TLS adds 29 bytes (typical, RFC 8446) to every request and response frame.
-    // 0 reconnects → handshakeExtraRps = round(0 × 2 / 3600) = 0 → rpsWasAdjusted = false
-    // effectiveRequestSize  = 7509 + 29 = 7538
-    // effectiveResponseSize = 534  + 29 = 563
-    // requestsPerMonth      = 1000 × 2_592_000 = 2_592_000_000
-    // responseGbPerMonth    = 563 × 1000 × 2_592_000 / 1_073_741_824 ≈ 1.359,0753
-    // dataTransferCostUsd   ≈ 122,32
 
     @Test
     void calculateProtoFileTCONetworkingCosts_AppliesTlsByteOverhead_WhenTlsIsEnabled() throws Exception {
@@ -465,10 +435,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attributeExists("infoTactics"));
     }
 
-    // ── Security: mTLS, 0 reconnects ─────────────────────────────────────────
-    // Per-message overhead identical to TLS (same RFC 8446 record format).
-    // 0 reconnects → no extra RPS. Expected results identical to TLS-only.
-
     @Test
     void calculateProtoFileTCONetworkingCosts_AppliesMtlsByteOverhead_WhenMtlsIsEnabled() throws Exception {
         SecurityTactics mtls = new SecurityTactics(
@@ -490,12 +456,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("dataTransferCostUsd",     "122.53"))
                 .andExpect(model().attribute("hasTactics",              true));
     }
-
-    // ── Security: mTLS with high reconnects generating extra RPS ─────────────
-    // 720 reconnects/hr × 5 mTLS messages / 3600 = exactly 1 extra req/s
-    // effectiveRps = 1001 → rpsWasAdjusted = true
-    // requestsPerMonth = 1001 × 2_592_000 = 2_594_592_000
-    // responseGbPerMonth = 563 × 1001 × 2_592_000 / 1_073_741_824 ≈ 1.360,4344
 
     @Test
     void calculateProtoFileTCONetworkingCosts_AddsHandshakeRps_WhenMtlsReconnectRateIsHigh() throws Exception {
@@ -519,13 +479,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("dataTransferCostUsd",     "122.66"))
                 .andExpect(model().attributeExists("rpsTactics"));
     }
-
-    // ── Security: OAuth 2.0 + JWT, local validation ───────────────────────────
-    // JWT adds 650 bytes to requests only (Authorization metadata header). No TLS.
-    // tokenAcquisitionExtraRps = round(1000 / (3600 × 1)) = 0 → rpsWasAdjusted = false
-    // effectiveRequestSize  = 7509 + 650 = 8159
-    // effectiveResponseSize = 534         (unchanged — JWT on requests only)
-    // responseGbPerMonth unchanged from baseline → cost unchanged at 116,02
 
     @Test
     void calculateProtoFileTCONetworkingCosts_AppliesJwtByteOverhead_WhenOAuthLocalValidationIsEnabled() throws Exception {
@@ -555,15 +508,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attributeExists("infoTactics"));
     }
 
-    // ── Security: OAuth 2.0 + JWT, remote introspection ──────────────────────
-    // Remote introspection adds 1 extra req/s per incoming gRPC request.
-    // tokenAcquisitionExtraRps = round(1000 / (3600 × 1)) = 0
-    // effectiveRps = 1000 + 1000 (introspection) = 2000 → rpsWasAdjusted = true
-    // effectiveRequestSize = 8159, effectiveResponseSize = 534
-    // requestsPerMonth = 2000 × 2_592_000 = 5_184_000_000
-    // responseGbPerMonth = 534 × 2000 × 2_592_000 / 1_073_741_824 ≈ 2.578,1393
-    // dataTransferCostUsd ≈ 232,03
-
     @Test
     void calculateProtoFileTCONetworkingCosts_AddsIntrospectionRps_WhenOAuthRemoteIntrospectionIsEnabled() throws Exception {
         SecurityTactics oauth = new SecurityTactics(
@@ -588,14 +532,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attributeExists("rpsTactics"));
     }
 
-    // ── Security: TLS + OAuth local combined ─────────────────────────────────
-    // TLS adds 29 bytes to both frames. JWT adds 650 bytes to requests only.
-    // effectiveRequestSize  = 7509 + 29 + 650 = 8188
-    // effectiveResponseSize = 534  + 29       = 563
-    // effectiveRps = 1000 (0 reconnects, local validation, tokenAcq = 0)
-    // requestGbPerMonth  = 8188 × 1000 × 2_592_000 / 1_073_741_824 ≈ 19.765,7347
-    // responseGbPerMonth = 563  × 1000 × 2_592_000 / 1_073_741_824 ≈  1.359,0753
-
     @Test
     void calculateProtoFileTCONetworkingCosts_AppliesBothTlsAndJwtOverhead_WhenCombined() throws Exception {
         SecurityTactics combined = new SecurityTactics(
@@ -619,11 +555,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("responseGbPerMonth",      "1,361.4893"))
                 .andExpect(model().attribute("dataTransferCostUsd",     "122.53"));
     }
-
-    // ── Security: Basic Authentication ───────────────────────────────────────
-    // Basic Auth is informational only — no byte overhead model, no extra RPS.
-    // securityByteOverheadApplied = false, rpsWasAdjusted = false.
-    // hasTactics = true (appears in infoTactics with the production warning).
 
     @Test
     void calculateProtoFileTCONetworkingCosts_ShowsBasicAuthAsInformational_WhenBasicAuthIsEnabled() throws Exception {

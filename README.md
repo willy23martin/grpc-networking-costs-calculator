@@ -9,6 +9,7 @@ This service calculates the TCO costs for a gRPC-based Microservices MACH Archit
 
 ![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
+
 ## Protocol Buffer files:
 You can find the **Protocol Buffers files** in the [protos](src/main/resources/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
 in the context of an **E-Commerce microservice**:
@@ -16,6 +17,10 @@ in the context of an **E-Commerce microservice**:
 2. **BUC2**: **gRPC Server Streaming pattern**: The business needs to retrieve all possible orders that match a search criterion (term or filter).
 3. **BUC3**: **gRPC Client Streaming pattern**: Update a set of orders.
 4. **BUC4**: **gRPC Bi-Directional Streaming pattern**: Send  a continuous set of orders and process them into combined shipments based on the delivery date.
+
+## Application Profiles:
+The service can be parametrized before building it to use a Cloud Service Provider to calculate costs.
+**Application Profiles**: In order to provide Networking calculation costs and Cloud Costs the user should specify one of the three [ApplicationProfile.java](src/main/java/com/calculator/application/configuration/ApplicationProfile.java) for it before deploying the service: **aws (for Amazon Web Service)**, **azure (for Microsoft Azure)** or **gcp (for Google Cloud Platform)**.
 
 ## Constraints:
 * **protoc dependency version supported**: **4.29.4** - used to load protocol buffer files and process them following the **protoc syntax v3**. Check [pom.xml](pom.xml)
@@ -33,6 +38,7 @@ in the context of an **E-Commerce microservice**:
 * **Security tactics**: TLS Certificate and OAuth2.0 + JWT Token. 
 * **Software Design Patterns that have been implemented**: **Composed Method** and **Builder**. Check for `// DESIGN PATTERN` comments.
 * **NOTE**:Some tests might be skipped as those are operating system dependent.
+* **Application Profiles**: Only **aws** is enabled.
 
 ## How to run it?
 1. Execute ``mvn clean install -e`` from your terminal in order to generate the gRPCTCONetworkingCostCalculator **jar file**.
@@ -64,7 +70,7 @@ in the context of an **E-Commerce microservice**:
 ![Toolkit-Phase3CalculateBaseCostsBody.png](src/main/resources/images/Toolkit-Phase3CalculateBaseCostsBody.png)
 
 #### Define costs optimization strategies (FinOps practices)}
-Pending
+![Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png](src/main/resources/images/Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png)
 
 #### Modify Configuration of Cloud Services based on FinOps practices
 Pending
@@ -95,6 +101,16 @@ Pending
 16. [Mach Architecture: Microservices, API-first, Cloud-native, and Headless principles](https://a.co/d/0aqCTQKt).
 17. [Cloud FinOps, 2nd Edition: Collaborative, Real-Time Cloud Value Decision Making](https://a.co/d/0f8kkjcU).
 18. [Migrating to AWS: A Manager's Guide: How to Foster Agility, Reduce Costs, and Bring a Competitive Edge to Your Business](https://a.co/d/0bCjXIW5).
+19. [Building Microservices, 2nd Edition](https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/).
+20. [Monolith to Microservices](https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/).
+21. [Communication Patterns](https://www.oreilly.com/library/view/communication-patterns/9781098140533/).
+22. [UML for Java Programmers](https://www.oreilly.com/library/view/uml-for-javatm/0131428489/).
+23. [AWS FinOps Simplified](https://www.oreilly.com/library/view/aws-finops-simplified/9781803247236/).
+24. [Engineering Resilient Systems on AWS](https://www.oreilly.com/library/view/engineering-resilient-systems/9781098162412/).
+25. [Building Resilient Architectures on AWS](https://www.oreilly.com/library/view/building-resilient-architectures/9781835887103/).
+26. [System Design on AWS](https://www.oreilly.com/library/view/system-design-on/9781098146887/).
+27. [Efficient Cloud FinOps](https://www.oreilly.com/library/view/efficient-cloud-finops/9781805122579/).
+28. [AWS Certified Solutions Architect](https://www.oreilly.com/library/view/aws-certified-solutions/9781119982623/).
 
 ## Credits
 [CREDITS.md](CREDITS.md)

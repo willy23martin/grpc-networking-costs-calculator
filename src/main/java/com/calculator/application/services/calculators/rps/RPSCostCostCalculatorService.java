@@ -29,10 +29,11 @@ public class RPSCostCostCalculatorService {
     }
 
     private long calculateForResiliencyPatterns(ArchitecturalDecisionsDTO architecturalDecisionsDTO, long effectiveRequestsPerSecond) {
+        long addition = 0L;
         if (resiliencyPatternsHaveBeenConfigured(architecturalDecisionsDTO)) {
-            effectiveRequestsPerSecond += rpsResiliencyCostCalculator.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO.requestsPerSecond(), architecturalDecisionsDTO.retryTactic());
+            addition = rpsResiliencyCostCalculator.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO.requestsPerSecond(), architecturalDecisionsDTO.retryTactic());
         }
-        return effectiveRequestsPerSecond;
+        return effectiveRequestsPerSecond + addition;
     }
 
     private long calculateForMicroservicesPatterns(ArchitecturalDecisionsDTO architecturalDecisionsDTO, long effectiveRequestsPerSecond) {

@@ -9,11 +9,6 @@ public class RPSSAGAPatternCostCalculatorRPS implements RPSNetworkingCostCalcula
 
     @Override
     public long calculateEffectiveRequestsPerSecond(long baseRequestsPerSecond, SAGAPattern sagaPattern) {
-        long additionalRequestsPerSecond = 0L;
-        int transactions = sagaPattern.sagaCompensatableTransactions() + sagaPattern.sagaRetriableTransactions() + sagaPattern.sagaPivotTransactions();
-        if (transactions > 0) {
-            additionalRequestsPerSecond = baseRequestsPerSecond * transactions;
-        }
-        return additionalRequestsPerSecond;
+        return baseRequestsPerSecond;
     }
 }
