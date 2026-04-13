@@ -49,12 +49,12 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
         securityCosts.put("wafPer1MRequests",           fetchSimplePrice("awswaf", "Request", 0.60));
     }
 
-    private void mapAmazonInspectorPerEC2Instance(Map<String, Object> result) {
-        result.put("inspectorPerInstanceMonth", fetchSimplePrice("AmazonInspector", "EC2 Instance", 1.178));
+    private void mapAmazonInspectorPerEC2Instance(Map<String, Object> securityCosts) {
+        securityCosts.put("inspectorPerInstanceMonth", fetchSimplePrice("AmazonInspector", "EC2 Instance", 1.178));
     }
 
-    private void mapGuardDutyPerGBCloudTrailVPCForLogsAnalysedCosts(Map<String, Object> result) {
-        result.put("guardDutyPerGbLogs",       fetchSimplePrice("AmazonGuardDuty", "Logs", 1.00));
-        result.put("guardDutyFirstGbFreeNote", "First 500 GB/month free. $1.00/GB thereafter (tiered).");
+    private void mapGuardDutyPerGBCloudTrailVPCForLogsAnalysedCosts(Map<String, Object> securityCosts) {
+        securityCosts.put("guardDutyPerGbLogs",       fetchSimplePrice("AmazonGuardDuty", "Logs", 1.00));
+        securityCosts.put("guardDutyFirstGbFreeNote", "First 500 GB/month free. $1.00/GB thereafter (tiered).");
     }
 }

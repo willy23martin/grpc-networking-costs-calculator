@@ -29,29 +29,29 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
         return databaseBackupCosts;
     }
 
-    private void mapS3StandardStorageForBackupsCosts(Map<String, Object> result) {
-        result.put("s3StandardPerGbMonth",   fetchSimplePrice("AmazonS3",  "S3 Standard", 0.023));
+    private void mapS3StandardStorageForBackupsCosts(Map<String, Object> databaseBackupCosts) {
+        databaseBackupCosts.put("s3StandardPerGbMonth",   fetchSimplePrice("AmazonS3",  "S3 Standard", 0.023));
         log.info("S3 Standard Storage For Backups Costs have been mapped");
     }
 
-    private void mapRDSSnapshotStorageCosts(Map<String, Object> result) {
-        result.put("rdsSnapshotPerGbMonth",  fetchSimplePrice("AmazonRDS", "RDS Snapshot", 0.095));
+    private void mapRDSSnapshotStorageCosts(Map<String, Object> databaseBackupCosts) {
+        databaseBackupCosts.put("rdsSnapshotPerGbMonth",  fetchSimplePrice("AmazonRDS", "RDS Snapshot", 0.095));
         log.info("RDS Snapshot Storage Costs have been mapped");
     }
 
-    private static void mapRDSMultiAZSurchargeCosts(Map<String, Object> result) {
-        result.put("rdsMultiAzSurchargeNote","Multi-AZ roughly doubles the RDS instance cost. Select instance above to compute.");
+    private static void mapRDSMultiAZSurchargeCosts(Map<String, Object> databaseBackupCosts) {
+        databaseBackupCosts.put("rdsMultiAzSurchargeNote","Multi-AZ roughly doubles the RDS instance cost. Select instance above to compute.");
         log.info("RDS MultiAZ Surcharge Costs have been mapped.");
     }
 
-    private void mapAuroraReplicaPerReplicaPerHourCosts(Map<String, Object> result) {
-        result.put("auroraReplicaPerHour",   fetchAuroraReplicaPrice());
+    private void mapAuroraReplicaPerReplicaPerHourCosts(Map<String, Object> databaseBackupCosts) {
+        databaseBackupCosts.put("auroraReplicaPerHour",   fetchAuroraReplicaPrice());
         log.info("Aurora Replica Per Hour Costs have been mapped.");
     }
 
-    private static void mapDynamoDBGlobalTablesReplicatedWriteCosts(Map<String, Object> result) {
-        result.put("dynamoGlobalTablePerWruUsd", 0.000975);
-        result.put("dynamoGlobalTableNote",  "Add ~$0.000975/WRU per extra replication region beyond the primary.");
+    private static void mapDynamoDBGlobalTablesReplicatedWriteCosts(Map<String, Object> databaseBackupCosts) {
+        databaseBackupCosts.put("dynamoGlobalTablePerWruUsd", 0.000975);
+        databaseBackupCosts.put("dynamoGlobalTableNote",  "Add ~$0.000975/WRU per extra replication region beyond the primary.");
         log.info("Dynamo DB Global Tables Replicated Write Costs have been mapped.");
     }
 

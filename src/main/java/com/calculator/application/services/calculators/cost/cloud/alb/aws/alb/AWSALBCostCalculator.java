@@ -23,7 +23,7 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
     @Override
     public Map<String, Object> calculateALBCosts() {
 
-        Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> albCostMap = new LinkedHashMap<>();
         try {
 
             GetProductsRequest req = GetProductsRequest.builder()
@@ -44,20 +44,20 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
                 if (usageType.contains("LoadBalancerUsage") && fixedPerHour == 0) fixedPerHour = price;
                 if (usageType.contains("LCUUsage") && lcuPerHour == 0) lcuPerHour = price;
             }
-            result.put("fixedPerHourUsd",   fixedPerHour > 0 ? fixedPerHour : ALB_FIXED_CHARGE_PER_HOUR);
-            result.put("lcuPerHourUsd",     lcuPerHour   > 0 ? lcuPerHour   : LCU_FIXED_CHARGE_PER_HOUR);
-            result.put("fixedPerMonthUsd",  Math.round((fixedPerHour > 0 ? fixedPerHour : ALB_FIXED_CHARGE_PER_HOUR) * 730 * 100) / 100.0);
-            result.put("lcuPerMonthBase",   Math.round((lcuPerHour   > 0 ? lcuPerHour   : LCU_FIXED_CHARGE_PER_HOUR) * 730 * 100) / 100.0);
-            result.put("source", "AWS Pricing API");
+            albCostMap.put("fixedPerHourUsd",   fixedPerHour > 0 ? fixedPerHour : ALB_FIXED_CHARGE_PER_HOUR);
+            albCostMap.put("lcuPerHourUsd",     lcuPerHour   > 0 ? lcuPerHour   : LCU_FIXED_CHARGE_PER_HOUR);
+            albCostMap.put("fixedPerMonthUsd",  Math.round((fixedPerHour > 0 ? fixedPerHour : ALB_FIXED_CHARGE_PER_HOUR) * 730 * 100) / 100.0);
+            albCostMap.put("lcuPerMonthBase",   Math.round((lcuPerHour   > 0 ? lcuPerHour   : LCU_FIXED_CHARGE_PER_HOUR) * 730 * 100) / 100.0);
+            albCostMap.put("source", "AWS Pricing API");
         } catch (Exception e) {
             log.warning("ALB pricing fetch failed: " + e.getMessage());
-            result.put("fixedPerHourUsd",  ALB_FIXED_CHARGE_PER_HOUR);
-            result.put("lcuPerHourUsd",    LCU_FIXED_CHARGE_PER_HOUR);
-            result.put("fixedPerMonthUsd", 5.84);
-            result.put("lcuPerMonthBase",  5.84);
-            result.put("source", "fallback");
+            albCostMap.put("fixedPerHourUsd",  ALB_FIXED_CHARGE_PER_HOUR);
+            albCostMap.put("lcuPerHourUsd",    LCU_FIXED_CHARGE_PER_HOUR);
+            albCostMap.put("fixedPerMonthUsd", 5.84);
+            albCostMap.put("lcuPerMonthBase",  5.84);
+            albCostMap.put("source", "fallback");
         }
-        return result;
+        return albCostMap;
     }
 
 }

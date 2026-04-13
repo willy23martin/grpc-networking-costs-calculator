@@ -22,24 +22,24 @@ public class ElastiCacheCostCalculator extends AWSCloudCalculator implements Cac
         return cachingCosts;
     }
 
-    private static void mapBackupStorageForRedisSnapshots(Map<String, Object> result) {
-        result.put("snapshotStoragePerGbMonth", 0.085);
-        result.put("note","ElastiCache on-demand prices shown. Reserved Nodes offer up to 55% savings (1yr) or 70% (3yr) for committed workloads.");
+    private static void mapBackupStorageForRedisSnapshots(Map<String, Object> cachingCosts) {
+        cachingCosts.put("snapshotStoragePerGbMonth", 0.085);
+        cachingCosts.put("note","ElastiCache on-demand prices shown. Reserved Nodes offer up to 55% savings (1yr) or 70% (3yr) for committed workloads.");
     }
 
-    private void mapMemcached(Map<String, Object> result, String memcachedR6gLargePerHour, String memcached, String memcachedR6gXlargePerHour) {
-        result.put(memcachedR6gLargePerHour, fetchElastiCachePrice("cache.r6g.large", memcached));
-        result.put(memcachedR6gXlargePerHour, fetchElastiCachePrice("cache.r6g.xlarge", memcached));
+    private void mapMemcached(Map<String, Object> cachingCosts, String memcachedR6gLargePerHour, String memcached, String memcachedR6gXlargePerHour) {
+        cachingCosts.put(memcachedR6gLargePerHour, fetchElastiCachePrice("cache.r6g.large", memcached));
+        cachingCosts.put(memcachedR6gXlargePerHour, fetchElastiCachePrice("cache.r6g.xlarge", memcached));
     }
 
-    private void mapCacheRG6Large(Map<String, Object> result) {
-        mapMemcached(result, "redisR6gLargePerHour", "redis", "redisR6gXlargePerHour");
-        result.put("redisR6g2xlargePerHour",     fetchElastiCachePrice("cache.r6g.2xlarge", "redis"));
+    private void mapCacheRG6Large(Map<String, Object> cachingCosts) {
+        mapMemcached(cachingCosts, "redisR6gLargePerHour", "redis", "redisR6gXlargePerHour");
+        cachingCosts.put("redisR6g2xlargePerHour",     fetchElastiCachePrice("cache.r6g.2xlarge", "redis"));
     }
 
     private double fetchElastiCachePrice(String nodeType, String engine) {
         try {
-            GetProductsRequest req = GetProductsRequest.builder()
+            GetProductsRequest productsRequest = GetProductsRequest.builder()
                     .serviceCode("AmazonElastiCache")
                     .filters(
                             Filter.builder().type(FilterType.TERM_MATCH).field("location").value(AWS_LOCATION).build(),
@@ -47,15 +47,15 @@ public class ElastiCacheCostCalculator extends AWSCloudCalculator implements Cac
                             Filter.builder().type(FilterType.TERM_MATCH).field("instanceType").value(nodeType).build()
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
-            GetProductsResponse resp = pricing.getProducts(req);
+            GetProductsResponse resp = pricing.getProducts(productsRequest);
             if (resp.priceList().isEmpty()) return 0.0;
             JsonNode root = mapper.readTree(resp.priceList().get(0));
             return root.path("terms").path("OnDemand").fields().next()
                     .getValue().path("priceDimensions").fields().next()
                     .getValue().path("pricePerUnit").path("USD").asDouble(0.0);
         } catch (Exception e) {
-            Map<String,Double> fb = Map.of("cache.r6g.large",0.166,"cache.r6g.xlarge",0.332,"cache.r6g.2xlarge",0.665);
-            return fb.getOrDefault(nodeType, 0.20);
+            Map<String,Double> fallBackCosts = Map.of("cache.r6g.large",0.166,"cache.r6g.xlarge",0.332,"cache.r6g.2xlarge",0.665);
+            return fallBackCosts.getOrDefault(nodeType, 0.20);
         }
     }
 }
