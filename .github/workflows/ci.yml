@@ -23,10 +23,7 @@ jobs:
         run: mvn dependency:resolve
 
       - name: Make protoc executable
-        run: |
-          find ~/.m2 -name "protoc-*-linux-x86_64" \
-            ! -name "*.jar" ! -name "*.sha1" ! -name "*.md5" \
-            | xargs chmod +x 2>/dev/null || true
+        run: find ~/.m2/repository/com/google/protobuf/protoc -type f -name "protoc-*" -exec chmod +x {} +
 
       - name: Build with Maven
         run: mvn -B test

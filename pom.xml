@@ -77,13 +77,6 @@
             <artifactId>protobuf-java</artifactId>
             <version>4.29.4</version>
         </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protoc</artifactId>
-            <version>4.29.4</version>
-            <classifier>${os.detected.classifier}</classifier>
-            <type>exe</type>
-        </dependency>
         <!-- ObjectMapper bean-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -174,6 +167,23 @@
                     <compilerArgs>
                         <arg>-parameters</arg>
                     </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:4.29.4:exe:${os.detected.classifier}</protocArtifact>
                 </configuration>
             </plugin>
             <plugin>
