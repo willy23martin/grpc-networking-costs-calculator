@@ -29,7 +29,10 @@ jobs:
             | xargs chmod +x 2>/dev/null || true
 
       - name: Build with Maven
-        run: mvn test
+        run: |
+            mvn dependency:get -Dartifact=com.google.protobuf:protoc:4.29.4:exe:${{ runner.os == 'Windows' && 'windows-x86_64' || (runner.arch == 'ARM64' && 'linux-aarch_64' || 'linux-x86_64') }}
+            find ~/.m2/repository/com/google/protobuf/protoc -type f -name "protoc-*" -exec chmod +x {} + || true
+            mvn -B test
 
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
