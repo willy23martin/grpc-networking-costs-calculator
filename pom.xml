@@ -205,6 +205,14 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:4.29.4:exe:${os.detected.classifier}</protocArtifact>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
