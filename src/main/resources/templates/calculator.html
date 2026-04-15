@@ -1159,7 +1159,7 @@
         .phase5-service-card:hover{box-shadow:var(--shadow-sm);}
         .phase5-service-number{font-size:.7rem;color:var(--ink-light);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px;}
         .phase5-total-banner{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-radius:var(--r);background:linear-gradient(135deg,var(--blue-deep),#0F2540);color:#fff;}
-    </style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style>
+    </style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style>
 </head>
 <body>
 <!-- ═══════════════ ARCHITECT BANNER ═══════════════ -->
@@ -1499,15 +1499,16 @@
                 <div class="tactic-row">
                     <input type="checkbox" class="tactic-check" id="tactic-saga">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-saga">SAGA Pattern <span class="warning-badge badge-red">× RPS</span></label>
-                        <span class="tactic-description">Distributed transaction across multiple microservices — <strong style="color:var(--red);">multiplies</strong> networking costs.</span>
+                        <label class="tactic-label" for="tactic-saga">SAGA Pattern <span class="warning-badge badge-warn">+ RPS hops</span></label>
+                        <span class="tactic-description">Distributes a transaction across N sequential gRPC calls. Adds <strong>(steps&minus;1) extra hops</strong> per transaction. Egress cost only when steps exit the VPC.</span>
                     </div>
                 </div>
                 <div class="saga-explainer" id="saga-explainer">
-                    <div class="explainer-title"><i class="fas fa-graduation-cap"></i> How SAGA affects gRPC traffic</div>
-                    <p>Your base RPS represents logical business transactions. Each SAGA instance fans out into N independent gRPC calls — one per step. The multiplier is:</p>
-                    <div class="formula">effective gRPC calls/sec = base RPS × total steps per SAGA instance</div>
-                    <p style="margin-top:8px;font-size:.78rem;color:var(--ink-light);">Example: 1,000 RPS × 3 steps = 3,000 gRPC calls/sec. The steps replace the single call; they do not add to it.</p>
+                    <div class="explainer-title"><i class="fas fa-graduation-cap"></i> How SAGA affects networking costs</div>
+                    <p>Each transaction spawns N sequential gRPC calls. <strong>Extra egress formula:</strong></p>
+                    <div class="formula">extra egress calls/s = base RPS &times; (steps &minus; 1)</div>
+                    <p style="margin-top:4px;font-size:.78rem;">Example: 1,000 RPS &times; (3 &minus; 1) = +2,000 extra calls/s. Total billable: 3,000 calls/s.</p>
+                    <p style="margin-top:3px;font-size:.78rem;color:var(--ink-light);">⚠ Egress billed only when steps exit the VPC. Intra-VPC same-AZ calls are free.</p>
                 </div>
                 <div class="saga-sub-params" id="saga-params">
                     <div class="tactic-row" style="background:var(--amber-bg);border-radius:var(--r);padding:8px 12px;margin-bottom:4px;border:1px solid var(--amber-border);">
@@ -1639,7 +1640,7 @@
                     <input type="checkbox" class="tactic-check" id="tactic-oauth">
                     <div class="tactic-label-group">
                         <label class="tactic-label" for="tactic-oauth">OAuth 2.0 + JWT <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span></label>
-                        <span class="tactic-description">Bearer token in every gRPC metadata header. Adds JWT bytes per request + token acquisition calls to the auth server.</span>
+                        <span class="tactic-description">JWT bearer in gRPC metadata. Inbound = $0 AWS cost. Cost via token-acquisition calls to auth server.</span>
                         <div class="byte-range-badge" id="jwt-byte-badge" style="display:none;">
                             <i class="fas fa-weight-hanging" style="font-size:.75rem;"></i>
                             JWT header per request: <strong>300</strong> <span class="range-label">min</span> / <strong>650</strong> <span class="range-label">typical</span> / <strong>1,200</strong> <span class="range-label">max</span> <span class="range-label">bytes — RFC 7519/7523/9101</span>
@@ -1868,19 +1869,6 @@
                         </div>
                     </div>
 
-                    <!-- ══════════ COST OPTIMISATION ══════════════════════════════════════ -->
-                    <div class="tactics-category" id="cat-costopt">
-                        <div class="tactics-category-header" onclick="toggleCategory('costopt')">
-                            <span class="tactics-category-title"><span>💰</span> Cost Optimisation <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
-                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-costopt"></i>
-                        </div>
-                        <div class="tactics-category-body" id="body-costopt">
-                            <div id="costopt-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching cost optimisation data from AWS…</div>
-                            <div id="costopt-content" style="display:none;"></div>
-                            <div id="costopt-result" style="display:none;margin-top:10px;"></div>
-                        </div>
-                    </div>
-
                     <!-- ══════════ HIGH-PERFORMANCE CACHING ════════════════════════════════ -->
                     <div class="tactics-category" id="cat-caching">
                         <div class="tactics-category-header" onclick="toggleCategory('caching')">
@@ -1951,38 +1939,9 @@
                                         </div>
                                         <div class="tactic-input-group"><select id="input-spot-pct" onchange="recalculateContainerCost()" style="width:155px;"><option value="0">&mdash; None &mdash;</option><option value="50">~50% saving</option><option value="70">~70% saving</option><option value="90">~90% saving</option></select><span class="tactic-unit">vs on-demand</span></div>
                                     </div>
-                                    <div class="tactic-row">
-                                        <input type="checkbox" class="tactic-check" id="cef-ri" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
-                                        <div class="tactic-label-group">
-                                            <label class="tactic-label" for="cef-ri">Reserved Instances (RI)</label>
-                                            <span class="tactic-description">1-yr or 3-yr commitment reduces EC2 node costs by 30&ndash;60% for stable, predictable production clusters.</span>
-                                        </div>
-                                        <div class="tactic-input-group"><select id="input-container-ri" onchange="recalculateContainerCost()" style="width:155px;"><option value="0">&mdash; None &mdash;</option><option value="30">1-yr (~30% off)</option><option value="55">3-yr (~55% off)</option></select><span class="tactic-unit">discount</span></div>
-                                    </div>
-                                    <div class="tactic-row">
-                                        <input type="checkbox" class="tactic-check" id="cef-savings-plan" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
-                                        <div class="tactic-label-group">
-                                            <label class="tactic-label" for="cef-savings-plan">Savings Plans Commitment</label>
-                                            <span class="tactic-description">Flexible commitment covering EKS Fargate, Lambda, EC2 nodes. Typical 1-yr saving: 20&ndash;40%.</span>
-                                        </div>
-                                        <div class="tactic-input-group"><input type="number" id="input-savings-plan-commit" min="0" step="10" placeholder="$/hr" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">$/hr</span></div>
-                                    </div>
-                                    <div class="tactic-row">
-                                        <input type="checkbox" class="tactic-check" id="cef-commitment-discount" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
-                                        <div class="tactic-label-group">
-                                            <label class="tactic-label" for="cef-commitment-discount">Commitment Used Discounts</label>
-                                            <span class="tactic-description">Unused RI/SP commitments still incur cost. Track utilisation rate to ensure commitments match actual usage.</span>
-                                        </div>
-                                        <div class="tactic-input-group"><input type="number" id="input-commitment-util" min="0" step="1" placeholder="%" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">% utilised</span></div>
-                                    </div>
-                                    <div class="tactic-row">
-                                        <input type="checkbox" class="tactic-check" id="cef-subscription" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
-                                        <div class="tactic-label-group">
-                                            <label class="tactic-label" for="cef-subscription">Subscription Discounts (EDP)</label>
-                                            <span class="tactic-description">Enterprise Discount Program or marketplace subscriptions that reduce unit costs across your AWS bill.</span>
-                                        </div>
-                                        <div class="tactic-input-group"><input type="number" id="input-subscription-disc" min="0" step="1" placeholder="%" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">% discount</span></div>
-                                    </div>
+                                    <!-- RI/SP discounts moved to FinOps Cost Optimisation section below -->
+                                    <div class="notice notice-gold" style="margin:6px 0 10px;"><i class="fas fa-tags"></i>
+                                        <div style="font-size:.78rem;">Reserved Instances &amp; Savings Plans apply to this cluster's EC2/Fargate compute costs. Configure them in the <strong>FinOps Cloud Cost Optimisation</strong> accordion below — enter the cluster's on-demand spend as your baseline.</div></div>
                                     <div class="tactic-row">
                                         <input type="checkbox" class="tactic-check" id="cef-req-cpu" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
                                         <div class="tactic-label-group">
@@ -2250,6 +2209,19 @@
                         </div>
                     </div>
 
+                    <!-- ══════════ COST OPTIMISATION ══════════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-costopt">
+                        <div class="tactics-category-header" onclick="toggleCategory('costopt')">
+                            <span class="tactics-category-title"><span>💰</span> FinOps Cost Optimisation <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-costopt"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-costopt">
+                            <div id="costopt-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching cost optimisation data from AWS…</div>
+                            <div id="costopt-content" style="display:none;"></div>
+                            <div id="costopt-result" style="display:none;margin-top:10px;"></div>
+                        </div>
+                    </div>
+
                     <!-- ══════════ FINOPS ARCHITECTURE NOTES ═══════════════════════════════ -->
                     <div class="tactics-category" id="cat-finops-notes">
                         <div class="tactics-category-header" onclick="toggleCategory('finops-notes')">
@@ -2359,6 +2331,7 @@
             <div class="comparison-delta" id="cmp-delta-row">
                 <span>Total monthly cost increase from tactics</span>
                 <span class="delta-mono" id="cmp-delta-val">—</span>
+                <div id="cmp-delta-breakdown" style="font-size:.72rem;color:var(--ink-light);margin-top:3px;font-family:monospace;"></div>
             </div>
             <div style="font-size:.74rem;color:var(--ink-light);margin-top:6px;" id="cmp-source-note">
                 * Estimated using proto payload size placeholder (200 B req / 1,200 B resp).
@@ -2645,6 +2618,11 @@
     </div>
 </div>
 <script>
+
+
+
+
+
 
 
 
@@ -3349,17 +3327,20 @@
     function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEstimate, contribs) {
       var totalDelta = (tactics.cost + computeCloudInfraCost()) - base.cost;
       var el;
-      /* Base = networking only (no tactics). Tactics total = networking + cloud infra */
-      var _cloudInfraForCmp = computeCloudInfraCost();
-      var _tacticsTotalCost = tactics.cost + _cloudInfraForCmp;
-      el = document.getElementById('cmp-base-cost');    if (el) el.textContent = '$' + base.cost.toFixed(2) + ' / mo';
-      el = document.getElementById('cmp-base-rps');     if (el) el.textContent = baseRps.toLocaleString() + ' RPS (networking only, no tactics)';
-      el = document.getElementById('cmp-tactics-cost'); if (el) el.textContent = '$' + _tacticsTotalCost.toFixed(2) + ' / mo';
-      el = document.getElementById('cmp-tactics-rps');  if (el) el.textContent = effectiveRps.toLocaleString() + ' RPS + $' + _cloudInfraForCmp.toFixed(2) + ' cloud infra';
+      var _cloudInfraForCmp=computeCloudInfraCost();
+      var _networkingDelta=tactics.cost-base.cost;
+      var _tacticsTotalCost=tactics.cost+_cloudInfraForCmp;
+      var _totalDeltaForCmp=_tacticsTotalCost-base.cost;
+      el=document.getElementById('cmp-base-cost');    if(el)el.textContent='$'+base.cost.toFixed(2)+' / mo';
+      el=document.getElementById('cmp-base-rps');     if(el)el.textContent=baseRps.toLocaleString()+' RPS (networking only)';
+      el=document.getElementById('cmp-tactics-cost'); if(el)el.textContent='$'+_tacticsTotalCost.toFixed(2)+' / mo';
+      el=document.getElementById('cmp-tactics-rps');  if(el)el.textContent=effectiveRps.toLocaleString()+' eff. RPS'
+        +(_networkingDelta>0?' (+$'+_networkingDelta.toFixed(2)+' networking)':'')
+        +(_cloudInfraForCmp>0?' · +$'+_cloudInfraForCmp.toFixed(2)+' cloud infra':'');
 
       var bEl = document.getElementById('cmp-tactic-breakdown');
       if (bEl) {
-        if (contribs && contribs.length > 0) {
+        if (true) { /* show breakdown even with cloud-only tactics */
           var rHtml = '';
           for (var ci = 0; ci < contribs.length; ci++) {
             var c = contribs[ci];
@@ -3402,68 +3383,75 @@
               + '</td><td class="tbd-badges">'+badge+'</td>'
               + '<td class="tbd-cost'+(c.kind!=='info'&&costImpact!=='\u2014'?' tbd-cost-impact':'')+'">'+costImpact+'</td></tr>';
           }
-          /* Add cloud tactic rows */
+          /* Add cloud tactic rows — always show each checked item, no outer guard */
           var _cloudRows = '';
-          var _ci = computeCloudInfraCost();
-          if (_ci > 0) {
-            if (window._albData && document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
-              var _ac=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
-              var _al=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
-              var _albC=window._albData.fixedPerMonthUsd*_ac+window._albData.lcuPerHourUsd*_al*730*_ac;
-              _cloudRows += '<tr><td class="tbd-name">ALB ('+_ac+' load balancer'+(+_ac>1?'s':'')+')'+            '<div class="tbd-detail">$'+window._albData.fixedPerMonthUsd.toFixed(4)+'/hr fixed + LCU charges</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_albC.toFixed(2)+'/mo</td></tr>';
-            }
-            if (window._cacheData && document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
-              var _ce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
-              var _cns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
-              var _cn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
-              var _cpmap={'redisr6glarge':window._cacheData.redisR6gLargePerHour,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour,
-                'redisr6g2xlarge':window._cacheData.redisR6g2xlargePerHour,
-                'memcachedr6glarge':window._cacheData.memcachedR6gLargePerHour,'memcachedr6gxlarge':window._cacheData.memcachedR6gXlargePerHour};
-              var _cpr=_cpmap[_ce+_cn.replace(/\./g,'').replace('cache','')] || _cpmap[_ce+'r6glarge'] || 0.166;
-              var _cacheC=_cpr*730*_cns;
-              _cloudRows += '<tr><td class="tbd-name">ElastiCache '+_ce+' ('+_cns+' node'+(+_cns>1?'s':'')+')'+            '<div class="tbd-detail">$'+_cpr.toFixed(4)+'/hr × '+_cns+' × 730 hr</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_cacheC.toFixed(2)+'/mo</td></tr>';
-            }
-            if (window._dbData && document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
-              var _gbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
-              var _s3C=_gbv*(window._dbData.s3StandardPerGbMonth||0.023);
-              _cloudRows += '<tr><td class="tbd-name">S3 Backup ('+_gbv+' GB)'+            '<div class="tbd-detail">$'+(window._dbData.s3StandardPerGbMonth||0.023).toFixed(4)+'/GB-mo</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_s3C.toFixed(2)+'/mo</td></tr>';
-            }
-            if (window._dbData && document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
-              var _arc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
-              var _auroraC=(window._dbData.auroraReplicaPerHour||0.26)*730*_arc;
-              _cloudRows += '<tr><td class="tbd-name">Aurora Read Replica ('+_arc+' node'+(+_arc>1?'s':'')+')'+            '<div class="tbd-detail">$'+(window._dbData.auroraReplicaPerHour||0.26).toFixed(4)+'/hr × 730 hr</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_auroraC.toFixed(2)+'/mo</td></tr>';
-            }
-            /* Cloud security */
-            var _secTotal=0;
-            if (window._secData) {
-              var _rps2=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
-              var _rpm=_rps2*2592000;
-              var _g=function(id){return document.getElementById(id)||{};};
-              if(_g('sec-guardduty').checked){var _gd=Math.max(0,(parseFloat(_g('input-guardduty-gb').value)||0)-500)*window._secData.guardDutyPerGbLogs;_secTotal+=_gd;}
-              if(_g('sec-inspector').checked){_secTotal+=(parseInt(_g('input-inspector-instances').value)||1)*window._secData.inspectorPerInstanceMonth;}
-              if(_g('sec-waf').checked){_secTotal+=window._secData.wafWebAclPerMonth+(parseInt(_g('input-waf-rules').value)||5)*window._secData.wafRulePerMonth+(_rpm/1000000)*window._secData.wafPer1MRequests;}
-              if(_g('sec-macie').checked){_secTotal+=Math.max(0,(parseFloat(_g('input-macie-gb').value)||0)-1)*window._secData.maciePerGbClassified;}
-              if(_g('sec-cloudwatch').checked){var _cwg=parseFloat(_g('input-cw-gb').value)||1;_secTotal+=_cwg*window._secData.cloudwatchLogsIngestionPerGb+_cwg*window._secData.cloudwatchLogsStoragePerGbMonth;}
-              if(_g('sec-audit').checked){_secTotal+=(parseInt(_g('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;}
-              if(_g('sec-kms').checked){var _kk=parseInt(_g('input-kms-keys').value)||1;_secTotal+=_kk*window._secData.kmsCmkPerMonth+(_rpm/10000)*window._secData.kmsApiCallsPer10k;}
-            }
-            if (_secTotal > 0) {
-              _cloudRows += '<tr><td class="tbd-name">Cloud Security Services'+            '<div class="tbd-detail">GuardDuty, WAF, Inspector, KMS, Macie, CloudWatch, Audit</div></td>'+            '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'+            '<td class="tbd-cost tbd-cost-impact">+$'+_secTotal.toFixed(2)+'/mo</td></tr>';
-            }
-            var _agC3=parseFloat(sessionStorage.getItem('tco_apigw_cost')||'0');
-            if(_agC3>0) _cloudRows+='<tr><td class="tbd-name">API Gateway<div class="tbd-detail">$'+_agC3.toFixed(2)+'/mo</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+_agC3.toFixed(2)+'/mo</td></tr>';
-            var _ccC3=parseFloat(sessionStorage.getItem('tco_container_cost')||'0');
-            if(_ccC3>0) _cloudRows+='<tr><td class="tbd-name">Containerized Environment<div class="tbd-detail">$'+_ccC3.toFixed(2)+'/mo</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+_ccC3.toFixed(2)+'/mo</td></tr>';
-            if (_ci > 0) {
-              _cloudRows += '<tr style="background:var(--paper);font-weight:700;border-top:2px solid var(--rule);">'
-                + '<td class="tbd-name" colspan="2">Total Cloud Infra Cost</td>'
-                + '<td class="tbd-cost tbd-cost-impact">+$'+_ci.toFixed(2)+'/mo</td></tr>';
-            }
+          var _ci = computeCloudInfraCost(); /* net value after FinOps saving */
+          /* ALB */
+          if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
+            var _ac=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
+            var _al=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
+            var _albC=window._albData?window._albData.fixedPerMonthUsd*_ac+window._albData.lcuPerHourUsd*_al*730*_ac:parseFloat(sessionStorage.getItem('tco_alb_cost')||'0');
+            if(_albC>0) _cloudRows+='<tr><td class="tbd-name">ALB ('+_ac+' LB'+(+_ac>1?'s':'')+')<div class="tbd-detail">'+(window._albData?'$'+window._albData.fixedPerMonthUsd.toFixed(4)+'/hr fixed + '+_al+' LCU/hr':'from session')+'</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+_albC.toFixed(2)+'/mo</td></tr>';
+          }
+          /* ElastiCache */
+          if (document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
+            var _ce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
+            var _cns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
+            var _cn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
+            var _cacheC=0,_cpr2=0.166;
+            if(window._cacheData){var _cpmap={'redisr6glarge':window._cacheData.redisR6gLargePerHour,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour,'redisr6g2xlarge':window._cacheData.redisR6g2xlargePerHour,'memcachedr6glarge':window._cacheData.memcachedR6gLargePerHour,'memcachedr6gxlarge':window._cacheData.memcachedR6gXlargePerHour};_cpr2=_cpmap[_ce+_cn.replace(/\./g,'').replace('cache','')]||_cpmap[_ce+'r6glarge']||0.166;_cacheC=_cpr2*730*_cns;}
+            else{_cacheC=parseFloat(sessionStorage.getItem('tco_cache_cost')||'0');}
+            if(_cacheC>0) _cloudRows+='<tr><td class="tbd-name">ElastiCache '+_ce+' ('+_cns+' node'+(+_cns>1?'s':'')+')<div class="tbd-detail">$'+_cpr2.toFixed(4)+'/hr × '+_cns+' × 730hr</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+_cacheC.toFixed(2)+'/mo</td></tr>';
+          }
+          /* DB Backup */
+          if (document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
+            var _gbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
+            var _s3r=(window._dbData&&window._dbData.s3StandardPerGbMonth)||0.023;
+            _cloudRows+='<tr><td class="tbd-name">S3 DB Backup ('+_gbv+' GB)<div class="tbd-detail">$'+_s3r.toFixed(4)+'/GB-mo × '+_gbv+' GB</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+(_gbv*_s3r).toFixed(2)+'/mo</td></tr>';
+          }
+          /* Aurora Replica */
+          if (document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
+            var _arc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
+            var _aRate=(window._dbData&&window._dbData.auroraReplicaPerHour)||0.26;
+            _cloudRows+='<tr><td class="tbd-name">Aurora Read Replica ('+_arc+' node'+(+_arc>1?'s':'')+')<div class="tbd-detail">$'+_aRate.toFixed(4)+'/hr × 730hr × '+_arc+'</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+(_aRate*730*_arc).toFixed(2)+'/mo</td></tr>';
+          }
+          /* Cloud Security */
+          var _secTotalLive=0;
+          if (window._secData) {
+            var _rps2=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+            var _rpm=_rps2*2592000;
+            var _g=function(id){return document.getElementById(id)||{};};
+            if(_g('sec-guardduty').checked)_secTotalLive+=Math.max(0,(parseFloat(_g('input-guardduty-gb').value)||0)-500)*window._secData.guardDutyPerGbLogs;
+            if(_g('sec-inspector').checked)_secTotalLive+=(parseInt(_g('input-inspector-instances').value)||1)*window._secData.inspectorPerInstanceMonth;
+            if(_g('sec-waf').checked)_secTotalLive+=window._secData.wafWebAclPerMonth+(parseInt(_g('input-waf-rules').value)||5)*window._secData.wafRulePerMonth+(_rpm/1000000)*window._secData.wafPer1MRequests;
+            if(_g('sec-macie').checked)_secTotalLive+=Math.max(0,(parseFloat(_g('input-macie-gb').value)||0)-1)*window._secData.maciePerGbClassified;
+            if(_g('sec-cloudwatch').checked){var _cwg2=parseFloat(_g('input-cw-gb').value)||1;_secTotalLive+=_cwg2*(window._secData.cloudwatchLogsIngestionPerGb+window._secData.cloudwatchLogsStoragePerGbMonth);}
+            if(_g('sec-audit').checked)_secTotalLive+=(parseInt(_g('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;
+            if(_g('sec-kms').checked){var _kk2=parseInt(_g('input-kms-keys').value)||1;_secTotalLive+=_kk2*window._secData.kmsCmkPerMonth+(_rpm/10000)*window._secData.kmsApiCallsPer10k;}
+          } else {
+            _secTotalLive=parseFloat(sessionStorage.getItem('tco_sec_cost')||'0');
+          }
+          if(_secTotalLive>0) _cloudRows+='<tr><td class="tbd-name">Cloud Security Services<div class="tbd-detail">GuardDuty / WAF / Inspector / KMS / Macie / CloudWatch</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+_secTotalLive.toFixed(2)+'/mo</td></tr>';
+          /* API Gateway — once only */
+          var _agLiveC=parseFloat(sessionStorage.getItem('tco_apigw_cost')||'0');
+          var _agCbLive=!!(document.getElementById('tactic-apigw')&&document.getElementById('tactic-apigw').checked);
+          if(_agCbLive||_agLiveC>0){
+            var _agTL=(document.getElementById('input-apigw-type')||{value:'REST'}).value.toUpperCase();
+            if(_agLiveC>0)_cloudRows+='<tr><td class="tbd-name">API Gateway ('+_agTL+')<div class="tbd-detail">$'+_agLiveC.toFixed(2)+'/mo</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+_agLiveC.toFixed(2)+'/mo</td></tr>';
+            else _cloudRows+='<tr><td class="tbd-name">API Gateway ('+_agTL+')<div class="tbd-detail" style="color:var(--amber);">Enter call volume to calculate cost</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost" style="color:var(--ink-light);font-size:.78rem;">enter volume ↓</td></tr>';
+          }
+          /* Containerized Environment — once only */
+          var _contLiveC=parseFloat(sessionStorage.getItem('tco_container_cost')||'0');
+          if(_contLiveC>0){var _orchL=(document.getElementById('input-orchestration')||{value:'EKS'}).value||'EKS';_cloudRows+='<tr><td class="tbd-name">Containerized Cluster ('+_orchL.toUpperCase()+')<div class="tbd-detail">$'+_contLiveC.toFixed(2)+'/mo · cluster + storage + licenses</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$'+_contLiveC.toFixed(2)+'/mo</td></tr>';}
+          /* FinOps saving row */
+          var _foSav=parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+          if(_foSav>0) _cloudRows+='<tr style="background:var(--green-bg);"><td class="tbd-name" style="color:var(--green);">FinOps RI/SP Saving<div class="tbd-detail">Reserved Instance / Savings Plan discount</div></td><td class="tbd-badges"><span class="tbd-badge" style="background:rgba(22,101,52,.1);color:var(--green);">saving</span></td><td class="tbd-cost" style="color:var(--green);font-weight:700;">-$'+_foSav.toFixed(2)+'/mo</td></tr>';
+          /* Net total footer — only when there are cloud rows */
+          if (_cloudRows) {
+            _cloudRows+='<tr style="background:var(--paper);font-weight:700;border-top:2px solid var(--rule);"><td class="tbd-name" colspan="2">Net Cloud Infra Cost</td><td class="tbd-cost tbd-cost-impact">+$'+Math.max(0,_ci).toFixed(2)+'/mo</td></tr>';
           }
           bEl.innerHTML = '<table class="tbd-table"><thead><tr><th>Tactic</th><th>Type</th><th>Est. Cost Impact</th></tr></thead><tbody>'+rHtml+_cloudRows+'</tbody></table>';
-        } else {
-          bEl.innerHTML = '<div style="font-size:.8rem;color:var(--ink-light);padding:8px 0;">No tactics selected yet.</div>';
-        }
+        } /* end breakdown block */
         bEl.style.display = 'block';
       }
 
@@ -3472,14 +3460,16 @@
         ? '* Estimated using placeholder sizes (200 B req / 1,200 B resp). Upload your .proto for exact figures.'
         : '* Calculated using your .proto file. \u2139 SAGA multiplies inter-service calls. AWS charges $0.00/GB same-AZ, $0.01/GB cross-AZ, $0.09+/GB to internet.';
 
-      var dRow = document.getElementById('cmp-delta-row');
-      var dVal = document.getElementById('cmp-delta-val');
-      if (Math.abs(totalDelta) < 0.01) {
-        if (dRow) dRow.className = 'comparison-delta neutral';
-        if (dVal) dVal.textContent = 'No change';
-      } else {
-        if (dRow) dRow.className = totalDelta > 0 ? 'comparison-delta' : 'comparison-delta neutral';
-        if (dVal) dVal.textContent = (totalDelta > 0 ? '+' : '') + '$' + totalDelta.toFixed(2) + ' / mo';
+      var dRow=document.getElementById('cmp-delta-row'),dVal=document.getElementById('cmp-delta-val'),dBreak=document.getElementById('cmp-delta-breakdown');
+      var _fd=_totalDeltaForCmp;
+      if(Math.abs(_fd)<0.01){
+        if(dRow)dRow.className='comparison-delta neutral';
+        if(dVal)dVal.textContent='No change';
+        if(dBreak)dBreak.textContent='';
+      }else{
+        if(dRow)dRow.className=_fd>0?'comparison-delta':'comparison-delta neutral';
+        if(dVal)dVal.textContent=(_fd>0?'+':'')+' $'+_fd.toFixed(2)+' / mo';
+        if(dBreak){var _dbp=[];if(Math.abs(_networkingDelta)>=0.01)_dbp.push('networking: '+(_networkingDelta>0?'+':'')+' $'+_networkingDelta.toFixed(2));if(_cloudInfraForCmp>=0.01)_dbp.push('cloud infra: +$'+_cloudInfraForCmp.toFixed(2));dBreak.textContent=_dbp.join(' · ');}
       }
     }
 
@@ -3512,6 +3502,9 @@
        REPORT + UNIT ECONOMICS
     ===================================================================== */
     function populateReportSummary() {
+      var _mc4=document.getElementById('tactic-mission-critical');
+      var _mn4=document.getElementById('p4-mission-critical-note');
+      if(_mn4&&_mc4)_mn4.style.display=_mc4.checked?'flex':'none';
       var grid = document.getElementById('reportServiceSummary');
       if (!grid) return;
       var ne = document.getElementById('serviceName');
@@ -3647,6 +3640,9 @@
       /* Container environment factors */
       t += parseFloat(sessionStorage.getItem('tco_container_cost')||'0');
       t += parseFloat(sessionStorage.getItem('tco_apigw_cost')||'0');
+      /* FinOps saving: subtract from total cloud infra cost */
+      var _finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+      t = Math.max(0, t - _finopsSaving);
       return Math.round(t*100)/100;
     }
 
@@ -3677,100 +3673,109 @@
       var _tcoDiv = document.getElementById('cloudTcoBreakdown');
       if (_tcoDiv) {
         var _comps = [];
+        /* ── Networking ──────────────────────────────── */
         _comps.push({label:'AWS Egress (Response Transfer)', cat:'Networking', badge:'badge-bytes', cost:cost});
         var _tlsOnP4=!!(document.getElementById('tactic-tls')&&document.getElementById('tactic-tls').checked);
         var _mtlsOnP4=!!(document.getElementById('tactic-mtls')&&document.getElementById('tactic-mtls').checked);
         var _oauthP4=!!(document.getElementById('tactic-oauth')&&document.getElementById('tactic-oauth').checked);
-        var _tlsOvhP4=parseFloat(sessionStorage.getItem('tco_tls_overhead')||'0')||((_tlsOnP4||_mtlsOnP4)?29:0);
-        var _jwtOvhP4=parseFloat(sessionStorage.getItem('tco_jwt_overhead')||'0')||(_oauthP4?650:0);
-        if((_tlsOnP4||_mtlsOnP4)&&_tlsOvhP4>0){
-          var _effRpsP4=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
-          var _respNoTls=(window._lastProtoRespBytes||PLACEHOLDER_RESP_BYTES);
-          var _tlsDelta=Math.round((calcMonthlyCost(_effRpsP4,_respNoTls+_tlsOvhP4).cost-calcMonthlyCost(_effRpsP4,_respNoTls).cost)*100)/100;
-          if(_tlsDelta>0)_comps.push({label:(_mtlsOnP4?'mTLS':'TLS')+' frame overhead (+'+_tlsOvhP4+' B/frame, RFC 8446 — included in egress above)',cat:'Security',badge:'badge-bytes',cost:_tlsDelta});
+        var _tlsOvhP4=window._lastTlsBytes||((_tlsOnP4||_mtlsOnP4)?29:0);
+        var _jwtOvhP4=window._lastJwtBytes||(_oauthP4?650:0);
+        if ((_tlsOnP4||_mtlsOnP4) && _tlsOvhP4>0) {
+          _comps.push({label:(_mtlsOnP4?'mTLS':'TLS')+' frame overhead (+'+_tlsOvhP4+' B/frame, RFC 8446 — included in egress above)',cat:'Security',badge:'badge-dr',cost:0,zeroNote:'TLS overhead is counted within AWS Egress cost above. No additional line charge.'});
         }
-        if(_oauthP4&&_jwtOvhP4>0){
-          _comps.push({label:'JWT header overhead (+'+_jwtOvhP4+' B/req, RFC 7519 — request-side, AWS inbound)',cat:'Security',badge:'badge-bytes',cost:0,zeroNote:'AWS inbound traffic is free. JWT cost impact is via token-acquisition RPS in the effective RPS above.'});
+        if (_oauthP4 && _jwtOvhP4>0) {
+          _comps.push({label:'JWT header overhead (+'+_jwtOvhP4+' B/req, RFC 7519 — request-side, AWS inbound)',cat:'Security',badge:'badge-dr',cost:0,zeroNote:'JWT tokens travel request-side (inbound). AWS does not charge for inbound data transfer.'});
         }
-        var _talbC=0, _talbLabel='ALB';
-        if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
-          if (window._albData) {
-            var _tac2=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
-            var _tal2=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
-            _talbC=window._albData.fixedPerMonthUsd*_tac2+window._albData.lcuPerHourUsd*_tal2*730*_tac2;
-            _talbLabel='ALB ('+_tac2+' LB)';
-          } else {
-            _talbC=parseFloat(sessionStorage.getItem('tco_alb_cost')||'0');
-            _talbLabel=sessionStorage.getItem('tco_alb_label')||'ALB';
-          }
-          if(_talbC>0) _comps.push({label:_talbLabel, cat:'Business Continuity', badge:'badge-bc', cost:_talbC});
-        }
-        var _tcC=0, _tcLabel='ElastiCache';
-        if (document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
-          if (window._cacheData) {
-            var _tce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
-            var _tcns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
-            var _tcn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
-            var _tcp2={'redisr6glarge':window._cacheData.redisR6gLargePerHour||0.166,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour||0.332};
-            var _tcpr=_tcp2[_tce+_tcn.replace(/\./g,'').replace('cache','')] || _tcp2[_tce+'r6glarge'] || 0.166;
-            _tcC=_tcpr*730*_tcns;
-            _tcLabel='ElastiCache '+_tce+' ('+_tcns+' node'+(+_tcns>1?'s':'')+')';
-          } else {
-            _tcC=parseFloat(sessionStorage.getItem('tco_cache_cost')||'0');
-            _tcLabel=sessionStorage.getItem('tco_cache_label')||'ElastiCache';
-          }
-          if(_tcC>0) _comps.push({label:_tcLabel, cat:'Business Continuity', badge:'badge-bc', cost:_tcC});
-        }
-        /* DB backup: live or sessionStorage */
+        /* ── Cloud Infrastructure (grouped total) ──── */
+        var _cloudInfraComponents = [];
+        /* ALB */
+        var _talbC=0;
+        if (window._albData && document.getElementById('tactic-alb')&&document.getElementById('tactic-alb').checked) {
+          var _ac=parseInt((document.getElementById('input-alb-count')||{value:'1'}).value)||1;
+          var _al=parseFloat((document.getElementById('input-alb-lcu')||{value:'0'}).value)||0;
+          _talbC = window._albData.fixedPerMonthUsd*_ac + window._albData.lcuPerHourUsd*_al*730*_ac;
+        } else { _talbC=parseFloat(sessionStorage.getItem('tco_alb_cost')||'0'); }
+        if(_talbC>0) _cloudInfraComponents.push({n:'ALB(s)',v:_talbC});
+        /* ElastiCache */
+        var _tcC=0;
+        if (window._cacheData && document.getElementById('tactic-cache')&&document.getElementById('tactic-cache').checked) {
+          var _ce=(document.getElementById('input-cache-engine')||{value:'redis'}).value||'redis';
+          var _cn=(document.getElementById('input-cache-node')||{value:'r6g.large'}).value||'r6g.large';
+          var _cns=parseInt((document.getElementById('input-cache-nodes')||{value:'1'}).value)||1;
+          var _cpm={'redisr6glarge':window._cacheData.redisR6gLargePerHour,'redisr6gxlarge':window._cacheData.redisR6gXlargePerHour,'redisr6g2xlarge':window._cacheData.redisR6g2xlargePerHour,'memcachedr6glarge':window._cacheData.memcachedR6gLargePerHour,'memcachedr6gxlarge':window._cacheData.memcachedR6gXlargePerHour};
+          _tcC=(_cpm[_ce+_cn.replace(/\./g,'').replace('cache','')]||_cpm[_ce+'r6glarge']||0.166)*730*_cns;
+        } else { _tcC=parseFloat(sessionStorage.getItem('tco_cache_cost')||'0'); }
+        if(_tcC>0) _cloudInfraComponents.push({n:'ElastiCache',v:_tcC});
+        /* DB Backup / Aurora */
         var _dbCostTotal=0;
-        if (!window._dbData) {
-          _dbCostTotal=parseFloat(sessionStorage.getItem('tco_db_cost')||'0');
-          if(_dbCostTotal>0) _comps.push({label:'Database Backup / DR', cat:'Disaster Recovery', badge:'badge-dr', cost:_dbCostTotal});
-        } else {
-          if (document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
-            var _tgbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;
-            var _ts3C=_tgbv*(window._dbData.s3StandardPerGbMonth||0.023);
-            _dbCostTotal+=_ts3C;
-            _comps.push({label:'S3 DB Backup ('+_tgbv+' GB)', cat:'Disaster Recovery', badge:'badge-dr', cost:_ts3C});
-          }
-          if (document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
-            var _tarc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;
-            var _taC=(window._dbData.auroraReplicaPerHour||0.26)*730*_tarc;
-            _dbCostTotal+=_taC;
-            _comps.push({label:'Aurora Replica ('+_tarc+' node'+(+_tarc>1?'s':'')+') — BC', cat:'Business Continuity', badge:'badge-bc', cost:_taC});
-          }
-        }
-        /* Security: live or sessionStorage */
-        var _tSecT = window._secData ? 0 : parseFloat(sessionStorage.getItem('tco_sec_cost')||'0');
+        if(window._dbData){
+          var _ts3On=document.getElementById('tactic-s3-backup')&&document.getElementById('tactic-s3-backup').checked;
+          var _taOn=document.getElementById('tactic-aurora-replica')&&document.getElementById('tactic-aurora-replica').checked;
+          if(_ts3On){var _tgbv=parseFloat((document.getElementById('db-gb')||{value:'10'}).value)||10;_dbCostTotal+=_tgbv*(window._dbData.s3StandardPerGbMonth||0.023);}
+          if(_taOn){var _tarc=parseInt((document.getElementById('aurora-replica-count')||{value:'1'}).value)||1;_dbCostTotal+=(window._dbData.auroraReplicaPerHour||0.26)*730*_tarc;}
+        } else { _dbCostTotal=parseFloat(sessionStorage.getItem('tco_db_cost')||'0'); }
+        if(_dbCostTotal>0) _cloudInfraComponents.push({n:'Database/Backup',v:_dbCostTotal});
+        /* Security */
+        var _tSecT=0;
         if(window._secData){
-          var _trps2=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
-          var _trpm=_trps2*2592000; var _tgg=function(id){return document.getElementById(id)||{};};
-          if(_tgg('sec-guardduty').checked)_tSecT+=Math.max(0,(parseFloat(_tgg('input-guardduty-gb').value)||0)-500)*window._secData.guardDutyPerGbLogs;
-          if(_tgg('sec-inspector').checked)_tSecT+=(parseInt(_tgg('input-inspector-instances').value)||1)*window._secData.inspectorPerInstanceMonth;
-          if(_tgg('sec-waf').checked)_tSecT+=window._secData.wafWebAclPerMonth+(parseInt(_tgg('input-waf-rules').value)||5)*window._secData.wafRulePerMonth+(_trpm/1000000)*window._secData.wafPer1MRequests;
-          if(_tgg('sec-macie').checked)_tSecT+=Math.max(0,(parseFloat(_tgg('input-macie-gb').value)||0)-1)*window._secData.maciePerGbClassified;
-          if(_tgg('sec-cloudwatch').checked){var _tcwg=parseFloat(_tgg('input-cw-gb').value)||1;_tSecT+=_tcwg*window._secData.cloudwatchLogsIngestionPerGb+_tcwg*window._secData.cloudwatchLogsStoragePerGbMonth;}
-          if(_tgg('sec-audit').checked)_tSecT+=(parseInt(_tgg('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;
-          if(_tgg('sec-kms').checked){var _tkk=parseInt(_tgg('input-kms-keys').value)||1;_tSecT+=_tkk*window._secData.kmsCmkPerMonth+(_trpm/10000)*window._secData.kmsApiCallsPer10k;}
-        }
-        if(_tSecT>0) _comps.push({label:'Cloud Security Services', cat:'Disaster Recovery', badge:'badge-dr', cost:_tSecT});
+          var _g2=function(id){return document.getElementById(id)||{};};
+          var _rps2x=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+          var _rpmx=_rps2x*2592000;
+          if(_g2('sec-guardduty').checked)_tSecT+=Math.max(0,(parseFloat(_g2('input-guardduty-gb').value)||0)-500)*window._secData.guardDutyPerGbLogs;
+          if(_g2('sec-inspector').checked)_tSecT+=(parseInt(_g2('input-inspector-instances').value)||1)*window._secData.inspectorPerInstanceMonth;
+          if(_g2('sec-waf').checked)_tSecT+=window._secData.wafWebAclPerMonth+(parseInt(_g2('input-waf-rules').value)||5)*window._secData.wafRulePerMonth+(_rpmx/1000000)*window._secData.wafPer1MRequests;
+          if(_g2('sec-macie').checked)_tSecT+=Math.max(0,(parseFloat(_g2('input-macie-gb').value)||0)-1)*window._secData.maciePerGbClassified;
+          if(_g2('sec-cloudwatch').checked){var _cwgx=parseFloat(_g2('input-cw-gb').value)||1;_tSecT+=_cwgx*window._secData.cloudwatchLogsIngestionPerGb+_cwgx*window._secData.cloudwatchLogsStoragePerGbMonth;}
+          if(_g2('sec-audit').checked)_tSecT+=(parseInt(_g2('input-audit-assessments').value)||1)*window._secData.auditManagerPerAssessmentMonth;
+          if(_g2('sec-kms').checked){var _kkx=parseInt(_g2('input-kms-keys').value)||1;_tSecT+=_kkx*window._secData.kmsCmkPerMonth+(_rpmx/10000)*window._secData.kmsApiCallsPer10k;}
+        } else { _tSecT=parseFloat(sessionStorage.getItem('tco_sec_cost')||'0'); }
+        if(_tSecT>0) _cloudInfraComponents.push({n:'Security Services',v:_tSecT});
+        /* Container */
         var _contCost=parseFloat(sessionStorage.getItem('tco_container_cost')||'0');
-        if(_contCost>0) _comps.push({label:'Containerized Environment Factors', cat:'Cloud Infra', badge:'badge-warn', cost:_contCost});
+        if(_contCost>0) _cloudInfraComponents.push({n:'Containerized Cluster',v:_contCost});
+        /* API Gateway */
         var _apigwCost=parseFloat(sessionStorage.getItem('tco_apigw_cost')||'0');
-        if(_apigwCost>0) _comps.push({label:'API Gateway', cat:'Microservices', badge:'badge-bc', cost:_apigwCost});
-
-        /* Container cost already added via _contCost — no duplicate */
+        if(_apigwCost>0) _cloudInfraComponents.push({n:'API Gateway',v:_apigwCost});
+        /* Push a single grouped Cloud Infrastructure row */
+        var _totalCloudInfra = _cloudInfraComponents.reduce(function(s,c){return s+c.v;},0);
+        if(_totalCloudInfra>0){
+          var _ciBreakdown=_cloudInfraComponents.map(function(c){return c.n+' $'+c.v.toFixed(2);}).join(' | ');
+          _comps.push({label:'Cloud Infrastructure', cat:'Cloud + Container', badge:'badge-warn',
+            cost:_totalCloudInfra,
+            detail:_ciBreakdown});
+        }
+        /* FinOps Saving (negative row) */
+        var _finopsSav=parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+        var _finopsSpend=parseFloat(sessionStorage.getItem('tco_finops_spend')||'0');
+        if(_finopsSav>0){
+          _comps.push({label:'FinOps Optimisation (RI/SP saving)', cat:'Cost Reduction', badge:'badge-bc',
+            cost:-_finopsSav,
+            isSaving:true});
+        }
+        /* Container cost already consolidated above */
 
         /* Compute true total from all collected components */
-        var _realTco = Math.round(_comps.reduce(function(s,c){return s+c.cost;},0)*100)/100;
+        /* _realTco = gross networking + cloud - FinOps savings */
+        var _realTco = Math.round(_comps.reduce(function(s,c){return s+(c.zeroNote?0:c.cost);},0)*100)/100;
+        _realTco = Math.max(0, _realTco);
         window._lastComputedTco = _realTco;
         /* Render rows with percentages based on _realTco (guaranteed to sum to 100%) */
+        /* _realTco is the gross total; for % display we use absolute value of positive comps */
+        var _posTotal = _comps.filter(function(c){return !c.isSaving&&!c.zeroNote&&c.cost>0;}).reduce(function(s,c){return s+c.cost;},0);
         var _tcoRows = _comps.map(function(c) {
-          var pct = (_realTco > 0 ? (c.cost/_realTco*100).toFixed(1) : '0.0');
-          var costDisp=c.zeroNote?'<span style="font-size:.73rem;color:var(--green);font-style:italic;">$0 egress</span>':'<span style="font-family:monospace;color:var(--blue-deep);">$'+c.cost.toFixed(2)+'</span>';
-          var pctDisp=c.zeroNote?'<span style="font-size:.73rem;color:var(--green);">free</span>':pct+'%';
+          var pct = (_posTotal > 0 && c.cost > 0 && !c.isSaving ? (c.cost/_posTotal*100).toFixed(1) : '0.0');
+          var costDisp;
+          if(c.isSaving){
+            costDisp='<span style="font-family:monospace;color:var(--green);font-weight:700;">-$'+Math.abs(c.cost).toFixed(2)+' saved</span>';
+          } else if(c.zeroNote){
+            costDisp='<span style="font-size:.73rem;color:var(--green);font-style:italic;">$0 egress</span>';
+          } else {
+            costDisp='<span style="font-family:monospace;color:var(--blue-deep);">$'+c.cost.toFixed(2)+'</span>';
+          }
+          var pctDisp=c.zeroNote?'<span style="font-size:.73rem;color:var(--green);">free</span>':(c.isSaving?'<span style="color:var(--green);">saving</span>':pct+'%');
           var noteRow=c.zeroNote?'<tr style="background:var(--green-bg);"><td colspan="4" style="padding:3px 12px 8px;font-size:.73rem;color:var(--green);font-style:italic;">\u2139 '+c.zeroNote+'</td></tr>':'';
-          return '<tr style="border-bottom:'+(c.zeroNote?'none':'1px solid var(--rule)')+';"><td style="padding:8px 12px;font-weight:600;">'+c.label+'</td>'
+          var _detailHtml = c.detail ? '<div style="font-size:.72rem;color:var(--ink-light);margin-top:2px;">' + c.detail + '</div>' : '';
+          return '<tr style="border-bottom:'+(c.zeroNote?'none':'1px solid var(--rule)')+';"><td style="padding:8px 12px;font-weight:'+(c.isSaving?'700':'600')+';">'+c.label+_detailHtml+'</td>'
             +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge '+c.badge+'">'+c.cat+'</span></td>'
             +'<td style="padding:8px 12px;text-align:right;">'+costDisp+'</td>'
             +'<td style="padding:8px 12px;text-align:right;">'+pctDisp+'</td></tr>'+noteRow;
@@ -3796,7 +3801,7 @@
 
       /* Unit Economics: use _realTco (from TCO breakdown) to avoid double-counting */
       var _effectiveTco=(typeof _realTco!=='undefined'&&_realTco>0)?_realTco:totalCost;
-      window._lastComputedTco=_effectiveTco;
+      window._lastComputedTco = _effectiveTco; /* final authoritative value */
       var cPuMonthly=_effectiveTco/consumers;
       var cPr=_effectiveTco/reqMonth;
       var cPuDay=cPuMonthly/30;
@@ -4208,13 +4213,20 @@
         var cont = document.getElementById('cloudsec-content');
         if (!cont) return;
         var svcs = [
-          { id:'sec-guardduty',  icon:'fa-shield-halved',   label:'Amazon GuardDuty',        iId:'input-guardduty-gb',        iL:'GB logs/mo',   desc:'$'+data.guardDutyPerGbLogs+'/GB. '+data.guardDutyFirstGbFreeNote },
-          { id:'sec-inspector',  icon:'fa-magnifying-glass', label:'Amazon Inspector',         iId:'input-inspector-instances', iL:'instances',    desc:'$'+data.inspectorPerInstanceMonth+'/instance/mo' },
-          { id:'sec-waf',        icon:'fa-shield',           label:'AWS WAF',                  iId:'input-waf-rules',           iL:'rules',        desc:'$'+data.wafWebAclPerMonth+'/WebACL + $'+data.wafRulePerMonth+'/rule + $'+data.wafPer1MRequests+'/1M req' },
-          { id:'sec-macie',      icon:'fa-eye',              label:'Amazon Macie',             iId:'input-macie-gb',            iL:'GB S3 data',   desc:'$'+data.maciePerGbClassified+'/GB. '+data.macieFirstGbFreeNote },
-          { id:'sec-cloudwatch', icon:'fa-chart-line',       label:'CloudWatch Logs',          iId:'input-cw-gb',              iL:'GB logs/mo',   desc:'Ingestion: $'+data.cloudwatchLogsIngestionPerGb+'/GB + Storage: $'+data.cloudwatchLogsStoragePerGbMonth+'/GB-mo' },
-          { id:'sec-audit',      icon:'fa-clipboard-check',  label:'AWS Audit Manager',        iId:'input-audit-assessments',  iL:'assessments',  desc:'$'+data.auditManagerPerAssessmentMonth+'/assessment/mo' },
-          { id:'sec-kms',        icon:'fa-key',              label:'KMS (Encryption at Rest)', iId:'input-kms-keys',           iL:'CMKs',         desc:data.kmsNote }
+          {id:'sec-guardduty',icon:'fa-shield-halved',label:'Amazon GuardDuty',iId:'input-guardduty-gb',iL:'GB logs/mo',
+            desc:'Threat detection via VPC Flow Logs &amp; CloudTrail. First 500 GB/mo free. $'+data.guardDutyPerGbLogs+'/GB after.'},
+          {id:'sec-inspector',icon:'fa-magnifying-glass',label:'Amazon Inspector',iId:'input-inspector-instances',iL:'EC2 instances',
+            desc:'CVE &amp; network-exposure scans of EC2 and containers. $'+data.inspectorPerInstanceMonth+'/instance/mo.'},
+          {id:'sec-waf',icon:'fa-shield',label:'AWS WAF',iId:'input-waf-rules',iL:'custom rules',
+            desc:'Layer-7 firewall for ALB/API GW. Blocks SQLi, XSS, rate abuse. $'+data.wafWebAclPerMonth+' WebACL + $'+data.wafRulePerMonth+'/rule + $'+data.wafPer1MRequests+'/1M req.'},
+          {id:'sec-macie',icon:'fa-eye',label:'Amazon Macie',iId:'input-macie-gb',iL:'GB S3 data',
+            desc:'ML PII &amp; credential discovery in S3. First 1 GB/mo free. $'+data.maciePerGbClassified+'/GB.'},
+          {id:'sec-cloudwatch',icon:'fa-chart-line',label:'CloudWatch Logs',iId:'input-cw-gb',iL:'GB ingested/mo',
+            desc:'Log ingestion &amp; alerting. $'+data.cloudwatchLogsIngestionPerGb+'/GB in &middot; $'+data.cloudwatchLogsStoragePerGbMonth+'/GB-mo stored.'},
+          {id:'sec-audit',icon:'fa-clipboard-check',label:'AWS Audit Manager',iId:'input-audit-assessments',iL:'active assessments',
+            desc:'SOC2/PCI/ISO compliance evidence. $'+data.auditManagerPerAssessmentMonth+'/assessment/mo.'},
+          {id:'sec-kms',icon:'fa-key',label:'AWS KMS (Encryption)',iId:'input-kms-keys',iL:'CMKs (keys)',
+            desc:'Envelope encryption for S3/RDS/EBS. $'+data.kmsCmkPerMonth+'/CMK/mo + $'+data.kmsApiCallsPer10k+'/10K API calls. Typically 1&ndash;3 CMKs per service.'}
         ];
         cont.innerHTML = svcs.map(function(s) {
           return '<div class="tactic-row"><input type="checkbox" class="tactic-check" id="'+s.id+'" onchange="recalculateSecCost()">'
@@ -4275,10 +4287,14 @@
         _coData = data;
         var cont = document.getElementById('costopt-content');
         if (!cont) return;
-        var html = '<div class="notice notice-blue" style="margin-bottom:12px;"><i class="fas fa-info-circle"></i>'
-          + '<div>Enter your monthly EC2 on-demand spend to see projected savings.</div></div>'
-          + '<div class="tactic-row"><div class="tactic-label-group"><label class="tactic-label" for="input-ec2-monthly-spend">Monthly EC2 on-demand spend (USD)</label></div>'
-          + '<div class="tactic-input-group"><input type="number" id="input-ec2-monthly-spend" min="0" placeholder="500" oninput="recalculateCostOpt()"><span class="tactic-unit">USD/mo</span></div></div>';
+        var _as=computeEc2BaselineSpend();
+        var html='<div class="notice notice-blue" style="margin-bottom:12px;"><i class="fas fa-info-circle"></i>'
+          +'<div>RI &amp; Savings Plans apply to EC2/EKS compute already configured above. Spend is auto-calculated.</div></div>'
+          +'<div class="tactic-row" style="background:var(--amber-bg);border-radius:var(--r);padding:8px 12px;margin-bottom:8px;border:1px solid var(--amber-border);">'
+          +'<div class="tactic-label-group"><label class="tactic-label" style="color:var(--amber);">'
+          +'<i class="fas fa-calculator" style="margin-right:5px;"></i>Estimated on-demand compute spend</label>'
+          +'<span class="tactic-description">Auto-calculated from EC2/EKS selections. Edit if needed.</span></div>'
+          +'<div class="tactic-input-group"><input type="number" id="input-ec2-monthly-spend" min="0" placeholder="500" value="'+(_as||'')+'" oninput="recalculateCostOpt()"><span class="tactic-unit">USD/mo</span></div></div>';
         var opts = [
           { id:'opt-ri-standard',      label:'Standard RI (1-yr) \u2014 ~'+data.reservedInstance1yrSavingsPct+'% savings', desc:data.riNote, numId:'input-ri-count', numL:'RIs' },
           { id:'opt-ri-3yr',           label:'Standard RI (3-yr) \u2014 ~'+data.reservedInstance3yrSavingsPct+'% savings', desc:'', numId:null, numL:null },
@@ -4349,12 +4365,24 @@
         + '&#9432; Applies to EC2 compute costs only. '
         + 'Data transfer (egress) costs cannot be discounted via Reserved Instances or Savings Plans.</div></div>'
         : '';
+      /* Save FinOps saving to sessionStorage so TCO table can reflect it */
+      /* Convention: tco_finops_saving = positive number = monthly saving to subtract */
+      if(best>0){
+        sessionStorage.setItem('tco_finops_saving', best.toFixed(4));
+        sessionStorage.setItem('tco_finops_spend',  spend.toFixed(4));
+      } else {
+        sessionStorage.removeItem('tco_finops_saving');
+        sessionStorage.removeItem('tco_finops_spend');
+      }
       res.innerHTML = '<div style="padding:14px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#fffdf5);border:1px solid var(--gold-border);">'
         + '<div style="font-family:\'DM Serif Display\',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;"><i class="fas fa-coins" style="margin-right:6px;"></i>Cost Optimisation Summary</div>'
         + lines.map(function(l){return '<div style="font-size:.82rem;margin-top:6px;color:var(--ink-medium);">\u2022 '+l+'</div>';}).join('')
         + (best>0?'<div style="margin-top:10px;font-weight:700;color:var(--green);">Best monthly saving: $'+best.toFixed(2)+'/mo \u2192 $'+((spend-best)*12).toFixed(2)+'/yr</div>':'')
         + '</div>'
         + _fpHtml;
+      /* Refresh live comparison delta */
+      var _bRco=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+      if(_bRco) updateLiveComparison(_bRco, _bRco);
     }
 
     function loadCachingSection() {
@@ -4474,30 +4502,50 @@
       var buc=sessionStorage.getItem('svc_buc')||'\u2014';
       var rps=parseInt(sessionStorage.getItem('svc_rps')||'0')||0;
       var cons=parseInt(sessionStorage.getItem('svc_consumers')||'0')||0;
-      var tco=0;
-      var tcoRows=document.querySelectorAll('#cloudTcoBreakdown table tbody tr');
-      if(tcoRows.length){var lr=tcoRows[tcoRows.length-1];var c2=lr.querySelectorAll('td');if(c2.length>=3)tco=parseFloat((c2[2].textContent||'').replace(/[^0-9.]/g,''))||0;}
-      if(!tco){var bel=document.querySelector('#unitEconGrid .unit-econ-value');if(bel)tco=parseFloat((bel.textContent||'').replace(/[^0-9.]/g,''))||0;}
+      /* Use _lastComputedTco (set by populateUnitEcon) — the only reliable source */
+      var tco = (typeof window._lastComputedTco === 'number' && window._lastComputedTco > 0)
+        ? Math.round(window._lastComputedTco * 100) / 100 : 0;
+      /* Fallback: scan TCO table last row for $X.XX/mo cell (avoid % column) */
+      if (!tco) {
+        var _tTable = document.querySelector('#cloudTcoBreakdown table');
+        if (_tTable) {
+          var _tRows = _tTable.querySelectorAll('tbody tr');
+          if (_tRows.length) {
+            var _lr = _tRows[_tRows.length - 1];
+            _lr.querySelectorAll('td').forEach(function(cell) {
+              var t = cell.textContent || '';
+              if (t.indexOf('$') >= 0 && t.indexOf('/mo') >= 0 && t.indexOf('%') < 0) {
+                var v = parseFloat(t.replace(/[^0-9.]/g, ''));
+                if (v > 1) tco = v; /* >1 to avoid tiny rounding values */
+              }
+            });
+          }
+        }
+      }
       var tIds=['tactic-client-lb','tactic-server-lb','tactic-timeout','tactic-retry','tactic-cb','tactic-saga','tactic-tls','tactic-mtls','tactic-oauth','tactic-basic-auth'];
       var tLbl={'tactic-client-lb':'LB-Client','tactic-server-lb':'LB-Server','tactic-timeout':'Timeout','tactic-retry':'Retry','tactic-cb':'Circ.Breaker','tactic-saga':'SAGA','tactic-tls':'TLS','tactic-mtls':'mTLS','tactic-oauth':'OAuth2+JWT','tactic-basic-auth':'Basic Auth'};
       var active=tIds.filter(function(id){var e=document.getElementById(id);return e&&e.checked;}).map(function(id){return tLbl[id]||id;});
       var p=getPortfolio();
       p.push({id:Date.now(),name:name.trim(),purpose:purpose.trim().substring(0,120),buc:(buc.indexOf('CUSTOM:')===0?buc.replace('CUSTOM:',''):buc),rps:rps,consumers:cons,tactics:active,tco:tco,timestamp:new Date().toLocaleDateString()});
       savePortfolio(p);
-      showToast('\u2713 Saved! Returning to Phase\u00a01\u2026');
-      setTimeout(function(){
-        ['serviceName','servicePurpose','requestsPerSecond','revenuePerTransaction'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
-        ['svc_name','svc_purpose','svc_rps','svc_buc','svc_consumers','svc_consumer_type','svc_revenue_per_tx','tco_alb_cost','tco_alb_label','tco_cache_cost','tco_cache_label','tco_db_cost','tco_sec_cost','tco_tls_overhead','tco_jwt_overhead'].forEach(function(k){sessionStorage.removeItem(k);});
-        selectedBUC=null;window._lastProtoFile=null;
-        document.querySelectorAll('.buc-card').forEach(function(c){c.classList.remove('selected');});
-        document.querySelectorAll('.tactic-check').forEach(function(cb){cb.checked=false;});
-        var ps=document.getElementById('phase2-proto-section');if(ps)ps.style.display='none';
-        var csel=document.getElementById('phase2-consumers-section');if(csel)csel.style.display='none';
-        var fnd=document.getElementById('fileNameDisplay2');if(fnd)fnd.textContent='';
-        var sr=document.getElementById('serverResultsSection');if(sr){sr.classList.add('hidden');sr.classList.remove('visible');}
-        var p5=document.getElementById('phase5');if(p5){p5.style.display='none';p5.classList.remove('visible');}
-        goToPhase(1);
-      },1800);
+      /* Visual confirmation on the button — stay in Phase 4 */
+      var _btn = document.querySelector('.phase4-actions [onclick="saveServiceToPortfolio()"]');
+      if (_btn) {
+        var _orig = _btn.innerHTML;
+        var _origBg = _btn.style.background;
+        _btn.innerHTML = '<i class="fas fa-check"></i> Saved to Portfolio!';
+        _btn.style.background = 'var(--green)';
+        _btn.disabled = true;
+        setTimeout(function() {
+          _btn.innerHTML = _orig;
+          _btn.style.background = _origBg;
+          _btn.disabled = false;
+        }, 2500);
+      } else {
+        showToast('\u2713 Service saved to portfolio!');
+      }
+      renderPhase5Portfolio();
+      showPortfolioNextDialog(name, tco);
     }
     function goToPhase5(){
       document.querySelectorAll('.phase-card').forEach(function(c){c.classList.remove('visible');});
@@ -4572,16 +4620,36 @@
           +'<p style="font-size:.72rem;color:#6B7280;border-top:1px solid #E5E3DF;padding-top:10px;margin-top:14px;">'
           +'Architectural TCO estimate. Validate with Engineering, FinOps, Finance and Procurement before acting on these figures.</p>';
       }
-      if(tots){
-        tots.style.display='block';
-        tots.innerHTML='<div class="phase5-total-banner">'
-          +'<div><div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.6);margin-bottom:4px;">Total Portfolio TCO</div>'
-          +'<div style="font-family:monospace;font-size:1.6rem;font-weight:700;">$'+totalTco.toFixed(2)+'/mo</div>'
-          +'<div style="font-size:.78rem;color:rgba(255,255,255,.75);margin-top:3px;">$'+(totalTco*12).toFixed(2)+'/yr \u00b7 '+portfolio.length+' service'+(portfolio.length!==1?'s':'')+' modelled</div>'
-          +'</div><div style="text-align:right;">'
-          +'<div style="font-size:.7rem;color:rgba(255,255,255,.6);margin-bottom:4px;">Avg TCO / service</div>'
-          +'<div style="font-family:monospace;font-size:1.1rem;font-weight:700;">$'+(totalTco/portfolio.length).toFixed(2)+'/mo</div>'
-          +'</div></div>';
+      if (tots) {
+        tots.style.display = 'block';
+        var _grid = document.getElementById('p5-totals-grid');
+        var _metrics = [
+          { l:'Services Modelled',  v: portfolio.length,                    s: 'in this portfolio' },
+          { l:'Total Monthly TCO',  v: '$'+totalTco.toFixed(2)+'/mo',       s: 'sum of all services' },
+          { l:'Total Annual TCO',   v: '$'+(totalTco*12).toFixed(2)+'/yr',  s: '12 × monthly total' },
+          { l:'Avg TCO / Service',  v: '$'+(totalTco/portfolio.length).toFixed(2)+'/mo', s: 'mean per service' }
+        ];
+        var _gridHtml = _metrics.map(function(m) {
+          return '<div style="background:rgba(255,255,255,.1);border-radius:var(--r);padding:12px 14px;">'
+            + '<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;'
+            + 'color:rgba(255,255,255,.55);margin-bottom:4px;">'+m.l+'</div>'
+            + '<div style="font-family:monospace;font-size:1.1rem;font-weight:700;color:#F5ECD7;">'+m.v+'</div>'
+            + '<div style="font-size:.7rem;color:rgba(255,255,255,.45);margin-top:2px;">'+m.s+'</div>'
+            + '</div>';
+        }).join('');
+        if (_grid) {
+          _grid.style.gridTemplateColumns = 'repeat(4,1fr)';
+          _grid.innerHTML = _gridHtml;
+        } else {
+          /* Fallback if grid not found */
+          tots.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">'
+            + '<div><div style="font-size:.7rem;color:rgba(255,255,255,.6);margin-bottom:4px;">Total Portfolio TCO</div>'
+            + '<div style="font-family:monospace;font-size:1.6rem;font-weight:700;">$'+totalTco.toFixed(2)+'/mo</div>'
+            + '<div style="font-size:.78rem;color:rgba(255,255,255,.75);margin-top:3px;">$'+(totalTco*12).toFixed(2)+'/yr &middot; '
+            + portfolio.length+' service'+(portfolio.length!==1?'s':'')+' modelled</div></div>'
+            + '<div style="text-align:right;"><div style="font-size:.7rem;color:rgba(255,255,255,.6);margin-bottom:4px;">Avg / service</div>'
+            + '<div style="font-family:monospace;font-size:1.1rem;font-weight:700;">$'+(totalTco/portfolio.length).toFixed(2)+'/mo</div></div></div>';
+        }
       }
     }
     function removeFromPortfolio(id){savePortfolio(getPortfolio().filter(function(e){return e.id!==id;}));renderPhase5Portfolio();}
@@ -4605,24 +4673,42 @@
       var g=function(id){return document.getElementById(id)||{};};
       var chk=function(id){return !!(g(id).checked);};
       var num=function(id,def){return parseFloat(g(id).value)||(def||0);};
+      /* Use live AWS prices from /api/aws/container-pricing if already loaded */
+      var _cp = window._containerPriceData || {};
+      var _eksPerCluster = (_cp.eksControlPlanePerMonth != null) ? _cp.eksControlPlanePerMonth : 73.0;
+      var _albPerLb      = (_cp.albFixedPerMonth        != null) ? _cp.albFixedPerMonth        : 16.43;
+      var _ebsPerGb      = (_cp.ebsGp3PerGbMonth        != null) ? _cp.ebsGp3PerGbMonth        : 0.08;
+      var _s3PerGb       = 0.023; /* S3 Standard — stable, no API needed */
+      /* If live prices not yet loaded, kick off the fetch */
+      if (!window._containerPriceData) {
+        fetch('/api/aws/container-pricing').then(function(r){return r.ok?r.json():null;})
+        .then(function(d){if(d){window._containerPriceData=d;recalculateContainerCost();}}).catch(function(){});
+      }
       var aLines=[],aTotal=0;
       if(chk('cef-clusters')){
         var nCl=num('input-clusters',1);
         var orch=g('input-orchestration').value||'';
-        if(orch===''||orch==='eks'){var c0=nCl*73;aTotal+=c0;aLines.push('EKS Control Plane ('+nCl+' x $73/mo): $'+c0.toFixed(2)+'/mo');}
+        if(orch===''||orch==='eks'){var c0=nCl*_eksPerCluster;aTotal+=c0;aLines.push('EKS Control Plane ('+nCl+' x $'+_eksPerCluster.toFixed(2)+'/mo): $'+c0.toFixed(2)+'/mo');}
         else aLines.push('ECS clusters: no control plane charge');
       }
-      if(chk('cef-cluster-lb')){var nLB=num('input-cluster-lbs',1);var cLB=nLB*16.43;aTotal+=cLB;aLines.push('Cluster ALBs ('+nLB+'x $16.43/mo): $'+cLB.toFixed(2)+'/mo');}
-      if(chk('cef-host-storage')){var gbN=num('input-host-storage-gb',30);var nPo=num('input-pods',10);var estN=Math.max(1,Math.ceil(nPo/10));var cHS=gbN*estN*0.10;aTotal+=cHS;aLines.push('Host OS Storage (~'+estN+' nodes x '+gbN+' GB x $0.10): $'+cHS.toFixed(2)+'/mo');}
-      if(chk('cef-cluster-backup')){var bkGb=num('input-cluster-backup-gb',50);var cBk=bkGb*0.023;aTotal+=cBk;aLines.push('Cluster Backup ('+bkGb+' GB x $0.023): $'+cBk.toFixed(2)+'/mo');}
+      if(chk('cef-cluster-lb')){var nLB=num('input-cluster-lbs',1);var cLB=nLB*_albPerLb;aTotal+=cLB;aLines.push('Cluster ALBs ('+nLB+'x $'+_albPerLb.toFixed(2)+'/mo): $'+cLB.toFixed(2)+'/mo');}
+      if(chk('cef-host-storage')){var gbN=num('input-host-storage-gb',30);var nPo=num('input-pods',10);var estN=Math.max(1,Math.ceil(nPo/10));var cHS=gbN*estN*_ebsPerGb;aTotal+=cHS;aLines.push('Host OS Storage (~'+estN+' nodes x '+gbN+' GB x $'+_ebsPerGb.toFixed(3)+'): $'+cHS.toFixed(2)+'/mo');}
+      if(chk('cef-cluster-backup')){var bkGb=num('input-cluster-backup-gb',50);var cBk=bkGb*_s3PerGb;aTotal+=cBk;aLines.push('Cluster Backup ('+bkGb+' GB x $'+_s3PerGb+'): $'+cBk.toFixed(2)+'/mo');}
       if(chk('cef-host-license')){var licR=parseFloat(g('input-host-os').value)||0;if(licR>0){var nPo2=num('input-pods',10);var estN2=Math.max(1,Math.ceil(nPo2/10));var cHL=licR*730*estN2;aTotal+=cHL;aLines.push('Host OS License: $'+cHL.toFixed(2)+'/mo');}}
       if(chk('cef-workload-license')){var wl=num('input-workload-license-cost',0);if(wl>0){aTotal+=wl;aLines.push('Workload License: $'+wl.toFixed(2)+'/mo');}}
-      var maxDisc=Math.max(parseInt(g('input-container-ri').value)||0,parseInt(g('input-spot-pct').value)||0,num('input-subscription-disc',0))/100;
-      if(maxDisc>0&&aTotal>0){var sv=aTotal*maxDisc;aTotal-=sv;aLines.push('Discount ('+Math.round(maxDisc*100)+'%): -$'+sv.toFixed(2)+'/mo');}
+      /* Spot discount is still valid here — it's about instance type selection, not RI/SP purchasing */
+      var spotDisc=(parseInt(g('input-spot-pct').value)||0)/100;
+      if(spotDisc>0&&aTotal>0){var sv=aTotal*spotDisc;aTotal-=sv;aLines.push('Spot discount ('+Math.round(spotDisc*100)+'%): -$'+sv.toFixed(2)+'/mo');}
       var appLines=[],appTotal=0;
       var isFg=(g('input-underlying-resource').value||'').indexOf('fargate')>=0;
-      if(chk('cef-cronjobs')&&isFg){var nCJ=num('input-cronjobs',1);var durM=num('input-cronjob-duration-min',15);var rD=num('input-cronjob-freq',4);var cjC=durM*60*rD*30*nCJ*(0.25*0.04048/3600+0.5*0.004445/3600);appTotal+=cjC;appLines.push('CronJobs on Fargate: $'+cjC.toFixed(2)+'/mo');}
-      if(chk('cef-statefulsets')){var stR=num('input-statefulsets',1);var stV=num('input-vol-limit',20);var stC=stR*stV*0.10;appTotal+=stC;appLines.push('StatefulSet PVCs ('+stR+'x '+stV+' GB x $0.10): $'+stC.toFixed(2)+'/mo');}
+      var _fgVcpuRate=(_cp.fargateVcpuPerHour!=null)?_cp.fargateVcpuPerHour:0.04048;
+      var _fgGbRate  =(_cp.fargateGbPerHour  !=null)?_cp.fargateGbPerHour  :0.004445;
+      if(isFg&&(g('input-underlying-resource').value||'').indexOf('spot')>=0){
+        _fgVcpuRate=(_cp.fargateSpotVcpuPerHour!=null)?_cp.fargateSpotVcpuPerHour:0.01254688;
+        _fgGbRate  =(_cp.fargateSpotGbPerHour  !=null)?_cp.fargateSpotGbPerHour  :0.00137248;
+      }
+      if(chk('cef-cronjobs')&&isFg){var nCJ=num('input-cronjobs',1);var durM=num('input-cronjob-duration-min',15);var rD=num('input-cronjob-freq',4);var cjC=durM*60*rD*30*nCJ*(0.25*_fgVcpuRate/3600+0.5*_fgGbRate/3600);appTotal+=cjC;appLines.push('CronJobs on Fargate: $'+cjC.toFixed(2)+'/mo');}
+      if(chk('cef-statefulsets')){var stR=num('input-statefulsets',1);var stV=num('input-vol-limit',20);var stC=stR*stV*_ebsPerGb;appTotal+=stC;appLines.push('StatefulSet PVCs ('+stR+'x '+stV+' GB x $'+_ebsPerGb.toFixed(3)+'): $'+stC.toFixed(2)+'/mo');}
       var oT=Math.round((aTotal+appTotal)*100)/100;
       function rRes(el,lines,tot,icon,title,col){
         if(!el)return;
@@ -4698,7 +4784,7 @@
       ['svc_name','svc_purpose','svc_rps','svc_buc','svc_consumers','svc_consumer_type',
        'svc_revenue_per_tx','tco_alb_cost','tco_alb_label','tco_cache_cost','tco_cache_label',
        'tco_db_cost','tco_sec_cost','tco_tls_overhead','tco_jwt_overhead',
-       'tco_container_cost','tco_apigw_cost'].forEach(function(k){sessionStorage.removeItem(k);});
+       'tco_container_cost','tco_apigw_cost','tco_finops_saving','tco_finops_spend'].forEach(function(k){sessionStorage.removeItem(k);});
       goToPhase(1);
     }
 
@@ -4716,6 +4802,73 @@
       document.title='MACH-Portfolio-TCO-'+new Date().toISOString().substring(0,10);
       window.print();
       document.title=orig;
+    }
+
+    /* =====================================================================
+       API GATEWAY — lazy-load prices from /api/aws/api-gateway-pricing
+    ===================================================================== */
+    var _apigwData = window._apigwData || null;
+
+    function loadApiGwSection() {
+      /* If already loaded, just show the content */
+      if (_apigwData) { renderApiGwContent(); return; }
+      var fallback = {
+        restApiPer1MCallsMonthly: 3.50,
+        httpApiPer1MCallsFirst1B: 1.00,
+        httpApiPer1MCallsOver1B:  0.90,
+        wsApiPer1MConnections:    0.25,
+        wsApiPer1MMessages:       1.00,
+        cacheHalfGbPerHour:       0.020,
+        cache1GbPerHour:          0.038,
+        cache1_6GbPerHour:        0.054,
+        cache6_1GbPerHour:        0.200
+      };
+      fetch('/api/aws/api-gateway-pricing')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(d) { _apigwData = d || fallback; renderApiGwContent(); })
+        .catch(function()  { _apigwData = fallback;      renderApiGwContent(); });
+    }
+
+    function renderApiGwContent() {
+      var ld = document.getElementById('apigw-loading');
+      var ct = document.getElementById('apigw-content');
+      if (ld) ld.style.display = 'none';
+      if (ct) ct.style.display = 'block';
+      recalculateApiGw();
+    }
+
+    function computeEc2BaselineSpend(){
+      var s=0,iSel=document.getElementById('input-instance-type'),nR=parseInt((document.getElementById('input-replica-count')||{value:'0'}).value)||0;
+      if(iSel&&nR>0&&window._ec2PriceMap){var p=window._ec2PriceMap[iSel.value];if(p>0)s+=p*730*nR;}
+      var _cp=window._containerPriceData||{},pods=parseInt((document.getElementById('input-pods')||{value:'0'}).value)||0,ur=(document.getElementById('input-underlying-resource')||{value:''}).value||'';
+      if(pods>0&&ur.indexOf('fargate')<0){var eN=Math.max(1,Math.ceil(pods/10)),nT=(document.getElementById('input-ec2-instance')||{value:'m6i.large'}).value||'m6i.large',nP=(_cp.ec2OnDemandPrices&&_cp.ec2OnDemandPrices[nT])||0.096;s+=nP*730*eN;}
+      return s>0?Math.round(s*100)/100:null;
+    }
+
+    function showPortfolioNextDialog(svcName,tcoVal){
+      var old=document.getElementById('portfolio-next-dialog');if(old)old.remove();
+      var p=getPortfolio();var tot=p.reduce(function(s,e){return s+e.tco;},0);
+      var ov=document.createElement('div');ov.id='portfolio-next-dialog';
+      ov.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(10,20,40,.55);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      var sl=svcName?'\u201c'+svcName+'\u201d':'this service';
+      var tl=tcoVal?'$'+(Math.round(tcoVal*100)/100).toFixed(2)+'/mo':'';
+      ov.innerHTML='<div style="background:var(--card);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:28px 32px;max-width:480px;width:90%;">'
+        +'<div style="font-family:\'DM Serif Display\',serif;font-size:1.1rem;color:var(--blue-deep);margin-bottom:6px;">'
+        +'<i class="fas fa-folder-plus" style="margin-right:8px;color:var(--gold);"></i>Service Added to Portfolio</div>'
+        +'<div style="font-size:.88rem;color:var(--ink-medium);margin-bottom:4px;">'+sl+(tl?' &mdash; <strong style="color:var(--red);">'+tl+'</strong>':'')+' saved.</div>'
+        +'<div style="font-size:.82rem;color:var(--ink-light);margin-bottom:20px;">'
+        +'Portfolio: <strong>'+p.length+' service'+(p.length!==1?'s':'')+'</strong>'
+        +' &middot; Total: <strong style="color:var(--blue-deep);">$'+tot.toFixed(2)+'/mo</strong></div>'
+        +'<div style="display:flex;gap:12px;flex-wrap:wrap;">'
+        +'<button id="pnd-c" class="btn btn-gold" style="flex:1;"><i class="fas fa-plus-circle"></i> Model Another Service</button>'
+        +'<button id="pnd-f" class="btn btn-primary" style="flex:1;"><i class="fas fa-chart-pie"></i> View Portfolio</button>'
+        +'</div><button id="pnd-s" class="btn btn-ghost" style="width:100%;margin-top:8px;">'
+        +'<i class="fas fa-eye"></i> Stay &mdash; review report</button></div>';
+      document.body.appendChild(ov);
+      document.getElementById('pnd-c').onclick=function(){ov.remove();startNewService();};
+      document.getElementById('pnd-f').onclick=function(){ov.remove();goToPhase(5);};
+      document.getElementById('pnd-s').onclick=function(){ov.remove();};
+      ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
     }
     function wireAllHandlers() {
       function on(id, ev, fn) { var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
@@ -4938,6 +5091,11 @@
       })();
 
     });
+
+
+
+
+
 
 
 
