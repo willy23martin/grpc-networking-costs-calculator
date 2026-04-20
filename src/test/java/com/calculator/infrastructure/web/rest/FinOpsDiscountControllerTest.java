@@ -17,6 +17,8 @@ import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 
 import java.util.List;
 
+import static com.calculator.application.services.utils.MathUtils.round2;
+import static com.calculator.application.services.utils.MathUtils.round4;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -148,7 +150,7 @@ class FinOpsDiscountControllerTest {
     @Test
     @DisplayName("Coverage: Math Utils")
     void testMath() {
-        assert(FinOpsDiscountController.round2(5.555) == 5.56);
-        assert(FinOpsDiscountController.round4(0.12344) == 0.1234);
+        assert(round2(5.555) == 5.56);
+        assert(round4(0.12344) == 0.1234);
     }
 }
