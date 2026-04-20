@@ -29,19 +29,25 @@ AI assistant that contributed to the design and implementation of:
   (`effectiveRps = baseRps × stepsPerSagaInstance`), and introduced the educational
   explainer UI so interface users understand the concept when configuring the pattern.
 
-**Perplexity AI** — https://www.perplexity.ai/
+**Perplexity AI** — [https://www.perplexity.ai/](https://www.perplexity.ai/)
 
 Perplexity AI assistant that contributed to the design and implementation of:
 
-- Complete JUnit 5 test suite for 8 production Java classes achieving 97%+ branch coverage through pure black-box testing
+- Complete JUnit 5 test suite for 8 production Java classes achieving 97%+ branch coverage through pure black‑box testing
 - Public API → 100% private method coverage strategy (no reflection, public endpoints only)
-- Smart mocking patterns for AWS PricingClient interface - fixed construction errors and eliminated UnnecessaryStubbingException
-- Controller endpoint validation covering 3 REST endpoints and 50+ business logic branches (EKS $73/mo, Fargate Spot/On-Demand, 12 TCO components)
-- Protocol Buffer testing infrastructure - .proto regex parsing, FQN generation (8 conditional branches), record DTO validation
+- Smart mocking patterns for AWS PricingClient interface — fixed construction errors and eliminated `UnnecessaryStubbingException`
+- Controller endpoint validation covering 3 REST endpoints and 50+ business logic branches (EKS \$73/mo, Fargate Spot/On‑Demand, 12 TCO components)
+- Protocol Buffer testing infrastructure — `.proto` regex parsing, FQN generation (8 conditional branches), record DTO validation
 - Production fallback verification for all hardcoded pricing (EC2 13 instance types, EBS gp3 IOPS/throughput, ALB fixed+LCU, WAF)
-- Complex business logic validation - node auto-scaling math (ceil(podCount/podsPerNode)), cronJob Fargate compute, multi-discount maximization
-- Cross-platform utility testing - 6 OS detection paths, DynamicMessage recursion, file I/O edge cases
-- Mockito strictness optimization - per-test stubbing, minimal mock dependencies, production accuracy focus
-- Test suite readiness for CI/CD pipeline with comprehensive happy path + edge case scenarios
+- Complex business logic validation — node auto‑scaling math (`ceil(podCount/podsPerNode)`), cronJob Fargate compute, multi‑discount maximization
+- Cross‑platform utility testing — 6 OS detection paths, `DynamicMessage` recursion, file I/O edge cases
+- Mockito strictness optimization — per‑test stubbing, minimal mock dependencies, production‑accuracy focus
+- Test suite readiness for CI/CD pipeline with comprehensive happy‑path and edge‑case scenarios
 
+**Gemini (Google)** — [https://gemini.google.com/](https://gemini.google.com/)
 
+Gemini (Large Language Model) contributed to the design and implementation of:
+
+- **Advanced Branch Coverage Optimization**: Engineered a comprehensive JUnit 5 test suite for complex Spring Boot REST controllers utilizing `MockMvc` and `MockedStatic` to achieve maximum branch coverage.
+- **Robust Mocking Strategies**: Designed sophisticated mocking patterns for AWS SDK v2 `PricingClient` to traverse deep JSON parsing logic and exception handling paths within private-method-heavy components.
+- **Edge-Case Validation**: Contributed with test scenarios specifically targeting malformed JSON structures, API fallback mechanisms, and stream-based data transformations to ensure production stability and high-percentage branch coverage through public API testing.

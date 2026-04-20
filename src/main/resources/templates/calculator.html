@@ -1159,7 +1159,7 @@
         .phase5-service-card:hover{box-shadow:var(--shadow-sm);}
         .phase5-service-number{font-size:.7rem;color:var(--ink-light);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px;}
         .phase5-total-banner{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-radius:var(--r);background:linear-gradient(135deg,var(--blue-deep),#0F2540);color:#fff;}
-    </style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style>
+    </style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style></style>
 </head>
 <body>
 <!-- ═══════════════ ARCHITECT BANNER ═══════════════ -->
@@ -1394,6 +1394,17 @@
 
         <!-- Reliability -->
         <div class="tactics-category">
+            <!-- Reliability intro -->
+            <div class="notice" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-radius:var(--r);padding:13px 15px;margin-bottom:8px;">
+                <div style="display:flex;gap:9px;align-items:flex-start;">
+                    <i class="fas fa-circle-check" style="color:#2563EB;margin-top:2px;flex-shrink:0;font-size:.9rem;"></i>
+                    <div style="font-size:.80rem;color:var(--ink-medium);line-height:1.55;">
+                        <strong style="color:#1e40af;">Reliability</strong> &mdash; ISO/IEC 25010:2023 §4.2.4: The degree to which a system performs its required functions under stated conditions without failure.
+                        Sub-characteristics: <strong>Availability</strong> (uptime SLA), <strong>Fault Tolerance</strong> (operation despite faults), <strong>Recoverability</strong> (restoration after failure).
+                        <span style="color:var(--ink-light);font-size:.74rem;display:block;margin-top:2px;">Reliability is the operational baseline — a system must be reliable before it can be resilient. Configure these first.</span>
+                    </div>
+                </div>
+            </div>
             <div class="tactics-category-header" onclick="toggleCategory('reliability')">
                 <span class="tactics-category-title"><span>🛡️</span> Reliability Tactics</span>
                 <i class="fas fa-chevron-down tactics-chevron" id="chevron-reliability"></i>
@@ -1421,6 +1432,17 @@
 
         <!-- Resiliency -->
         <div class="tactics-category">
+            <!-- Resiliency intro -->
+            <div class="notice" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fb923c;border-radius:var(--r);padding:13px 15px;margin-bottom:8px;">
+                <div style="display:flex;gap:9px;align-items:flex-start;">
+                    <i class="fas fa-shield-halved" style="color:#c2410c;margin-top:2px;flex-shrink:0;font-size:.9rem;"></i>
+                    <div style="font-size:.80rem;color:var(--ink-medium);line-height:1.55;">
+                        <strong style="color:#9a3412;">Resiliency</strong> &mdash; SEI CMU (Firesmith, 2019) / ISO/IEC 25010:2023: <em>&ldquo;A system is resilient to the degree to which it rapidly and effectively protects its critical capabilities from disruption caused by adverse events and conditions.&rdquo;</em>
+                        Four protection functions: <strong>Resistance</strong> (minimise harm), <strong>Recognition</strong> (detect adverse events), <strong>Recovery</strong> (restore desired state), <strong>Adaptation</strong> (tolerate ongoing adversity).
+                        <span style="color:var(--ink-light);font-size:.74rem;display:block;margin-top:2px;">Resilience assumes failures WILL occur. Apply in order: Timeout (Recognition) &rarr; Retry (Recovery) &rarr; Circuit Breaker (Adaptation).</span>
+                    </div>
+                </div>
+            </div>
             <div class="tactics-category-header" onclick="toggleCategory('resiliency')">
                 <span class="tactics-category-title"><span>🔄</span> Resiliency Patterns</span>
                 <i class="fas fa-chevron-down tactics-chevron" id="chevron-resiliency"></i>
@@ -1577,6 +1599,17 @@
 
         <!-- Security -->
         <div class="tactics-category">
+            <!-- Security intro -->
+            <div class="notice" style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border:1px solid #a78bfa;border-radius:var(--r);padding:13px 15px;margin-bottom:8px;">
+                <div style="display:flex;gap:9px;align-items:flex-start;">
+                    <i class="fas fa-lock" style="color:#7c3aed;margin-top:2px;flex-shrink:0;font-size:.9rem;"></i>
+                    <div style="font-size:.80rem;color:var(--ink-medium);line-height:1.55;">
+                        <strong style="color:#5b21b6;">Security</strong> &mdash; ISO/IEC 25010:2023 §4.2.6: <em>&ldquo;The degree to which a product protects information so that persons or systems have data access appropriate to their authorisation.&rdquo;</em>
+                        Sub-characteristics: <strong>Confidentiality</strong> (TLS), <strong>Integrity</strong> (signed tokens), <strong>Non-Repudiation</strong> (JWT audit trail), <strong>Accountability</strong> (traceable principals), <strong>Authenticity</strong> (mTLS identity).
+                        <span style="color:var(--ink-light);font-size:.74rem;display:block;margin-top:2px;">Each tactic maps to OWASP Top 10:2021. Apply in layers: TLS &rarr; mTLS &rarr; OAuth 2.0 + JWT. Each layer addresses a distinct attack vector.</span>
+                    </div>
+                </div>
+            </div>
             <div class="tactics-category-header" onclick="toggleCategory('security')">
                 <span class="tactics-category-title"><span>🔒</span> Security Tactics</span>
                 <i class="fas fa-chevron-down tactics-chevron" id="chevron-security"></i>
@@ -1594,7 +1627,7 @@
                 <div class="tactic-row" style="margin-top:12px;">
                     <input type="checkbox" class="tactic-check" id="tactic-tls">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-tls">TLS (one-way) <span class="warning-badge badge-bytes">+ bytes</span></label>
+                        <label class="tactic-label" for="tactic-tls">TLS 1.3 (one-way) <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A02&middot;A07</span></label>
                         <span class="tactic-description">Encrypts every gRPC frame via TLS 1.3. Adds per-message byte overhead; handshakes only on reconnect.</span>
                         <div class="byte-range-badge" id="tls-byte-badge" style="display:none;">
                             <i class="fas fa-weight-hanging" style="font-size:.75rem;"></i>
@@ -1617,7 +1650,7 @@
                 <div class="tactic-row">
                     <input type="checkbox" class="tactic-check" id="tactic-mtls">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-mtls">mTLS (mutual TLS) <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span></label>
+                        <label class="tactic-label" for="tactic-mtls">mTLS (Mutual TLS) <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A01&middot;A02&middot;A07</span> <span class="warning-badge badge-red">+ requests</span></label>
                         <span class="tactic-description">Client also presents a certificate. Same per-message overhead as TLS; 5 handshake messages per reconnect vs 2 for plain TLS.</span>
                         <div class="byte-range-badge" id="mtls-byte-badge" style="display:none;">
                             <i class="fas fa-weight-hanging" style="font-size:.75rem;"></i>
@@ -1639,7 +1672,7 @@
                 <div class="tactic-row">
                     <input type="checkbox" class="tactic-check" id="tactic-oauth">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-oauth">OAuth 2.0 + JWT <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span></label>
+                        <label class="tactic-label" for="tactic-oauth">OAuth 2.0 + JWT <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A01&middot;A02&middot;A07</span></label>
                         <span class="tactic-description">JWT bearer in gRPC metadata. Inbound = $0 AWS cost. Cost via token-acquisition calls to auth server.</span>
                         <div class="byte-range-badge" id="jwt-byte-badge" style="display:none;">
                             <i class="fas fa-weight-hanging" style="font-size:.75rem;"></i>
@@ -1677,7 +1710,7 @@
                            data-info="Basic Authentication sends base64(user:pass) in every request Authorization header. No extra requests — but no expiry or revocation. Use only for tooling/dev."
                     >
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-basic-auth">Basic Authentication <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-warn">⚠ Not recommended</span></label>
+                        <label class="tactic-label" for="tactic-basic-auth">Basic Authentication <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-warn">⚠ Not recommended</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A02&middot;A07</span></label>
                         <span class="tactic-description">50–100 bytes per request. No expiry, no revocation. Dev/internal tooling only.</span>
                     </div>
                 </div>
@@ -2492,6 +2525,7 @@
             </tbody>
         </table>
 
+        <div id="p4-timeline-summary" style="display:none;margin-top:16px;margin-bottom:4px;"></div>
         <!-- Cloud TCO Breakdown (populated by JS) -->
         <div id="cloudTcoBreakdown" style="margin-top:20px;"></div>
 
@@ -2546,7 +2580,7 @@
             <button class="btn btn-gold" onclick="saveServiceToPortfolio()">
                 <i class="fas fa-folder-plus"></i> Add to Portfolio
             </button>
-            <button class="btn btn-ghost" onclick="startNewService()">
+            <button class="btn btn-ghost" onclick="startNewService(true)">
                 <i class="fas fa-plus-circle"></i> Model Another Service
             </button>
             <button class="btn btn-ghost" style="margin-left:auto;border-color:var(--blue-mid);color:var(--blue-mid);" onclick="goToPhase(5)">
@@ -2562,8 +2596,8 @@
     <div class="card-header">
         <div class="card-header-icon icon-gold"><i class="fas fa-chart-pie"></i></div>
         <div class="card-header-text">
-            <h2>Phase 5 — Portfolio Summary</h2>
-            <p>Aggregated TCO for all modelled microservices. Data persisted in browser local storage.</p>
+            <h2>Phase 5 — Architecture Portfolio Summary</h2>
+            <p>Final phase: aggregated TCO across all modelled microservices. Download the PDF to share with stakeholders.</p>
         </div>
     </div>
     <div class="notice notice-blue" style="margin-bottom:16px;"><i class="fas fa-info-circle"></i>
@@ -2579,6 +2613,7 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;" id="p5-totals-grid"></div>
     </div>
+    <div id="p5-unit-economics" style="display:none;"></div>
     <div id="p5-print-table" style="display:none;"></div>
 
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
@@ -2618,6 +2653,17 @@
     </div>
 </div>
 <script>
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2935,6 +2981,13 @@
        REPLICA SIZING
     ===================================================================== */
     function recalculateReplicas() {
+      var _cReqEl=document.getElementById('input-max-req-per-replica');
+      var _bRpsV=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+      if(_cReqEl&&_bRpsV>0){
+        if(!_cReqEl.value) _cReqEl.placeholder='from RPS: '+_bRpsV;
+        /* Also update the default value once per RPS change if field hasn't been manually set */
+        if(!_cReqEl.dataset.userSet&&!_cReqEl.value) _cReqEl.value=_bRpsV;
+      }
       var ri  = document.getElementById('replica-result');
       var gi  = document.getElementById('replica-grid');
       var ci  = document.getElementById('replica-count-display');
@@ -3039,11 +3092,11 @@
       var retryCb = document.getElementById('tactic-retry');
       if (retryCb && retryCb.checked) {
         var errPct = parseFloat((document.getElementById('input-retry-error-pct') || {value:'5'}).value) || 5;
-        var extra = Math.round(effectiveRps * errPct / 100);
-        effectiveRps += extra;
-        breakdown.push('+' + extra.toLocaleString() + ' Retry (' + errPct + '% of ' + (effectiveRps - extra).toLocaleString() + ' eff.RPS)');
-        var prev = document.getElementById('retry-extra-rps-preview');
-        if (prev) prev.textContent = '+' + extra.toLocaleString() + ' req/s (' + errPct + '% of effective RPS)';
+        var extra=Math.round(baseRps*errPct/100);
+        effectiveRps+=extra;
+        breakdown.push('+'+extra.toLocaleString()+' Retry ('+errPct+'% × '+baseRps.toLocaleString()+' base RPS = '+extra.toLocaleString()+' retry/s)');
+        var prev=document.getElementById('retry-extra-rps-preview');
+        if(prev) prev.textContent='+'+extra.toLocaleString()+' req/s = '+errPct+'% of '+baseRps.toLocaleString()+' base RPS';
       }
 
       /* TLS/mTLS handshakes */
@@ -3274,17 +3327,10 @@
       var retryCb = document.getElementById('tactic-retry');
       if (retryCb && retryCb.checked) {
         var errPct2 = parseFloat((document.getElementById('input-retry-error-pct') || {value:'5'}).value) || 5;
-        /* Apply % to effective RPS after SAGA (if any) */
-        var _sagaCb2 = document.getElementById('tactic-saga');
-        var _sagaExt2 = !!(document.getElementById('tactic-saga-external-vpc')&&document.getElementById('tactic-saga-external-vpc').checked);
-        var _sagaSteps2 = (_sagaCb2&&_sagaCb2.checked&&_sagaExt2)
-          ? ((parseInt((document.getElementById('input-saga-compensatable')||{value:'0'}).value)||0)
-            +(parseInt((document.getElementById('input-saga-retriable')||{value:'0'}).value)||0)
-            +(parseInt((document.getElementById('input-saga-pivot')||{value:'0'}).value)||0)) : 0;
-        var _effBeforeRetry = _sagaSteps2 > 0 ? baseRps * _sagaSteps2 : baseRps;
-        var rExtra = Math.round(_effBeforeRetry * errPct2 / 100);
-        contribs.push({ label:'Retry ('+errPct2+'% of eff. RPS)', rpsAdded:rExtra, bytesAdded:0, kind:'rps', baseRespBytes:respB,
-          detail:'+'+rExtra.toLocaleString()+' req/s ('+errPct2+'% of '+_effBeforeRetry.toLocaleString()+' eff.RPS after SAGA)' });
+        /* Retry = errPct% of BASE RPS (not effective). Failed requests are retried once. */
+        var rExtra = Math.round(baseRps * errPct2 / 100);
+        contribs.push({ label:'Retry', value:errPct2+'% error rate', rpsAdded:rExtra, bytesAdded:0, kind:'rps', baseRespBytes:respB,
+          detail:'+'+rExtra.toLocaleString()+' req/s = '+errPct2+'% of '+baseRps.toLocaleString()+' base RPS' });
       }
 
       var tlsOn  = !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked);
@@ -3311,12 +3357,10 @@
         /* RFC 7519/7523/9101: 650B typical JWT header. Use backend or typical. */
         var jwtActual  = (jwtB != null && jwtB > 0) ? jwtB : 650;
         var byteStr2   = '+' + jwtActual + ' B/req JWT header (RFC 7519' + (jwtB != null ? ', from backend' : ', est. typical') + ')';
-        var details    = [byteStr2];
-        if (tokenAcq > 0)   details.push('+'+tokenAcq+' token acq/s');
-        if (introspRps > 0) details.push('+'+introspRps.toLocaleString()+' introspection/s');
+        var cDtl='+'+jwtActual+'B JWT'+(tokenAcq>0?' · +'+tokenAcq+' tkn/s':'')+(introspRps>0?' · +'+introspRps+' intr/s':'')+' · AWS inbound=$0';
         contribs.push({ label:'OAuth 2.0 + JWT'+(mode==='REMOTE_INTROSPECTION'?' (remote)':' (local)'),
           rpsAdded:tokenAcq+introspRps, bytesAdded:jwtActual, kind:'both', baseRespBytes:respB,
-          jwtOnRequestOnly:true, detail:details.join(' \u00b7 ') });
+          jwtOnRequestOnly:true, detail:cDtl });
       }
       return contribs;
     }
@@ -3378,6 +3422,7 @@
             if (c.kind==='bytes') badge = '<span class="tbd-badge tbd-bytes">+ bytes</span>';
             if (c.kind==='both')  badge = '<span class="tbd-badge tbd-rps">+ RPS</span><span class="tbd-badge tbd-bytes">+ bytes</span>';
             rHtml += '<tr><td class="tbd-name">' + c.label
+              + (c.value  ? ' <span style="font-size:.73rem;color:var(--ink-light);font-weight:400;">'+c.value+'</span>' : '')
               + (c.note   ? '<div class="tbd-note">'+c.note+'</div>' : '')
               + (c.detail ? '<div class="tbd-detail">'+c.detail+'</div>' : '')
               + '</td><td class="tbd-badges">'+badge+'</td>'
@@ -3448,7 +3493,9 @@
           if(_foSav>0) _cloudRows+='<tr style="background:var(--green-bg);"><td class="tbd-name" style="color:var(--green);">FinOps RI/SP Saving<div class="tbd-detail">Reserved Instance / Savings Plan discount</div></td><td class="tbd-badges"><span class="tbd-badge" style="background:rgba(22,101,52,.1);color:var(--green);">saving</span></td><td class="tbd-cost" style="color:var(--green);font-weight:700;">-$'+_foSav.toFixed(2)+'/mo</td></tr>';
           /* Net total footer — only when there are cloud rows */
           if (_cloudRows) {
-            _cloudRows+='<tr style="background:var(--paper);font-weight:700;border-top:2px solid var(--rule);"><td class="tbd-name" colspan="2">Net Cloud Infra Cost</td><td class="tbd-cost tbd-cost-impact">+$'+Math.max(0,_ci).toFixed(2)+'/mo</td></tr>';
+            _cloudRows+='<tr style="background:var(--paper);font-weight:700;border-top:2px solid var(--rule);">';
+            _cloudRows+='<td class="tbd-name" colspan="2">Total Monthly Cost Increase (networking + cloud infra)</td>';
+            _cloudRows+='<td class="tbd-cost tbd-cost-impact">+$'+_totalDeltaForCmp.toFixed(2)+'/mo</td></tr>';
           }
           bEl.innerHTML = '<table class="tbd-table"><thead><tr><th>Tactic</th><th>Type</th><th>Est. Cost Impact</th></tr></thead><tbody>'+rHtml+_cloudRows+'</tbody></table>';
         } /* end breakdown block */
@@ -3504,7 +3551,9 @@
     function populateReportSummary() {
       var _mc4=document.getElementById('tactic-mission-critical');
       var _mn4=document.getElementById('p4-mission-critical-note');
+      var _fn4=document.getElementById('p4-finops-notes');
       if(_mn4&&_mc4)_mn4.style.display=_mc4.checked?'flex':'none';
+      if(_fn4){_fn4.style.display='block';}
       var grid = document.getElementById('reportServiceSummary');
       if (!grid) return;
       var ne = document.getElementById('serviceName');
@@ -3643,6 +3692,21 @@
       /* FinOps saving: subtract from total cloud infra cost */
       var _finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
       t = Math.max(0, t - _finopsSaving);
+      /* EC2 compute cost from Scalability section */
+      var _ec2ReplicaCost = 0;
+      var instSel2=document.getElementById('input-ec2-instance');
+      var replicaDisp2=document.getElementById('replica-count-display');
+      if(instSel2&&instSel2.value){
+        var instParts=instSel2.value.split('|');
+        var instName2=instParts[0];
+        var nR2=replicaDisp2?parseInt(replicaDisp2.textContent)||0:0;
+        if(nR2>0){
+          var ec2P=window._ec2PriceMap||((window._containerPriceData&&window._containerPriceData.ec2OnDemandPrices)||{});
+          var ep=ec2P[instName2]||(Object.keys(ec2P).filter(function(k){return k.indexOf(instName2)>=0;})[0]&&ec2P[Object.keys(ec2P).filter(function(k){return k.indexOf(instName2)>=0;})[0]])||0.096;
+          _ec2ReplicaCost=ep*730*nR2;
+        }
+      }
+      t+=_ec2ReplicaCost;
       return Math.round(t*100)/100;
     }
 
@@ -3943,7 +4007,12 @@
       var n=document.getElementById('serviceName'), p=document.getElementById('servicePurpose'), r=document.getElementById('requestsPerSecond');
       if (n) sessionStorage.setItem('svc_name', n.value);
       if (p) sessionStorage.setItem('svc_purpose', p.value);
-      if (r) sessionStorage.setItem('svc_rps', r.value);
+      if (r) {
+        var _rpsRaw=parseFloat(r.value)||0;
+        var _rpsInt=Math.max(0,Math.floor(_rpsRaw));
+        if(_rpsRaw!==_rpsInt) r.value=String(_rpsInt);
+        sessionStorage.setItem('svc_rps',String(_rpsInt));
+      }
       var _revI = document.getElementById('revenuePerTransaction');
       if (_revI && _revI.value) sessionStorage.setItem('svc_revenue_per_tx', _revI.value);
       else sessionStorage.removeItem('svc_revenue_per_tx');
@@ -4062,8 +4131,10 @@
       var mc  = !!(document.getElementById('tactic-mission-critical') && document.getElementById('tactic-mission-critical').checked);
       var mcNote = document.getElementById('finops-mission-critical-note');
       if (mcNote) mcNote.style.display = mc ? 'flex' : 'none';
-      var mcNoteP4 = document.getElementById('p4-mission-critical-note');
-      if (mcNoteP4) mcNoteP4.style.display = mc ? 'flex' : 'none';
+      var mcNoteP4=document.getElementById('p4-mission-critical-note');
+      if(mcNoteP4) mcNoteP4.style.display=mc?'flex':'none';
+      var fn4r=document.getElementById('p4-finops-notes');
+      if(fn4r) fn4r.style.display='block';
       if (!res) return;
       if (!sla) { res.style.display = 'none'; return; }
       var dtMo  = ((1 - sla/100) * 30 * 24 * 60).toFixed(1);
@@ -4213,24 +4284,27 @@
         var cont = document.getElementById('cloudsec-content');
         if (!cont) return;
         var svcs = [
-          {id:'sec-guardduty',icon:'fa-shield-halved',label:'Amazon GuardDuty',iId:'input-guardduty-gb',iL:'GB logs/mo',
+          {id:'sec-guardduty',icon:'fa-shield-halved',owasp:'OWASP A09',label:'Amazon GuardDuty',iId:'input-guardduty-gb',iL:'GB logs/mo',
             desc:'Threat detection via VPC Flow Logs &amp; CloudTrail. First 500 GB/mo free. $'+data.guardDutyPerGbLogs+'/GB after.'},
-          {id:'sec-inspector',icon:'fa-magnifying-glass',label:'Amazon Inspector',iId:'input-inspector-instances',iL:'EC2 instances',
+          {id:'sec-inspector',icon:'fa-magnifying-glass',label:'Amazon Inspector',owasp:'OWASP A06',iId:'input-inspector-instances',iL:'EC2 instances',
             desc:'CVE &amp; network-exposure scans of EC2 and containers. $'+data.inspectorPerInstanceMonth+'/instance/mo.'},
-          {id:'sec-waf',icon:'fa-shield',label:'AWS WAF',iId:'input-waf-rules',iL:'custom rules',
+          {id:'sec-waf',icon:'fa-shield',label:'AWS WAF',owasp:'OWASP A03·A04',iId:'input-waf-rules',iL:'custom rules',
             desc:'Layer-7 firewall for ALB/API GW. Blocks SQLi, XSS, rate abuse. $'+data.wafWebAclPerMonth+' WebACL + $'+data.wafRulePerMonth+'/rule + $'+data.wafPer1MRequests+'/1M req.'},
-          {id:'sec-macie',icon:'fa-eye',label:'Amazon Macie',iId:'input-macie-gb',iL:'GB S3 data',
+          {id:'sec-macie',icon:'fa-eye',label:'Amazon Macie',owasp:'OWASP A02',iId:'input-macie-gb',iL:'GB S3 data',
             desc:'ML PII &amp; credential discovery in S3. First 1 GB/mo free. $'+data.maciePerGbClassified+'/GB.'},
-          {id:'sec-cloudwatch',icon:'fa-chart-line',label:'CloudWatch Logs',iId:'input-cw-gb',iL:'GB ingested/mo',
+          {id:'sec-cloudwatch',icon:'fa-chart-line',label:'CloudWatch Logs',owasp:'OWASP A09',iId:'input-cw-gb',iL:'GB ingested/mo',
             desc:'Log ingestion &amp; alerting. $'+data.cloudwatchLogsIngestionPerGb+'/GB in &middot; $'+data.cloudwatchLogsStoragePerGbMonth+'/GB-mo stored.'},
-          {id:'sec-audit',icon:'fa-clipboard-check',label:'AWS Audit Manager',iId:'input-audit-assessments',iL:'active assessments',
+          {id:'sec-audit',icon:'fa-clipboard-check',label:'AWS Audit Manager',owasp:'OWASP A09',iId:'input-audit-assessments',iL:'active assessments',
             desc:'SOC2/PCI/ISO compliance evidence. $'+data.auditManagerPerAssessmentMonth+'/assessment/mo.'},
-          {id:'sec-kms',icon:'fa-key',label:'AWS KMS (Encryption)',iId:'input-kms-keys',iL:'CMKs (keys)',
+          {id:'sec-kms',icon:'fa-key',label:'AWS KMS (Encryption)',owasp:'OWASP A02',iId:'input-kms-keys',iL:'CMKs (keys)',
             desc:'Envelope encryption for S3/RDS/EBS. $'+data.kmsCmkPerMonth+'/CMK/mo + $'+data.kmsApiCallsPer10k+'/10K API calls. Typically 1&ndash;3 CMKs per service.'}
         ];
         cont.innerHTML = svcs.map(function(s) {
           return '<div class="tactic-row"><input type="checkbox" class="tactic-check" id="'+s.id+'" onchange="recalculateSecCost()">'
-            + '<div class="tactic-label-group"><label class="tactic-label" for="'+s.id+'"><i class="fas '+s.icon+'" style="margin-right:5px;width:16px;"></i>'+s.label+' <span class="warning-badge badge-red">+ cost</span></label>'
+            + '<div class="tactic-label-group"><label class="tactic-label" for="'+s.id+'"><i class="fas '+s.icon+'" style="margin-right:5px;width:16px;"></i>'+s.label
+            + ' <span class="warning-badge badge-red">+ cost</span>'
+            + (s.owasp ? ' <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">'+s.owasp+'</span>' : '')
+            + '</label>'
             + '<span class="tactic-description">'+s.desc+'</span></div>'
             + '<div class="tactic-input-group"><input type="number" id="'+s.iId+'" min="0" placeholder="0" oninput="recalculateSecCost()"><span class="tactic-unit">'+s.iL+'</span></div>'
             + '</div>';
@@ -4294,7 +4368,13 @@
           +'<div class="tactic-label-group"><label class="tactic-label" style="color:var(--amber);">'
           +'<i class="fas fa-calculator" style="margin-right:5px;"></i>Estimated on-demand compute spend</label>'
           +'<span class="tactic-description">Auto-calculated from EC2/EKS selections. Edit if needed.</span></div>'
-          +'<div class="tactic-input-group"><input type="number" id="input-ec2-monthly-spend" min="0" placeholder="500" value="'+(_as||'')+'" oninput="recalculateCostOpt()"><span class="tactic-unit">USD/mo</span></div></div>';
+          +'<div class="tactic-input-group">'
+          +'<input type="number" id="input-ec2-monthly-spend" min="0" placeholder="500" value="'+(_as||'')+'" oninput="recalculateCostOpt()">'
+          +'<span class="tactic-unit">USD/mo</span>'
+          +'<button onclick="var f=computeEc2BaselineSpend();if(f){document.getElementById(\'input-ec2-monthly-spend\').value=f;}recalculateCostOpt();" '
+          +'style="margin-left:6px;padding:3px 8px;font-size:.7rem;background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber);border-radius:4px;cursor:pointer;">'
+          +'<i class="fas fa-sync-alt"></i> Refresh</button>'
+          +'</div></div>';
         var opts = [
           { id:'opt-ri-standard',      label:'Standard RI (1-yr) \u2014 ~'+data.reservedInstance1yrSavingsPct+'% savings', desc:data.riNote, numId:'input-ri-count', numL:'RIs' },
           { id:'opt-ri-3yr',           label:'Standard RI (3-yr) \u2014 ~'+data.reservedInstance3yrSavingsPct+'% savings', desc:'', numId:null, numL:null },
@@ -4314,6 +4394,13 @@
         cont.innerHTML = html;
         var ld = document.getElementById('costopt-loading'); if (ld) ld.style.display = 'none';
         cont.style.display = 'block';
+        /* Auto-populate spend from scalability/container on open */
+        var spEl2=document.getElementById('input-ec2-monthly-spend');
+        if(spEl2&&(!spEl2.value||parseFloat(spEl2.value)===0)){
+          var fr2=computeEc2BaselineSpend(); if(fr2){spEl2.value=fr2; recalculateCostOpt();}
+        } else {
+          recalculateCostOpt();
+        }
       }).catch(function(e) { var l=document.getElementById('costopt-loading'); if(l) l.textContent='Could not fetch cost optimisation: '+e.message; });
     }
 
@@ -4383,6 +4470,37 @@
       /* Refresh live comparison delta */
       var _bRco=parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
       if(_bRco) updateLiveComparison(_bRco, _bRco);
+      /* Fetch service-specific RI prices when EC2 instance is configured */
+      var _instSel=document.getElementById('input-ec2-instance');
+      var _instTyp=_instSel&&_instSel.value?_instSel.value.split('|')[0]:null;
+      if(_instTyp&&_fpRows.length>0){
+        fetch('/api/finops/ri-prices/'+encodeURIComponent(_instTyp))
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(riData){
+            if(!riData) return;
+            /* Update rows with live actual % */
+            _fpRows.forEach(function(row){
+              if(row.s.indexOf('1-yr')>=0&&riData.ri1yrActualDiscountPct>0) row.p=riData.ri1yrActualDiscountPct;
+              if(row.s.indexOf('3-yr')>=0&&riData.ri3yrActualDiscountPct>0) row.p=riData.ri3yrActualDiscountPct;
+            });
+            var newBest2=0;
+            _fpRows.forEach(function(r2){var sv=spend*r2.p/100;if(sv>newBest2)newBest2=sv;});
+            if(newBest2>0){
+              sessionStorage.setItem('tco_finops_saving',newBest2.toFixed(4));
+              sessionStorage.setItem('tco_finops_spend',spend.toFixed(4));
+              if(_bRco) updateLiveComparison(_bRco,_bRco);
+            }
+            /* Append live price note */
+            if(res){
+              var _r1n=riData.ri1yrActualDiscountPct>0?' · 1-yr RI: '+riData.ri1yrActualDiscountPct+'% off':'';
+              var _r3n=riData.ri3yrActualDiscountPct>0?' · 3-yr RI: '+riData.ri3yrActualDiscountPct+'% off':'';
+              var liveNote='<div style="font-size:.72rem;color:var(--blue-mid);margin-top:6px;">'
+                +'<i class="fas fa-cloud" style="margin-right:4px;"></i>'
+                +'Live: '+_instTyp+' On-Demand $'+riData.onDemandPerHour.toFixed(4)+'/hr'+_r1n+_r3n+'</div>';
+              res.insertAdjacentHTML('beforeend',liveNote);
+            }
+          }).catch(function(){});
+      }
     }
 
     function loadCachingSection() {
@@ -4491,13 +4609,30 @@
         + 'Buffer: '+bufNote+'<br>'
         + '<strong>Formula:</strong> \u2308 '+svcs+' \u00f7 ('+engs+' \u00d7 '+perDay+') \u00d7 '+buffer+' \u2309 \u00f7 '+wkDays+' days/week'
         + '</div></div>';
+      var p4tl=document.getElementById('p4-timeline-summary');
+      if(p4tl&&totalDays){
+        p4tl.style.display='block';
+        p4tl.innerHTML='<div style="padding:13px 16px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#fffdf5);border:1px solid var(--gold-border);">'
+          +'<div style="font-family:\'DM Serif Display\',serif;font-size:.92rem;color:var(--gold);margin-bottom:8px;">'
+          +'<i class="fas fa-calendar-days" style="margin-right:6px;"></i>Implementation Timeline</div>'
+          +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">'
+          +'<div><div style="font-size:.64rem;color:var(--ink-light);text-transform:uppercase;font-weight:700;margin-bottom:2px;">Days</div>'
+          +'<div style="font-family:monospace;font-size:1.25rem;font-weight:700;color:var(--blue-deep);">'+totalDays+'</div></div>'
+          +'<div><div style="font-size:.64rem;color:var(--ink-light);text-transform:uppercase;font-weight:700;margin-bottom:2px;">Weeks</div>'
+          +'<div style="font-family:monospace;font-size:1.25rem;font-weight:700;color:var(--blue-deep);">'+weeks+'</div></div>'
+          +'<div><div style="font-size:.64rem;color:var(--ink-light);text-transform:uppercase;font-weight:700;margin-bottom:2px;">Months</div>'
+          +'<div style="font-family:monospace;font-size:1.25rem;font-weight:700;color:var(--blue-deep);">'+months+'</div></div>'
+          +'</div>'
+          +'<div style="font-size:.74rem;color:var(--ink-medium);margin-top:6px;">'+svcs+' svcs · '+engs+' eng · '+bufPct+'% buffer</div></div>';
+      }
     }
 
     var PORTFOLIO_KEY = 'grpc_tco_portfolio_v1';
     function getPortfolio(){try{var r=localStorage.getItem(PORTFOLIO_KEY);return r?JSON.parse(r):[];}catch(e){return [];}}
     function savePortfolio(arr){try{localStorage.setItem(PORTFOLIO_KEY,JSON.stringify(arr));}catch(e){}}
     function saveServiceToPortfolio(){
-      var name=(document.getElementById('serviceName')&&document.getElementById('serviceName').value)||sessionStorage.getItem('svc_name')||'Service';
+      var _svcEl=document.getElementById('serviceName');
+      var name=(_svcEl&&_svcEl.value.trim())||(sessionStorage.getItem('svc_name')||'').trim()||'Unnamed Service';
       var purpose=(document.getElementById('servicePurpose')&&document.getElementById('servicePurpose').value)||sessionStorage.getItem('svc_purpose')||'';
       var buc=sessionStorage.getItem('svc_buc')||'\u2014';
       var rps=parseInt(sessionStorage.getItem('svc_rps')||'0')||0;
@@ -4522,11 +4657,38 @@
           }
         }
       }
-      var tIds=['tactic-client-lb','tactic-server-lb','tactic-timeout','tactic-retry','tactic-cb','tactic-saga','tactic-tls','tactic-mtls','tactic-oauth','tactic-basic-auth'];
-      var tLbl={'tactic-client-lb':'LB-Client','tactic-server-lb':'LB-Server','tactic-timeout':'Timeout','tactic-retry':'Retry','tactic-cb':'Circ.Breaker','tactic-saga':'SAGA','tactic-tls':'TLS','tactic-mtls':'mTLS','tactic-oauth':'OAuth2+JWT','tactic-basic-auth':'Basic Auth'};
-      var active=tIds.filter(function(id){var e=document.getElementById(id);return e&&e.checked;}).map(function(id){return tLbl[id]||id;});
+      /* Collect ALL selected tactics: reliability, resiliency, security, microservices, cloud, container */
+      var _allTacticIds=[
+        /* Reliability */   'tactic-client-lb','tactic-server-lb',
+        /* Resiliency */    'tactic-timeout','tactic-retry','tactic-cb',
+        /* Microservices */ 'tactic-saga','tactic-apigw',
+        /* Security */      'tactic-tls','tactic-mtls','tactic-oauth','tactic-basic-auth',
+        /* Cloud */         'tactic-alb','tactic-cache','tactic-s3-backup','tactic-aurora-replica',
+        /* Cloud Sec */     'sec-guardduty','sec-inspector','sec-waf','sec-macie','sec-cloudwatch','sec-audit','sec-kms',
+        /* Container */     'cef-clusters','cef-host-storage','cef-cluster-lb','cef-host-license','cef-workload-license','cef-cronjobs','cef-statefulsets',
+        /* FinOps */        'opt-ri-standard','opt-ri-3yr','opt-savings-plan-1yr','opt-savings-plan-3yr'
+      ];
+      var _allTacticLbl={
+        'tactic-client-lb':'LB-Client','tactic-server-lb':'ALB/LB-Server','tactic-timeout':'Timeout',
+        'tactic-retry':'Retry','tactic-cb':'Circuit Breaker','tactic-saga':'SAGA','tactic-apigw':'API GW',
+        'tactic-tls':'TLS','tactic-mtls':'mTLS','tactic-oauth':'OAuth2+JWT','tactic-basic-auth':'Basic Auth',
+        'tactic-alb':'ALB','tactic-cache':'ElastiCache','tactic-s3-backup':'S3 Backup','tactic-aurora-replica':'Aurora',
+        'sec-guardduty':'GuardDuty','sec-inspector':'Inspector','sec-waf':'WAF','sec-macie':'Macie',
+        'sec-cloudwatch':'CloudWatch','sec-audit':'Audit Mgr','sec-kms':'KMS',
+        'cef-clusters':'EKS Cluster','cef-host-storage':'Host Storage','cef-cluster-lb':'Cluster LB',
+        'cef-host-license':'OS License','cef-workload-license':'Workload License','cef-cronjobs':'CronJobs','cef-statefulsets':'StatefulSets',
+        'opt-ri-standard':'RI 1yr','opt-ri-3yr':'RI 3yr','opt-savings-plan-1yr':'SP 1yr','opt-savings-plan-3yr':'SP 3yr'
+      };
+      var active=_allTacticIds.filter(function(id){var e=document.getElementById(id);return e&&e.checked;}).map(function(id){return _allTacticLbl[id]||id;});
+      /* Also add FinOps saving note if applicable */
+      var _foS=parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+      if(_foS>0) active.push('FinOps -$'+_foS.toFixed(0)+'/mo');
       var p=getPortfolio();
-      p.push({id:Date.now(),name:name.trim(),purpose:purpose.trim().substring(0,120),buc:(buc.indexOf('CUSTOM:')===0?buc.replace('CUSTOM:',''):buc),rps:rps,consumers:cons,tactics:active,tco:tco,timestamp:new Date().toLocaleDateString()});
+      var _storedTco=Math.round(tco*100)/100;
+      p=p.filter(function(e){return e.name!==name.trim();});
+      var _revEl2=document.getElementById('revenuePerTransaction');
+      var _revPerUser=(_revEl2&&_revEl2.value)?parseFloat(_revEl2.value)||0:parseFloat(sessionStorage.getItem('svc_revenue_per_tx')||'0')||0;
+      p.push({id:Date.now(),name:name.trim(),purpose:purpose.trim().substring(0,150),buc:buc,rps:rps,consumers:cons,tactics:active,tco:_storedTco,revenuePerUserMonth:_revPerUser,timestamp:new Date().toLocaleDateString()});
       savePortfolio(p);
       /* Visual confirmation on the button — stay in Phase 4 */
       var _btn = document.querySelector('.phase4-actions [onclick="saveServiceToPortfolio()"]');
@@ -4582,6 +4744,7 @@
           +'</div></div>'
           +'<div style="text-align:right;min-width:130px;">'
           +'<div style="font-family:monospace;font-size:1.2rem;font-weight:700;color:var(--blue-deep);">$'+e.tco.toFixed(2)+'/mo</div>'
+          +'<div style="font-size:.72rem;color:var(--ink-light);">$'+(e.tco*12).toFixed(2)+'/yr</div>'
           +'<div style="font-size:.72rem;color:var(--ink-light);margin-bottom:6px;">'+pct+'% of portfolio</div>'
           +'<div style="height:6px;background:var(--rule);border-radius:999px;overflow:hidden;"><div style="height:100%;width:'+barW+'%;background:linear-gradient(to right,var(--blue-deep),var(--blue-mid));border-radius:999px;"></div></div>'
           +'</div></div>'
@@ -4620,6 +4783,22 @@
           +'<p style="font-size:.72rem;color:#6B7280;border-top:1px solid #E5E3DF;padding-top:10px;margin-top:14px;">'
           +'Architectural TCO estimate. Validate with Engineering, FinOps, Finance and Procurement before acting on these figures.</p>';
       }
+      /* ── Call backend /api/portfolio/roi ── */
+      var _p5UeDiv=document.getElementById('p5-unit-economics');
+      if(_p5UeDiv&&portfolio.length>0){
+        var _payload={services:portfolio.map(function(e){return{name:e.name,buc:e.buc,tco:e.tco||0,revenuePerUserMonth:e.revenuePerUserMonth||0,consumers:e.consumers||0,rps:e.rps||0};}),
+          finopsMonthlySaving:parseFloat(sessionStorage.getItem('tco_finops_saving')||'0'),
+          ec2BaselineSpend:parseFloat(sessionStorage.getItem('tco_finops_spend')||'0')};
+        _p5UeDiv.style.display='block';
+        _p5UeDiv.innerHTML='<div style="text-align:center;padding:16px;color:var(--ink-light);font-size:.82rem;"><span class="spinner"></span> Computing…</div>';
+        fetch('/api/portfolio/roi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(_payload)})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(roi){if(roi)renderP5UnitEconomics(roi,_p5UeDiv);else renderP5UeFallback(_p5UeDiv,portfolio);})
+          .catch(function(){renderP5UeFallback(_p5UeDiv,portfolio);});
+      }
+      /* Aggregate Unit Economics (handled above) */
+      var _ueDiv=document.getElementById('p5-unit-economics');
+      /* Unit economics handled by renderP5UnitEconomics above */
       if (tots) {
         tots.style.display = 'block';
         var _grid = document.getElementById('p5-totals-grid');
@@ -4773,8 +4952,8 @@
       return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    function startNewService(){
-      if(!confirm('Start modelling a new service? Current phase inputs will be cleared.')) return;
+    function startNewService(skipConfirm){
+      if(!skipConfirm && !confirm('Start modelling a new service? Current phase inputs will be cleared.')) return;
       ['serviceName','servicePurpose','requestsPerSecond','revenuePerTransaction'].forEach(function(id){
         var el=document.getElementById(id); if(el) el.value='';
       });
@@ -4865,17 +5044,119 @@
         +'</div><button id="pnd-s" class="btn btn-ghost" style="width:100%;margin-top:8px;">'
         +'<i class="fas fa-eye"></i> Stay &mdash; review report</button></div>';
       document.body.appendChild(ov);
-      document.getElementById('pnd-c').onclick=function(){ov.remove();startNewService();};
+      document.getElementById('pnd-c').onclick=function(){ov.remove();startNewService(true);};
+      var _p4btn=document.querySelector('.phase4-actions [onclick="startNewService()"]');
+      if(_p4btn) _p4btn.setAttribute('onclick','startNewService(true)');
       document.getElementById('pnd-f').onclick=function(){ov.remove();goToPhase(5);};
       document.getElementById('pnd-s').onclick=function(){ov.remove();};
       ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+    }
+
+    function autoEnableAlb(){
+      var cb=document.getElementById('tactic-alb');
+      if(!cb||cb.checked) return;
+      cb.checked=true;
+      var ctBody=document.getElementById('body-cloud-tactics');
+      if(ctBody&&ctBody.style.display==='none') toggleCategory('cloud-tactics');
+      if(!window._albData) loadAlbSection();
+      showToast('✓ ALB auto-enabled in Cloud Tactics — required for load balancing.');
+    }
+
+    function renderP5UnitEconomics(roi,container){
+      var _rc=roi.monthlyRoi>=0?'var(--green)':'var(--red)';
+      var _ueI=[
+        {l:'Total Architecture TCO',v:'$'+roi.totalMonthlyTco.toFixed(2)+'/mo',s:'sum of '+roi.serviceCount+' services'},
+        {l:'Total Annual TCO',v:'$'+roi.totalAnnualTco.toFixed(2)+'/yr',s:'12 × monthly'},
+        {l:'Avg TCO / Microservice',v:'$'+roi.avgTcoPerService.toFixed(2)+'/mo',s:'mean'},
+        {l:'Total RPS',v:roi.totalRps.toLocaleString(),s:'aggregate req/s'},
+        {l:'Cost / Request',v:roi.costPerRequestUsd>0?'$'+roi.costPerRequestUsd.toFixed(6):'—',s:'avg'},
+        {l:'Cost / User / Month',v:roi.costPerUserPerMonth>0?'$'+roi.costPerUserPerMonth.toFixed(4):'—',s:roi.totalConsumers>0?roi.totalConsumers.toLocaleString()+' users':'set in Phase 2'}
+      ];
+      var _grd=function(items,cols){
+        cols=cols||'repeat(3,1fr)';
+        return '<div style="display:grid;grid-template-columns:'+cols+';gap:12px;margin-bottom:16px;">'
+          +items.map(function(m){return '<div style="background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:12px 14px;">'
+            +'<div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;">'+m.l+'</div>'
+            +'<div style="font-family:monospace;font-size:1.05rem;font-weight:700;color:'+(m.c||'var(--blue-deep)')+';">'+m.v+'</div>'
+            +'<div style="font-size:.7rem;color:var(--ink-light);margin-top:2px;">'+m.s+'</div>'
+            +'</div>';}).join('')+'</div>';
+      };
+      var html='<div style="margin-top:20px;">'
+        +'<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;color:var(--blue-deep);margin-bottom:12px;"><i class="fas fa-coins" style="margin-right:8px;"></i>Aggregated Unit Economics</div>'
+        +_grd(_ueI);
+      if(roi.hasRevenueData){
+        var _roiI=[
+          {l:'Total Monthly Revenue',v:'$'+roi.totalMonthlyRevenue.toFixed(2),s:'across all services'},
+          {l:'Total Annual Revenue',v:'$'+roi.totalAnnualRevenue.toFixed(2),s:'12 × monthly'},
+          {l:'Portfolio ARPU',v:roi.portfolioArpu>0?'$'+roi.portfolioArpu.toFixed(4)+'/user/mo':'—',s:'weighted avg'},
+          {l:'Monthly ROI',v:roi.monthlyRoi.toFixed(1)+'%',c:_rc,s:'(rev − TCO) ÷ TCO'},
+          {l:'Annual ROI',v:roi.annualRoi.toFixed(1)+'%',c:_rc,s:'12× monthly'},
+          {l:'Net Monthly Profit',v:'$'+roi.netMonthlyProfit.toFixed(2),c:roi.netMonthlyProfit>=0?'var(--green)':'var(--red)',s:'rev − TCO'},
+          {l:'Net Annual Profit',v:'$'+roi.netAnnualProfit.toFixed(2),c:roi.netAnnualProfit>=0?'var(--green)':'var(--red)',s:'12×'},
+          {l:'Break-even Users',v:roi.breakEvenUsers>0?roi.breakEvenUsers.toLocaleString():'—',s:'to cover portfolio TCO'},
+          {l:'Revenue / $1 Infra',v:roi.revenuePerDollarInfra>0?'$'+roi.revenuePerDollarInfra.toFixed(2):'—',s:'efficiency'}
+        ];
+        html+='<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;color:var(--amber);margin-bottom:12px;"><i class="fas fa-chart-line" style="margin-right:8px;"></i>Portfolio Revenue, ARPU &amp; ROI Analysis</div>'
+          +'<div style="font-size:.77rem;color:var(--ink-medium);padding:8px 12px;background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(212,160,23,.2);margin-bottom:10px;">'
+          +'Aggregate ROI across all modelled microservices. Set Expected Revenue per Transaction in Phase 1 per service. '
+          +'<strong>Break-even</strong> = users to cover full portfolio TCO. Share with Finance and Leadership.</div>'
+          +_grd(_roiI);
+        if(roi.finopsMonthlySaving>0)
+          html+='<div style="padding:12px 14px;border-radius:var(--r);background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid var(--green-border);margin-top:4px;">'
+            +'<div style="font-size:.84rem;font-weight:600;color:var(--green);margin-bottom:6px;"><i class="fas fa-tags" style="margin-right:5px;"></i>FinOps Savings Impact on Portfolio ROI</div>'
+            +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:.8rem;">'
+            +'<div><div style="color:var(--ink-light);margin-bottom:2px;">Monthly Saving</div><div style="font-family:monospace;font-weight:700;color:var(--green);">-$'+roi.finopsMonthlySaving.toFixed(2)+'/mo</div></div>'
+            +'<div><div style="color:var(--ink-light);margin-bottom:2px;">Adjusted TCO</div><div style="font-family:monospace;font-weight:700;color:var(--blue-deep);">$'+roi.finopsAdjustedTco.toFixed(2)+'/mo</div></div>'
+            +'<div><div style="color:var(--ink-light);margin-bottom:2px;">Adj. Monthly ROI</div><div style="font-family:monospace;font-weight:700;color:var(--green);">'+roi.finopsAdjustedRoi.toFixed(1)+'%'
+            +(roi.finopsRoiImprovementPct>0?' (+'+roi.finopsRoiImprovementPct.toFixed(1)+'%)':'')+'</div></div>'
+            +'</div></div>';
+      } else {
+        html+='<div style="font-size:.77rem;color:var(--ink-light);padding:10px 12px;border-radius:var(--r);background:rgba(212,160,23,.05);border:1px solid rgba(212,160,23,.2);">'
+          +'<i class="fas fa-circle-info" style="margin-right:5px;color:var(--gold);"></i>'
+          +'Enter <strong>Expected Revenue per Transaction</strong> in Phase 1 to unlock Portfolio ROI &amp; ARPU analysis.</div>';
+      }
+      html+='</div>';
+      container.innerHTML=html;
+    }
+
+    function renderP5UeFallback(container,portfolio){
+      var tt=portfolio.reduce(function(s,e){return s+e.tco;},0);
+      var tr=portfolio.reduce(function(s,e){return s+(e.rps||0);},0);
+      var tc=portfolio.reduce(function(s,e){return s+(e.consumers||0);},0);
+      var tv=portfolio.reduce(function(s,e){return s+(e.revenuePerUserMonth||0)*(e.consumers||0);},0);
+      var fs=parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+      renderP5UnitEconomics({
+        totalMonthlyTco:Math.round(tt*100)/100,totalAnnualTco:Math.round(tt*12*100)/100,
+        avgTcoPerService:Math.round(tt/Math.max(1,portfolio.length)*100)/100,serviceCount:portfolio.length,
+        totalRps:tr,totalConsumers:tc,totalMonthlyRevenue:Math.round(tv*100)/100,totalAnnualRevenue:Math.round(tv*12*100)/100,
+        portfolioArpu:tc>0?Math.round(tv/tc*10000)/10000:0,
+        monthlyRoi:tt>0&&tv>0?Math.round((tv-tt)/tt*10000)/100:0,annualRoi:tt>0&&tv>0?Math.round((tv-tt)/tt*10000)/100:0,
+        netMonthlyProfit:Math.round((tv-tt)*100)/100,netAnnualProfit:Math.round((tv-tt)*12*100)/100,
+        breakEvenUsers:tv>0&&tt>0&&tc>0?Math.ceil(tt/(tv/tc)):0,revenuePerDollarInfra:tt>0?Math.round(tv/tt*100)/100:0,
+        costPerRequestUsd:tr>0?Math.round(tt/(tr*2592000)*1000000)/1000000:0,
+        costPerUserPerMonth:tc>0?Math.round(tt/tc*10000)/10000:0,costPerUserPerDay:tc>0?Math.round(tt/tc/30*1000000)/1000000:0,
+        finopsMonthlySaving:fs,finopsAdjustedTco:Math.max(0,tt-fs),
+        finopsAdjustedRoi:tt-fs>0&&tv>0?Math.round((tv-(tt-fs))/(tt-fs)*10000)/100:0,
+        finopsRoiImprovementPct:0,hasRevenueData:tv>0
+      },container);
     }
     function wireAllHandlers() {
       function on(id, ev, fn) { var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
 
       on('serviceName',       'input',  function() { schedulePhase1Save(); });
       on('servicePurpose',    'input',  function() { schedulePhase1Save(); });
-      on('requestsPerSecond', 'input',  function() { recalculateRps(); schedulePhase1Save(); });
+      on('requestsPerSecond', 'input',  function() {
+        var el=document.getElementById('requestsPerSecond');
+        if(el && el.value.indexOf('.')>=0) el.value=String(Math.floor(parseFloat(el.value)||0));
+        recalculateRps(); schedulePhase1Save();
+        /* Sync C_req default with new base RPS */
+        var cqEl=document.getElementById('input-max-req-per-replica');
+        if(cqEl&&!cqEl.dataset.userSet){
+          cqEl.value=el?el.value:'';
+          cqEl.placeholder=el&&el.value?'from RPS: '+el.value:'';
+          recalculateReplicas();
+        }
+      });
       on('revenuePerTransaction', 'input', function() {
         if (this.value) sessionStorage.setItem('svc_revenue_per_tx', this.value);
         else sessionStorage.removeItem('svc_revenue_per_tx');
@@ -4925,8 +5206,14 @@
       on('phase2NextBtn',       'click', function() { goToPhase(3); });
       on('phase3CalcBtn',       'click', function() { submitProtoAndCalculate(); });
 
-      on('tactic-client-lb', 'change', function() { scheduleSessionSave(); });
-      on('tactic-server-lb', 'change', function() { scheduleSessionSave(); });
+      on('tactic-client-lb', 'change', function() {
+        if(document.getElementById('tactic-client-lb').checked) autoEnableAlb();
+        recalculateRps(); scheduleSessionSave(); updateCloudTacticsBadge();
+      });
+      on('tactic-server-lb', 'change', function() {
+        if(document.getElementById('tactic-server-lb').checked) autoEnableAlb();
+        recalculateRps(); scheduleSessionSave(); updateCloudTacticsBadge();
+      });
 
       on('tactic-alb',      'change', function() { recalculateAlb(); updateCloudTacticsBadge(); recalculateRps(); });
       on('input-alb-count', 'input',  function() { recalculateAlb(); });
@@ -4936,7 +5223,11 @@
       on('input-db-engine', 'change', function() { renderDbOptions(); });
 
       on('input-ec2-instance',       'change', function() { recalculateReplicas(); });
-      on('input-max-req-per-replica','input',  function() { recalculateReplicas(); });
+      on('input-max-req-per-replica','input',  function() {
+        var el=document.getElementById('input-max-req-per-replica');
+        if(el) el.dataset.userSet='1';
+        recalculateReplicas();
+      });
     }
 
     /* =====================================================================
@@ -5091,6 +5382,17 @@
       })();
 
     });
+
+
+
+
+
+
+
+
+
+
+
 
 
 
