@@ -275,12 +275,12 @@ public class ArchitectureQualityDefinitionsController {
             String id, String name, String iso,
             String def, String when, String tradeoff) {
         TacticGuidance t = new TacticGuidance();
-        t.tacticId              = id;
-        t.name                  = name;
-        t.isoSubCharacteristic  = iso;
-        t.briefDefinition       = def;
-        t.whenToApply           = when;
-        t.tradeoff              = tradeoff;
+        t.tacticId = id;
+        t.name = name;
+        t.isoSubCharacteristic = iso;
+        t.briefDefinition = def;
+        t.whenToApply = when;
+        t.tradeoff = tradeoff;
         return t;
     }
 }

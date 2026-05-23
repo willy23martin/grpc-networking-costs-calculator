@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>gRPC MACH Architecture — TCO Networking Costs Calculator</title>
+    <title>gRPC MACH Architecture — TCO Costs Calculator</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <style>
@@ -1171,7 +1171,7 @@
             <div class="arch-banner-title">Software Architect &amp; FinOps Engineering Toolkit</div>
             <div class="arch-banner-subtitle">
                 This tool is designed for <strong>Software Architects acting as FinOps Engineers</strong> — bridging the gap between
-                Information Technology and Finance. Model your gRPC microservice's networking Total Cost of Ownership (TCO)
+                Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
                 with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
                 in the language of business.
             </div>
@@ -1184,7 +1184,7 @@
 <div class="page-shell">
 
     <div class="main-title">
-        <h1>gRPC MACH Architecture<br>TCO Networking Costs Calculator</h1>
+        <h1>gRPC MACH Architecture<br>TCO Costs Efficiency Calculator</h1>
         <div class="subtitle">Point-to-Point Integration Pattern · Protocol Buffer IDL · AWS Egress Pricing</div>
     </div>
 
@@ -1353,6 +1353,8 @@
                 <div class="file-upload-hint">Accepts .proto (Protocol Buffer IDL)</div>
             </div>
             <div class="file-name-display" id="fileNameDisplay2"></div>
+            <div id="proto-autoload-indicator" style="font-size:.78rem;margin-top:5px;font-style:italic;min-height:18px"></div>
+            <div class="notice notice-blue" style="margin-top:10px;font-size:.79rem;"><i class="fas fa-circle-info"></i><div>The <strong>.proto file is pre-loaded automatically</strong> when you select a BUC card above. Spring Boot must be running and must serve files from <code style="font-family:monospace;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px">src/main/resources/protos/basicBusinessUseCases/</code>. You can still override by uploading your own file.</div></div>
         </div>
 
         <!-- Consumers — shown only after BUC is selected -->
@@ -1395,6 +1397,18 @@
         <!-- Reliability -->
         <div class="tactics-category">
             <!-- Reliability intro -->
+
+            <!-- ACTIVITY 1 BANNER -->
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#EFF6FF;border:2px solid #2563EB;">
+                <div style="min-width:34px;height:34px;border-radius:50%;background:#1A3A5C;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A1</div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#1A3A5C;margin-bottom:3px"><i class="fas fa-bullseye" style="margin-right:6px"></i><strong>Activity 1:</strong> Choose a Architectural Characteristic</div>
+                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select the primary Architectural Characteristic driving your architecture — Reliability, Resiliency, or Security. This choice determines which tactics and patterns are applicable to your gRPC microservice.</div></div></div>
+
+            <!-- ACTIVITY 2 BANNER -->
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#F0FDF4;border:2px solid #86EFAC;">
+                <div style="min-width:34px;height:34px;border-radius:50%;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A2</div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#166534;margin-bottom:3px"><i class="fas fa-sliders" style="margin-right:6px"></i><strong>Activity 2:</strong> Choose Tactics and Patterns to Promote that Architectural Characteristic</div>
+                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Configure the specific architectural tactics (Timeout, Retry, Circuit Breaker, TLS, mTLS, OAuth 2.0+JWT, SAGA…) that implement the Architectural Characteristic selected in Activity 1. Each tactic adjusts effective RPS or byte overhead.</div></div></div>
             <div class="notice" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-radius:var(--r);padding:13px 15px;margin-bottom:8px;">
                 <div style="display:flex;gap:9px;align-items:flex-start;">
                     <i class="fas fa-circle-check" style="color:#2563EB;margin-top:2px;flex-shrink:0;font-size:.9rem;"></i>
@@ -1720,6 +1734,12 @@
         </div>
 
         <!-- ══════ CLOUD TACTICS & PATTERNS ══════════════════════════════ -->
+
+        <!-- ACTIVITY 3 BANNER -->
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#FFFBEB;border:2px solid #FCD34D;">
+            <div style="min-width:34px;height:34px;border-radius:50%;background:#92400E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A3</div>
+            <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#92400E;margin-bottom:3px"><i class="fas fa-cloud" style="margin-right:6px"></i><strong>Activity 3:</strong> Map Cloud Services to Implement Tactics and Patterns</div>
+                <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select the AWS cloud services that realise your chosen tactics: ALB (load balancing), ElastiCache (caching), RDS/Aurora (database DR), WAF/GuardDuty/KMS (security), EKS/Fargate (containerisation), API Gateway (microservices). Live AWS Pricing API data populates each section automatically.</div></div></div>
         <div class="tactics-category cloud-tactics-group" id="cat-cloud-tactics">
             <div class="tactics-category-header cloud-tactics-header" onclick="toggleCategory('cloud-tactics')">
         <span class="tactics-category-title">
@@ -1966,6 +1986,11 @@
                                     </div>
                                     <div class="tactic-row">
                                         <input type="checkbox" class="tactic-check" id="cef-spot" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <!-- ACTIVITY 5 BANNER -->
+                                        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#F0FDF4;border:2px solid #86EFAC;">
+                                            <div style="min-width:34px;height:34px;border-radius:50%;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A5</div>
+                                            <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#166534;margin-bottom:3px"><i class="fas fa-tags" style="margin-right:6px"></i><strong>Activity 5:</strong> Define Cost Optimisation Strategies — Rate / Utilisation</div>
+                                                <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select Reserved Instance (RI) or Compute Savings Plan (SP) commitment strategies. Live rates are fetched from the AWS Price List Bulk API for your chosen instance type. Choose the strategy that best balances commitment term against flexibility.</div></div></div>
                                         <div class="tactic-label-group">
                                             <label class="tactic-label" for="cef-spot">Spot Instances <span class="warning-badge badge-warn" style="font-size:.62rem;">Non-prod</span></label>
                                             <span class="tactic-description">Up to 90% savings vs on-demand. Ideal for dev/test/staging. Requires interruption-tolerant workloads.</span>
@@ -2243,6 +2268,12 @@
                     </div>
 
                     <!-- ══════════ COST OPTIMISATION ══════════════════════════════════════ -->
+
+                    <!-- ACTIVITY 5 BANNER -->
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#F0FDF4;border:2px solid #86EFAC;">
+                        <div style="min-width:34px;height:34px;border-radius:50%;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A5</div>
+                        <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#166534;margin-bottom:3px"><i class="fas fa-tags" style="margin-right:6px"></i><strong>Activity 5:</strong> Define Cost Optimisation Strategies — Rate / Utilisation</div>
+                            <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select Reserved Instance (RI) or Compute Savings Plan (SP) commitment strategies. Live rates are fetched from the AWS Price List Bulk API for your chosen instance type. Choose the strategy that best balances commitment term against flexibility.</div></div></div>
                     <div class="tactics-category" id="cat-costopt">
                         <div class="tactics-category-header" onclick="toggleCategory('costopt')">
                             <span class="tactics-category-title"><span>💰</span> FinOps Cost Optimisation <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
@@ -2250,6 +2281,12 @@
                         </div>
                         <div class="tactics-category-body" id="body-costopt">
                             <div id="costopt-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching cost optimisation data from AWS…</div>
+
+                            <!-- ACTIVITY 6 BANNER -->
+                            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#FAF5FF;border:2px solid #A78BFA;">
+                                <div style="min-width:34px;height:34px;border-radius:50%;background:#7C3AED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A6</div>
+                                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#7C3AED;margin-bottom:3px"><i class="fas fa-pen-to-square" style="margin-right:6px"></i><strong>Activity 6:</strong> Modify Cloud Service Configuration Aligned with Optimisation Strategies</div>
+                                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Adjust replica count, instance type, Spot percentage, or node count to align with your commitment strategy. The live cost delta recalculates automatically — compare on-demand vs reserved/spot before committing.</div></div></div>
                             <div id="costopt-content" style="display:none;"></div>
                             <div id="costopt-result" style="display:none;margin-top:10px;"></div>
                         </div>
@@ -2373,6 +2410,12 @@
         </div>
 
         <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:20px;">
+
+            <!-- ACTIVITY 4 BANNER -->
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#DBEAFE;border:2px solid #2563EB;">
+                <div style="min-width:34px;height:34px;border-radius:50%;background:#1A3A5C;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A4</div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#1A3A5C;margin-bottom:3px"><i class="fas fa-calculator" style="margin-right:6px"></i><strong>Activity 4:</strong> Calculate the Base TCO Costs</div>
+                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Submit your .proto IDL to the backend. Spring Boot compiles the proto, derives exact serialised request/response byte sizes, applies tactic overhead (TLS, JWT), computes AWS egress cost against all cloud infrastructure selected above, and generates the full Phase 4 TCO report.</div></div></div>
             <button class="btn btn-ghost" id="btn-phase3-back"><i class="fas fa-arrow-left"></i> Back</button>
             <button class="btn btn-primary" id="phase3CalcBtn">
                 <i class="fas fa-calculator"></i> Calculate TCO
@@ -2403,6 +2446,12 @@
 
 <!-- ═══ PHASE 4 — TCO Results (was Phase 5) ═══ -->
 
+
+<!-- ACTIVITY 7 BANNER -->
+<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#FEF2F2;border:2px solid #FCA5A5;">
+    <div style="min-width:34px;height:34px;border-radius:50%;background:#991B1B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A7</div>
+    <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#991B1B;margin-bottom:3px"><i class="fas fa-chart-bar" style="margin-right:6px"></i><strong>Activity 7:</strong> Calculate the TCO Cost Considering Optimisation Strategies</div>
+        <div style="font-size:.76rem;color:#3D4451;line-height:1.5">The Phase 4 report reflects the full optimised TCO: networking egress + cloud infrastructure − FinOps RI/SP savings. Unit economics, ARPU, ROI, break-even users, and the stakeholder PDF report are all generated here.</div></div></div>
 <div id="serverResultsSection" th:if="${error != null || requestSize != null}" class="card results-section hidden">
     <div class="card-header">
         <div class="card-header-icon icon-gold"><i class="fas fa-chart-bar"></i></div>
@@ -2534,6 +2583,89 @@
             <div class="unit-econ-title"><i class="fas fa-coins"></i> Unit Economics</div>
             <div class="unit-econ-grid" id="unitEconGrid">
                 <!-- populated by JS -->
+            </div>
+        </div>
+
+        <!-- FinOps Tagging & Labelling Strategy -->
+        <div id="p4-tagging-strategy" style="margin-top:24px;padding:20px 24px;border-radius:var(--r-lg);
+             background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.05rem;color:#166534;
+               margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-tags"></i> FinOps Tagging &amp; Labelling Strategy
+                <span style="font-size:.7rem;font-weight:600;background:#166534;color:#fff;
+                  padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em">
+              FinOps Best Practice
+            </span>
+            </div>
+            <div style="font-size:.82rem;color:#3D4451;margin-bottom:14px;line-height:1.6;
+               padding:10px 14px;background:rgba(255,255,255,.6);border-radius:var(--r);
+               border:1px solid rgba(134,239,172,.5);">
+                <i class="fas fa-circle-info" style="color:#166534;margin-right:6px"></i>
+                Tagging and labelling cloud resources is the foundation of cost visibility in FinOps.
+                Without consistent tags, cost allocation across teams, services, and environments
+                is impossible. The following strategy is derived from the
+                <strong>FinOps Foundation Tagging Best Practices</strong> and
+                <strong>AWS Cost Allocation Tags</strong> guidance, applied to the cloud services
+                selected for this microservice.
+            </div>
+
+            <!-- Mandatory Tags -->
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+               color:#166534;margin-bottom:8px;">
+                <i class="fas fa-star" style="margin-right:5px"></i>Mandatory Tags (apply to ALL selected resources)
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:16px">
+                <thead>
+                <tr style="background:#166534;color:#fff">
+                    <th style="padding:8px 12px;text-align:left">Tag Key</th>
+                    <th style="padding:8px 12px;text-align:left">Example Value</th>
+                    <th style="padding:8px 12px;text-align:left">Purpose</th>
+                    <th style="padding:8px 12px;text-align:left">FinOps Dimension</th>
+                </tr>
+                </thead>
+                <tbody id="tagging-mandatory-rows">
+                <!-- Populated by JS -->
+                </tbody>
+            </table>
+
+            <!-- Service-specific Tags -->
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+               color:#166534;margin-bottom:8px;">
+                <i class="fas fa-microchip" style="margin-right:5px"></i>Service-Specific Tags (for this microservice)
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:16px">
+                <thead>
+                <tr style="background:#166534;color:#fff">
+                    <th style="padding:8px 12px;text-align:left">Tag Key</th>
+                    <th style="padding:8px 12px;text-align:left">Suggested Value</th>
+                    <th style="padding:8px 12px;text-align:left">Purpose</th>
+                </tr>
+                </thead>
+                <tbody id="tagging-service-rows">
+                <!-- Populated by JS -->
+                </tbody>
+            </table>
+
+            <!-- Selected cloud services tagging guidance -->
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+               color:#166534;margin-bottom:8px;">
+                <i class="fas fa-cloud" style="margin-right:5px"></i>Selected Cloud Services — Tagging Checklist
+            </div>
+            <div id="tagging-cloud-checklist" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+                <!-- Populated by JS -->
+            </div>
+
+            <div style="font-size:.75rem;color:#4B5563;line-height:1.6;padding:10px 14px;
+               background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(134,239,172,.4)">
+                <i class="fas fa-triangle-exclamation" style="color:#92400E;margin-right:5px"></i>
+                <strong>Governance note:</strong>
+                Tags are only effective when enforced via
+                <strong>AWS Tag Policies</strong> (AWS Organizations) and monitored through
+                <strong>AWS Cost Explorer Tag Coverage</strong> reports.
+                Untagged resources should trigger automated alerts via
+                <strong>AWS Config Rules</strong> (e.g. <code style="font-family:monospace;
+            background:rgba(0,0,0,.06);padding:1px 4px;border-radius:3px">required-tags</code>).
+                Discuss tagging governance with your FinOps and Cloud Centre of Excellence (CCoE) team.
             </div>
         </div>
 
@@ -2809,6 +2941,14 @@
     /* =====================================================================
        BUC SELECTION
     ===================================================================== */
+    /* BUC → proto file mapping (served from Spring Boot static resources) */
+    var BUC_PROTO_MAP = {
+      'BUC1': 'unaryRPCPattern.proto',
+      'BUC2': 'serverStreamingRPCPattern.proto',
+      'BUC3': 'clientStreamingRPCPattern.proto',
+      'BUC4': 'biDirectionalStreamingRPCPattern.proto'
+    };
+
     function selectBUC(buc, cardEl) {
       document.querySelectorAll('.buc-card').forEach(function(c) { c.classList.remove('selected'); });
       if (buc !== 'CUSTOM') {
@@ -2816,6 +2956,8 @@
         if (cbn) cbn.value = '';
         selectedBUC = buc;
         if (cardEl) cardEl.classList.add('selected');
+        /* Auto-load the proto file from Spring Boot static resources */
+        autoLoadProtoForBUC(buc);
       } else {
         var cv = ((document.getElementById('customBucName') || {value:''}).value || '').trim();
         selectedBUC = cv ? 'CUSTOM:' + cv : null;
@@ -2830,6 +2972,46 @@
       scheduleSessionSave();
       if (selectedBUC) sessionStorage.setItem('svc_buc', selectedBUC);
       else sessionStorage.removeItem('svc_buc');
+    }
+
+    /**
+     * Fetches the .proto file for the selected BUC from:
+     *   /protos/basicBusinessUseCases/<filename>
+     * (Spring Boot serves src/main/resources/protos/ as static resources)
+     * Falls back gracefully if the server is unreachable.
+     */
+    function autoLoadProtoForBUC(buc) {
+      var fileName = BUC_PROTO_MAP[buc];
+      if (!fileName) return;
+      var url = '/protos/basicBusinessUseCases/' + fileName;
+      var ind = document.getElementById('proto-autoload-indicator');
+      if (ind) { ind.textContent = '⏳ Loading ' + fileName + '…'; ind.style.color = 'var(--ink-light)'; }
+      fetch(url)
+        .then(function(resp) {
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          return resp.blob();
+        })
+        .then(function(blob) {
+          var file = new File([blob], fileName, { type: 'text/plain' });
+          window._lastProtoFile = file;
+          /* Mirror into the hidden form input so form submit works */
+          try {
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            var pf = document.getElementById('protoFile');
+            if (pf) pf.files = dt.files;
+          } catch(e) {}
+          /* Update Phase 2 file display */
+          var d = document.getElementById('fileNameDisplay2');
+          if (d) d.textContent = '\u2713  ' + fileName + '  (pre-loaded for ' + buc + ')';
+          if (ind) { ind.textContent = '\u2713 ' + fileName + ' pre-loaded'; ind.style.color = 'var(--green)'; }
+          updatePhase2NextBtn();
+        })
+        .catch(function(err) {
+          console.warn('Proto auto-load failed for ' + buc + ':', err.message,
+            '— Upload the file manually or ensure Spring Boot serves /protos/basicBusinessUseCases/');
+          if (ind) { ind.textContent = '\u26a0 Could not auto-load ' + fileName + ' — please upload manually.'; ind.style.color = 'var(--amber)'; }
+        });
     }
 
     function updatePhase2NextBtn() {
@@ -3554,7 +3736,8 @@
       var _fn4=document.getElementById('p4-finops-notes');
       if(_mn4&&_mc4)_mn4.style.display=_mc4.checked?'flex':'none';
       if(_fn4){_fn4.style.display='block';}
-      var grid = document.getElementById('reportServiceSummary');
+      renderTaggingStrategy();
+  var grid = document.getElementById('reportServiceSummary');
       if (!grid) return;
       var ne = document.getElementById('serviceName');
       var pe = document.getElementById('servicePurpose');
@@ -5140,7 +5323,100 @@
         finopsRoiImprovementPct:0,hasRevenueData:tv>0
       },container);
     }
-    function wireAllHandlers() {
+
+/* =====================================================================
+   FINOPS TAGGING & LABELLING STRATEGY
+   FinOps Foundation: https://www.finops.org/framework/capabilities/tagging-labeling/
+   AWS Cost Allocation Tags: https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html
+===================================================================== */
+var MANDATORY_TAGS = [
+  { key:'Environment',    example:'production | staging | dev',         purpose:'Separate cost by environment',           dim:'Allocation' },
+  { key:'Team',           example:'platform-engineering | backend',     purpose:'Charge back costs to the owning team',   dim:'Chargeback' },
+  { key:'CostCentre',     example:'CC-1042',                            purpose:'Finance cost centre mapping',            dim:'Chargeback' },
+  { key:'Project',        example:'mach-ecommerce-replatform',         purpose:'Group costs by business initiative',     dim:'Allocation' },
+  { key:'Application',    example:'order-management-service',          purpose:'Identify the owning application',        dim:'Showback' },
+  { key:'ManagedBy',      example:'terraform | cloudformation | cdk',  purpose:'Track IaC ownership and drift',          dim:'Governance' },
+  { key:'DataClassification', example:'confidential | internal | public', purpose:'Support security and compliance policy', dim:'Governance' },
+];
+
+function renderTaggingStrategy() {
+  var mBody = document.getElementById('tagging-mandatory-rows');
+  var sBody = document.getElementById('tagging-service-rows');
+  var cList = document.getElementById('tagging-cloud-checklist');
+  if (!mBody) return;
+
+  /* Mandatory tags table */
+  var name = (document.getElementById('serviceName') && document.getElementById('serviceName').value)
+    || sessionStorage.getItem('svc_name') || 'your-service-name';
+  mBody.innerHTML = MANDATORY_TAGS.map(function(t) {
+    return '<tr style="border-bottom:1px solid rgba(134,239,172,.3);transition:background .15s">'
+      + '<td style="padding:7px 12px;font-family:monospace;font-weight:600;color:#166534">' + t.key + '</td>'
+      + '<td style="padding:7px 12px;color:#6B7280;font-family:monospace;font-size:.78rem">' + t.example + '</td>'
+      + '<td style="padding:7px 12px">' + t.purpose + '</td>'
+      + '<td style="padding:7px 12px"><span style="display:inline-block;padding:1px 7px;border-radius:999px;'
+      + 'font-size:.67rem;font-weight:700;background:#DCFCE7;border:1px solid #86EFAC;color:#166534">'
+      + t.dim + '</span></td></tr>';
+  }).join('');
+
+  /* Service-specific tags */
+  var buc = sessionStorage.getItem('svc_buc') || selectedBUC || 'BUC1';
+  var rps = sessionStorage.getItem('svc_rps') || '0';
+  var patternMap = { BUC1:'unary-rpc', BUC2:'server-streaming', BUC3:'client-streaming', BUC4:'bidirectional-streaming' };
+  var pattern = patternMap[buc] || 'grpc';
+  var serviceTags = [
+    { key:'ServiceName',     val: name.toLowerCase().replace(/[^a-z0-9-]/g,'-'), purpose:'Exact microservice identifier for cost drill-down' },
+    { key:'gRPCPattern',     val: pattern,                                        purpose:'The gRPC streaming pattern used by this service' },
+    { key:'BaseRPS',         val: rps,                                            purpose:'Baseline load — supports capacity cost attribution' },
+    { key:'BusinessUseCase', val: buc,                                            purpose:'Ties cost to the business capability it supports' },
+    { key:'ProtocolBuffer',  val: 'proto3',                                       purpose:'Serialisation format — relevant to egress cost model' },
+    { key:'FinOpsReviewed',  val: new Date().toISOString().substring(0,10),      purpose:'Date last reviewed by FinOps/architect for cost fitness' },
+  ];
+  sBody.innerHTML = serviceTags.map(function(t) {
+    return '<tr style="border-bottom:1px solid rgba(134,239,172,.3)">'
+      + '<td style="padding:7px 12px;font-family:monospace;font-weight:600;color:#166534">' + t.key + '</td>'
+      + '<td style="padding:7px 12px;font-family:monospace;color:#2563EB;font-size:.78rem">' + t.val + '</td>'
+      + '<td style="padding:7px 12px">' + t.purpose + '</td></tr>';
+  }).join('');
+
+  /* Cloud services checklist */
+  var cloudSvcs = [];
+  var g = function(id){ return document.getElementById(id) || {}; };
+  if (g('tactic-alb').checked)
+    cloudSvcs.push({ svc:'Application Load Balancer (ALB)', tags:['Application','Environment','Team','CostCentre','ServiceName'], note:'Tag each ALB individually — one ALB can serve multiple services, so tag at listener/target-group level too.' });
+  if (g('tactic-cache').checked)
+    cloudSvcs.push({ svc:'Amazon ElastiCache', tags:['Application','Environment','Team','ServiceName','DataClassification'], note:'Tag the replication group. Snapshot storage inherits tags automatically.' });
+  if (g('tactic-s3-backup').checked || g('tactic-aurora-replica').checked || g('tactic-rds-snapshot').checked || g('tactic-rds-multiaz').checked)
+    cloudSvcs.push({ svc:'Amazon RDS / Aurora', tags:['Application','Environment','Team','CostCentre','DataClassification','ManagedBy'], note:'Tag DB instance and snapshots separately. Aurora: tag cluster + each instance. Enable Cost Allocation Tags in RDS console.' });
+  if (g('sec-guardduty').checked || g('sec-inspector').checked || g('sec-waf').checked || g('sec-kms').checked || g('sec-macie').checked || g('sec-cloudwatch').checked || g('sec-audit').checked)
+    cloudSvcs.push({ svc:'Security Services (GuardDuty / WAF / KMS / Macie / CloudWatch)', tags:['Application','Environment','Team','CostCentre'], note:'GuardDuty and Macie are account-level; use AWS Cost Categories for allocation. KMS CMKs: tag per owning service.' });
+  if (g('cef-clusters').checked || g('cef-control-plane').checked)
+    cloudSvcs.push({ svc:'Amazon EKS Cluster', tags:['Application','Environment','Team','CostCentre','ManagedBy'], note:'Add tags to the EKS cluster AND all managed node groups. Use AWS Cost Allocation Tags + Kubecost/OpenCost for pod-level attribution.' });
+  if (g('tactic-apigw').checked)
+    cloudSvcs.push({ svc:'Amazon API Gateway', tags:['Application','Environment','Team','BusinessUseCase','gRPCPattern'], note:'Tag at the API level. REST APIs support tagging; usage plans and stages inherit API tags.' });
+  // EC2 from scalability
+  var instSel = document.getElementById('input-ec2-instance');
+  if (instSel && instSel.value)
+    cloudSvcs.push({ svc:'Amazon EC2 (Compute Replicas)', tags:['Application','Environment','Team','CostCentre','ServiceName','BaseRPS'], note:'Tag every instance AND its EBS volumes. Use Launch Templates to enforce tags at launch time. Spot instances: add tag propagation in the Spot Fleet config.' });
+
+  if (!cloudSvcs.length) {
+    cList.innerHTML = '<div style="font-size:.82rem;color:#6B7280;font-style:italic">No cloud services selected yet — tags will appear here once resources are configured in Phase 3.</div>';
+  } else {
+    cList.innerHTML = cloudSvcs.map(function(item) {
+      return '<div style="padding:12px 14px;border-radius:var(--r);background:rgba(255,255,255,.7);'
+        + 'border:1px solid rgba(134,239,172,.5)">'
+        + '<div style="font-weight:600;font-size:.85rem;color:#166534;margin-bottom:5px">'
+        + '<i class="fas fa-cloud" style="margin-right:6px;font-size:.78rem"></i>' + item.svc + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">'
+        + item.tags.map(function(t){ return '<span style="font-family:monospace;font-size:.68rem;font-weight:700;'
+          + 'background:#DCFCE7;border:1px solid #86EFAC;color:#166534;padding:1px 7px;border-radius:999px">' + t + '</span>'; }).join('')
+        + '</div>'
+        + '<div style="font-size:.75rem;color:#6B7280;line-height:1.5">'
+        + '<i class="fas fa-circle-info" style="margin-right:4px;color:#166534"></i>' + item.note + '</div></div>';
+    }).join('');
+  }
+}
+
+function wireAllHandlers() {
       function on(id, ev, fn) { var el=document.getElementById(id); if(el) el.addEventListener(ev,fn); }
 
       on('serviceName',       'input',  function() { schedulePhase1Save(); });
