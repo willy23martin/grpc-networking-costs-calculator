@@ -11,7 +11,7 @@ This service calculates the TCO costs for a gRPC-based Microservices MACH Archit
 
 
 ## Protocol Buffer files:
-You can find the **Protocol Buffers files** in the [protos](src/main/resources/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
+You can find the **Protocol Buffers files** in the [protos](src/main/resources/static/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/static/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/static/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
 in the context of an **E-Commerce microservice**:
 1. **BUC1**: **gRPC Unary pattern**: Retrieve orders by using an order ID from client to server.
 2. **BUC2**: **gRPC Server Streaming pattern**: The business needs to retrieve all possible orders that match a search criterion (term or filter).
@@ -81,6 +81,38 @@ Pending
 ### Discernment with FinOps Personas and Engineering Teams:
 ![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
+## MVC Controllers
+
+| Controller | Endpoint | Replaces JS function |
+|---|---|---|
+| `TcoCalculationController` | `POST /api/tco/effective-rps` | `recalculateRps()` |
+| `TcoCalculationController` | `POST /api/tco/egress-cost` | `calcMonthlyCost()` |
+| `TcoCalculationController` | `POST /api/tco/cloud-infra-cost` | `computeCloudInfraCost()` |
+| `AlbCostController` | `POST /api/cost/alb` | `recalculateAlb()` |
+| `DatabaseBackupCostController` | `POST /api/cost/db-backup` | `recalculateDbCost()` |
+| `SecurityCostController` | `POST /api/cost/security` | `recalculateSecCost()` |
+| `CachingCostController` | `POST /api/cost/caching` | `recalculateCaching()` |
+| `ApiGatewayCostController` | `POST /api/cost/api-gateway` | `recalculateApiGw()` |
+| `ContainerCostController` | `POST /api/cost/container` | `recalculateContainerCost()` |
+| `FinOpsCostController` | `POST /api/cost/finops` | `recalculateCostOpt()` |
+| `TimelineController` | `POST /api/cost/timeline` | `recalculateTimeline()` |
+| `ReplicaSizingController` | `POST /api/cost/replica-sizing` | `recalculateReplicas()` |
+| `UnitEconomicsController` | `POST /api/cost/unit-economics` | `populateUnitEcon()` |
+
+## Design principle
+
+- Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/aws/*`) to each endpoint.
+- Backend returns **computed results** only — costs, breakdowns, labels.
+- No business logic in JS. JS = form collection + API call + render.
+
+## Retry formula (preserved)
+`tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS, never SAGA-multiplied RPS.
+
+## SAGA egress rule (preserved)
+Egress is only billed (and RPS multiplied) when `sagaExternalVpc = true`.
+Intra-VPC steps = $0.00 same-AZ, no RPS impact on cost.
+
+
 
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
@@ -95,22 +127,21 @@ Pending
 10. [Richardson, C. (2019). Microservices Patterns. MANNING.](https://learning.oreilly.com/library/view/microservices-patterns/9781617294549/).
 11. [Design Patterns: Elements of Reusable Object-Oriented Software](https://a.co/d/b77puMG).
 12. [Refactoring to Patterns](https://a.co/d/0faJEZSx).
-13. [Java Persistence with Spring Data and Hibernate](https://a.co/d/04ZENVQy).
-14. [gRPC: Up and Running: Building Cloud Native Applications with Go and Java for Docker and Kubernetes](https://a.co/d/0cr8VGEU).
-15. [gRPC Microservices in Go](https://a.co/d/00mpZLip).
-16. [Mach Architecture: Microservices, API-first, Cloud-native, and Headless principles](https://a.co/d/0aqCTQKt).
-17. [Cloud FinOps, 2nd Edition: Collaborative, Real-Time Cloud Value Decision Making](https://a.co/d/0f8kkjcU).
-18. [Migrating to AWS: A Manager's Guide: How to Foster Agility, Reduce Costs, and Bring a Competitive Edge to Your Business](https://a.co/d/0bCjXIW5).
-19. [Building Microservices, 2nd Edition](https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/).
-20. [Monolith to Microservices](https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/).
-21. [Communication Patterns](https://www.oreilly.com/library/view/communication-patterns/9781098140533/).
-22. [UML for Java Programmers](https://www.oreilly.com/library/view/uml-for-javatm/0131428489/).
-23. [AWS FinOps Simplified](https://www.oreilly.com/library/view/aws-finops-simplified/9781803247236/).
-24. [Engineering Resilient Systems on AWS](https://www.oreilly.com/library/view/engineering-resilient-systems/9781098162412/).
-25. [Building Resilient Architectures on AWS](https://www.oreilly.com/library/view/building-resilient-architectures/9781835887103/).
-26. [System Design on AWS](https://www.oreilly.com/library/view/system-design-on/9781098146887/).
-27. [Efficient Cloud FinOps](https://www.oreilly.com/library/view/efficient-cloud-finops/9781805122579/).
-28. [AWS Certified Solutions Architect](https://www.oreilly.com/library/view/aws-certified-solutions/9781119982623/).
+13. [gRPC: Up and Running: Building Cloud Native Applications with Go and Java for Docker and Kubernetes](https://a.co/d/0cr8VGEU).
+14. [gRPC Microservices in Go](https://a.co/d/00mpZLip).
+15. [Mach Architecture: Microservices, API-first, Cloud-native, and Headless principles](https://a.co/d/0aqCTQKt).
+16. [Cloud FinOps, 2nd Edition: Collaborative, Real-Time Cloud Value Decision Making](https://a.co/d/0f8kkjcU).
+17. [Migrating to AWS: A Manager's Guide: How to Foster Agility, Reduce Costs, and Bring a Competitive Edge to Your Business](https://a.co/d/0bCjXIW5).
+18. [Building Microservices, 2nd Edition](https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/).
+19. [Monolith to Microservices](https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/).
+20. [Communication Patterns](https://www.oreilly.com/library/view/communication-patterns/9781098140533/).
+21. [UML for Java Programmers](https://www.oreilly.com/library/view/uml-for-javatm/0131428489/).
+22. [AWS FinOps Simplified](https://www.oreilly.com/library/view/aws-finops-simplified/9781803247236/).
+23. [Engineering Resilient Systems on AWS](https://www.oreilly.com/library/view/engineering-resilient-systems/9781098162412/).
+24. [Building Resilient Architectures on AWS](https://www.oreilly.com/library/view/building-resilient-architectures/9781835887103/).
+25. [System Design on AWS](https://www.oreilly.com/library/view/system-design-on/9781098146887/).
+26. [Efficient Cloud FinOps](https://www.oreilly.com/library/view/efficient-cloud-finops/9781805122579/).
+27. [AWS Certified Solutions Architect](https://www.oreilly.com/library/view/aws-certified-solutions/9781119982623/).
 
 ## Credits
 [CREDITS.md](CREDITS.md)
