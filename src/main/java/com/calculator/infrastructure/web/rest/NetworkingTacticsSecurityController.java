@@ -31,7 +31,7 @@ public class NetworkingTacticsSecurityController {
        POST /api/tco/effective-rps — REQUEST DTO
     ================================================================ */
     public static class EffectiveRpsRequest {
-        @JsonProperty public int     baseRps                 = 0;
+        @JsonProperty public int baseRps = 0;
 
         // SAGA
         @JsonProperty public boolean sagaEnabled             = false;

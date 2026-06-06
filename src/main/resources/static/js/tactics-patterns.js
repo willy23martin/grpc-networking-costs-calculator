@@ -412,45 +412,54 @@ function renderApiGwContent() {
 function recalculateApiGw() {
   if (!apiGatewayPricingDatabase) return;
 
-  const apiGatewayType = document.getElementById('input-apigw-type')?.value || 'rest';
-  const callsPerMonthCount = getFormNumericValue('input-apigw-calls-per-month');
-  const cacheAllocationSize = getFormNumericValue('input-apigw-cache');
+  var apiGatewayType        = (document.getElementById('input-apigw-type') || { value: 'rest' }).value || 'rest';
+  var callsPerMonthMillions = parseFloat((document.getElementById('input-apigw-calls-per-month') || { value: '0' }).value) || 0;
+  var cacheHourlyRate       = parseFloat((document.getElementById('input-apigw-cache') || { value: '0' }).value) || 0;
 
-  let rawMonthlyExecutionCallCost = 0;
-  if (apiGatewayType === 'rest') {
-    rawMonthlyExecutionCallCost = callsPerMonthCount * (apiGatewayPricingDatabase.restApiPer1MCallsMonthly ?? 3.50);
-  } else if (apiGatewayType === 'http') {
-    rawMonthlyExecutionCallCost = callsPerMonthCount * (apiGatewayPricingDatabase.httpApiPer1MCallsFirst1B ?? 1.00);
-  } else {
-    rawMonthlyExecutionCallCost = callsPerMonthCount * (apiGatewayPricingDatabase.wsApiPer1MConnections ?? 0.25);
-  }
+  var requestBody = {
+    apiGatewayType:           apiGatewayType,
+    callsPerMonthMillions:    callsPerMonthMillions,
+    cacheHourlyRate:          cacheHourlyRate,
+    restApiPer1MCallsMonthly: apiGatewayPricingDatabase.restApiPer1MCallsMonthly || 3.50,
+    httpApiPer1MCallsFirst1B: apiGatewayPricingDatabase.httpApiPer1MCallsFirst1B || 1.00,
+    wsApiPer1MConnections:    apiGatewayPricingDatabase.wsApiPer1MConnections    || 0.25
+  };
 
-  const calculatedCacheMonthlyCost = cacheAllocationSize * 730;
-  const rawAggregateMonthlyCost = rawMonthlyExecutionCallCost + calculatedCacheMonthlyCost;
-  const exactNormalizedMonthlyTotal = Math.round(rawAggregateMonthlyCost * 100) / 100;
+  fetch('/api/cost/api-gateway', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  })
+  .then(function(response) { return response.ok ? response.json() : null; })
+  .then(function(data) {
+    if (!data) return;
 
-  const resultContainer = document.getElementById('apigw-result');
-  if (resultContainer) {
-    const internalCallSummary = callsPerMonthCount > 0 ? `$${rawMonthlyExecutionCallCost.toFixed(2)}/mo calls` : '';
-    const internalCacheSummary = calculatedCacheCost > 0 ? `${callsPerMonthCount > 0 ? ' + ' : ''}$${calculatedCacheMonthlyCost.toFixed(2)}/mo cache` : '';
-    const executionOutputString = exactNormalizedMonthlyTotal > 0
-      ? ` = <span style="color:var(--red);">$${exactNormalizedMonthlyTotal.toFixed(2)}/mo</span>`
-      : '&nbsp;enter call volume above';
+    var resultContainer = document.getElementById('apigw-result');
+    if (resultContainer) {
+      var executionSummary = callsPerMonthMillions > 0
+        ? data.breakdownLines.join(' + ')
+        : '';
+      var costDisplay = data.monthlyTotalUsd > 0
+        ? (executionSummary ? executionSummary + ' = ' : '')
+          + '<span style="color:var(--red);">$' + data.monthlyTotalUsd.toFixed(2) + '/mo</span>'
+        : '&nbsp;enter call volume above';
 
-    resultContainer.innerHTML = `<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>API Gateway (${apiGatewayType.toUpperCase()}): ${internalCallSummary}${internalCacheSummary}${executionOutputString}</strong>`;
-  }
+      resultContainer.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i>'
+        + '<strong>API Gateway (' + apiGatewayType.toUpperCase() + '): ' + costDisplay + '</strong>';
+    }
 
-  if (exactNormalizedMonthlyTotal > 0) {
-    sessionStorage.setItem('tco_apigw_cost', exactNormalizedMonthlyTotal.toFixed(4));
-  } else {
-    sessionStorage.removeItem('tco_apigw_cost');
-  }
+    if (data.monthlyTotalUsd > 0) {
+      sessionStorage.setItem('tco_apigw_cost', data.monthlyTotalUsd.toFixed(4));
+    } else {
+      sessionStorage.removeItem('tco_apigw_cost');
+    }
 
-  const baseRequestsPerSecond = parseInt(document.getElementById('requestsPerSecond')?.value, 10) || 0;
-  if (baseRequestsPerSecond) {
-    updateLiveComparison(baseRequestsPerSecond, baseRequestsPerSecond);
-  }
+    var currentBaseRps = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
+    if (currentBaseRps) updateLiveComparison(currentBaseRps, currentBaseRps);
+  })
+  .catch(function(error) { console.warn('recalculateApiGw failed:', error.message); });
 }
+
 
 /* =====================================================================
     TACTIC CONTRIBUTIONS (gRPC MACH TELEMETRY MODEL)
