@@ -466,159 +466,58 @@ function recalculateApiGw() {
 ===================================================================== */
 
 function collectTacticContributions(baseRequestsPerSecond, backendResult) {
-  const tacticContributionsList = [];
+  var tlsOverheadBytes            = (backendResult && backendResult.tlsOverheadBytes) || 0;
+  var jwtOverheadBytes            = (backendResult && backendResult.jwtOverheadBytes) || 0;
+  var protoResponseSizeBytes      = (backendResult && backendResult.responseSizeEff)  || 0;
 
-  // Destructure payload variables with safe structural fallbacks
-  const {
-    tlsOverheadBytes: tlsBackendBytes = null,
-    jwtOverheadBytes: jwtBackendBytes = null,
-    responseSizeEff: basicResponseBytes = null
-  } = backendResult ?? {};
+  var isChecked  = function(id) { var el = document.getElementById(id); return !!(el && el.checked); };
+  var intValue   = function(id) { var el = document.getElementById(id); return parseInt((el || { value: '0' }).value, 10) || 0; };
+  var floatValue = function(id, fallback) {
+    var el = document.getElementById(id);
+    return parseFloat((el || { value: String(fallback) }).value) || fallback;
+  };
 
-  // 1. Map static structural info metadata tactics
-  const staticMetadataTactics = [
-    { id: 'tactic-client-lb', label: 'Client-side Load Balancing' },
-    { id: 'tactic-server-lb', label: 'Server-side Load Balancing' },
-    { id: 'tactic-cb', label: 'Circuit Breaker' },
-    { id: 'tactic-basic-auth', label: 'Basic Authentication', note: '⚠️ Not recommended for production' }
-  ];
+  var requestBody = {
+    baseRps:                          baseRequestsPerSecond,
+    protoResponseSizeEffectiveBytes:  protoResponseSizeBytes,
+    tlsOverheadBytesFromBackend:      tlsOverheadBytes,
+    jwtOverheadBytesFromBackend:      jwtOverheadBytes,
+    clientSideLoadBalancingEnabled:   isChecked('tactic-client-lb'),
+    serverSideLoadBalancingEnabled:   isChecked('tactic-server-lb'),
+    circuitBreakerEnabled:            isChecked('tactic-cb'),
+    basicAuthEnabled:                 isChecked('tactic-basic-auth'),
+    timeoutEnabled:                   isChecked('tactic-timeout'),
+    timeoutMs:                        intValue('input-timeout'),
+    sagaEnabled:                      isChecked('tactic-saga'),
+    sagaExternalVpc:                  isChecked('tactic-saga-external-vpc'),
+    sagaCompensatableSteps:           intValue('input-saga-compensatable'),
+    sagaRetriableSteps:               intValue('input-saga-retriable'),
+    sagaPivotSteps:                   intValue('input-saga-pivot'),
+    retryEnabled:                     isChecked('tactic-retry'),
+    retryErrorRatePct:                floatValue('input-retry-error-pct', 5),
+    tlsEnabled:                       isChecked('tactic-tls'),
+    mtlsEnabled:                      isChecked('tactic-mtls'),
+    tlsReconnectsPerHour:             intValue('input-tls-reconnects'),
+    oauthEnabled:                     isChecked('tactic-oauth'),
+    tokenValidationMode:              (document.getElementById('input-token-validation') || { value: 'LOCAL' }).value || 'LOCAL',
+    tokenTtlSeconds:                  intValue('input-token-ttl') || 3600,
+    concurrentClients:                intValue('input-concurrent-clients') || 1
+  };
 
-  staticMetadataTactics.forEach(({ id, label, note }) => {
-    if (document.getElementById(id)?.checked) {
-      tacticContributionsList.push({ label, rpsAdded: 0, bytesAdded: 0, kind: 'info', note });
-    }
-  });
-
-  // 2. Evaluate Network Timeout Settings
-  if (document.getElementById('tactic-timeout')?.checked) {
-    const configuredTimeoutMs = parseInt(document.getElementById('input-timeout')?.value, 10) || 0;
-    tacticContributionsList.push({ label: `Timeout (${configuredTimeoutMs} ms)`, rpsAdded: 0, bytesAdded: 0, kind: 'info' });
-  }
-
-  // 3. Process Dynamic Pipeline Transaction Estimators
-  collectSagaPatternContributions(tacticContributionsList, baseRequestsPerSecond, basicResponseBytes);
-  collectRetryTacticContributions(tacticContributionsList, baseRequestsPerSecond, basicResponseBytes);
-  collectTlsTacticContributions(tacticContributionsList, tlsBackendBytes, basicResponseBytes);
-  collectOAuthJWTPatternContributions(tacticContributionsList, baseRequestsPerSecond, jwtBackendBytes, basicResponseBytes);
-
-  return tacticContributionsList;
-}
-
-function collectSagaPatternContributions(tacticContributionsList, baseRequestsPerSecond, basicResponseBytes) {
-  if (!document.getElementById('tactic-saga')?.checked) return;
-
-  const compensatableStepsCount = parseInt(document.getElementById('input-saga-compensatable')?.value, 10) || 0;
-  const retriableStepsCount = parseInt(document.getElementById('input-saga-retriable')?.value, 10) || 0;
-  const pivotStepsCount = parseInt(document.getElementById('input-saga-pivot')?.value, 10) || 0;
-
-  const aggregatedTransactionSteps = compensatableStepsCount + retriableStepsCount + pivotStepsCount;
-  if (aggregatedTransactionSteps <= 0) return;
-
-  const isCrossVpcEgressBilled = Boolean(document.getElementById('tactic-saga-external-vpc')?.checked);
-
-  if (isCrossVpcEgressBilled) {
-    const totalTransactionsPerSecond = baseRequestsPerSecond * aggregatedTransactionSteps;
-    tacticContributionsList.push({
-      label: `SAGA Pattern (${aggregatedTransactionSteps} steps/instance, external VPC — egress billed)`,
-      rpsAdded: totalTransactionsPerSecond - baseRequestsPerSecond,
-      bytesAdded: 0,
-      kind: 'rps',
-      baseRespBytes: basicResponseBytes,
-      detail: `${baseRequestsPerSecond.toLocaleString()} RPS × ${aggregatedTransactionSteps} steps = ${totalTransactionsPerSecond.toLocaleString()} billable egress calls/s`
-    });
-  } else {
-    tacticContributionsList.push({
-      label: `SAGA Pattern (${aggregatedTransactionSteps} steps/instance, intra-VPC — egress FREE)`,
-      rpsAdded: 0,
-      bytesAdded: 0,
-      kind: 'info',
-      detail: `All ${aggregatedTransactionSteps} steps within AWS VPC — $0.00/GB same-AZ, $0.01/GB cross-AZ`
-    });
-  }
-}
-
-function collectRetryTacticContributions(tacticContributionsList, baseRequestsPerSecond, basicResponseBytes) {
-  if (!document.getElementById('tactic-retry')?.checked) return;
-
-  const CRITICAL_PATH_DEFAULT_ERROR_RATE_PCT = 5;
-  const rawErrorRateInputString = document.getElementById('input-retry-error-pct')?.value;
-  const simulatedErrorRatePercentage = parseFloat(rawErrorRateInputString) || CRITICAL_PATH_DEFAULT_ERROR_RATE_PCT;
-
-  const calculatedRetryRequestsPerSecondOverhead = Math.round((baseRequestsPerSecond * simulatedErrorRatePercentage) / 100);
-
-  tacticContributionsList.push({
-    label: 'Retry',
-    value: `${simulatedErrorRatePercentage}% error rate`,
-    rpsAdded: calculatedRetryRequestsPerSecondOverhead,
-    bytesAdded: 0,
-    kind: 'rps',
-    baseRespBytes: basicResponseBytes,
-    detail: `+${calculatedRetryRequestsPerSecondOverhead.toLocaleString()} req/s = ${simulatedErrorRatePercentage}% of ${baseRequestsPerSecond.toLocaleString()} base RPS`
-  });
-}
-
-function collectTlsTacticContributions(tacticContributionsList, tlsBackendBytes, basicResponseBytes) {
-  const isOneWayTlsEnabled = Boolean(document.getElementById('tactic-tls')?.checked);
-  const isMutualTlsEnabled = Boolean(document.getElementById('tactic-mtls')?.checked);
-  if (!isOneWayTlsEnabled && !isMutualTlsEnabled) return;
-
-  const structuralHandshakeSessionReconnects = parseInt(document.getElementById('input-tls-reconnects')?.value, 10) || 0;
-  const handshakeMessagesPerSessionCount = isMutualTlsEnabled ? 5 : 2;
-  const calculatedHandshakeRequestsPerSecond = Math.round((structuralHandshakeSessionReconnects * handshakeMessagesPerSessionCount) / 3600);
-
-  const clearTlsContextLabel = isMutualTlsEnabled ? 'mTLS (mutual TLS)' : 'TLS (one-way)';
-
-  // RFC 8446 AES-GCM: 29 Bytes typical structural framework wire overhead.
-  const RFC_8446_BASE_FRAME_OVERHEAD_BYTES = 29;
-  const actualTlsWireBytesOverhead = (tlsBackendBytes !== null && tlsBackendBytes > 0) ? tlsBackendBytes : RFC_8446_BASE_FRAME_OVERHEAD_BYTES;
-
-  const infrastructureSourceContextMessage = tlsBackendBytes !== null ? ', from backend' : ', est. typical';
-  let trackingDetailSummaryString = `+${actualTlsWireBytesOverhead} B/frame (RFC 8446${infrastructureSourceContextMessage})`;
-
-  if (calculatedHandshakeRequestsPerSecond > 0) {
-    trackingDetailSummaryString += ` · +${calculatedHandshakeRequestsPerSecond} handshake req/s`;
-  }
-
-  tacticContributionsList.push({
-    label: clearTlsContextLabel,
-    rpsAdded: calculatedHandshakeRequestsPerSecond,
-    bytesAdded: actualTlsWireBytesOverhead,
-    kind: calculatedHandshakeRequestsPerSecond > 0 ? 'both' : 'bytes',
-    baseRespBytes: basicResponseBytes,
-    detail: trackingDetailSummaryString
-  });
-}
-
-function collectOAuthJWTPatternContributions(tacticContributionsList, baseRequestsPerSecond, jwtBackendBytes, basicResponseBytes) {
-  if (!document.getElementById('tactic-oauth')?.checked) return;
-
-  const tokenValidityDurationTtlSeconds = parseInt(document.getElementById('input-token-ttl')?.value, 10) || 3600;
-  const isolatedActiveConcurrentClients = parseInt(document.getElementById('input-concurrent-clients')?.value, 10) || 1;
-  const networkValidationStrategyMode = document.getElementById('input-token-validation')?.value || 'LOCAL';
-
-  const tokenAcquisitionRequestsPerSecond = Math.round(baseRequestsPerSecond / (tokenValidityDurationTtlSeconds * isolatedActiveConcurrentClients));
-  const remoteIntrospectionRequestsPerSecond = networkValidationStrategyMode === 'REMOTE_INTROSPECTION' ? baseRequestsPerSecond : 0;
-
-  // RFC 7519/7523/9101: 650 Bytes typical structural base base64 string size.
-  const RFC_7519_BASE_JWT_OVERHEAD_BYTES = 650;
-  const actualJwtHeaderBytesOverhead = (jwtBackendBytes !== null && jwtBackendBytes > 0) ? jwtBackendBytes : RFC_7519_BASE_JWT_OVERHEAD_BYTES;
-
-  const infrastructureSourceContextMessage = jwtBackendBytes !== null ? ', from backend' : ', est. typical';
-  const architecturalModeSuffix = networkValidationStrategyMode === 'REMOTE_INTROSPECTION' ? ' (remote)' : ' (local)';
-
-  // Build descriptive metrics payload summary string
-  const tokenAcquisitionMetricString = tokenAcquisitionRequestsPerSecond > 0 ? ` · +${tokenAcquisitionRequestsPerSecond} tkn/s` : '';
-  const networkIntrospectionMetricString = remoteIntrospectionRequestsPerSecond > 0 ? ` · +${remoteIntrospectionRequestsPerSecond} intr/s` : '';
-  const structuredTelemetryDiagnosticsMessage = `+${actualJwtHeaderBytesOverhead}B JWT header (RFC 7519${infrastructureSourceContextMessage})${tokenAcquisitionMetricString}${networkIntrospectionMetricString} · AWS inbound=$0`;
-
-  tacticContributionsList.push({
-    label: `OAuth 2.0 + JWT${architecturalModeSuffix}`,
-    rpsAdded: tokenAcquisitionRequestsPerSecond + remoteIntrospectionRequestsPerSecond,
-    bytesAdded: actualJwtHeaderBytesOverhead,
-    kind: 'both',
-    baseRespBytes: basicResponseBytes,
-    jwtOnRequestOnly: true,
-    detail: structuredTelemetryDiagnosticsMessage
+  return fetch('/api/cost/tactic-contributions', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(requestBody)
+  })
+  .then(function(response) { return response.ok ? response.json() : null; })
+  .then(function(data) {
+    if (!data) return [];
+    window._lastTacticContributions = data.contributions;
+    return data.contributions;
+  })
+  .catch(function(err) {
+    console.warn('collectTacticContributions backend call failed:', err.message);
+    return [];
   });
 }
 

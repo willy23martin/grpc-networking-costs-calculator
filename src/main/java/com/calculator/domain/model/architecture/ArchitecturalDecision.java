@@ -17,6 +17,6 @@ public abstract sealed class ArchitecturalDecision permits ArchitecturalTactic, 
 
     protected ArchitecturalCharacteristic architecturalCharacteristic;
 
-    protected Map<String, CostFactor> costFactors = new HashMap<>();
+    protected Map<String, CostFactor> costFactors;
 
 }

@@ -68,6 +68,7 @@ function recalculateReplicas() {
 /* =====================================================================
    COST MATH
 ===================================================================== */
+
 function calcMonthlyCost(rps, respBytes) {
   var gbPerMonth = (rps * 60 * 60 * 24 * 30 * respBytes) / (1024 * 1024 * 1024);
   var cost = 0, rem = gbPerMonth;
@@ -189,36 +190,52 @@ function hasAnyImpactingTactic() {
 }
 
 function updateLiveComparison(baseRps, effectiveRps) {
-  var block = document.getElementById('tactics-comparison-block');
-  if (!block) return;
-  if (!baseRps || (!window._lastProtoFile && !hasAnyImpactingTactic() && computeCloudInfraCost() === 0)) {
-    block.classList.remove('visible');
+  var comparisonBlock = document.getElementById('tactics-comparison-block');
+  if (!comparisonBlock) return;
+
+  if (!baseRps || (!window._lastProtoFile && !hasAnyImpactingTactic() && (window._lastCloudInfraCost || 0) === 0)) {
+    comparisonBlock.classList.remove('visible');
     return;
   }
-  block.classList.add('visible');
+
+  comparisonBlock.classList.add('visible');
+
   if (window._lastProtoFile) {
     setComparisonLoading(true);
     clearTimeout(_compDebounce);
-    _compDebounce = setTimeout(function () {
-      saveTacticsToSession().then(function () {
-        return Promise.all([fetchBackendCost(window._lastProtoFile, true), fetchBackendCost(window._lastProtoFile, false)]);
-      }).then(function (results) {
-        var baseResult = results[0];
-        var tacticsResult = results[1];
-        if (baseResult && tacticsResult) {
-          renderComparisonFromBackend(baseResult, tacticsResult, baseRps, effectiveRps, false, collectTacticContributions(baseRps, baseResult));
-        }
-      }).catch(function (e) {
-        console.warn('Backend comparison failed:', e);
-        renderComparisonEstimate(baseRps, effectiveRps);
-      }).then(function () {
-        setComparisonLoading(false);
-      });
+    _compDebounce = setTimeout(function() {
+      saveTacticsToSession()
+        .then(function() {
+          return Promise.all([
+            fetchBackendCost(window._lastProtoFile, true),
+            fetchBackendCost(window._lastProtoFile, false)
+          ]);
+        })
+        .then(function(results) {
+          var baseResult    = results[0];
+          var tacticsResult = results[1];
+          if (!baseResult || !tacticsResult) return;
+          // collectTacticContributions now returns a Promise
+          return collectTacticContributions(baseRps, baseResult)
+            .then(function(contributions) {
+              renderComparisonFromBackend(
+                baseResult, tacticsResult, baseRps, effectiveRps, false, contributions
+              );
+            });
+        })
+        .catch(function(err) {
+          console.warn('Backend comparison failed:', err.message);
+          renderComparisonEstimate(baseRps, effectiveRps);
+        })
+        .then(function() {
+          setComparisonLoading(false);
+        });
     }, 600);
   } else {
     renderComparisonEstimateWithBytes(baseRps, effectiveRps);
   }
 }
+
 
 function setComparisonLoading(on) {
   var block = document.getElementById('tactics-comparison-block');
@@ -311,157 +328,168 @@ function parseBackendCostFromHtml(html) {
 /* =====================================================================
    COMPARISON RENDER
 ===================================================================== */
-function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEstimate, contribs) {
-  var totalDelta = (tactics.cost + computeCloudInfraCost()) - base.cost;
+function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEstimate, contributions) {
+  var cachedCloudInfraCost  = window._lastCloudInfraCost || 0;
+  var networkingCostDelta   = tactics.cost - base.cost;
+  var tacticsTotalCost      = tactics.cost + cachedCloudInfraCost;
+  var totalMonthlyCostDelta = tacticsTotalCost - base.cost;
   var el;
-  var _cloudInfraForCmp = computeCloudInfraCost();
-  var _networkingDelta = tactics.cost - base.cost;
-  var _tacticsTotalCost = tactics.cost + _cloudInfraForCmp;
-  var _totalDeltaForCmp = _tacticsTotalCost - base.cost;
-  el = document.getElementById('cmp-base-cost'); if (el) el.textContent = '$' + base.cost.toFixed(2) + ' / mo';
-  el = document.getElementById('cmp-base-rps'); if (el) el.textContent = baseRps.toLocaleString() + ' RPS (networking only)';
-  el = document.getElementById('cmp-tactics-cost'); if (el) el.textContent = '$' + _tacticsTotalCost.toFixed(2) + ' / mo';
-  el = document.getElementById('cmp-tactics-rps'); if (el) el.textContent = effectiveRps.toLocaleString() + ' eff. RPS'
-    + (_networkingDelta > 0 ? ' (+$' + _networkingDelta.toFixed(2) + ' networking)' : '')
-    + (_cloudInfraForCmp > 0 ? ' · +$' + _cloudInfraForCmp.toFixed(2) + ' cloud infra' : '');
 
-  var bEl = document.getElementById('cmp-tactic-breakdown');
-  if (bEl) {
-    if (true) { /* show breakdown even with cloud-only tactics */
-      var rHtml = '';
-      for (var ci = 0; ci < contribs.length; ci++) {
-        var c = contribs[ci];
-        var costImpact = '\u2014';
-        if (c.kind !== 'info') {
-          /* Always have rb: proto, backend, or placeholder — never null */
-          var rb = c.baseRespBytes != null ? c.baseRespBytes
-            : (base.responseSizeEff != null ? base.responseSizeEff
-              : PLACEHOLDER_RESP_BYTES);
-          if (rb != null) {
-            var rpsC = c.rpsAdded > 0 ? calcMonthlyCost(baseRps + c.rpsAdded, rb).cost - calcMonthlyCost(baseRps, rb).cost : 0;
-            var byteC = 0;
-            if (c.bytesAdded != null && c.bytesAdded > 0) {
-              if (c.jwtOnRequestOnly) {
-                byteC = 0; /* JWT on requests: AWS inbound = free. Cost via rpsAdded (token acq). */
-              } else {
-                byteC = calcMonthlyCost(baseRps, rb + c.bytesAdded).cost - calcMonthlyCost(baseRps, rb).cost;
-              }
-            }
-            var tot = rpsC + byteC;
-            if (c.jwtOnRequestOnly && rpsC === 0 && byteC === 0) {
-              costImpact = '<span style="color:var(--ink-light);font-size:.74rem;">' + (c.bytesAdded > 0 ? '+' + c.bytesAdded + ' B/req inbound (free) \u00b7 ' : '')
-                + 'JWT egress cost = $0. Cost via token-acq RPS.</span>';
-            } else {
-              costImpact = tot > 0 ? (tot >= 0.005 ? '+$' + tot.toFixed(2) + '/mo' : '< +$0.01/mo')
-                : (tot === 0 ? 'no change' : '\u2014');
-            }
-          } else {
-            costImpact = '<em style="color:var(--ink-light);font-size:.75rem;">proto required</em>';
-          }
+  el = document.getElementById('cmp-base-cost');
+  if (el) el.textContent = '$' + base.cost.toFixed(2) + ' / mo';
+
+  el = document.getElementById('cmp-base-rps');
+  if (el) el.textContent = baseRps.toLocaleString() + ' RPS (networking only)';
+
+  el = document.getElementById('cmp-tactics-cost');
+  if (el) el.textContent = '$' + tacticsTotalCost.toFixed(2) + ' / mo';
+
+  el = document.getElementById('cmp-tactics-rps');
+  if (el) el.textContent = effectiveRps.toLocaleString() + ' eff. RPS'
+    + (networkingCostDelta  > 0 ? ' (+$' + networkingCostDelta.toFixed(2)   + ' networking)'  : '')
+    + (cachedCloudInfraCost > 0 ? ' · +$' + cachedCloudInfraCost.toFixed(2) + ' cloud infra' : '');
+
+  var breakdownTableEl = document.getElementById('cmp-tactic-breakdown');
+  if (breakdownTableEl) {
+    // Networking tactic rows — cost impacts from TacticContributionController response
+    var tacticRowsHtml = '';
+    if (contributions && contributions.length) {
+      contributions.forEach(function(contribution) {
+        var costImpactHtml;
+        if (contribution.kind === 'info') {
+          costImpactHtml = '—';
+        } else if (contribution.jwtOnRequestOnly && contribution.estimatedMonthlyCostUsd === 0) {
+          costImpactHtml = '<span style="color:var(--ink-light);font-size:.74rem;">' + contribution.costDisplayLabel + '</span>';
+        } else {
+          costImpactHtml = contribution.costDisplayLabel || '—';
         }
-        var badge = '';
-        if (c.kind === 'info') badge = '<span class="tbd-badge tbd-info">informational</span>';
-        if (c.kind === 'rps') badge = '<span class="tbd-badge tbd-rps">+ RPS</span>';
-        if (c.kind === 'bytes') badge = '<span class="tbd-badge tbd-bytes">+ bytes</span>';
-        if (c.kind === 'both') badge = '<span class="tbd-badge tbd-rps">+ RPS</span><span class="tbd-badge tbd-bytes">+ bytes</span>';
-        rHtml += '<tr><td class="tbd-name">' + c.label
-          + (c.value ? ' <span style="font-size:.73rem;color:var(--ink-light);font-weight:400;">' + c.value + '</span>' : '')
-          + (c.note ? '<div class="tbd-note">' + c.note + '</div>' : '')
-          + (c.detail ? '<div class="tbd-detail">' + c.detail + '</div>' : '')
-          + '</td><td class="tbd-badges">' + badge + '</td>'
-          + '<td class="tbd-cost' + (c.kind !== 'info' && costImpact !== '\u2014' ? ' tbd-cost-impact' : '') + '">' + costImpact + '</td></tr>';
-      }
-      /* Add cloud tactic rows — always show each checked item, no outer guard */
-      var _cloudRows = '';
-      var _ci = computeCloudInfraCost(); /* net value after FinOps saving */
-      /* ALB */
-      if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
-        var _ac = parseInt((document.getElementById('input-alb-count') || { value: '1' }).value) || 1;
-        var _al = parseFloat((document.getElementById('input-alb-lcu') || { value: '0' }).value) || 0;
-        var _albC = window._albData ? window._albData.fixedPerMonthUsd * _ac + window._albData.lcuPerHourUsd * _al * 730 * _ac : parseFloat(sessionStorage.getItem('tco_alb_cost') || '0');
-        if (_albC > 0) _cloudRows += '<tr><td class="tbd-name">ALB (' + _ac + ' LB' + (+_ac > 1 ? 's' : '') + ')<div class="tbd-detail">' + (window._albData ? '$' + window._albData.fixedPerMonthUsd.toFixed(4) + '/hr fixed + ' + _al + ' LCU/hr' : 'from session') + '</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$' + _albC.toFixed(2) + '/mo</td></tr>';
-      }
-      /* ElastiCache */
-      if (document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
-        var _ce = (document.getElementById('input-cache-engine') || { value: 'redis' }).value || 'redis';
-        var _cns = parseInt((document.getElementById('input-cache-nodes') || { value: '1' }).value) || 1;
-        var _cn = (document.getElementById('input-cache-node') || { value: 'r6g.large' }).value || 'r6g.large';
-        var _cacheC = 0, _cpr2 = 0.166;
-        if (window._cacheData) { var _cpmap = { 'redisr6glarge': window._cacheData.redisR6gLargePerHour, 'redisr6gxlarge': window._cacheData.redisR6gXlargePerHour, 'redisr6g2xlarge': window._cacheData.redisR6g2xlargePerHour, 'memcachedr6glarge': window._cacheData.memcachedR6gLargePerHour, 'memcachedr6gxlarge': window._cacheData.memcachedR6gXlargePerHour }; _cpr2 = _cpmap[_ce + _cn.replace(/\./g, '').replace('cache', '')] || _cpmap[_ce + 'r6glarge'] || 0.166; _cacheC = _cpr2 * 730 * _cns; }
-        else { _cacheC = parseFloat(sessionStorage.getItem('tco_cache_cost') || '0'); }
-        if (_cacheC > 0) _cloudRows += '<tr><td class="tbd-name">ElastiCache ' + _ce + ' (' + _cns + ' node' + (+_cns > 1 ? 's' : '') + ')<div class="tbd-detail">$' + _cpr2.toFixed(4) + '/hr × ' + _cns + ' × 730hr</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$' + _cacheC.toFixed(2) + '/mo</td></tr>';
-      }
-      /* DB Backup */
-      if (document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
-        var _gbv = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
-        var _s3r = (window._dbData && window._dbData.s3StandardPerGbMonth) || 0.023;
-        _cloudRows += '<tr><td class="tbd-name">S3 DB Backup (' + _gbv + ' GB)<div class="tbd-detail">$' + _s3r.toFixed(4) + '/GB-mo × ' + _gbv + ' GB</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$' + (_gbv * _s3r).toFixed(2) + '/mo</td></tr>';
-      }
-      /* Aurora Replica */
-      if (document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
-        var _arc = parseInt((document.getElementById('aurora-replica-count') || { value: '1' }).value) || 1;
-        var _aRate = (window._dbData && window._dbData.auroraReplicaPerHour) || 0.26;
-        _cloudRows += '<tr><td class="tbd-name">Aurora Read Replica (' + _arc + ' node' + (+_arc > 1 ? 's' : '') + ')<div class="tbd-detail">$' + _aRate.toFixed(4) + '/hr × 730hr × ' + _arc + '</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$' + (_aRate * 730 * _arc).toFixed(2) + '/mo</td></tr>';
-      }
-      /* Cloud Security */
-      var _secTotalLive = 0;
-      if (window._secData) {
-        var _rps2 = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-        var _rpm = _rps2 * 2592000;
-        var _g = function (id) { return document.getElementById(id) || {}; };
-        if (_g('sec-guardduty').checked) _secTotalLive += Math.max(0, (parseFloat(_g('input-guardduty-gb').value) || 0) - 500) * window._secData.guardDutyPerGbLogs;
-        if (_g('sec-inspector').checked) _secTotalLive += (parseInt(_g('input-inspector-instances').value) || 1) * window._secData.inspectorPerInstanceMonth;
-        if (_g('sec-waf').checked) _secTotalLive += window._secData.wafWebAclPerMonth + (parseInt(_g('input-waf-rules').value) || 5) * window._secData.wafRulePerMonth + (_rpm / 1000000) * window._secData.wafPer1MRequests;
-        if (_g('sec-macie').checked) _secTotalLive += Math.max(0, (parseFloat(_g('input-macie-gb').value) || 0) - 1) * window._secData.maciePerGbClassified;
-        if (_g('sec-cloudwatch').checked) { var _cwg2 = parseFloat(_g('input-cw-gb').value) || 1; _secTotalLive += _cwg2 * (window._secData.cloudwatchLogsIngestionPerGb + window._secData.cloudwatchLogsStoragePerGbMonth); }
-        if (_g('sec-audit').checked) _secTotalLive += (parseInt(_g('input-audit-assessments').value) || 1) * window._secData.auditManagerPerAssessmentMonth;
-        if (_g('sec-kms').checked) { var _kk2 = parseInt(_g('input-kms-keys').value) || 1; _secTotalLive += _kk2 * window._secData.kmsCmkPerMonth + (_rpm / 10000) * window._secData.kmsApiCallsPer10k; }
-      } else {
-        _secTotalLive = parseFloat(sessionStorage.getItem('tco_sec_cost') || '0');
-      }
-      if (_secTotalLive > 0) _cloudRows += '<tr><td class="tbd-name">Cloud Security Services<div class="tbd-detail">GuardDuty / WAF / Inspector / KMS / Macie / CloudWatch</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$' + _secTotalLive.toFixed(2) + '/mo</td></tr>';
-      /* API Gateway — once only */
-      var _agLiveC = parseFloat(sessionStorage.getItem('tco_apigw_cost') || '0');
-      var _agCbLive = !!(document.getElementById('tactic-apigw') && document.getElementById('tactic-apigw').checked);
-      if (_agCbLive || _agLiveC > 0) {
-        var _agTL = (document.getElementById('input-apigw-type') || { value: 'REST' }).value.toUpperCase();
-        if (_agLiveC > 0) _cloudRows += '<tr><td class="tbd-name">API Gateway (' + _agTL + ')<div class="tbd-detail">$' + _agLiveC.toFixed(2) + '/mo</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$' + _agLiveC.toFixed(2) + '/mo</td></tr>';
-        else _cloudRows += '<tr><td class="tbd-name">API Gateway (' + _agTL + ')<div class="tbd-detail" style="color:var(--amber);">Enter call volume to calculate cost</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost" style="color:var(--ink-light);font-size:.78rem;">enter volume ↓</td></tr>';
-      }
-      /* Containerized Environment — once only */
-      var _contLiveC = parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
-      if (_contLiveC > 0) { var _orchL = (document.getElementById('input-orchestration') || { value: 'EKS' }).value || 'EKS'; _cloudRows += '<tr><td class="tbd-name">Containerized Cluster (' + _orchL.toUpperCase() + ')<div class="tbd-detail">$' + _contLiveC.toFixed(2) + '/mo · cluster + storage + licenses</div></td><td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td><td class="tbd-cost tbd-cost-impact">+$' + _contLiveC.toFixed(2) + '/mo</td></tr>'; }
-      /* FinOps saving row */
-      var _foSav = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
-      if (_foSav > 0) _cloudRows += '<tr style="background:var(--green-bg);"><td class="tbd-name" style="color:var(--green);">FinOps RI/SP Saving<div class="tbd-detail">Reserved Instance / Savings Plan discount</div></td><td class="tbd-badges"><span class="tbd-badge" style="background:rgba(22,101,52,.1);color:var(--green);">saving</span></td><td class="tbd-cost" style="color:var(--green);font-weight:700;">-$' + _foSav.toFixed(2) + '/mo</td></tr>';
-      /* Net total footer — only when there are cloud rows */
-      if (_cloudRows) {
-        _cloudRows += '<tr style="background:var(--paper);font-weight:700;border-top:2px solid var(--rule);">';
-        _cloudRows += '<td class="tbd-name" colspan="2">Total Monthly Cost Increase (networking + cloud infra)</td>';
-        _cloudRows += '<td class="tbd-cost tbd-cost-impact">+$' + _totalDeltaForCmp.toFixed(2) + '/mo</td></tr>';
-      }
-      bEl.innerHTML = '<table class="tbd-table"><thead><tr><th>Tactic</th><th>Type</th><th>Est. Cost Impact</th></tr></thead><tbody>' + rHtml + _cloudRows + '</tbody></table>';
-    } /* end breakdown block */
-    bEl.style.display = 'block';
+
+        var kindBadge = '';
+        if (contribution.kind === 'info')  kindBadge = '<span class="tbd-badge tbd-info">informational</span>';
+        if (contribution.kind === 'rps')   kindBadge = '<span class="tbd-badge tbd-rps">+ RPS</span>';
+        if (contribution.kind === 'bytes') kindBadge = '<span class="tbd-badge tbd-bytes">+ bytes</span>';
+        if (contribution.kind === 'both')  kindBadge = '<span class="tbd-badge tbd-rps">+ RPS</span><span class="tbd-badge tbd-bytes">+ bytes</span>';
+
+        var hasCostImpact = contribution.kind !== 'info' && costImpactHtml !== '—';
+        tacticRowsHtml += '<tr>'
+          + '<td class="tbd-name">' + contribution.label
+          + (contribution.value  ? ' <span style="font-size:.73rem;color:var(--ink-light);font-weight:400;">' + contribution.value  + '</span>' : '')
+          + (contribution.note   ? '<div class="tbd-note">'   + contribution.note   + '</div>' : '')
+          + (contribution.detail ? '<div class="tbd-detail">' + contribution.detail + '</div>' : '')
+          + '</td>'
+          + '<td class="tbd-badges">' + kindBadge + '</td>'
+          + '<td class="tbd-cost' + (hasCostImpact ? ' tbd-cost-impact' : '') + '">' + costImpactHtml + '</td>'
+          + '</tr>';
+      });
+    }
+
+    // Cloud infrastructure rows — read from sessionStorage (populated by /api/cost/* calls)
+    var cloudServiceRowsHtml = buildCloudServiceBreakdownRows();
+
+    if (cloudServiceRowsHtml) {
+      cloudServiceRowsHtml += '<tr style="background:var(--paper);font-weight:700;border-top:2px solid var(--rule);">'
+        + '<td class="tbd-name" colspan="2">Total Monthly Cost Increase (networking + cloud infra)</td>'
+        + '<td class="tbd-cost tbd-cost-impact">+$' + totalMonthlyCostDelta.toFixed(2) + '/mo</td></tr>';
+    }
+
+    breakdownTableEl.innerHTML = '<table class="tbd-table">'
+      + '<thead><tr><th>Tactic</th><th>Type</th><th>Est. Cost Impact</th></tr></thead>'
+      + '<tbody>' + tacticRowsHtml + cloudServiceRowsHtml + '</tbody></table>';
+    breakdownTableEl.style.display = 'block';
   }
 
-  var nEl = document.getElementById('cmp-source-note');
-  if (nEl) nEl.textContent = isEstimate
+  var sourceNoteEl = document.getElementById('cmp-source-note');
+  if (sourceNoteEl) sourceNoteEl.textContent = isEstimate
     ? '* Estimated using placeholder sizes (200 B req / 1,200 B resp). Upload your .proto for exact figures.'
-    : '* Calculated using your .proto file. \u2139 SAGA multiplies inter-service calls. AWS charges $0.00/GB same-AZ, $0.01/GB cross-AZ, $0.09+/GB to internet.';
+    : '* Calculated using your .proto file. ℹ SAGA multiplies inter-service calls. AWS charges $0.00/GB same-AZ, $0.01/GB cross-AZ, $0.09+/GB to internet.';
 
-  var dRow = document.getElementById('cmp-delta-row'), dVal = document.getElementById('cmp-delta-val'), dBreak = document.getElementById('cmp-delta-breakdown');
-  var _fd = _totalDeltaForCmp;
-  if (Math.abs(_fd) < 0.01) {
-    if (dRow) dRow.className = 'comparison-delta neutral';
-    if (dVal) dVal.textContent = 'No change';
-    if (dBreak) dBreak.textContent = '';
+  var deltaRowEl   = document.getElementById('cmp-delta-row');
+  var deltaValueEl = document.getElementById('cmp-delta-val');
+  var deltaBreakEl = document.getElementById('cmp-delta-breakdown');
+
+  if (Math.abs(totalMonthlyCostDelta) < 0.01) {
+    if (deltaRowEl)   deltaRowEl.className     = 'comparison-delta neutral';
+    if (deltaValueEl) deltaValueEl.textContent = 'No change';
+    if (deltaBreakEl) deltaBreakEl.textContent = '';
   } else {
-    if (dRow) dRow.className = _fd > 0 ? 'comparison-delta' : 'comparison-delta neutral';
-    if (dVal) dVal.textContent = (_fd > 0 ? '+' : '') + ' $' + _fd.toFixed(2) + ' / mo';
-    if (dBreak) { var _dbp = []; if (Math.abs(_networkingDelta) >= 0.01) _dbp.push('networking: ' + (_networkingDelta > 0 ? '+' : '') + ' $' + _networkingDelta.toFixed(2)); if (_cloudInfraForCmp >= 0.01) _dbp.push('cloud infra: +$' + _cloudInfraForCmp.toFixed(2)); dBreak.textContent = _dbp.join(' · '); }
+    if (deltaRowEl)   deltaRowEl.className     = totalMonthlyCostDelta > 0 ? 'comparison-delta' : 'comparison-delta neutral';
+    if (deltaValueEl) deltaValueEl.textContent = (totalMonthlyCostDelta > 0 ? '+' : '') + ' $' + totalMonthlyCostDelta.toFixed(2) + ' / mo';
+    if (deltaBreakEl) {
+      var parts = [];
+      if (Math.abs(networkingCostDelta)  >= 0.01) parts.push('networking: '  + (networkingCostDelta  > 0 ? '+' : '') + '$' + networkingCostDelta.toFixed(2));
+      if (cachedCloudInfraCost >= 0.01)            parts.push('cloud infra: +$' + cachedCloudInfraCost.toFixed(2));
+      deltaBreakEl.textContent = parts.join(' · ');
+    }
   }
 }
+function buildCloudServiceBreakdownRows() {
+  var rows = '';
+
+  // ALB — reads sessionStorage written by recalculateAlb() → /api/cost/alb
+  if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
+    var albCost  = parseFloat(sessionStorage.getItem('tco_alb_cost')  || '0');
+    var albLabel = sessionStorage.getItem('tco_alb_label')             || 'ALB';
+    if (albCost > 0) rows += buildCloudRow('ALB — ' + albLabel, '$' + albCost.toFixed(2) + '/mo', albCost);
+  }
+
+  // ElastiCache — reads sessionStorage written by recalculateCaching() → /api/cost/caching
+  if (document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
+    var cacheCost  = parseFloat(sessionStorage.getItem('tco_cache_cost')  || '0');
+    var cacheLabel = sessionStorage.getItem('tco_cache_label')              || 'ElastiCache';
+    if (cacheCost > 0) rows += buildCloudRow('ElastiCache — ' + cacheLabel, '$' + cacheCost.toFixed(2) + '/mo', cacheCost);
+  }
+
+  // Database / backup — reads sessionStorage written by recalculateDbCost() → /api/cost/database-backup
+  var dbCost = parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
+  if (dbCost > 0) rows += buildCloudRow('Database Backup / DR', '$' + dbCost.toFixed(2) + '/mo', dbCost);
+
+  // Cloud security — reads sessionStorage written by recalculateSecCost() → /api/cost/security-services
+  var secCost = parseFloat(sessionStorage.getItem('tco_sec_cost') || '0');
+  if (secCost > 0) rows += buildCloudRow('Cloud Security Services', 'GuardDuty / WAF / Inspector / KMS / Macie / CloudWatch', secCost);
+
+  // API Gateway — reads sessionStorage written by recalculateApiGw() → /api/cost/api-gateway
+  var apiGatewayCost = parseFloat(sessionStorage.getItem('tco_apigw_cost') || '0');
+  var isApiGwEnabled = !!(document.getElementById('tactic-apigw') && document.getElementById('tactic-apigw').checked);
+  if (isApiGwEnabled || apiGatewayCost > 0) {
+    var apiGwType = (document.getElementById('input-apigw-type') || { value: 'REST' }).value.toUpperCase();
+    if (apiGatewayCost > 0) {
+      rows += buildCloudRow('API Gateway (' + apiGwType + ')', '$' + apiGatewayCost.toFixed(2) + '/mo', apiGatewayCost);
+    } else {
+      rows += '<tr>'
+        + '<td class="tbd-name">API Gateway (' + apiGwType + ')'
+        + '<div class="tbd-detail" style="color:var(--amber);">Enter call volume to calculate cost</div></td>'
+        + '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'
+        + '<td class="tbd-cost" style="color:var(--ink-light);font-size:.78rem;">enter volume ↓</td></tr>';
+    }
+  }
+
+  // Container — reads sessionStorage written by recalculateContainerCost() → /api/cost/container
+  var containerCost     = parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
+  var orchestrationType = (document.getElementById('input-orchestration') || { value: 'EKS' }).value || 'EKS';
+  if (containerCost > 0) rows += buildCloudRow('Containerized Cluster (' + orchestrationType.toUpperCase() + ')', '$' + containerCost.toFixed(2) + '/mo · cluster + storage + licenses', containerCost);
+
+  // FinOps saving (negative row)
+  var finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
+  if (finopsSaving > 0) {
+    rows += '<tr style="background:var(--green-bg);">'
+      + '<td class="tbd-name" style="color:var(--green);">FinOps RI/SP Saving'
+      + '<div class="tbd-detail">Reserved Instance / Savings Plan discount applied via /api/cost/finops-discount</div></td>'
+      + '<td class="tbd-badges"><span class="tbd-badge" style="background:rgba(22,101,52,.1);color:var(--green);">saving</span></td>'
+      + '<td class="tbd-cost" style="color:var(--green);font-weight:700;">-$' + finopsSaving.toFixed(2) + '/mo</td></tr>';
+  }
+
+  return rows;
+}
+
+function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
+  return '<tr>'
+    + '<td class="tbd-name">' + serviceName + '<div class="tbd-detail">' + detailText + '</div></td>'
+    + '<td class="tbd-badges"><span class="tbd-badge tbd-info">cloud infra</span></td>'
+    + '<td class="tbd-cost tbd-cost-impact">+$' + monthlyCostUsd.toFixed(2) + '/mo</td>'
+    + '</tr>';
+}
+
+
 
 function renderComparisonEstimate(baseRps, effectiveRps) {
   var baseCost = calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES);

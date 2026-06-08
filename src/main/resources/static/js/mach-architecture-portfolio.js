@@ -438,44 +438,47 @@ function showPortfolioNextDialog(serviceName, totalCostOfOwnership) {
 }
 
 function renderP5UnitEconomicsFallback(container, portfolio) {
-  const totalTco = portfolio.reduce((sum, s) => sum + s.tco, 0);
-  const totalRps = portfolio.reduce((sum, s) => sum + (s.rps || 0), 0);
-  const totalConsumers = portfolio.reduce((sum, s) => sum + (s.consumers || 0), 0);
-  const totalMonthlyRevenue = portfolio.reduce((sum, s) => sum + (s.revenuePerUserMonth || 0) * (s.consumers || 0), 0);
-  const finopsSavings = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
-
-  const baselineArpu = totalConsumers > 0 ? (totalMonthlyRevenue / totalConsumers) : 0;
-  const computedMonthlyRoi = totalTco > 0 && totalMonthlyRevenue > 0 ? ((totalMonthlyRevenue - totalTco) / totalTco) * 100 : 0;
-  const netMonthlyProfit = totalMonthlyRevenue - totalTco;
-
-  const fallbackMockedRoiPayload = {
-    totalMonthlyTco: Math.round(totalTco * 100) / 100,
-    totalAnnualTco: Math.round(totalTco * 12 * 100) / 100,
-    avgTcoPerService: Math.round((totalTco / Math.max(1, portfolio.length)) * 100) / 100,
-    serviceCount: portfolio.length,
-    totalRps: totalRps,
-    totalConsumers: totalConsumers,
-    totalMonthlyRevenue: Math.round(totalMonthlyRevenue * 100) / 100,
-    totalAnnualRevenue: Math.round(totalMonthlyRevenue * 12 * 100) / 100,
-    portfolioArpu: Math.round(baselineArpu * 10000) / 10000,
-    monthlyRoi: Math.round(computedMonthlyRoi * 100) / 100,
-    annualRoi: Math.round(computedMonthlyRoi * 100) / 100,
-    netMonthlyProfit: Math.round(netMonthlyProfit * 100) / 100,
-    netAnnualProfit: Math.round(netMonthlyProfit * 12 * 100) / 100,
-    breakEvenUsers: totalMonthlyRevenue > 0 && totalTco > 0 && totalConsumers > 0 ? Math.ceil(totalTco / baselineArpu) : 0,
-    revenuePerDollarInfra: totalTco > 0 ? Math.round((totalMonthlyRevenue / totalTco) * 100) / 100 : 0,
-    costPerRequestUsd: totalRps > 0 ? Math.round((totalTco / (totalRps * 2592000)) * 1000000) / 1000000 : 0,
-    costPerUserPerMonth: totalConsumers > 0 ? Math.round((totalTco / totalConsumers) * 10000) / 10000 : 0,
-    costPerUserPerDay: totalConsumers > 0 ? Math.round((totalTco / totalConsumers / 30) * 1000000) / 1000000 : 0,
-    finopsMonthlySaving: finopsSavings,
-    finopsAdjustedTco: Math.max(0, totalTco - finopsSavings),
-    finopsAdjustedRoi: (totalTco - finopsSavings > 0 && totalMonthlyRevenue > 0) ? Math.round(((totalMonthlyRevenue - (totalTco - finopsSavings)) / (totalTco - finopsSavings)) * 10000) / 100 : 0,
-    finopsRoiImprovementPct: 0,
-    hasRevenueData: totalMonthlyRevenue > 0
+  // Build the same request payload the primary call uses, but from local data.
+  // This guarantees the fallback path uses the same backend formula — no inline math.
+  const fallbackPayload = {
+    services: portfolio.map(service => ({
+      name:                 service.name,
+      buc:                  service.buc,
+      tco:                  service.tco || 0,
+      revenuePerUserMonth:  service.revenuePerUserMonth || 0,
+      consumers:            service.consumers || 0,
+      rps:                  service.rps || 0
+    })),
+    finopsMonthlySaving: parseFloat(sessionStorage.getItem('tco_finops_saving') || '0'),
+    ec2BaselineSpend:    parseFloat(sessionStorage.getItem('tco_finops_spend')   || '0')
   };
 
-  renderP5UnitEconomics(fallbackMockedRoiPayload, container);
+  fetch('/api/portfolio/roi', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(fallbackPayload)
+  })
+    .then(response => response.ok ? response.json() : null)
+    .then(roiData => {
+      if (roiData) {
+        renderP5UnitEconomics(roiData, container);
+      } else {
+        container.innerHTML =
+          '<div style="font-size:.82rem;color:var(--ink-light);padding:12px;">'
+          + '<i class="fas fa-triangle-exclamation" style="color:var(--amber);margin-right:6px;"></i>'
+          + 'Portfolio unit economics unavailable — please ensure Spring Boot is running.'
+          + '</div>';
+      }
+    })
+    .catch(() => {
+      container.innerHTML =
+        '<div style="font-size:.82rem;color:var(--ink-light);padding:12px;">'
+        + '<i class="fas fa-triangle-exclamation" style="color:var(--amber);margin-right:6px;"></i>'
+        + 'Could not connect to backend for portfolio ROI calculation.'
+        + '</div>';
+    });
 }
+
 
 function renderP5UnitEconomics(roi, container) {
   const roiStatusColorVariable = roi.monthlyRoi >= 0 ? 'var(--green)' : 'var(--red)';
