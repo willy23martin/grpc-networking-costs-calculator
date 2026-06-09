@@ -1,7 +1,6 @@
 package com.calculator.infrastructure.web.rest.helper;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
-import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
@@ -17,7 +16,6 @@ public class TacticsSessionControllerTestHelper {
                 new TimeoutPattern(false, 0),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 securityTactics
         );
     }
@@ -45,12 +43,6 @@ public class TacticsSessionControllerTestHelper {
                     "circuitBreakerHalfOpen": %d,
                     "circuitBreakerWaitMilliseconds": %d,
                     "circuitBreakerFailureRate": %d
-                  },
-                  "sagaPattern": {
-                    "microservicesSAGAPattern": %b,
-                    "sagaCompensatableTransactions": %d,
-                    "sagaRetriableTransactions": %d,
-                    "sagaPivotTransactions": %d
                   },
                   "securityTactics": {
                     "tlsTactic": {
@@ -83,10 +75,6 @@ public class TacticsSessionControllerTestHelper {
                 architecturalDecisionsDTO.circuitBreakerTactic().circuitBreakerHalfOpen(),
                 architecturalDecisionsDTO.circuitBreakerTactic().circuitBreakerWaitMilliseconds(),
                 architecturalDecisionsDTO.circuitBreakerTactic().circuitBreakerFailureRate(),
-                architecturalDecisionsDTO.sagaPattern().microservicesSAGAPattern(),
-                architecturalDecisionsDTO.sagaPattern().sagaCompensatableTransactions(),
-                architecturalDecisionsDTO.sagaPattern().sagaRetriableTransactions(),
-                architecturalDecisionsDTO.sagaPattern().sagaPivotTransactions(),
                 securityTactics.tlsTactic().tlsEnabled(),
                 securityTactics.tlsTactic().mtlsEnabled(),
                 securityTactics.tlsTactic().tlsReconnectsPerHour(),

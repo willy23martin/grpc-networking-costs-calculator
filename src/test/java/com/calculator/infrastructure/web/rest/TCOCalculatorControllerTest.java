@@ -2,7 +2,6 @@ package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
-import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
@@ -216,7 +215,6 @@ class TCOCalculatorControllerTest {
                 new TimeoutPattern(true, 500),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -241,7 +239,6 @@ class TCOCalculatorControllerTest {
                 new TimeoutPattern(false, 0),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(true, 10, 5, 60000, 50),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -263,7 +260,6 @@ class TCOCalculatorControllerTest {
                 new TimeoutPattern(false, 0),
                 new RetryPattern(true, 3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -278,77 +274,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("requestsPerMonth", "3B"))
                 .andExpect(model().attributeExists("rpsTactics"))
                 .andExpect(model().attribute("securityByteOverheadApplied", false));
-    }
-
-    @Test
-    void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaIsConfigured() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
-                1000,
-                new ReliabilityTactics(false, false),
-                new TimeoutPattern(false, 0),
-                new RetryPattern(false, 0),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(true, 1, 1, 1),
-                SecurityTactics.empty()
-        );
-        mockMvc.perform(multipart("/calculateTCO")
-                        .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
-                        .sessionAttr(SESSION_KEY, dto))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeDoesNotExist("error"))
-                .andExpect(model().attribute("hasTactics",       true))
-                .andExpect(model().attribute("rpsWasAdjusted",   false))
-                .andExpect(model().attribute("baseRps",          "1,000"))
-                .andExpect(model().attribute("effectiveRps",     "1,000"))
-                .andExpect(model().attribute("requestsPerMonth", "3B"))
-                .andExpect(model().attributeExists("rpsTactics"))
-                .andExpect(model().attribute("securityByteOverheadApplied", false));
-    }
-
-    @Test
-    void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaIsConfiguredWithMoreSteps() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
-                1000,
-                new ReliabilityTactics(false, false),
-                new TimeoutPattern(false, 0),
-                new RetryPattern(false, 0),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(true, 2, 3, 1),
-                SecurityTactics.empty()
-        );
-        mockMvc.perform(multipart("/calculateTCO")
-                        .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
-                        .sessionAttr(SESSION_KEY, dto))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeDoesNotExist("error"))
-                .andExpect(model().attribute("hasTactics",       true))
-                .andExpect(model().attribute("rpsWasAdjusted",   false))
-                .andExpect(model().attribute("effectiveRps",     "1,000"))
-                .andExpect(model().attribute("requestsPerMonth", "3B"));
-    }
-
-    @Test
-    void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaAndRetryAreCombined() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
-                1000,
-                new ReliabilityTactics(false, false),
-                new TimeoutPattern(false, 0),
-                new RetryPattern(true, 2),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(true, 1, 1, 1),
-                SecurityTactics.empty()
-        );
-        mockMvc.perform(multipart("/calculateTCO")
-                        .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
-                        .sessionAttr(SESSION_KEY, dto))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeDoesNotExist("error"))
-                .andExpect(model().attribute("hasTactics",       true))
-                .andExpect(model().attribute("rpsWasAdjusted",   true))
-                .andExpect(model().attribute("effectiveRps",     "1,020"))
-                .andExpect(model().attribute("requestsPerMonth", "3B"))
-                .andExpect(model().attributeExists("infoTactics"))
-                .andExpect(model().attributeExists("rpsTactics"));
     }
 
     @Test
@@ -359,7 +284,6 @@ class TCOCalculatorControllerTest {
                 new TimeoutPattern(true, 300),
                 new RetryPattern(true, 3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         mockMvc.perform(multipart("/calculateTCO")
@@ -373,39 +297,6 @@ class TCOCalculatorControllerTest {
                 .andExpect(model().attribute("requestsPerMonth", "3B"))
                 .andExpect(model().attributeExists("infoTactics"))
                 .andExpect(model().attributeExists("rpsTactics"));
-    }
-
-    @Test
-    @EnabledOnOs(OS.LINUX)
-    void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaIsConfigured_OnLinux() throws Exception {
-        mockMvc.perform(multipart("/calculateTCO")
-                        .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
-                        .sessionAttr(SESSION_KEY, sagaOnly(1, 1, 1)))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("effectiveRps",     "1,000"))
-                .andExpect(model().attribute("requestsPerMonth", "3B"));
-    }
-
-    @Test
-    @EnabledOnOs(OS.WINDOWS)
-    void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaIsConfigured_OnWindows() throws Exception {
-        mockMvc.perform(multipart("/calculateTCO")
-                        .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
-                        .sessionAttr(SESSION_KEY, sagaOnly(1, 1, 1)))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("effectiveRps",     "1,000"))
-                .andExpect(model().attribute("requestsPerMonth", "3B"));
-    }
-
-    @Test
-    @EnabledOnOs(OS.MAC)
-    void calculateProtoFileTCONetworkingCosts_ShowsCosts_WhenSagaIsConfigured_OnMac() throws Exception {
-        mockMvc.perform(multipart("/calculateTCO")
-                        .file(protoFile(VALID_PROTO_CONTENT.getBytes()))
-                        .sessionAttr(SESSION_KEY, sagaOnly(1, 1, 1)))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("effectiveRps",     "1,000"))
-                .andExpect(model().attribute("requestsPerMonth", "3B"));
     }
 
     @Test

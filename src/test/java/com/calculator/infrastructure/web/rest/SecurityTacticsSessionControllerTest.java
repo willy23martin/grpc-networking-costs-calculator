@@ -209,12 +209,6 @@ public class SecurityTacticsSessionControllerTest {
                 "circuitBreakerHalfOpen": 0,
                 "circuitBreakerWaitMilliseconds": 0,
                 "circuitBreakerFailureRate": 0
-              },
-              "sagaPattern": {
-                "microservicesSAGAPattern": false,
-                "sagaCompensatableTransactions": 0,
-                "sagaRetriableTransactions": 0,
-                "sagaPivotTransactions": 0
               }
             }
             """;

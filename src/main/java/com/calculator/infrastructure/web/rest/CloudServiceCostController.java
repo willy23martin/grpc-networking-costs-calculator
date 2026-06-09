@@ -141,7 +141,6 @@ public class CloudServiceCostController {
         @JsonProperty public boolean kmsEnabled                  = false;
         @JsonProperty public int     kmsCustomManagedKeyCount    = 1;
 
-        // Prices from /api/aws/security-services
         @JsonProperty public double  guardDutyPerGbLogs          = 0.004;
         @JsonProperty public double  inspectorPerInstanceMonth   = 1.886;
         @JsonProperty public double  wafWebAclPerMonth           = 5.0;

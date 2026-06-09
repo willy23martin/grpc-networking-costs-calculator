@@ -7,20 +7,21 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.util.Map;
-
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
 public final class ArchitecturalTactic extends ArchitecturalDecision {
+
     private String name;
 
     @Builder
     public ArchitecturalTactic(
+            String id,
             String name,
             ArchitecturalCharacteristic architecturalCharacteristic,
-            Map<String, CostFactor> costFactors) {
-        super(architecturalCharacteristic, costFactors);
+            CostFactor costFactor
+    ) {
+        super(id, architecturalCharacteristic, costFactor);
         this.name = name;
     }
 

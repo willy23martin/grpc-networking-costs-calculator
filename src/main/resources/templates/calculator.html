@@ -371,92 +371,6 @@
             </div>
         </div>
 
-        <!-- Microservices -->
-        <div class="tactics-category">
-            <div class="tactics-category-header" onclick="toggleCategory('microservices')">
-                <span class="tactics-category-title"><span>🧩</span> Microservices Patterns &amp; Tactics</span>
-                <i class="fas fa-chevron-down tactics-chevron" id="chevron-microservices"></i>
-            </div>
-            <div class="tactics-category-body" id="body-microservices">
-                <div class="tactic-row">
-                    <input type="checkbox" class="tactic-check" id="tactic-saga">
-                    <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-saga">SAGA Pattern <span class="warning-badge badge-warn">+ RPS hops</span></label>
-                        <span class="tactic-description">Distributes a transaction across N sequential gRPC calls. Adds <strong>(steps&minus;1) extra hops</strong> per transaction. Egress cost only when steps exit the VPC.</span>
-                    </div>
-                </div>
-                <div class="saga-explainer" id="saga-explainer">
-                    <div class="explainer-title"><i class="fas fa-graduation-cap"></i> How SAGA affects networking costs</div>
-                    <p>Each transaction spawns N sequential gRPC calls. <strong>Extra egress formula:</strong></p>
-                    <div class="formula">extra egress calls/s = base RPS &times; (steps &minus; 1)</div>
-                    <p style="margin-top:4px;font-size:.78rem;">Example: 1,000 RPS &times; (3 &minus; 1) = +2,000 extra calls/s. Total billable: 3,000 calls/s.</p>
-                    <p style="margin-top:3px;font-size:.78rem;color:var(--ink-light);">⚠ Egress billed only when steps exit the VPC. Intra-VPC same-AZ calls are free.</p>
-                </div>
-                <div class="saga-sub-params" id="saga-params">
-                    <div class="tactic-row" style="background:var(--amber-bg);border-radius:var(--r);padding:8px 12px;margin-bottom:4px;border:1px solid var(--amber-border);">
-                        <input type="checkbox" class="tactic-check" id="tactic-saga-external-vpc" style="accent-color:var(--amber);">
-                        <div class="tactic-label-group">
-                            <label class="tactic-label" for="tactic-saga-external-vpc" style="color:var(--amber);">
-                                <i class="fas fa-globe" style="margin-right:5px;"></i>
-                                SAGA steps call services <strong>outside AWS VPC</strong> <span class="warning-badge badge-warn">affects egress cost</span>
-                            </label>
-                            <span class="tactic-description">If SAGA steps exit your VPC (third-party APIs, partner services, cross-region calls), AWS charges internet egress ($0.09+/GB). If all steps stay within the same VPC, intra-service traffic costs $0.00 (same-AZ) or $0.01/GB (cross-AZ) — effectively free for most workloads. <strong>Check this box only if any step exits the VPC.</strong></span>
-                        </div>
-                    </div>
-
-                    <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label" for="input-saga-compensatable">Compensatable steps</label><span class="tactic-description">Steps reversible via a compensating action if a later step fails.</span></div>
-                        <div class="tactic-input-group"><input type="number" id="input-saga-compensatable" min="0" placeholder="1"><span class="tactic-unit">steps</span></div>
-                    </div>
-                    <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label" for="input-saga-retriable">Retriable steps</label><span class="tactic-description">Steps guaranteed to eventually succeed after retries.</span></div>
-                        <div class="tactic-input-group"><input type="number" id="input-saga-retriable" min="0" placeholder="1"><span class="tactic-unit">steps</span></div>
-                    </div>
-                    <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label" for="input-saga-pivot">Pivot steps</label><span class="tactic-description">Go/no-go point — neither compensatable nor retriable.</span></div>
-                        <div class="tactic-input-group"><input type="number" id="input-saga-pivot" min="0" placeholder="1"><span class="tactic-unit">steps</span></div>
-                    </div>
-                    <div class="live-preview" id="saga-live-preview"></div>
-                </div>
-                <div class="tactic-row">
-                    <input type="checkbox" class="tactic-check" id="tactic-apigw" onchange="toggleApiGwParams(this.checked)">
-                    <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-apigw">API Gateway <span class="warning-badge badge-red">+ cost</span></label>
-                        <span class="tactic-description">Exposes this service through Amazon API Gateway for auth, rate limiting, routing, and observability. <strong>REST:</strong> $3.50/M calls. <strong>HTTP API:</strong> $1.00/M calls. <strong>WebSocket:</strong> $0.25/M connection-minutes. Optional response caching from $0.020/hr reduces backend load.</span>
-                    </div>
-                </div>
-                <div id="apigw-params" style="display:none;padding-left:28px;border-left:3px solid var(--gold-border);margin:4px 0 10px;">
-                    <div id="apigw-loading" style="font-size:.82rem;color:var(--ink-light);padding:6px 0;"><span class="spinner"></span> Fetching API Gateway pricing…</div>
-                    <div id="apigw-content" style="display:none;">
-                        <div class="tactic-row">
-                            <div class="tactic-label-group"><label class="tactic-label">API Type</label><span class="tactic-description">REST: full features including usage plans/keys. HTTP: lower-latency, simpler. WebSocket: persistent bidirectional connections.</span></div>
-                            <div class="tactic-input-group"><select id="input-apigw-type" onchange="recalculateApiGw()" style="width:185px;">
-                                <option value="rest">REST API ($3.50/M calls)</option>
-                                <option value="http">HTTP API ($1.00/M calls)</option>
-                                <option value="websocket">WebSocket ($0.25/M conn-min)</option>
-                            </select></div>
-                        </div>
-                        <div class="tactic-row">
-                            <div class="tactic-label-group"><label class="tactic-label" for="input-apigw-calls-per-month">Monthly API calls (millions)</label></div>
-                            <div class="tactic-input-group"><input type="number" id="input-apigw-calls-per-month" min="0" step="0.1" placeholder="e.g. 10" oninput="recalculateApiGw()"><span class="tactic-unit">M calls/mo</span></div>
-                        </div>
-                        <div class="tactic-row">
-                            <div class="tactic-label-group"><label class="tactic-label">Response Caching</label><span class="tactic-description">Caches responses to reduce backend calls and improve latency. Billed per hour by cache size.</span></div>
-                            <div class="tactic-input-group"><select id="input-apigw-cache" onchange="recalculateApiGw()" style="width:185px;">
-                                <option value="0">No caching</option>
-                                <option value="0.020">0.5 GB cache ($0.020/hr)</option>
-                                <option value="0.038">1.6 GB cache ($0.038/hr)</option>
-                                <option value="0.054">6.1 GB cache ($0.054/hr)</option>
-                                <option value="0.200">13.5 GB cache ($0.200/hr)</option>
-                            </select></div>
-                        </div>
-                        <div id="apigw-result" class="live-preview" style="display:block;margin-top:8px;min-height:24px;"></div>
-                    </div>
-                </div>
-                <div class="tactics-info-banner" id="info-microservices"><i class="fas fa-info-circle"></i><span id="info-microservices-text"></span></div>
-            </div>
-        </div>
-
         <!-- Security -->
         <div class="tactics-category">
             <!-- Security intro -->
@@ -474,110 +388,148 @@
                 <span class="tactics-category-title"><span>🔒</span> Security Tactics</span>
                 <i class="fas fa-chevron-down tactics-chevron" id="chevron-security"></i>
             </div>
+
+            <!-- NEW CHANGE-->
             <div class="tactics-category-body" id="body-security">
                 <div class="security-explainer">
                     <div class="explainer-title"><i class="fas fa-shield-alt"></i> How security tactics affect TCO</div>
-                    <p>Security impacts costs in two dimensions — <strong>payload size</strong> (byte overhead per message) and <strong>request count</strong> (handshake or token-acquisition calls). The formula:</p>
+                    <p>Security impacts costs in two dimensions — <strong>payload size</strong> and <strong>request count</strong>.</p>
                     <div class="formula">effective RPS = tactics-adjusted RPS + handshake msgs/s + token acq/s + introspection/s</div>
                     <div class="formula" style="margin-top:6px;">effective message size = proto size + TLS overhead + JWT header overhead</div>
-                    <p style="margin-top:8px;font-size:.76rem;color:var(--ink-light);">Ranges per RFC 8446 (TLS 1.3), RFC 7519 (JWT), RFC 7523, RFC 9101, RFC 6749.</p>
                 </div>
 
-                <!-- TLS -->
                 <div class="tactic-row" style="margin-top:12px;">
                     <input type="checkbox" class="tactic-check" id="tactic-tls">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-tls">TLS 1.3 (one-way) <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A02&middot;A07</span></label>
-                        <span class="tactic-description">Encrypts every gRPC frame via TLS 1.3. Adds per-message byte overhead; handshakes only on reconnect.</span>
-                        <div class="byte-range-badge" id="tls-byte-badge" style="display:none;">
-                            <i class="fas fa-weight-hanging" style="font-size:.75rem;"></i>
-                            Per-message: <strong>21</strong> <span class="range-label">min</span> / <strong>29</strong> <span class="range-label">typical</span> / <strong>37</strong> <span class="range-label">max</span> <span class="range-label">bytes — RFC 8446</span>
-                        </div>
+                        <label class="tactic-label" for="tactic-tls">TLS 1.3 (one-way) <span class="warning-badge badge-bytes">+ bytes</span></label>
+                        <span class="tactic-description">Encrypts every gRPC frame via TLS 1.3.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-tls"></div>
                     </div>
                 </div>
                 <div class="security-sub-params" id="tls-params">
                     <div class="tactic-row">
                         <div class="tactic-label-group">
                             <label class="tactic-label" for="input-tls-reconnects">Reconnects per hour</label>
-                            <span class="tactic-description">Each reconnect triggers a TLS handshake (2 message exchanges). At 60 reconnects/hr (60s idle timeout) ≈ 0.03 extra req/s — informational. AWS ALB idle default: 60s; keep-alive default: 3,600s.</span>
                         </div>
                         <div class="tactic-input-group"><input type="number" id="input-tls-reconnects" min="0" placeholder="1"><span class="tactic-unit">reconnects/hr</span></div>
                     </div>
                     <div class="acm-note"><i class="fas fa-check-circle"></i><span><strong>AWS ACM — no additional cost.</strong> Certificates managed &amp; auto-renewed at no charge.</span></div>
                 </div>
 
-                <!-- mTLS -->
                 <div class="tactic-row">
                     <input type="checkbox" class="tactic-check" id="tactic-mtls">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-mtls">mTLS (Mutual TLS) <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A01&middot;A02&middot;A07</span> <span class="warning-badge badge-red">+ requests</span></label>
-                        <span class="tactic-description">Client also presents a certificate. Same per-message overhead as TLS; 5 handshake messages per reconnect vs 2 for plain TLS.</span>
-                        <div class="byte-range-badge" id="mtls-byte-badge" style="display:none;">
-                            <i class="fas fa-weight-hanging" style="font-size:.75rem;"></i>
-                            Per-message: <strong>21</strong> <span class="range-label">min</span> / <strong>29</strong> <span class="range-label">typical</span> / <strong>37</strong> <span class="range-label">max</span> <span class="range-label">bytes — RFC 8446</span>
-                        </div>
+                        <label class="tactic-label" for="tactic-mtls">mTLS (Mutual TLS) <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span></label>
+                        <span class="tactic-description">Enforces bi-directional cryptographic handshake identity confirmation.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-mtls"></div>
                     </div>
                 </div>
                 <div class="security-sub-params" id="mtls-params" style="display:none;">
-                    <div class="tactic-row">
-                        <div class="tactic-label-group">
-                            <label class="tactic-label">mTLS — 5 messages per reconnect</label>
-                            <span class="tactic-description">Full exchange: ClientHello → ServerHello + Cert + CertRequest → client Cert → CertVerify → Finished. Configure reconnects/hr above.</span>
-                        </div>
-                    </div>
                     <div class="acm-note"><i class="fas fa-check-circle"></i><span><strong>AWS ACM — no additional cost.</strong> Client &amp; server certificates managed by ACM.</span></div>
                 </div>
 
-                <!-- OAuth 2.0 + JWT -->
                 <div class="tactic-row">
                     <input type="checkbox" class="tactic-check" id="tactic-oauth">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-oauth">OAuth 2.0 + JWT <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A01&middot;A02&middot;A07</span></label>
-                        <span class="tactic-description">JWT bearer in gRPC metadata. Inbound = $0 AWS cost. Cost via token-acquisition calls to auth server.</span>
-                        <div class="byte-range-badge" id="jwt-byte-badge" style="display:none;">
-                            <i class="fas fa-weight-hanging" style="font-size:.75rem;"></i>
-                            JWT header per request: <strong>300</strong> <span class="range-label">min</span> / <strong>650</strong> <span class="range-label">typical</span> / <strong>1,200</strong> <span class="range-label">max</span> <span class="range-label">bytes — RFC 7519/7523/9101</span>
-                        </div>
+                        <label class="tactic-label" for="tactic-oauth">OAuth 2.0 + JWT <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span></label>
+                        <span class="tactic-description">Attaches structural claims validation signatures to RPC call wrappers.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-oauth"></div>
                     </div>
                 </div>
                 <div class="security-sub-params" id="oauth-params">
                     <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label">Token validation mode</label>
-                            <span class="tactic-description"><strong>Local (recommended):</strong> server validates JWT signature locally — zero extra req/call. <strong>Remote introspection:</strong> calls auth server on every gRPC request — doubles outbound volume.</span>
-                        </div>
+                        <div class="tactic-label-group"><label class="tactic-label">Token validation mode</label></div>
                         <div class="tactic-input-group"><select id="input-token-validation"><option value="LOCAL">Local (recommended)</option><option value="REMOTE_INTROSPECTION">Remote introspection</option></select></div>
                     </div>
                     <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label" for="input-token-ttl">Token TTL</label><span class="tactic-description">Longer TTL = fewer acquisition calls per second (RFC 6749 §4.1).</span></div>
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-token-ttl">Token TTL</label></div>
                         <div class="tactic-input-group"><input type="number" id="input-token-ttl" min="60" placeholder="3600"><span class="tactic-unit">seconds</span></div>
                     </div>
                     <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label" for="input-concurrent-clients">Concurrent clients</label><span class="tactic-description">Token acquisition amortised across all clients sharing a token pool.</span></div>
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-concurrent-clients">Concurrent clients</label></div>
                         <div class="tactic-input-group"><input type="number" id="input-concurrent-clients" min="1" placeholder="1"><span class="tactic-unit">clients</span></div>
                     </div>
                     <div class="tactic-row">
-                        <div class="tactic-label-group"><label class="tactic-label">Interceptor type</label>
-                            <span class="tactic-description"><strong>Unary:</strong> validates JWT on each individual RPC. <strong>Stream:</strong> validates once at stream open — lower cost for long-lived streams.</span>
-                        </div>
+                        <div class="tactic-label-group"><label class="tactic-label">Interceptor type</label></div>
                         <div class="tactic-input-group"><select id="input-interceptor-type"><option value="UNARY">Unary interceptor</option><option value="STREAM">Stream interceptor</option></select></div>
                     </div>
                     <div class="live-preview" id="oauth-live-preview"></div>
                 </div>
 
-                <!-- Basic Auth -->
                 <div class="tactic-row">
-                    <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-basic-auth" data-category="security"
-                           data-info="Basic Authentication sends base64(user:pass) in every request Authorization header. No extra requests — but no expiry or revocation. Use only for tooling/dev."
-                    >
+                    <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-basic-auth" data-category="security">
                     <div class="tactic-label-group">
-                        <label class="tactic-label" for="tactic-basic-auth">Basic Authentication <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-warn">⚠ Not recommended</span> <span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">OWASP A02&middot;A07</span></label>
-                        <span class="tactic-description">50–100 bytes per request. No expiry, no revocation. Dev/internal tooling only.</span>
+                        <label class="tactic-label" for="tactic-basic-auth">Basic Authentication <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-warn">⚠ Not recommended</span></label>
+                        <span class="tactic-description">Transmits clear-text credentials inside authorization metadata headings.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-basic-auth"></div>
                     </div>
                 </div>
-
                 <div class="tactics-info-banner" id="info-security"><i class="fas fa-info-circle"></i><span id="info-security-text"></span></div>
             </div>
+
+
+            <div class="tactics-category-body text-card" id="body-cloud">
+                <div style="padding:10px 0;">
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-guardduty">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-guardduty">AWS GuardDuty</label>
+                            <span class="tactic-description">Intelligent threat detection monitoring network flows.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-guardduty"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-inspector">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-inspector">AWS Inspector</label>
+                            <span class="tactic-description">Automated vulnerability assessment for container images.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-inspector"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-waf">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-waf">AWS WAF</label>
+                            <span class="tactic-description">Web Application Firewall protecting HTTP/2 ingress points.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-waf"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-macie">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-macie">AWS Macie</label>
+                            <span class="tactic-description">Data privacy protection service using pattern-matching algorithms.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-macie"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-cloudwatch">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-cloudwatch">AWS CloudWatch</label>
+                            <span class="tactic-description">Real-time observability monitoring structural system metrics.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-cloudwatch"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-audit">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-audit">AWS CloudTrail</label>
+                            <span class="tactic-description">Immutable tracking recording action histories.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-audit"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-kms">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-kms">AWS KMS</label>
+                            <span class="tactic-description">Hardware security cryptographic module system keys control.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-kms"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+        <!-- NEW CHANGE-->
 
         <!-- ══════ CLOUD TACTICS & PATTERNS ══════════════════════════════ -->
 
@@ -1592,6 +1544,7 @@
 </div>
 
 <!-- JS Scripts -->
+<script th:src="@{/js/initializer-tactics-mapping.js}" src="/js/initializer-tactics-mapping.js"></script>
 <script th:src="@{/js/calculator.js}" src="/js/calculator.js"></script>
 <script th:src="@{/js/session-management.js}" src="/js/session-management.js"></script>
 <script th:src="@{/js/phase-navigation.js}" src="/js/phase-navigation.js"></script>

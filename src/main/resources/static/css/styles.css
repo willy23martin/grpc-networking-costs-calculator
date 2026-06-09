@@ -753,7 +753,6 @@ select {
 }
 
 .cb-sub-params,
-.saga-sub-params,
 .security-sub-params {
   display: none;
   padding-left: 28px;
@@ -850,7 +849,7 @@ select {
   color: var(--ink-light);
 }
 
-/* Saga & OAuth live previews */
+/* OAuth live previews */
 .live-preview {
   display: none;
   margin-top: 8px;
@@ -867,7 +866,6 @@ select {
   display: block;
 }
 
-.saga-explainer,
 .security-explainer {
   display: none;
   margin: 10px 0 4px;
@@ -878,12 +876,6 @@ select {
   color: var(--ink);
 }
 
-.saga-explainer {
-  background: var(--gold-light);
-  border: 1px solid var(--gold-border);
-}
-
-.saga-explainer.visible,
 .security-explainer.visible {
   display: block;
   animation: slideUp .25s ease;

@@ -33,8 +33,7 @@ The service can be parametrized before building it to use a Cloud Service Provid
 * Define a global max repeated items in protofile like the maximum amount of messages property name: *protofile.max.repeated.items*.
 * An **AWS account** with an **IAM user** with **permissions for consuming the AWS Pricing API** is needed.
 * **Reliability tactics**: Client-side and server-side load balancing.
-* **Resiliency tactics and patters**: Timeout, Retry and Circuit breaker. 
-* **Microservices patterns**: SAGA Pattern.
+* **Resiliency tactics and patters**: Timeout, Retry and Circuit breaker.
 * **Security tactics**: TLS Certificate and OAuth2.0 + JWT Token. 
 * **Software Design Patterns that have been implemented**: **Composed Method** and **Builder**. Check for `// DESIGN PATTERN` comments.
 * **NOTE**:Some tests might be skipped as those are operating system dependent.
@@ -106,12 +105,7 @@ Pending
 - No business logic in JS. JS = form collection + API call + render.
 
 ## Retry formula (preserved)
-`tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS, never SAGA-multiplied RPS.
-
-## SAGA egress rule (preserved)
-Egress is only billed (and RPS multiplied) when `sagaExternalVpc = true`.
-Intra-VPC steps = $0.00 same-AZ, no RPS impact on cost.
-
+`tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
 
 
 # References:

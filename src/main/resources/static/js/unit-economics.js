@@ -41,14 +41,13 @@ function populateReportSummary() {
   var consumerTypeLabelMap = { SERVICES: 'Microservices / APIs', USERS: 'End Users', BOTH: 'Mixed' };
   var consumerTypeLabel = consumerTypeLabelMap[consumerType] || consumerType;
 
-  var tacticIds = ['tactic-client-lb', 'tactic-server-lb', 'tactic-timeout', 'tactic-retry', 'tactic-cb', 'tactic-saga', 'tactic-tls', 'tactic-mtls', 'tactic-oauth', 'tactic-basic-auth'];
+  var tacticIds = ['tactic-client-lb', 'tactic-server-lb', 'tactic-timeout', 'tactic-retry', 'tactic-cb', 'tactic-tls', 'tactic-mtls', 'tactic-oauth', 'tactic-basic-auth'];
   var tacticLabelsMap = {
     'tactic-client-lb': 'Client-side LB',
     'tactic-server-lb': 'Server-side LB',
     'tactic-timeout': 'Timeout',
     'tactic-retry': 'Retry',
     'tactic-cb': 'Circuit Breaker',
-    'tactic-saga': 'SAGA Pattern',
     'tactic-tls': 'TLS',
     'tactic-mtls': 'mTLS',
     'tactic-oauth': 'OAuth 2.0 + JWT',
@@ -68,25 +67,10 @@ function populateReportSummary() {
 
   if (document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked) {
     var retryErrorPercentage = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
-    var isSagaExternalVpc = !!(document.getElementById('tactic-saga') && document.getElementById('tactic-saga').checked && document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
 
-    var sagaTotalSteps = isSagaExternalVpc ? ((parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0) + (parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0) + (parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0)) : 0;
-    var effectiveBaseRpsForRetry = sagaTotalSteps > 0 ? numericRps * sagaTotalSteps : numericRps;
-    var extraRetryRequests = Math.round(effectiveBaseRpsForRetry * retryErrorPercentage / 100);
+    var extraRetryRequests = Math.round(numericRps * retryErrorPercentage / 100);
 
     rpsImpacts.push('Retry: +' + extraRetryRequests.toLocaleString() + ' req/s (' + retryErrorPercentage + '% of ' + effectiveBaseRpsForRetry.toLocaleString() + ' eff.RPS)');
-  }
-
-  if (document.getElementById('tactic-saga') && document.getElementById('tactic-saga').checked) {
-    var compensatableSteps = parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0;
-    var retriableSteps = parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0;
-    var pivotSteps = parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0;
-    var totalSagaSteps = compensatableSteps + retriableSteps + pivotSteps;
-    var isExternalVpc = !!(document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
-
-    if (totalSagaSteps > 0) {
-      rpsImpacts.push('SAGA: ' + (isExternalVpc ? ('×' + totalSagaSteps + ' steps = ' + (numericRps * totalSagaSteps).toLocaleString() + ' egress req/s') : (totalSagaSteps + ' steps intra-VPC — no egress')));
-    }
   }
 
   if (document.getElementById('tactic-tls') && document.getElementById('tactic-tls').checked) {

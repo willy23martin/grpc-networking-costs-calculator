@@ -108,7 +108,6 @@ function compileActiveArchitecturalTactics() {
     'tactic-timeout': 'Timeout',
     'tactic-retry': 'Retry',
     'tactic-cb': 'Circuit Breaker',
-    'tactic-saga': 'SAGA',
     'tactic-apigw': 'API GW',
     'tactic-tls': 'TLS',
     'tactic-mtls': 'mTLS',

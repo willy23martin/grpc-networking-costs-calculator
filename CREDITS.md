@@ -38,15 +38,10 @@ AI assistant that contributed to the design and implementation of:
 - Architecture tactics display in the TCO results page, including controller model
   population, RPS impact grouping (informational vs. cost-increasing), and
   Thymeleaf template rendering with per-tactic summary tables and RPS adjustment banner.
-- SAGA pattern RPS calculation semantics: clarified the distinction between RPS
-  (runtime throughput) and SAGA steps (structural units of one business transaction),
-  corrected the calculation from additive to multiplicative
-  (`effectiveRps = baseRps × stepsPerSagaInstance`), and introduced the educational
-  explainer UI so interface users understand the concept when configuring the pattern.
 - Full refactor of `calculator.html` JavaScript into modular Spring Boot REST controllers,
   migrating all cost arithmetic out of the browser and into the backend across 4 modules:
     - **Module 1** — Effective RPS calculation (`POST /api/tco/effective-rps`):
-      SAGA multiplier, Retry additive formula, TLS/mTLS handshake RPS,
+      Retry additive formula, TLS/mTLS handshake RPS,
       OAuth token-acquisition and remote-introspection RPS, all moved to
       `NetworkingTacticsSecurityController`.
     - **Module 2** — Individual cloud service cost calculations moved to
@@ -64,7 +59,7 @@ AI assistant that contributed to the design and implementation of:
       (`POST /api/cost/unit-economics`).
     - **Module 4** — Per-tactic cost impact estimation for the live comparison panel
       moved to `TacticContributionController` (`POST /api/cost/tactic-contributions`):
-      AWS egress tiered pricing math, per-tactic monthly cost delta for SAGA,
+      AWS egress tiered pricing math,
       Retry, TLS/mTLS, and OAuth 2.0+JWT; `collectTacticContributions` refactored
       from synchronous inline math to an async backend call returning pre-computed
       `estimatedMonthlyCostUsd` and `costDisplayLabel` per tactic;

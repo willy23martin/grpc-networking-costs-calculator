@@ -1,5 +1,13 @@
 package com.calculator.domain.model.quality;
 
 public enum ArchitecturalCharacteristics {
-    DATA_CONSISTENCY, SECURITY
+    RELIABILITY,
+    RESILIENCY,
+    SECURITY,
+    AFFORDABILITY,
+    CONFIDENTIALITY,
+    INTEGRITY,
+    AUTHENTICITY,
+    ACCOUNTABILITY,
+    NON_REPUDIATION
 }

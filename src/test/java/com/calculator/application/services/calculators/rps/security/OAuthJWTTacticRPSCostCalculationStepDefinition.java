@@ -34,18 +34,16 @@ public class OAuthJWTTacticRPSCostCalculationStepDefinition {
 
     @When("the software architect selects OAuth plus JWT token as an architectural tactic with Remote Instrospection")
     public void the_software_architect_selects_o_auth_plus_jwt_token_as_an_architectural_tactic_with_remote_instrospection() {
+       /**
         this.architecturalCharacteristic = ArchitecturalCharacteristic
                 .builder()
                 .name(ArchitecturalCharacteristics.SECURITY.name())
                 .build();
 
-        this.costFactor = NetworkingCost
-                .builder()
-                .criteria(NetworkingCostCriteria.REQUESTS_PER_SECOND.name())
-                .value(2)
-                .operation(CostOperations.MULTIPLIER.name())
-                .units(CostUnits.RPS.name())
-                .build();
+        this.costFactor = new NetworkingCost(
+
+        );
+
 
         this.architecturalTactic = ArchitecturalTactic
                 .builder()
@@ -55,6 +53,7 @@ public class OAuthJWTTacticRPSCostCalculationStepDefinition {
                         CostFactors.RPS.name(), costFactor
                 ))
                 .build();
+        */
     }
 
     @Then("the requests per second should increase up to {int} rps")

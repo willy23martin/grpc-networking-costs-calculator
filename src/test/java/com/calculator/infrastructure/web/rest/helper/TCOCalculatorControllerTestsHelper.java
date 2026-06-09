@@ -1,7 +1,6 @@
 package com.calculator.infrastructure.web.rest.helper;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
-import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
@@ -22,20 +21,7 @@ public class TCOCalculatorControllerTestsHelper {
                 new TimeoutPattern(false, 0),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 security
-        );
-    }
-
-    public static ArchitecturalDecisionsDTO sagaOnly(int compensatable, int retriable, int pivot) {
-        return new ArchitecturalDecisionsDTO(
-                1000,
-                new ReliabilityTactics(false, false),
-                new TimeoutPattern(false, 0),
-                new RetryPattern(false, 0),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(true, compensatable, retriable, pivot),
-                SecurityTactics.empty()
         );
     }
 

@@ -88,13 +88,11 @@ function calcMonthlyCost(rps, respBytes) {
 function recalculateRps() {
   var baseRps = parseInt((document.getElementById('requestsPerSecond') || { value: '' }).value) || 0;
   var sumEl   = document.getElementById('rps-impact-summary');
-  var sagaPrv = document.getElementById('saga-live-preview');
   var oaPrv   = document.getElementById('oauth-live-preview');
   var cmpBlk  = document.getElementById('tactics-comparison-block');
 
   if (!baseRps) {
     if (sumEl)   sumEl.classList.remove('visible');
-    if (sagaPrv) sagaPrv.classList.remove('visible');
     if (oaPrv)   oaPrv.classList.remove('visible');
     if (cmpBlk)  cmpBlk.classList.remove('visible');
     return;
@@ -103,21 +101,16 @@ function recalculateRps() {
   baseRpsForComparison = baseRps;
 
   var payload = {
-    baseRps:              baseRps,
-    sagaEnabled:          !!(document.getElementById('tactic-saga') && document.getElementById('tactic-saga').checked),
-    sagaExternalVpc:      !!(document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked),
-    sagaCompensatable:    parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0,
-    sagaRetriable:        parseInt((document.getElementById('input-saga-retriable')     || { value: '0' }).value) || 0,
-    sagaPivot:            parseInt((document.getElementById('input-saga-pivot')         || { value: '0' }).value) || 0,
-    retryEnabled:         !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked),
-    retryErrorPct:        parseFloat((document.getElementById('input-retry-error-pct')  || { value: '5' }).value) || 5,
-    tlsEnabled:           !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked),
-    mtlsEnabled:          !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked),
+    baseRps: baseRps,
+    retryEnabled: !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked),
+    retryErrorPct: parseFloat((document.getElementById('input-retry-error-pct')  || { value: '5' }).value) || 5,
+    tlsEnabled: !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked),
+    mtlsEnabled: !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked),
     tlsReconnectsPerHour: parseInt((document.getElementById('input-tls-reconnects')     || { value: '0' }).value) || 0,
-    oauthEnabled:         !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked),
-    tokenValidationMode:  (document.getElementById('input-token-validation') || { value: 'LOCAL' }).value || 'LOCAL',
-    tokenTtlSeconds:      parseInt((document.getElementById('input-token-ttl')          || { value: '3600' }).value) || 3600,
-    concurrentClients:    parseInt((document.getElementById('input-concurrent-clients') || { value: '1' }).value) || 1
+    oauthEnabled: !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked),
+    tokenValidationMode: (document.getElementById('input-token-validation') || { value: 'LOCAL' }).value || 'LOCAL',
+    tokenTtlSeconds: parseInt((document.getElementById('input-token-ttl')          || { value: '3600' }).value) || 3600,
+    concurrentClients: parseInt((document.getElementById('input-concurrent-clients') || { value: '1' }).value) || 1
   };
 
   fetch('/api/tco/effective-rps', {
@@ -130,14 +123,6 @@ function recalculateRps() {
     if (!d) return;
 
     window._lastEffectiveRps = d.effectiveRps;
-
-    // SAGA preview
-    if (d.sagaPreview && payload.sagaEnabled) {
-      if (sagaPrv) {
-        sagaPrv.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>' + d.sagaPreview + '</strong>';
-        sagaPrv.classList.add('visible');
-      }
-    } else { if (sagaPrv) sagaPrv.classList.remove('visible'); }
 
     // Retry preview
     if (d.retryExtra > 0) {
@@ -177,13 +162,6 @@ function hasAnyImpactingTactic() {
     'tactic-alb', 'tactic-cache', 'tactic-s3-backup', 'tactic-aurora-replica', 'tactic-apigw',
     'cef-clusters', 'cef-cluster-lb', 'cef-host-storage', 'cef-workload-license'];
   for (var i = 0; i < allIds.length; i++) { var el = document.getElementById(allIds[i]); if (el && el.checked) return true; }
-  var sagaCb = document.getElementById('tactic-saga');
-  if (sagaCb && sagaCb.checked) {
-    var steps = (parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0)
-      + (parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0)
-      + (parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0);
-    if (steps > 0) return true;
-  }
   var ssK = ['tco_alb_cost', 'tco_cache_cost', 'tco_db_cost', 'tco_sec_cost', 'tco_container_cost', 'tco_apigw_cost'];
   for (var k = 0; k < ssK.length; k++) { if (parseFloat(sessionStorage.getItem(ssK[k]) || '0') > 0) return true; }
   return false;
@@ -275,7 +253,6 @@ function buildBaseTacticsDTO(rps) {
     timeoutTactic: { resiliencyTimeoutTactic: false, tacticTimeoutMilliseconds: 0 },
     retryTactic: { resiliencyRetryTactic: false, tacticRetryTimes: 0 },
     circuitBreakerTactic: { resiliencyCircuitBreakerPattern: false, circuitBreakerPatternMinimumCalls: 0, circuitBreakerHalfOpen: 0, circuitBreakerWaitMilliseconds: 0, circuitBreakerFailureRate: 0 },
-    sagaPattern: { microservicesSAGAPattern: false, sagaCompensatableTransactions: 0, sagaRetriableTransactions: 0, sagaPivotTransactions: 0 },
     securityTactics: {
       tlsTactic: { tlsEnabled: false, mtlsEnabled: false, tlsReconnectsPerHour: 0 },
       jwtTactic: { oauthJwtEnabled: false, tokenValidationMode: 'LOCAL', tokenTtlSeconds: 3600, concurrentClients: 1, interceptorType: 'UNARY' },
@@ -401,7 +378,7 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
   var sourceNoteEl = document.getElementById('cmp-source-note');
   if (sourceNoteEl) sourceNoteEl.textContent = isEstimate
     ? '* Estimated using placeholder sizes (200 B req / 1,200 B resp). Upload your .proto for exact figures.'
-    : '* Calculated using your .proto file. ℹ SAGA multiplies inter-service calls. AWS charges $0.00/GB same-AZ, $0.01/GB cross-AZ, $0.09+/GB to internet.';
+    : '* Calculated using your .proto file. AWS charges $0.00/GB same-AZ, $0.01/GB cross-AZ, $0.09+/GB to internet.';
 
   var deltaRowEl   = document.getElementById('cmp-delta-row');
   var deltaValueEl = document.getElementById('cmp-delta-val');
@@ -538,14 +515,6 @@ function recalculateAlb() {
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) {
     var _effR = _bRpsR;
-    var _sagaCbR = document.getElementById('tactic-saga');
-    if (_sagaCbR && _sagaCbR.checked) {
-      var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0);
-      var _extR = !!(document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
-      if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
-    }
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
       var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
@@ -683,14 +652,6 @@ function recalculateDbCost() {
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) {
     var _effR = _bRpsR;
-    var _sagaCbR = document.getElementById('tactic-saga');
-    if (_sagaCbR && _sagaCbR.checked) {
-      var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0);
-      var _extR = !!(document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
-      if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
-    }
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
       var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
@@ -725,14 +686,6 @@ function recalculateSecCost() {
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) {
     var _effR = _bRpsR;
-    var _sagaCbR = document.getElementById('tactic-saga');
-    if (_sagaCbR && _sagaCbR.checked) {
-      var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0);
-      var _extR = !!(document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
-      if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
-    }
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
       var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
@@ -869,14 +822,6 @@ function recalculateCaching() {
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) {
     var _effR = _bRpsR;
-    var _sagaCbR = document.getElementById('tactic-saga');
-    if (_sagaCbR && _sagaCbR.checked) {
-      var _ssR2 = (parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0)
-        + (parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0);
-      var _extR = !!(document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
-      if (_ssR2 > 0 && _extR) _effR = _bRpsR * _ssR2;
-    }
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
       var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
@@ -955,18 +900,10 @@ function recalculateContainerCost() {
   var _bR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bR) {
     var _eR = _bR;
-    var _sOn = !!(document.getElementById('tactic-saga') && document.getElementById('tactic-saga').checked && document.getElementById('tactic-saga-external-vpc') && document.getElementById('tactic-saga-external-vpc').checked);
-    if (_sOn) { var _ss = (parseInt((document.getElementById('input-saga-compensatable') || { value: '0' }).value) || 0) + (parseInt((document.getElementById('input-saga-retriable') || { value: '0' }).value) || 0) + (parseInt((document.getElementById('input-saga-pivot') || { value: '0' }).value) || 0); if (_ss > 0) _eR = _bR * _ss; }
     var _rOn = !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked);
     if (_rOn) { var _ep = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5; _eR += Math.round(_eR * _ep / 100); }
     updateLiveComparison(_bR, _eR);
   }
-}
-
-function toggleApiGwParams(show) {
-  var p = document.getElementById('apigw-params'); if (p) p.style.display = show ? 'block' : 'none';
-  if (show && !_apigwData) loadApiGwSection(); else if (show) recalculateApiGw();
-  recalculateRps(); scheduleSessionSave(); updateCloudTacticsBadge();
 }
 
 function escHtml(s) {
@@ -1055,12 +992,6 @@ function wireAllHandlers() {
   on('tactic-cb', 'change', function () { toggleCircuitBreakerParams(this.checked); scheduleSessionSave(); });
   ['input-cb-min-calls', 'input-cb-half-open', 'input-cb-wait', 'input-cb-failure-rate'].forEach(function (id) {
     on(id, 'input', function () { scheduleSessionSave(); });
-  });
-
-  on('tactic-saga', 'change', function () { toggleSagaParams(this.checked); });
-  on('tactic-saga-external-vpc', 'change', function () { recalculateRps(); scheduleSessionSave(); });
-  ['input-saga-compensatable', 'input-saga-retriable', 'input-saga-pivot'].forEach(function (id) {
-    on(id, 'input', function () { recalculateRps(); scheduleSessionSave(); });
   });
 
   on('tactic-tls', 'change', function () { toggleTlsOptions(); });
@@ -1217,14 +1148,6 @@ document.addEventListener('DOMContentLoaded', function () {
         v('input-cb-half-open', dto.circuitBreakerTactic.circuitBreakerHalfOpen);
         v('input-cb-wait', dto.circuitBreakerTactic.circuitBreakerWaitMilliseconds);
         v('input-cb-failure-rate', dto.circuitBreakerTactic.circuitBreakerFailureRate);
-      }
-
-      s('tactic-saga', dto.sagaPattern.microservicesSAGAPattern);
-      if (dto.sagaPattern.microservicesSAGAPattern) {
-        toggleSagaParams(true);
-        v('input-saga-compensatable', dto.sagaPattern.sagaCompensatableTransactions);
-        v('input-saga-retriable', dto.sagaPattern.sagaRetriableTransactions);
-        v('input-saga-pivot', dto.sagaPattern.sagaPivotTransactions);
       }
 
       if (dto.securityTactics) {

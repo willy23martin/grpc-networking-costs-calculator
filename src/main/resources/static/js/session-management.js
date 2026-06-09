@@ -102,14 +102,6 @@ function collectTacticsDTO() {
       circuitBreakerFailureRate: getParsedInteger('input-cb-failure-rate')
     },
 
-    sagaPattern: {
-      microservicesSAGAPattern: isChecked('tactic-saga'),
-      sagaExternalVpc: isChecked('tactic-saga-external-vpc'),
-      sagaCompensatableTransactions: getParsedInteger('input-saga-compensatable'),
-      sagaRetriableTransactions: getParsedInteger('input-saga-retriable'),
-      sagaPivotTransactions: getParsedInteger('input-saga-pivot')
-    },
-
     securityTactics: {
       tlsTactic: {
         tlsEnabled: isChecked('tactic-tls'),
@@ -137,19 +129,8 @@ function calculateResiliencyRetryParameters(baselineRequestsPerSecond) {
 
   const failureRatePercentageThreshold = parseFloat(getUiElementOrEmptyObject('input-retry-error-pct').value) || 5;
 
-  const isSagaDistributedTransactionActive = isChecked('tactic-saga') && isChecked('tactic-saga-external-vpc');
-  let compositeTransactionStepsMultiplier = 0;
-
-  if (isSagaDistributedTransactionActive) {
-    compositeTransactionStepsMultiplier = getParsedInteger('input-saga-compensatable') +
-                                           getParsedInteger('input-saga-retriable') +
-                                           getParsedInteger('input-saga-pivot');
-  }
-
   // Evaluate the effective workload load adjustments introduced by nested choreography steps
-  const effectiveBaseTrafficLoad = compositeTransactionStepsMultiplier > 0
-    ? baselineRequestsPerSecond * compositeTransactionStepsMultiplier
-    : baselineRequestsPerSecond;
+  const effectiveBaseTrafficLoad = baselineRequestsPerSecond;
 
   const totalCalculatedRetryInvocations = Math.round((effectiveBaseTrafficLoad * failureRatePercentageThreshold) / 100);
 

@@ -136,12 +136,6 @@ function toggleRetry(checked) {
   scheduleSessionSave();
 }
 
-function toggleSagaParams(show) {
-  toggleUiVisibility('saga-params', show);
-  document.getElementById('saga-explainer')?.classList.toggle('visible', show);
-  recalculateRps();
-}
-
 function toggleTlsOptions() {
   const isTlsActive = Boolean(document.getElementById('tactic-tls')?.checked);
   const isMtlsActive = Boolean(document.getElementById('tactic-mtls')?.checked);
@@ -488,11 +482,6 @@ function collectTacticContributions(baseRequestsPerSecond, backendResult) {
     basicAuthEnabled:                 isChecked('tactic-basic-auth'),
     timeoutEnabled:                   isChecked('tactic-timeout'),
     timeoutMs:                        intValue('input-timeout'),
-    sagaEnabled:                      isChecked('tactic-saga'),
-    sagaExternalVpc:                  isChecked('tactic-saga-external-vpc'),
-    sagaCompensatableSteps:           intValue('input-saga-compensatable'),
-    sagaRetriableSteps:               intValue('input-saga-retriable'),
-    sagaPivotSteps:                   intValue('input-saga-pivot'),
     retryEnabled:                     isChecked('tactic-retry'),
     retryErrorRatePct:                floatValue('input-retry-error-pct', 5),
     tlsEnabled:                       isChecked('tactic-tls'),

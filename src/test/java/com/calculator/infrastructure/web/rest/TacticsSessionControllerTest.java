@@ -2,7 +2,6 @@ package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
-import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
@@ -57,12 +56,6 @@ class TacticsSessionControllerTest {
                 "circuitBreakerWaitMilliseconds": 60000,
                 "circuitBreakerFailureRate": 50
               },
-              "sagaPattern": {
-                "microservicesSAGAPattern": true,
-                "sagaCompensatableTransactions": 1,
-                "sagaRetriableTransactions": 2,
-                "sagaPivotTransactions": 1
-              },
               "securityTactics": {
                 "tlsTactic": {
                   "tlsEnabled": true,
@@ -98,7 +91,6 @@ class TacticsSessionControllerTest {
                 .andExpect(jsonPath("$.timeoutTactic").isNotEmpty())
                 .andExpect(jsonPath("$.retryTactic").isNotEmpty())
                 .andExpect(jsonPath("$.circuitBreakerTactic").isNotEmpty())
-                .andExpect(jsonPath("$.sagaPattern").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics.tlsTactic").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics.jwtTactic").isNotEmpty())
@@ -115,10 +107,6 @@ class TacticsSessionControllerTest {
                 .andExpect(jsonPath("$.circuitBreakerTactic.circuitBreakerHalfOpen").value(5))
                 .andExpect(jsonPath("$.circuitBreakerTactic.circuitBreakerWaitMilliseconds").value(60000))
                 .andExpect(jsonPath("$.circuitBreakerTactic.circuitBreakerFailureRate").value(50))
-                .andExpect(jsonPath("$.sagaPattern.microservicesSAGAPattern").value(true))
-                .andExpect(jsonPath("$.sagaPattern.sagaCompensatableTransactions").value(1))
-                .andExpect(jsonPath("$.sagaPattern.sagaRetriableTransactions").value(2))
-                .andExpect(jsonPath("$.sagaPattern.sagaPivotTransactions").value(1))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(true))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.mtlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsReconnectsPerHour").value(2))
@@ -138,7 +126,6 @@ class TacticsSessionControllerTest {
                 new TimeoutPattern(true, 300),
                 new RetryPattern(true, 3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         mockMvc.perform(post("/api/session/tactics")
@@ -157,7 +144,6 @@ class TacticsSessionControllerTest {
                 .andExpect(jsonPath("$.timeoutTactic.resiliencyTimeoutTactic").value(false))
                 .andExpect(jsonPath("$.retryTactic.resiliencyRetryTactic").value(false))
                 .andExpect(jsonPath("$.circuitBreakerTactic.resiliencyCircuitBreakerPattern").value(false))
-                .andExpect(jsonPath("$.sagaPattern.microservicesSAGAPattern").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.mtlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.oauthJwtEnabled").value(false))
@@ -172,7 +158,6 @@ class TacticsSessionControllerTest {
                 new TimeoutPattern(true, 200),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(true, 1, 2, 1),
                 SecurityTactics.empty()
         );
         mockMvc.perform(get("/api/session/tactics")
@@ -181,10 +166,6 @@ class TacticsSessionControllerTest {
                 .andExpect(jsonPath("$.requestsPerSecond").value(500))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityClientSideLoadBalancerTactic").value(true))
                 .andExpect(jsonPath("$.timeoutTactic.tacticTimeoutMilliseconds").value(200))
-                .andExpect(jsonPath("$.sagaPattern.microservicesSAGAPattern").value(true))
-                .andExpect(jsonPath("$.sagaPattern.sagaCompensatableTransactions").value(1))
-                .andExpect(jsonPath("$.sagaPattern.sagaRetriableTransactions").value(2))
-                .andExpect(jsonPath("$.sagaPattern.sagaPivotTransactions").value(1))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.oauthJwtEnabled").value(false));
     }
@@ -197,7 +178,6 @@ class TacticsSessionControllerTest {
                 new TimeoutPattern(false, 0),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         mockMvc.perform(delete("/api/session/tactics")

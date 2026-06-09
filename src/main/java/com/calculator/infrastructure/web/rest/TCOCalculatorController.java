@@ -1,7 +1,7 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
-import com.calculator.application.services.calculators.rps.RPSCostCostCalculatorService;
+import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
 import com.calculator.application.services.compilators.CompilationService;
 import com.calculator.application.services.populator.TacticsPopulatorService;
 import com.calculator.application.services.protobuf.ProtocolBufferMessageSizeCalculationService;
@@ -69,7 +69,7 @@ public class TCOCalculatorController implements ErrorController {
     ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
 
     @Autowired
-    RPSCostCostCalculatorService requestsPerSecondCalculatorService;
+    RequestPerSecondCostCalculatorService requestsPerSecondCalculatorService;
 
     @Autowired
     TacticsPopulatorService tacticsModelPopulatorService;

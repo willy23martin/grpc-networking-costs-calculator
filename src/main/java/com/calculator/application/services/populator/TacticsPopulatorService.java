@@ -1,6 +1,5 @@
 package com.calculator.application.services.populator;
 
-import com.calculator.application.services.populator.microservices.MicroservicesPattersPopulatorService;
 import com.calculator.application.services.populator.reliability.ReliabilityTacticsPopulatorService;
 import com.calculator.application.services.populator.resiliency.ResiliencyTacticsPopulatorService;
 import com.calculator.application.services.populator.security.SecurityTacticsPopulatorService;
@@ -20,9 +19,6 @@ public class TacticsPopulatorService {
     ResiliencyTacticsPopulatorService resiliencyTacticsPopulatorService;
 
     @Autowired
-    MicroservicesPattersPopulatorService microservicesPattersPopulatorService;
-
-    @Autowired
     SecurityTacticsPopulatorService securityTacticsPopulatorService;
 
     public void populateTacticsModel(
@@ -32,9 +28,6 @@ public class TacticsPopulatorService {
     ) {
         reliabilityTacticsPopulatorService.populate(architecturalDecisionsDTO.reliabilityTactics(), infoTactics);
         resiliencyTacticsPopulatorService.populate(architecturalDecisionsDTO, rpsTactics, infoTactics);
-        if (architecturalDecisionsDTO.sagaPattern().microservicesSAGAPattern()) {
-            microservicesPattersPopulatorService.populate(architecturalDecisionsDTO, architecturalDecisionsDTO.requestsPerSecond(), rpsTactics);
-        }
         securityTacticsPopulatorService.populate(architecturalDecisionsDTO.securityTactics(), architecturalDecisionsDTO.requestsPerSecond(), infoTactics, rpsTactics);
     }
 }

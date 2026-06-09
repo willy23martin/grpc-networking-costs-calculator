@@ -61,13 +61,6 @@ public class TacticsContributionController {
         @JsonProperty public boolean timeoutEnabled                 = false;
         @JsonProperty public int     timeoutMs                      = 0;
 
-        // SAGA
-        @JsonProperty public boolean sagaEnabled                   = false;
-        @JsonProperty public boolean sagaExternalVpc               = false;
-        @JsonProperty public int     sagaCompensatableSteps        = 0;
-        @JsonProperty public int     sagaRetriableSteps            = 0;
-        @JsonProperty public int     sagaPivotSteps                = 0;
-
         // Retry
         @JsonProperty public boolean retryEnabled                  = false;
         @JsonProperty public double  retryErrorRatePct             = 5.0;
@@ -138,9 +131,6 @@ public class TacticsContributionController {
                     "Timeout (" + req.timeoutMs + " ms)", null, null);
         }
 
-        // ── 2. SAGA Pattern ──────────────────────────────────────────────────
-        buildSagaContribution(resp, req, responseBytes);
-
         // ── 3. Retry ─────────────────────────────────────────────────────────
         buildRetryContribution(resp, req, responseBytes);
 
@@ -158,43 +148,6 @@ public class TacticsContributionController {
         resp.totalTacticNetworkingDeltaUsd = round2(total);
 
         return ResponseEntity.ok(resp);
-    }
-
-    // ── SAGA ─────────────────────────────────────────────────────────────────
-    private void buildSagaContribution(TacticContributionResponse resp,
-                                       TacticContributionRequest req,
-                                       int responseBytes) {
-        if (!req.sagaEnabled) return;
-
-        int totalSteps = req.sagaCompensatableSteps + req.sagaRetriableSteps + req.sagaPivotSteps;
-        if (totalSteps <= 0) return;
-
-        TacticContributionItem item = new TacticContributionItem();
-
-        if (req.sagaExternalVpc) {
-            int effectiveRps = req.baseRps * totalSteps;
-            int rpsAdded     = effectiveRps - req.baseRps;
-            double cost      = egressCostDeltaUsd(req.baseRps, rpsAdded, responseBytes);
-
-            item.label  = "SAGA Pattern (" + totalSteps + " steps/instance, external VPC — egress billed)";
-            item.kind   = "rps";
-            item.rpsAdded = rpsAdded;
-            item.bytesAdded = 0;
-            item.detail = req.baseRps + " RPS \u00d7 " + totalSteps + " steps = "
-                    + effectiveRps + " billable egress calls/s";
-            item.estimatedMonthlyCostUsd = round2(cost);
-            item.costDisplayLabel = cost >= 0.005
-                    ? "+$" + round2(cost) + "/mo"
-                    : "< +$0.01/mo";
-        } else {
-            item.label  = "SAGA Pattern (" + totalSteps + " steps/instance, intra-VPC — egress FREE)";
-            item.kind   = "info";
-            item.detail = "All " + totalSteps + " steps within AWS VPC — $0.00/GB same-AZ, $0.01/GB cross-AZ";
-            item.estimatedMonthlyCostUsd = 0;
-            item.costDisplayLabel = "no change";
-        }
-
-        resp.contributions.add(item);
     }
 
     // ── Retry ────────────────────────────────────────────────────────────────
