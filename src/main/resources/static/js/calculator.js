@@ -182,6 +182,7 @@ function updateLiveComparison(baseRps, effectiveRps) {
     setComparisonLoading(true);
     clearTimeout(_compDebounce);
     _compDebounce = setTimeout(function() {
+      aggregateCloudInfraCost();
       saveTacticsToSession()
         .then(function() {
           return Promise.all([
@@ -193,6 +194,7 @@ function updateLiveComparison(baseRps, effectiveRps) {
           var baseResult    = results[0];
           var tacticsResult = results[1];
           if (!baseResult || !tacticsResult) return;
+          aggregateCloudInfraCost();
           // collectTacticContributions now returns a Promise
           return collectTacticContributions(baseRps, baseResult)
             .then(function(contributions) {
@@ -468,22 +470,103 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
 
 
 
+/* =====================================================================
+   COLLECT TACTIC CONTRIBUTIONS  — calls /api/cost/tactic-contributions
+   Returns a Promise<Array> of contribution items from the backend.
+   Falls back to an empty array if the request fails or no tactics set.
+===================================================================== */
+function collectTacticContributions(baseRps, backendResult) {
+  var g = function(id) { return document.getElementById(id) || {}; };
+  var isChecked = function(id) { return !!(g(id).checked); };
+  var getInt = function(id, def) { return parseInt(g(id).value, 10) || (def || 0); };
+  var getFloat = function(id, def) { return parseFloat(g(id).value) || (def || 0); };
+
+  var payload = {
+    baseRps: baseRps,
+    protoResponseSizeEffectiveBytes:  (backendResult && backendResult.responseSizeEff)  || 0,
+    tlsOverheadBytesFromBackend:      (backendResult && backendResult.tlsOverheadBytes) || 0,
+    jwtOverheadBytesFromBackend:      (backendResult && backendResult.jwtOverheadBytes) || 0,
+
+    clientSideLoadBalancingEnabled: isChecked('tactic-client-lb'),
+    serverSideLoadBalancingEnabled: isChecked('tactic-server-lb'),
+    circuitBreakerEnabled:          isChecked('tactic-cb'),
+    basicAuthEnabled:               isChecked('tactic-basic-auth'),
+    timeoutEnabled:                 isChecked('tactic-timeout'),
+    timeoutMs:                      getInt('input-timeout'),
+
+    retryEnabled:                   isChecked('tactic-retry'),
+    retryErrorRatePct:              getFloat('input-retry-error-pct', 5),
+
+    tlsEnabled:                     isChecked('tactic-tls'),
+    mtlsEnabled:                    isChecked('tactic-mtls'),
+    tlsReconnectsPerHour:           getInt('input-tls-reconnects'),
+
+    oauthEnabled:                   isChecked('tactic-oauth'),
+    tokenValidationMode:            (g('input-token-validation').value) || 'LOCAL',
+    tokenTtlSeconds:                getInt('input-token-ttl', 3600),
+    concurrentClients:              getInt('input-concurrent-clients', 1)
+  };
+
+  /* Check whether any tactic with networking impact is actually enabled */
+  var hasNetworkTactic = payload.retryEnabled || payload.tlsEnabled || payload.mtlsEnabled || payload.oauthEnabled;
+  var hasInfoTactic    = payload.clientSideLoadBalancingEnabled || payload.serverSideLoadBalancingEnabled
+                      || payload.circuitBreakerEnabled || payload.basicAuthEnabled || payload.timeoutEnabled;
+
+  if (!hasNetworkTactic && !hasInfoTactic) {
+    return Promise.resolve([]);
+  }
+
+  return fetch('/api/cost/tactic-contributions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.ok ? r.json() : null; })
+  .then(function(data) {
+    if (!data) return [];
+    return data.contributions || [];
+  })
+  .catch(function(err) {
+    console.warn('collectTacticContributions backend call failed:', err.message);
+    return [];
+  });
+}
+
+/* =====================================================================
+   Aggregate all cloud service costs from sessionStorage into
+   window._lastCloudInfraCost so renderComparisonFromBackend can use it
+===================================================================== */
+function aggregateCloudInfraCost() {
+  var keys = ['tco_alb_cost','tco_cache_cost','tco_db_cost','tco_sec_cost',
+              'tco_container_cost','tco_apigw_cost'];
+  var total = keys.reduce(function(sum, k) {
+    return sum + (parseFloat(sessionStorage.getItem(k) || '0'));
+  }, 0);
+  var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
+  window._lastCloudInfraCost = Math.max(0, Math.round((total - saving) * 100) / 100);
+  return window._lastCloudInfraCost;
+}
+
 function renderComparisonEstimate(baseRps, effectiveRps) {
-  var baseCost = calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES);
+  var baseCost    = calcMonthlyCost(baseRps,    PLACEHOLDER_RESP_BYTES);
   var tacticsCost = calcMonthlyCost(effectiveRps, PLACEHOLDER_RESP_BYTES);
-  var base = { cost: baseCost.cost, respGb: baseCost.gbPerMonth, responseSizeEff: null };
+  aggregateCloudInfraCost();
+  var base    = { cost: baseCost.cost,    respGb: baseCost.gbPerMonth,    responseSizeEff: null };
   var tactics = { cost: tacticsCost.cost, respGb: tacticsCost.gbPerMonth, responseSizeEff: null };
-  renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, true, collectTacticContributions(baseRps, null));
+  collectTacticContributions(baseRps, null).then(function(contributions) {
+    renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, true, contributions);
+  });
 }
 
 // Patched version with byte estimation called from recalculate
 function renderComparisonEstimateWithBytes(baseRps, effectiveRps) {
   var estTlsB = 0, estJwtB = 0;
-  if ((document.getElementById('tactic-tls') && document.getElementById('tactic-tls').checked) ||
-    (document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked)) estTlsB = 29;
+  if ((document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked)  ||
+      (document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked)) estTlsB = 29;
   if (document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked) estJwtB = 650;
   var estRespBytes = PLACEHOLDER_RESP_BYTES + estTlsB;
-  var fakeBackend = { responseSizeEff: PLACEHOLDER_RESP_BYTES, tlsOverheadBytes: estTlsB, jwtOverheadBytes: estJwtB };
+  var fakeBackend  = { responseSizeEff: PLACEHOLDER_RESP_BYTES, tlsOverheadBytes: estTlsB, jwtOverheadBytes: estJwtB };
+  aggregateCloudInfraCost();
   var base = {
     cost: calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).cost,
     respGb: calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).gbPerMonth,
@@ -494,7 +577,9 @@ function renderComparisonEstimateWithBytes(baseRps, effectiveRps) {
     respGb: calcMonthlyCost(effectiveRps, estRespBytes).gbPerMonth,
     responseSizeEff: estRespBytes
   };
-  renderComparisonFromBackend(base, tactics2, baseRps, effectiveRps, true, collectTacticContributions(baseRps, fakeBackend));
+  collectTacticContributions(baseRps, fakeBackend).then(function(contributions) {
+    renderComparisonFromBackend(base, tactics2, baseRps, effectiveRps, true, contributions);
+  });
 }
 
 function recalculateAlb() {
@@ -994,12 +1079,26 @@ function wireAllHandlers() {
     on(id, 'input', function () { scheduleSessionSave(); });
   });
 
-  on('tactic-tls', 'change', function () { toggleTlsOptions(); });
-  on('tactic-mtls', 'change', function () { toggleTlsOptions(); });
+  on('tactic-tls', 'change', function () {
+    toggleTlsOptions();
+    if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
+  });
+  on('tactic-mtls', 'change', function () {
+    toggleTlsOptions();
+    if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
+  });
   on('input-tls-reconnects', 'input', function () { recalculateRps(); scheduleSessionSave(); });
 
-  on('tactic-oauth', 'change', function () { toggleOAuthParams(this.checked); enforceAuthMutualExclusivityBetweenOAuthAndBasicCheckboxes('oauth'); });
-  on('tactic-basic-auth', 'change', function () { enforceAuthMutualExclusivityBetweenOAuthAndBasicCheckboxes('basic'); scheduleSessionSave(); });
+  on('tactic-oauth', 'change', function () {
+    toggleOAuthParams(this.checked);
+    enforceAuthMutualExclusivityBetweenOAuthAndBasicCheckboxes('oauth');
+    if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
+  });
+  on('tactic-basic-auth', 'change', function () {
+    enforceAuthMutualExclusivityBetweenOAuthAndBasicCheckboxes('basic');
+    scheduleSessionSave();
+    if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
+  });
   on('input-token-validation', 'change', function () { recalculateRps(); scheduleSessionSave(); });
   on('input-token-ttl', 'input', function () { recalculateRps(); scheduleSessionSave(); });
   on('input-concurrent-clients', 'input', function () { recalculateRps(); scheduleSessionSave(); });
@@ -1015,15 +1114,27 @@ function wireAllHandlers() {
   on('tactic-client-lb', 'change', function () {
     if (document.getElementById('tactic-client-lb').checked) autoEnableAlb();
     recalculateRps(); scheduleSessionSave(); updateCloudTacticsBadge();
+    if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
   on('tactic-server-lb', 'change', function () {
     if (document.getElementById('tactic-server-lb').checked) autoEnableAlb();
     recalculateRps(); scheduleSessionSave(); updateCloudTacticsBadge();
+    if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
 
   on('tactic-alb', 'change', function () { recalculateAlb(); updateCloudTacticsBadge(); recalculateRps(); });
   on('input-alb-count', 'input', function () { recalculateAlb(); });
   on('input-alb-lcu', 'input', function () { recalculateAlb(); });
+
+  /* Cloud security service checkboxes — wire all to recalculateSecCost */
+  ['sec-guardduty','sec-inspector','sec-waf','sec-macie','sec-cloudwatch','sec-audit','sec-kms',
+   'sec-cloudtrail'].forEach(function(id) {
+    on(id, 'change', function() {
+      recalculateSecCost();
+      updateCloudTacticsBadge();
+      if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
+    });
+  });
 
   on('input-sla', 'change', function () { recalculateAvailability(); });
   on('input-db-engine', 'change', function () { renderDbOptions(); });
