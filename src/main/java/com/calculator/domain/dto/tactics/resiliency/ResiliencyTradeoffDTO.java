@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ResiliencyTradeoffDTO {
@@ -13,6 +15,9 @@ public class ResiliencyTradeoffDTO {
     public String tacticName;
     @JsonProperty("tacticCategory")
     private String tacticCategory;
-    @JsonProperty("costImpactNote")
-    private String costImpactNote;
+    @JsonProperty("costFactor")
+    private String costFactor;
+    // Only for Cloud Services
+    @JsonProperty("supportedArchitecturalDecisions")
+    private List<String> supportedArchitecturalDecisions;
 }

@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public abstract sealed class CostFactor permits InfrastructureCost, NetworkingCost {
-    protected String costImpactNotes;
+    protected String costFactorNotes;
 }

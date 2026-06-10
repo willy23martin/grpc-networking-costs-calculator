@@ -1,10 +1,7 @@
 package com.calculator.application.services.mapper.tradeoffs.security;
 
 import com.calculator.domain.dto.tactics.security.SecurityTradeoffsDTO;
-import com.calculator.domain.model.architecture.ArchitecturalDecision;
-import com.calculator.domain.model.architecture.ArchitecturalPattern;
-import com.calculator.domain.model.architecture.ArchitecturalTactic;
-import com.calculator.domain.model.architecture.CloudService;
+import com.calculator.domain.model.architecture.*;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.QualityTradeoff;
@@ -21,7 +18,7 @@ import java.util.List;
 public class SecurityTradeoffMapperService {
 
     @Autowired
-    private ArchitecturalDecisionRepository architecturalDecisionRepository;
+    ArchitecturalDecisionRepository architecturalDecisionRepository;
 
     public List<SecurityTradeoffsDTO> getSecurityTradeoffs() {
         List<SecurityTradeoffsDTO> securityMappings = new ArrayList<>();
@@ -32,6 +29,7 @@ public class SecurityTradeoffMapperService {
                 case ArchitecturalTactic architecturalTactic -> securityMappings.add(mapSecurityTactic(architecturalTactic));
                 case ArchitecturalPattern architecturalPattern -> securityMappings.add(mapSecurityPattern(architecturalPattern));
                 case CloudService cloudService -> securityMappings.add(mapCloudSecurityService(cloudService));
+                case FinOpsStrategy finOpsStrategy -> securityMappings.add(mapFinOpsStrategy(finOpsStrategy));
             }
         }
         return securityMappings;
@@ -62,7 +60,7 @@ public class SecurityTradeoffMapperService {
                 .cweIds(securityTradeoff.getCwes())
                 .promotedISO25010AttributeTradeoffs(promotedISO25010AttributeTradeoffs)
                 .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
-                .costImpactNote(architecturalTactic.getCostFactor().getCostImpactNotes())
+                .costFactor(architecturalTactic.getCostFactor().getCostFactorNotes())
                 .build();
     }
 
@@ -90,7 +88,7 @@ public class SecurityTradeoffMapperService {
                 .cweIds(securityTradeoff.getCwes())
                 .promotedISO25010AttributeTradeoffs(promotedISO25010AttributeTradeoffs)
                 .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
-                .costImpactNote(architecturalPattern.getCostFactor().getCostImpactNotes())
+                .costFactor(architecturalPattern.getCostFactor().getCostFactorNotes())
                 .build();
     }
 
@@ -124,8 +122,39 @@ public class SecurityTradeoffMapperService {
                 .cweIds(securityTradeoff.getCwes())
                 .promotedISO25010AttributeTradeoffs(promotedISO25010AttributeTradeoffs)
                 .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
-                .costImpactNote(cloudService.getCostFactor().getCostImpactNotes())
+                .costFactor(cloudService.getCostFactor().getCostFactorNotes())
                 .supportedArchitecturalDecisions(supportedArchitecturalDecisions)
+                .build();
+    }
+
+
+    private SecurityTradeoffsDTO mapFinOpsStrategy(FinOpsStrategy finOpsStrategy) {
+        var securityTradeoff = (SecurityQualityTradeoff)finOpsStrategy.getArchitecturalCharacteristic().getQualityTradeoffs().stream().filter(
+                qualityTradeoff -> qualityTradeoff.getTradeoffType().equals(TradeoffType.PROMOTES)
+        ).findFirst().orElse(
+                new QualityTradeoff(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .build(),
+                        TradeoffType.PROMOTES)
+        );
+        var promotedISO25010AttributeTradeoffs = finOpsStrategy.getArchitecturalCharacteristic().getQualityTradeoffs().stream()
+                .filter(qualityTradeoff -> qualityTradeoff.getTradeoffType().equals(TradeoffType.PROMOTES))
+                .map(
+                        qualityTradeoff -> qualityTradeoff.getArchitecturalCharacteristic().getName()
+                )
+                .toList();
+
+        return SecurityTradeoffsDTO.builder()
+                .tacticId(finOpsStrategy.getId())
+                .tacticName(finOpsStrategy.getName())
+                .tacticCategory(finOpsStrategy.getArchitecturalCharacteristic().getName())
+                .owaspTop10(securityTradeoff.getLinkedOwaspTop10Vulnerabilities())
+                .owaspLabels(securityTradeoff.getLinkedOwaspLabels())
+                .cweIds(securityTradeoff.getCwes())
+                .promotedISO25010AttributeTradeoffs(promotedISO25010AttributeTradeoffs)
+                .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
+                .costFactor(finOpsStrategy.getCostFactor().getCostFactorNotes())
                 .build();
     }
 

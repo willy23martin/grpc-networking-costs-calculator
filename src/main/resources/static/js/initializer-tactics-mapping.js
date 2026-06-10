@@ -57,7 +57,7 @@ function renderDynamicSecurityTelemetry() {
                     <div style="margin-bottom: 4px; font-weight: 600; color: #1A3A5C;">Mitigation Controls:</div>
                     <div style="margin-bottom: 6px;">${owaspBadges} ${cweBadges} ${isoBadges}</div>
                     <div style="margin-top: 4px;"><strong>Vulnerability Protection:</strong> ${mapping.vulnerabilityPrevented || mapping.securityRationale || 'N/A'}</div>
-                    <div style="margin-top: 3px; font-style: italic; color: #6B7280;"><strong>Cost Tradeoff:</strong> ${mapping.costImpactNote || 'Standard infrastructure tier processing rates apply'}</div>
+                    <div style="margin-top: 3px; font-style: italic; color: #6B7280;"><strong>Cost Factor:</strong> ${mapping.costFactor || 'Standard infrastructure tier processing rates apply'}</div>
                 </div>
             `;
     });

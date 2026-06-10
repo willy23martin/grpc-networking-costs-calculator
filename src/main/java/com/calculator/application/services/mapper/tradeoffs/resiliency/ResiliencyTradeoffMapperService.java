@@ -1,58 +1,70 @@
 package com.calculator.application.services.mapper.tradeoffs.resiliency;
 
+import com.calculator.domain.dto.tactics.reliability.ReliabilityTradeoffDTO;
 import com.calculator.domain.dto.tactics.resiliency.ResiliencyTradeoffDTO;
+import com.calculator.domain.model.architecture.*;
+import com.calculator.domain.repository.ArchitecturalDecisionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class ResiliencyTradeoffMapperService {
 
-    public List<ResiliencyTradeoffDTO> getSecurityTradeoffs() {
+    @Autowired
+    ArchitecturalDecisionRepository architecturalDecisionRepository;
+
+    public List<ResiliencyTradeoffDTO> getResiliencyTradeoffs() {
         List<ResiliencyTradeoffDTO> resiliencyMappings = new ArrayList<>();
+        List<ArchitecturalDecision> resiliencyDecisions = architecturalDecisionRepository.getAvailableResiliencyDecisions();
 
-        resiliencyMappings.add(
-                setResiliencyQualityImpact(
-                        "tactic-timeout",
-                        "Timeout",
-                        "Resiliency",
-                        "No direct cloud cost impact."
-                )
-        );
-
-        resiliencyMappings.add(
-                setResiliencyQualityImpact(
-                        "tactic-retry",
-                        "Retry",
-                        "Resiliency",
-                        "Increases effective RPS proportional to the error rate configured."
-                )
-        );
-
-        resiliencyMappings.add(
-                setResiliencyQualityImpact(
-                        "tactic-cb",
-                        "Circuit Breaker",
-                        "Resiliency",
-                        "No direct cloud cost impact."
-                )
-        );
-
+        for(var resiliencyDecision: resiliencyDecisions) {
+            switch (resiliencyDecision) {
+                case ArchitecturalTactic architecturalTactic -> resiliencyMappings.add(mapResiliencyTactic(architecturalTactic));
+                case ArchitecturalPattern architecturalPattern -> resiliencyMappings.add(mapResiliencyPattern(architecturalPattern));
+                case CloudService cloudService -> resiliencyMappings.add(mapCloudResiliencyService(cloudService));
+                case FinOpsStrategy finOpsStrategy -> resiliencyMappings.add(mapFinOpsStrategy(finOpsStrategy));
+            }
+        }
         return resiliencyMappings;
     }
 
-    private ResiliencyTradeoffDTO setResiliencyQualityImpact(
-            String tacticId,
-            String tacticName,
-            String tacticCategory,
-            String costImpactNote) {
-
-        ResiliencyTradeoffDTO reliabilityTradeoff = ResiliencyTradeoffDTO.builder()
-                .tacticId(tacticId)
-                .tacticName(tacticName)
-                .tacticCategory(tacticCategory)
-                .costImpactNote(costImpactNote)
+    private ResiliencyTradeoffDTO mapResiliencyTactic(ArchitecturalTactic architecturalTactic) {
+        return ResiliencyTradeoffDTO.builder()
+                .tacticId(architecturalTactic.getId())
+                .tacticName(architecturalTactic.getName())
+                .tacticCategory(architecturalTactic.getArchitecturalCharacteristic().getName())
+                .costFactor(architecturalTactic.getCostFactor().getCostFactorNotes())
                 .build();
-        return reliabilityTradeoff;
+    }
+
+    private ResiliencyTradeoffDTO mapResiliencyPattern(ArchitecturalPattern architecturalPattern) {
+        return ResiliencyTradeoffDTO.builder()
+                .tacticId(architecturalPattern.getId())
+                .tacticName(architecturalPattern.getName())
+                .tacticCategory(architecturalPattern.getArchitecturalCharacteristic().getName())
+                .costFactor(architecturalPattern.getCostFactor().getCostFactorNotes())
+                .build();
+    }
+
+    private ResiliencyTradeoffDTO mapCloudResiliencyService(CloudService cloudService) {
+        return ResiliencyTradeoffDTO.builder()
+                .tacticId(cloudService.getId())
+                .tacticName(cloudService.getName())
+                .tacticCategory(cloudService.getArchitecturalCharacteristic().getName())
+                .costFactor(cloudService.getCostFactor().getCostFactorNotes())
+                .build();
+    }
+
+    private ResiliencyTradeoffDTO mapFinOpsStrategy(FinOpsStrategy finOpsStrategy) {
+        return ResiliencyTradeoffDTO.builder()
+                .tacticId(finOpsStrategy.getId())
+                .tacticName(finOpsStrategy.getName())
+                .tacticCategory(finOpsStrategy.getArchitecturalCharacteristic().getName())
+                .costFactor(finOpsStrategy.getCostFactor().getCostFactorNotes())
+                .build();
     }
 
 }

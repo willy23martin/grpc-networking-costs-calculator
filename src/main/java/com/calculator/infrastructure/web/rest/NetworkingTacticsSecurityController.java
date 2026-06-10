@@ -1,5 +1,9 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.application.services.mapper.tradeoffs.reliability.ReliabilityTradeoffMapperService;
+import com.calculator.application.services.mapper.tradeoffs.resiliency.ResiliencyTradeoffMapperService;
+import com.calculator.domain.dto.tactics.reliability.ReliabilityTradeoffDTO;
+import com.calculator.domain.dto.tactics.resiliency.ResiliencyTradeoffDTO;
 import com.calculator.domain.dto.tactics.security.SecurityTradeoffsDTO;
 import com.calculator.application.services.mapper.tradeoffs.security.SecurityTradeoffMapperService;
 import com.calculator.domain.dto.requests.EffectiveRequestPerSecondRequest;
@@ -16,7 +20,13 @@ import java.util.*;
 public class NetworkingTacticsSecurityController {
 
     @Autowired
-    private SecurityTradeoffMapperService securityTradeoffMapperService;
+    SecurityTradeoffMapperService securityTradeoffMapperService;
+
+    @Autowired
+    ReliabilityTradeoffMapperService reliabilityTradeoffMapperService;
+
+    @Autowired
+    ResiliencyTradeoffMapperService resiliencyTradeoffMapperService;
 
     @PostMapping("/api/tco/effective-rps")
     public ResponseEntity<EffectiveRequestPerSecondResponse> calculateEffectiveRps(
@@ -90,6 +100,20 @@ public class NetworkingTacticsSecurityController {
         System.out.println("Security Tactics Mapping has been invoked");
         List<SecurityTradeoffsDTO> securityMappings = securityTradeoffMapperService.getSecurityTradeoffs();
         return ResponseEntity.ok(securityMappings);
+    }
+
+    @GetMapping("/api/reliability/tactic-mappings")
+    public ResponseEntity<List<ReliabilityTradeoffDTO>> getTacticReliabilityMappings() {
+        System.out.println("Reliability Tactics Mapping has been invoked");
+        List<ReliabilityTradeoffDTO> reliabilityMappings = reliabilityTradeoffMapperService.getReliabilityTradeoffs();
+        return ResponseEntity.ok(reliabilityMappings);
+    }
+
+    @GetMapping("/api/resiliency/tactic-mappings")
+    public ResponseEntity<List<ResiliencyTradeoffDTO>> getTacticResiliencyMappings() {
+        System.out.println("Resiliency Tactics Mapping has been invoked");
+        List<ResiliencyTradeoffDTO> reliabilityMappings = resiliencyTradeoffMapperService.getResiliencyTradeoffs();
+        return ResponseEntity.ok(reliabilityMappings);
     }
 
 }

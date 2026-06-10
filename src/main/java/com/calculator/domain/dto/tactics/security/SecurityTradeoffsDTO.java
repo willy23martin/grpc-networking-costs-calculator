@@ -25,8 +25,8 @@ public class SecurityTradeoffsDTO {
     List<String> promotedISO25010AttributeTradeoffs;
     @JsonProperty("vulnerabilityPrevented")
     private String vulnerabilityPrevented;
-    @JsonProperty("costImpactNote")
-    private String costImpactNote;
+    @JsonProperty("costFactor")
+    private String costFactor;
     // Only for Cloud Services
     @JsonProperty("supportedArchitecturalDecisions")
     private List<String> supportedArchitecturalDecisions;
