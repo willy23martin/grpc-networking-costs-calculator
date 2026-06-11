@@ -2,6 +2,7 @@ package com.calculator.domain.repository.resiliency;
 
 import com.calculator.domain.dto.tactics.resiliency.ResiliencyTradeoffDTO;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
+import com.calculator.domain.model.architecture.ArchitecturalPattern;
 import com.calculator.domain.model.architecture.ArchitecturalTactic;
 import com.calculator.domain.model.cost.InfrastructureCost;
 import com.calculator.domain.model.cost.NetworkingCost;
@@ -45,7 +46,7 @@ public class ResiliencyArchitecturalDecisionRepository {
                 )
         );
 
-        return ArchitecturalTactic.builder()
+        return ArchitecturalPattern.builder()
                 .id("tactic-timeout")
                 .name("Timeout")
                 .architecturalCharacteristic(
@@ -77,7 +78,7 @@ public class ResiliencyArchitecturalDecisionRepository {
                 )
         );
 
-        return ArchitecturalTactic.builder()
+        return ArchitecturalPattern.builder()
                 .id("tactic-retry")
                 .name("Retry")
                 .architecturalCharacteristic(
@@ -112,7 +113,7 @@ public class ResiliencyArchitecturalDecisionRepository {
                 )
         );
 
-        return ArchitecturalTactic.builder()
+        return ArchitecturalPattern.builder()
                 .id("tactic-cb")
                 .name("Circuit Breaker")
                 .architecturalCharacteristic(

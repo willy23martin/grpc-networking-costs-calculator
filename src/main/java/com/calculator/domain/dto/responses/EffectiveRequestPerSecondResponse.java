@@ -1,4 +1,4 @@
-package com.calculator.domain.dto.requests;
+package com.calculator.domain.dto.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

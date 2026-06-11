@@ -66,7 +66,7 @@ function populateReportSummary() {
   var numericRps = parseInt(requestsPerSecond) || 0;
 
   if (document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked) {
-    var retryErrorPercentage = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
+    var retryErrorPercentage = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
 
     var extraRetryRequests = Math.round(numericRps * retryErrorPercentage / 100);
 

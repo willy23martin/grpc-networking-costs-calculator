@@ -18,17 +18,28 @@ public class RequestPerSecondCostCalculatorService {
     // DESIGN PATTERN: COMPOSED METHOD
     public long calculateEffectiveRequestsPerSecond(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
         long effectiveRequestsPerSecond = architecturalDecisionsDTO.requestsPerSecond();
+
+        effectiveRequestsPerSecond += rpsSecurityCostCalculator.calculateEffectiveRequestsPerSecond(
+                architecturalDecisionsDTO.requestsPerSecond(),
+                architecturalDecisionsDTO.securityTactics()
+        );
         effectiveRequestsPerSecond = calculateForResiliencyPatterns(architecturalDecisionsDTO, effectiveRequestsPerSecond);
-        effectiveRequestsPerSecond += rpsSecurityCostCalculator.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO.requestsPerSecond(), architecturalDecisionsDTO.securityTactics());
+
+        System.out.println("effectiveRequestsPerSecond security: " + effectiveRequestsPerSecond);
         return effectiveRequestsPerSecond;
     }
 
-    private long calculateForResiliencyPatterns(ArchitecturalDecisionsDTO architecturalDecisionsDTO, long effectiveRequestsPerSecond) {
+    private long calculateForResiliencyPatterns(ArchitecturalDecisionsDTO architecturalDecisionsDTO, long currentTrafficBaseline) {
         long addition = 0L;
         if (resiliencyPatternsHaveBeenConfigured(architecturalDecisionsDTO)) {
-            addition = rpsResiliencyCostCalculator.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO.requestsPerSecond(), architecturalDecisionsDTO.retryTactic());
+            addition = rpsResiliencyCostCalculator.calculateEffectiveRequestsPerSecond(
+                    currentTrafficBaseline,
+                    architecturalDecisionsDTO.retryTactic()
+            );
         }
-        return effectiveRequestsPerSecond + addition;
+        System.out.println("effectiveRequestsPerSecond addition from resiliency: " + addition);
+        System.out.println("effectiveRequestsPerSecond rps response: " + currentTrafficBaseline + addition);
+        return currentTrafficBaseline + addition;
     }
 
     private static boolean resiliencyPatternsHaveBeenConfigured(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {

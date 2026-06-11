@@ -127,7 +127,7 @@ function calculateResiliencyRetryParameters(baselineRequestsPerSecond) {
   const isChecked = (elementId) => !!(getUiElementOrEmptyObject(elementId).checked);
   const getParsedInteger = (elementId) => parseInt(getUiElementOrEmptyObject(elementId).value, 10) || 0;
 
-  const failureRatePercentageThreshold = parseFloat(getUiElementOrEmptyObject('input-retry-error-pct').value) || 5;
+  const failureRatePercentageThreshold = parseInt(getUiElementOrEmptyObject('input-retry-error-pct').value) || 5;
 
   // Evaluate the effective workload load adjustments introduced by nested choreography steps
   const effectiveBaseTrafficLoad = baselineRequestsPerSecond;

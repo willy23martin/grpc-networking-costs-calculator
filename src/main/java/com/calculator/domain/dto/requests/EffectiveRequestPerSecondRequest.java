@@ -11,7 +11,7 @@ public class EffectiveRequestPerSecondRequest {
     @JsonProperty("retryEnabled")
     private boolean retryEnabled;
     @JsonProperty("retryErrorPct")
-    private double retryErrorPercentage;
+    private int retryErrorPercentage;
     @JsonProperty("tlsEnabled")
     private boolean tlsEnabled;
     @JsonProperty("mtlsEnabled")
@@ -26,11 +26,13 @@ public class EffectiveRequestPerSecondRequest {
     private int tokenTtlSeconds;
     @JsonProperty("concurrentClients")
     private int concurrentClients;
+    @JsonProperty("interceptorType")
+    private String interceptorType;
 
     public EffectiveRequestPerSecondRequest() {
         this.baseRequestPerSecond = 0;
         this.retryEnabled = false;
-        this.retryErrorPercentage = 0.0;
+        this.retryErrorPercentage = 0;
         this.tlsEnabled = false;
         this.mtlsEnabled = false;
         this.tlsReconnectsPerHour = 0;

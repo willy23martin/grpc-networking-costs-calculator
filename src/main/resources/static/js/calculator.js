@@ -103,14 +103,15 @@ function recalculateRps() {
   var payload = {
     baseRps: baseRps,
     retryEnabled: !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked),
-    retryErrorPct: parseFloat((document.getElementById('input-retry-error-pct')  || { value: '5' }).value) || 5,
+    retryErrorPct: parseInt((document.getElementById('input-retry-error-pct')  || { value: '5' }).value) || 5,
     tlsEnabled: !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked),
     mtlsEnabled: !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked),
     tlsReconnectsPerHour: parseInt((document.getElementById('input-tls-reconnects')     || { value: '0' }).value) || 0,
     oauthEnabled: !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked),
     tokenValidationMode: (document.getElementById('input-token-validation') || { value: 'LOCAL' }).value || 'LOCAL',
     tokenTtlSeconds: parseInt((document.getElementById('input-token-ttl')          || { value: '3600' }).value) || 3600,
-    concurrentClients: parseInt((document.getElementById('input-concurrent-clients') || { value: '1' }).value) || 1
+    concurrentClients: parseInt((document.getElementById('input-concurrent-clients') || { value: '1' }).value) || 1,
+    interceptorType: (document.getElementById('input-interceptor-type') || { value: 'UNARY' }).value || 'UNARY'
   };
 
   fetch('/api/tco/effective-rps', {
@@ -495,7 +496,7 @@ function collectTacticContributions(baseRps, backendResult) {
     timeoutMs:                      getInt('input-timeout'),
 
     retryEnabled:                   isChecked('tactic-retry'),
-    retryErrorRatePct:              getFloat('input-retry-error-pct', 5),
+    retryErrorRatePct:              getInt('input-retry-error-pct', 5),
 
     tlsEnabled:                     isChecked('tactic-tls'),
     mtlsEnabled:                    isChecked('tactic-mtls'),
@@ -602,7 +603,7 @@ function recalculateAlb() {
     var _effR = _bRpsR;
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
+      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
       _effR += Math.round(_effR * _errPR / 100);
     }
     updateLiveComparison(_bRpsR, _effR);
@@ -739,7 +740,7 @@ function recalculateDbCost() {
     var _effR = _bRpsR;
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
+      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
       _effR += Math.round(_effR * _errPR / 100);
     }
     updateLiveComparison(_bRpsR, _effR);
@@ -773,7 +774,7 @@ function recalculateSecCost() {
     var _effR = _bRpsR;
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
+      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
       _effR += Math.round(_effR * _errPR / 100);
     }
     updateLiveComparison(_bRpsR, _effR);
@@ -909,7 +910,7 @@ function recalculateCaching() {
     var _effR = _bRpsR;
     var _retryCbR = document.getElementById('tactic-retry');
     if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
+      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
       _effR += Math.round(_effR * _errPR / 100);
     }
     updateLiveComparison(_bRpsR, _effR);
@@ -986,7 +987,7 @@ function recalculateContainerCost() {
   if (_bR) {
     var _eR = _bR;
     var _rOn = !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked);
-    if (_rOn) { var _ep = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5; _eR += Math.round(_eR * _ep / 100); }
+    if (_rOn) { var _ep = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5; _eR += Math.round(_eR * _ep / 100); }
     updateLiveComparison(_bR, _eR);
   }
 }

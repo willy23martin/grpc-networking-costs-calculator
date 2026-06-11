@@ -483,7 +483,7 @@ function collectTacticContributions(baseRequestsPerSecond, backendResult) {
     timeoutEnabled:                   isChecked('tactic-timeout'),
     timeoutMs:                        intValue('input-timeout'),
     retryEnabled:                     isChecked('tactic-retry'),
-    retryErrorRatePct:                floatValue('input-retry-error-pct', 5),
+    retryErrorRatePct:                intValue('input-retry-error-pct', 5),
     tlsEnabled:                       isChecked('tactic-tls'),
     mtlsEnabled:                      isChecked('tactic-mtls'),
     tlsReconnectsPerHour:             intValue('input-tls-reconnects'),
