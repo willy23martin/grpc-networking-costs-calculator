@@ -148,7 +148,12 @@ function recalculateRps() {
   .then(function(d) {
     if (!d) return;
 
-    window._lastEffectiveRps = d.effectiveRps;
+    window._lastEffectiveRps  = d.effectiveRps;
+    window._lastRetryExtra    = d.retryExtra    || 0;   /* authoritative retry req/s from backend */
+    window._lastHandshakeExtra= d.handshakeExtra|| 0;
+    window._lastTokenAcqExtra = d.tokenAcqExtra || 0;
+    window._lastIntrospExtra  = d.introspectionExtra || 0;
+    window._lastRpsBreakdown  = d.breakdown     || [];  /* human-readable breakdown lines */
 
     // Retry preview
     if (d.retryExtra > 0) {
@@ -335,21 +340,27 @@ function parseBackendCostFromHtml(html) {
 ===================================================================== */
 function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEstimate, contributions) {
   aggregateCloudInfraCost();
-  var cachedCloudInfraCost  = window._lastCloudInfraCost || 0;
-  var networkingCostDelta   = tactics.cost - base.cost;
+  var cachedCloudInfraCost = window._lastCloudInfraCost || 0;
 
   /*
-   * totalMonthlyCostDelta:
-   *   networkingCostDelta  — egress diff already captures retry RPS + TLS bytes
-   *                          because tactics.cost = calcMonthlyCost(effectiveRps, estRespBytes)
-   *   cachedCloudInfraCost — ALB/Cache/DB/Sec/Container sessionStorage totals
+   * networkingCostDelta — sum of per-tactic monetary costs from TacticContributionController.
+   * This is the authoritative source: each contribution item was computed by the backend
+   * using the correct RPS delta and byte overhead for that specific tactic.
    *
-   * DO NOT add contributionCostSum here — the contributions are already embedded
-   * in tactics.cost (via effectiveRps and estRespBytes), so adding them again
-   * would double-count every tactic and falsely inflate the delta.
-   * The contributions array is used purely for the itemised breakdown table rows.
+   * We do NOT use (tactics.cost - base.cost) because that depends on `effectiveRps`
+   * arriving from a prior /api/tco/effective-rps call which may be stale when
+   * a cloud tactic (ALB, security service) triggers updateLiveComparison directly.
+   * The contribution list is always fetched fresh by collectTacticContributions().
    */
-  var tacticsTotalCost      = tactics.cost + cachedCloudInfraCost;
+  var networkingCostDelta = 0;
+  if (contributions && contributions.length) {
+    contributions.forEach(function(c) {
+      if (c.estimatedMonthlyCostUsd > 0) networkingCostDelta += c.estimatedMonthlyCostUsd;
+    });
+    networkingCostDelta = Math.round(networkingCostDelta * 100) / 100;
+  }
+
+  var tacticsTotalCost      = base.cost + networkingCostDelta + cachedCloudInfraCost;
   var totalMonthlyCostDelta = networkingCostDelta + cachedCloudInfraCost;
   var el;
 
@@ -563,7 +574,14 @@ function recalculateAlb() {
   var checked = !!(document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked);
   var params = document.getElementById('alb-params');
   if (params) params.style.display = checked ? 'block' : 'none';
-  if (!checked || !_albData) return;
+  if (!checked) {
+    sessionStorage.removeItem('tco_alb_cost');
+    sessionStorage.removeItem('tco_alb_label');
+    var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
+    if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
+    return;
+  }
+  if (!_albData) return;  /* data still loading — autoEnableAlb will call recalculateAlb() after load */
   var count = parseInt((document.getElementById('input-alb-count') || { value: '1' }).value) || 1;
   var lcu = parseFloat((document.getElementById('input-alb-lcu') || { value: '0' }).value) || 0;
   var fixedM = _albData.fixedPerMonthUsd * count;
@@ -969,12 +987,31 @@ function computeEc2BaselineSpend() {
 
 function autoEnableAlb() {
   var cb = document.getElementById('tactic-alb');
-  if (!cb || cb.checked) return;
-  cb.checked = true;
-  var ctBody = document.getElementById('body-cloud-tactics');
-  if (ctBody && ctBody.style.display === 'none') toggleCategory('cloud-tactics');
-  if (!window._albData) loadAlbSection();
-  showToast('✓ ALB auto-enabled in Cloud Tactics — required for load balancing.');
+  if (!cb) return;
+
+  /* Set defaults before enabling so recalculateAlb sees them */
+  var countEl = document.getElementById('input-alb-count');
+  var lcuEl   = document.getElementById('input-alb-lcu');
+  if (countEl && !countEl.value) countEl.value = '1';
+  if (lcuEl   && !lcuEl.value)   lcuEl.value   = '5';
+
+  if (!cb.checked) {
+    cb.checked = true;
+    var ctBody = document.getElementById('body-cloud-tactics');
+    if (ctBody && ctBody.style.display === 'none') toggleCategory('cloud-tactics');
+    showToast('✓ ALB auto-enabled in Cloud Tactics — required for load balancing.');
+  }
+
+  if (!window._albData) {
+    /* Load pricing data then immediately recalculate so the cost appears */
+    loadAlbSection().then(function() {
+      recalculateAlb();
+      updateCloudTacticsBadge();
+    });
+  } else {
+    recalculateAlb();
+    updateCloudTacticsBadge();
+  }
 }
 
 function wireAllHandlers() {
@@ -1010,11 +1047,20 @@ function wireAllHandlers() {
   on('buc-card-3', 'click', function () { selectBusinessUseCase('BUC3', this); });
   on('buc-card-4', 'click', function () { selectBusinessUseCase('BUC4', this); });
 
-  on('tactic-timeout', 'change', function () { var el = document.getElementById('input-timeout'); if (el) el.disabled = !this.checked; scheduleSessionSave(); });
-  on('input-timeout', 'input', function () { scheduleSessionSave(); });
+  on('tactic-timeout', 'change', function () {
+    var el = document.getElementById('input-timeout');
+    if (el) el.disabled = !this.checked;
+    scheduleSessionSave();
+    recalculateRps();
+  });
+  on('input-timeout', 'input', function () { scheduleSessionSave(); recalculateRps(); });
   on('tactic-retry', 'change', function () { toggleRetry(this.checked); });
   on('input-retry-error-pct', 'input', function () { recalculateRps(); scheduleSessionSave(); });
-  on('tactic-cb', 'change', function () { toggleCircuitBreakerParams(this.checked); scheduleSessionSave(); });
+  on('tactic-cb', 'change', function () {
+    toggleCbParams(this.checked);  /* was incorrectly named toggleCircuitBreakerParams */
+    scheduleSessionSave();
+    recalculateRps();
+  });
   ['input-cb-min-calls', 'input-cb-half-open', 'input-cb-wait', 'input-cb-failure-rate'].forEach(function (id) {
     on(id, 'input', function () { scheduleSessionSave(); });
   });
@@ -1037,6 +1083,7 @@ function wireAllHandlers() {
   on('tactic-basic-auth', 'change', function () {
     enforceAuthMutualExclusivityBetweenOAuthAndBasicCheckboxes('basic');
     scheduleSessionSave();
+    recalculateRps();
     if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
   on('input-token-validation', 'change', function () { recalculateRps(); scheduleSessionSave(); });

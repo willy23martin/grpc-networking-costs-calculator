@@ -34,6 +34,7 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
                     )
                     .formatVersion("aws_v1").maxResults(10).build();
             GetProductsResponse resp = pricing.getProducts(req);
+            System.out.println("GetProductsResponse: " +  resp);
             double fixedPerHour = 0.0, lcuPerHour = 0.0;
             for (String p : resp.priceList()) {
                 JsonNode root = mapper.readTree(p);

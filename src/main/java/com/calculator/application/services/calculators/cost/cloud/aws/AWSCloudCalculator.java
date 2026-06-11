@@ -38,13 +38,17 @@ public abstract class AWSCloudCalculator extends CloudCalculator {
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
             GetProductsResponse resp = pricing.getProducts(req);
-            if (resp.priceList().isEmpty()) return fallback;
+            if (resp.priceList().isEmpty()) {
+                System.out.println("GetProductsResponse is empty so fallback rates will be used.");
+                return fallback;
+            }
             JsonNode root = mapper.readTree(resp.priceList().get(0));
             double price = root.path("terms").path("OnDemand").fields().next()
                     .getValue().path("priceDimensions").fields().next()
                     .getValue().path("pricePerUnit").path("USD").asDouble(fallback);
             return price > 0 ? price : fallback;
         } catch (Exception e) {
+            e.printStackTrace();
             return fallback;
         }
     }

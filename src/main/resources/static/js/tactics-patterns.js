@@ -161,7 +161,7 @@ function toggleOAuthParams(show) {
 ===================================================================== */
 
 function loadAlbSection() {
-  fetchAwsPrice('alb-pricing')
+  return fetchAwsPrice('alb-pricing')
     .then(data => {
       applicationLoadBalancerPricingData = data;
       window._albData = data;   /* expose for unit-economics.js */
@@ -499,7 +499,7 @@ function collectTacticContributions(baseRequestsPerSecond, backendResult) {
     timeoutEnabled:                   isChecked('tactic-timeout'),
     timeoutMs:                        intValue('input-timeout'),
     retryEnabled:                     isChecked('tactic-retry'),
-    retryErrorRatePct:                intValue('input-retry-error-pct', 5),
+    retryErrorRatePct:                floatValue('input-retry-error-pct', 5),
     tlsEnabled:                       isChecked('tactic-tls'),
     mtlsEnabled:                      isChecked('tactic-mtls'),
     tlsReconnectsPerHour:             intValue('input-tls-reconnects'),

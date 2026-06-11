@@ -61,38 +61,69 @@ function populateReportSummary() {
     return tacticLabelsMap[id] || id;
   });
 
-  // Compute RPS-impact details for the summary card in Phase 4
+  // ── RPS & byte impact details for Phase 4 summary card ─────────────
+  // Use backend-authoritative values cached on window by recalculateRps()
+  // so Retry shows the correct extra req/s (= pct × effectiveBaseRps, not just baseRps).
   var rpsImpacts = [];
   var numericRps = parseInt(requestsPerSecond) || 0;
 
-  if (document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked) {
-    var retryErrorPercentage = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
-
-    var extraRetryRequests = Math.round(numericRps * retryErrorPercentage / 100);
-
-    rpsImpacts.push('Retry: +' + extraRetryRequests.toLocaleString() + ' req/s (' + retryErrorPercentage + '% of ' + effectiveBaseRpsForRetry.toLocaleString() + ' eff.RPS)');
+  var retryIsActive = !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked);
+  if (retryIsActive) {
+    var retryErrorPercentage = parseFloat(
+      (document.getElementById('input-retry-error-pct') || { value: '5' }).value
+    ) || 5;
+    // Prefer backend-computed extra (accounts for OAuth introspection expanding effective base).
+    // Fall back to local estimate only when no backend response has been received yet.
+    var authorizedRetryExtra = (window._lastRetryExtra > 0)
+      ? window._lastRetryExtra
+      : Math.round(numericRps * retryErrorPercentage / 100);
+    // The base used by the backend = effectiveRps before retry = effectiveRps - retryExtra
+    var retryBase = (window._lastEffectiveRps > 0)
+      ? (window._lastEffectiveRps - authorizedRetryExtra)
+      : numericRps;
+    rpsImpacts.push(
+      'Retry: +' + authorizedRetryExtra.toLocaleString()
+      + ' req/s (' + retryErrorPercentage + '% of '
+      + retryBase.toLocaleString() + ' eff. RPS)'
+    );
   }
 
-  if (document.getElementById('tactic-tls') && document.getElementById('tactic-tls').checked) {
-    rpsImpacts.push('TLS: +29 B/frame on responses (RFC 8446 AES-GCM) \u2192 increases egress GB cost');
+  var tlsIsActive  = !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked);
+  var mtlsIsActive = !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked);
+  if (tlsIsActive) {
+    var tlsHandshakeExtra = window._lastHandshakeExtra || 0;
+    rpsImpacts.push(
+      'TLS: +29 B/frame on responses (RFC 8446 AES-GCM) → increases egress GB cost'
+      + (tlsHandshakeExtra > 0 ? ', +' + tlsHandshakeExtra + ' handshake req/s' : '')
+    );
   }
-  if (document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked) {
-    rpsImpacts.push('mTLS: +29 B/frame on responses (RFC 8446) + 5 handshake msgs/reconnect');
+  if (mtlsIsActive) {
+    var mtlsHandshakeExtra = window._lastHandshakeExtra || 0;
+    rpsImpacts.push(
+      'mTLS: +29 B/frame on responses (RFC 8446) + 5 handshake msgs/reconnect'
+      + (mtlsHandshakeExtra > 0 ? ', +' + mtlsHandshakeExtra + ' handshake req/s' : '')
+    );
   }
 
-  if (document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked) {
-    var tokenTtlSeconds = parseInt((document.getElementById('input-token-ttl') || { value: '3600' }).value) || 3600;
-    var concurrentClients = parseInt((document.getElementById('input-concurrent-clients') || { value: '1' }).value) || 1;
+  var oauthIsActive = !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked);
+  if (oauthIsActive) {
+    var tokenTtlSeconds     = parseInt((document.getElementById('input-token-ttl')           || { value: '3600' }).value) || 3600;
+    var concurrentClients   = parseInt((document.getElementById('input-concurrent-clients')  || { value: '1'    }).value) || 1;
     var tokenValidationMode = (document.getElementById('input-token-validation') || { value: 'LOCAL' }).value || 'LOCAL';
 
-    var tokenAcquisitionsPerSecond = Math.round(numericRps / (tokenTtlSeconds * concurrentClients));
-    var remoteIntrospectionRequestsPerSecond = tokenValidationMode === 'REMOTE_INTROSPECTION' ? numericRps : 0;
+    // Prefer backend-authoritative values; local calc as fallback
+    var tokenAcqPerSecond       = (window._lastTokenAcqExtra > 0)
+      ? window._lastTokenAcqExtra
+      : Math.round(numericRps / (tokenTtlSeconds * concurrentClients));
+    var remoteIntrospPerSecond  = (window._lastIntrospExtra > 0)
+      ? window._lastIntrospExtra
+      : (tokenValidationMode === 'REMOTE_INTROSPECTION' ? numericRps : 0);
 
-    var oauthImpactDetails = '+650 B/req JWT header (RFC 7519, request-side \u2014 AWS inbound free)';
-    if (tokenAcquisitionsPerSecond > 0) oauthImpactDetails += ', +' + tokenAcquisitionsPerSecond + ' token acq/s';
-    if (remoteIntrospectionRequestsPerSecond > 0) oauthImpactDetails += ', +' + remoteIntrospectionRequestsPerSecond.toLocaleString() + ' remote introspection/s';
+    var oauthImpactParts = ['+650 B/req JWT header (RFC 7519, request-side — AWS inbound free)'];
+    if (tokenAcqPerSecond    > 0) oauthImpactParts.push('+' + tokenAcqPerSecond.toLocaleString()    + ' token acq/s');
+    if (remoteIntrospPerSecond > 0) oauthImpactParts.push('+' + remoteIntrospPerSecond.toLocaleString() + ' remote introspection/s');
 
-    rpsImpacts.push('OAuth2+JWT: ' + oauthImpactDetails);
+    rpsImpacts.push('OAuth2+JWT: ' + oauthImpactParts.join(', '));
   }
 
   var rpsImpactDetailsHtml = rpsImpacts.length
