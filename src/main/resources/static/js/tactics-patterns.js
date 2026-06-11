@@ -164,6 +164,7 @@ function loadAlbSection() {
   fetchAwsPrice('alb-pricing')
     .then(data => {
       applicationLoadBalancerPricingData = data;
+      window._albData = data;   /* expose for unit-economics.js */
       const descriptionContainer = document.getElementById('alb-price-desc');
       if (descriptionContainer) {
         descriptionContainer.innerHTML = `Fixed: <strong>$${data.fixedPerHourUsd.toFixed(4)}/hr</strong> ($${data.fixedPerMonthUsd}/mo per ALB) + <strong>$${data.lcuPerHourUsd.toFixed(4)}/hr per LCU</strong>. Source: ${data.source}`;
@@ -181,6 +182,7 @@ function loadDbBackupSection() {
   fetchAwsPrice('database-backup-pricing')
     .then(data => {
       databaseBackupPricingData = data;
+      window._dbData = data;   /* expose for unit-economics.js */
       toggleUiVisibility('dbbackup-loading', false);
       toggleUiVisibility('dbbackup-content', true);
     })
@@ -194,6 +196,7 @@ function loadCloudSecSection() {
   fetchAwsPrice('security-services')
     .then(data => {
       cloudSecurityPricingData = data;
+      window._secData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('cloudsec-content');
       if (!contentContainer) return;
 
@@ -209,8 +212,9 @@ function loadCloudSecSection() {
       ];
 
       contentContainer.innerHTML = securityServicesSchema.map(service => `
-        <div class="tactic-row">
-          <input type="checkbox" class="tactic-check" id="${service.id}" onchange="recalculateSecCost()">
+        <div class="tactic-row" id="row-${service.id}">
+          <input type="checkbox" class="tactic-check cloud-service-check" id="${service.id}"
+                 onchange="recalculateSecCost(); updateCloudTacticsBadge(); if(window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();">
           <div class="tactic-label-group">
             <label class="tactic-label" for="${service.id}">
               <i class="fas ${service.icon}" style="margin-right:5px;width:16px;"></i>${service.label}
@@ -218,6 +222,8 @@ function loadCloudSecSection() {
               ${service.owasp ? `<span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">${service.owasp}</span>` : ''}
             </label>
             <span class="tactic-description">${service.desc}</span>
+            <!-- Dynamic OWASP/CWE/ISO badge injection target for initializer-tactics-mapping.js -->
+            <div id="meta-container-${service.id}"></div>
           </div>
           <div class="tactic-input-group">
             <input type="number" id="${service.inputId}" min="0" placeholder="0" oninput="recalculateSecCost()">
@@ -228,6 +234,15 @@ function loadCloudSecSection() {
 
       toggleUiVisibility('cloudsec-loading', false);
       contentContainer.style.display = 'block';
+
+      /* After rendering, inject the OWASP/CWE/ISO badges from the cached mapping data */
+      if (window.refreshTacticMappingDisplay) {
+        window.refreshTacticMappingDisplay();
+      }
+      /* Also re-evaluate cloud-service visibility against active tactics */
+      if (typeof evaluateCloudServiceRelevance === 'function') {
+        evaluateCloudServiceRelevance();
+      }
     })
     .catch(error => {
       const loadingLabel = document.getElementById('cloudsec-loading');
@@ -317,6 +332,7 @@ function loadCachingSection() {
   fetchAwsPrice('caching-pricing')
     .then(data => {
       cacheInfrastructurePricingData = data;
+      window._cacheData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('caching-content');
       if (!contentContainer) return;
 

@@ -129,11 +129,17 @@ function renderMappingBadges(mapping) {
    supportedArchitecturalDecisions in the security mapping JSON.
    When those referenced tactics are NOT checked, dim the cloud row
    and show a tooltip. When at least one is checked, highlight it.
+   Uses event delegation so dynamically-rendered checkboxes are covered.
 ================================================================= */
 function wireCloudServiceVisibility() {
-    /* re-evaluate whenever a tactic checkbox changes */
-    document.querySelectorAll('.tactic-check').forEach(cb => {
-        cb.addEventListener('change', evaluateCloudServiceRelevance);
+    /* Re-evaluate whenever ANY tactic checkbox changes — use delegation
+       on document so dynamically-rendered cloud-service-check checkboxes
+       (injected by loadCloudSecSection) are also captured. */
+    document.addEventListener('change', function(e) {
+        if (e.target && (e.target.classList.contains('tactic-check') ||
+                         e.target.classList.contains('cloud-service-check'))) {
+            evaluateCloudServiceRelevance();
+        }
     });
     evaluateCloudServiceRelevance();
 }
@@ -145,7 +151,12 @@ function evaluateCloudServiceRelevance() {
         const deps = mapping.supportedArchitecturalDecisions;
         if (!deps || deps.length === 0) return;
 
-        const row = document.getElementById(mapping.tacticId)?.closest('.tactic-row');
+        /* Find the row: first try explicit row id, then walk up from checkbox */
+        let row = document.getElementById(`row-${mapping.tacticId}`);
+        if (!row) {
+            const cb = document.getElementById(mapping.tacticId);
+            if (cb) row = cb.closest('.tactic-row');
+        }
         if (!row) return;
 
         const anyActive = deps.some(depId => {
@@ -171,7 +182,14 @@ function evaluateCloudServiceRelevance() {
     });
 }
 
+/* =================================================================
+   PUBLIC re-render hook (called from calculator.js after any
+   tactic change to keep badges + cloud visibility in sync)
+================================================================= */
 window.refreshTacticMappingDisplay = function() {
     renderAllDynamicMetadata();
     evaluateCloudServiceRelevance();
 };
+
+/* Also export evaluateCloudServiceRelevance so tactics-patterns.js can call it */
+window.evaluateCloudServiceRelevance = evaluateCloudServiceRelevance;

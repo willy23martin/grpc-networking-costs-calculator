@@ -119,8 +119,7 @@ function populateReportSummary() {
 }
 
 function computeCloudInfraCost() {
-
-  /* ── Application Load Balancer (ALB) Cost ── */
+  runningTotalCost = 0;   /* ← MUST reset each call; module-level var accumulates otherwise */
   if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
     if (window._albData) {
       var albCount = parseInt((document.getElementById('input-alb-count') || { value: '1' }).value) || 1;

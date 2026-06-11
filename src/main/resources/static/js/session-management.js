@@ -127,7 +127,7 @@ function calculateResiliencyRetryParameters(baselineRequestsPerSecond) {
   const isChecked = (elementId) => !!(getUiElementOrEmptyObject(elementId).checked);
   const getParsedInteger = (elementId) => parseInt(getUiElementOrEmptyObject(elementId).value, 10) || 0;
 
-  const failureRatePercentageThreshold = parseInt(getUiElementOrEmptyObject('input-retry-error-pct').value) || 5;
+  const failureRatePercentageThreshold = parseFloat(getUiElementOrEmptyObject('input-retry-error-pct').value) || 5;
 
   // Evaluate the effective workload load adjustments introduced by nested choreography steps
   const effectiveBaseTrafficLoad = baselineRequestsPerSecond;
@@ -137,6 +137,11 @@ function calculateResiliencyRetryParameters(baselineRequestsPerSecond) {
   return {
     resiliencyRetryTactic: isChecked('tactic-retry'),
     tacticRetryErrorPct: failureRatePercentageThreshold,
-    tacticRetryTimes: totalCalculatedRetryInvocations
+    /* tacticRetryTimes must be the raw error-rate percentage (not the pre-calculated
+       extra req/s count) because RequestPerSecondCostCalculatorService computes:
+       extra = baseRps × tacticRetryTimes / 100
+       So tacticRetryTimes = 5 gives +50 req/s at 1000 base RPS (correct).
+       Sending 50 here would give +500 req/s (wrong — produces effectiveRps 1,500). */
+    tacticRetryTimes: failureRatePercentageThreshold
   };
 }

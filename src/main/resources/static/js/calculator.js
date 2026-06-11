@@ -85,6 +85,31 @@ function calcMonthlyCost(rps, respBytes) {
 /* =====================================================================
    RPS CALCULATION + LIVE COMPARISON
 ===================================================================== */
+
+/**
+ * Returns the effective RPS that was last computed by the backend
+ * /api/tco/effective-rps endpoint (accounts for ALL active RPS tactics:
+ * retry, TLS handshake, OAuth token-acq, etc.).
+ * Falls back to a local retry-only estimate if the backend hasn't
+ * responded yet — but only retry is approximated inline; all other
+ * tactic RPS adjustments require the backend call.
+ */
+function _getEffectiveRps() {
+  var base = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
+  if (!base) return 0;
+  /* Prefer the authoritative value from the last /api/tco/effective-rps response */
+  if (window._lastEffectiveRps && window._lastEffectiveRps >= base) {
+    return window._lastEffectiveRps;
+  }
+  /* Fallback: approximate retry only (conservative) */
+  var retryEl = document.getElementById('tactic-retry');
+  if (retryEl && retryEl.checked) {
+    var pct = parseFloat((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
+    return base + Math.round(base * pct / 100);
+  }
+  return base;
+}
+
 function recalculateRps() {
   var baseRps = parseInt((document.getElementById('requestsPerSecond') || { value: '' }).value) || 0;
   var sumEl   = document.getElementById('rps-impact-summary');
@@ -103,7 +128,7 @@ function recalculateRps() {
   var payload = {
     baseRps: baseRps,
     retryEnabled: !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked),
-    retryErrorPct: parseInt((document.getElementById('input-retry-error-pct')  || { value: '5' }).value) || 5,
+    retryErrorPct: parseFloat((document.getElementById('input-retry-error-pct')  || { value: '5' }).value) || 5,
     tlsEnabled: !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked),
     mtlsEnabled: !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked),
     tlsReconnectsPerHour: parseInt((document.getElementById('input-tls-reconnects')     || { value: '0' }).value) || 0,
@@ -309,10 +334,23 @@ function parseBackendCostFromHtml(html) {
    COMPARISON RENDER
 ===================================================================== */
 function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEstimate, contributions) {
+  aggregateCloudInfraCost();
   var cachedCloudInfraCost  = window._lastCloudInfraCost || 0;
   var networkingCostDelta   = tactics.cost - base.cost;
+
+  /*
+   * totalMonthlyCostDelta:
+   *   networkingCostDelta  — egress diff already captures retry RPS + TLS bytes
+   *                          because tactics.cost = calcMonthlyCost(effectiveRps, estRespBytes)
+   *   cachedCloudInfraCost — ALB/Cache/DB/Sec/Container sessionStorage totals
+   *
+   * DO NOT add contributionCostSum here — the contributions are already embedded
+   * in tactics.cost (via effectiveRps and estRespBytes), so adding them again
+   * would double-count every tactic and falsely inflate the delta.
+   * The contributions array is used purely for the itemised breakdown table rows.
+   */
   var tacticsTotalCost      = tactics.cost + cachedCloudInfraCost;
-  var totalMonthlyCostDelta = tacticsTotalCost - base.cost;
+  var totalMonthlyCostDelta = networkingCostDelta + cachedCloudInfraCost;
   var el;
 
   el = document.getElementById('cmp-base-cost');
@@ -472,68 +510,6 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
 
 
 /* =====================================================================
-   COLLECT TACTIC CONTRIBUTIONS  — calls /api/cost/tactic-contributions
-   Returns a Promise<Array> of contribution items from the backend.
-   Falls back to an empty array if the request fails or no tactics set.
-===================================================================== */
-function collectTacticContributions(baseRps, backendResult) {
-  var g = function(id) { return document.getElementById(id) || {}; };
-  var isChecked = function(id) { return !!(g(id).checked); };
-  var getInt = function(id, def) { return parseInt(g(id).value, 10) || (def || 0); };
-  var getFloat = function(id, def) { return parseFloat(g(id).value) || (def || 0); };
-
-  var payload = {
-    baseRps: baseRps,
-    protoResponseSizeEffectiveBytes:  (backendResult && backendResult.responseSizeEff)  || 0,
-    tlsOverheadBytesFromBackend:      (backendResult && backendResult.tlsOverheadBytes) || 0,
-    jwtOverheadBytesFromBackend:      (backendResult && backendResult.jwtOverheadBytes) || 0,
-
-    clientSideLoadBalancingEnabled: isChecked('tactic-client-lb'),
-    serverSideLoadBalancingEnabled: isChecked('tactic-server-lb'),
-    circuitBreakerEnabled:          isChecked('tactic-cb'),
-    basicAuthEnabled:               isChecked('tactic-basic-auth'),
-    timeoutEnabled:                 isChecked('tactic-timeout'),
-    timeoutMs:                      getInt('input-timeout'),
-
-    retryEnabled:                   isChecked('tactic-retry'),
-    retryErrorRatePct:              getInt('input-retry-error-pct', 5),
-
-    tlsEnabled:                     isChecked('tactic-tls'),
-    mtlsEnabled:                    isChecked('tactic-mtls'),
-    tlsReconnectsPerHour:           getInt('input-tls-reconnects'),
-
-    oauthEnabled:                   isChecked('tactic-oauth'),
-    tokenValidationMode:            (g('input-token-validation').value) || 'LOCAL',
-    tokenTtlSeconds:                getInt('input-token-ttl', 3600),
-    concurrentClients:              getInt('input-concurrent-clients', 1)
-  };
-
-  /* Check whether any tactic with networking impact is actually enabled */
-  var hasNetworkTactic = payload.retryEnabled || payload.tlsEnabled || payload.mtlsEnabled || payload.oauthEnabled;
-  var hasInfoTactic    = payload.clientSideLoadBalancingEnabled || payload.serverSideLoadBalancingEnabled
-                      || payload.circuitBreakerEnabled || payload.basicAuthEnabled || payload.timeoutEnabled;
-
-  if (!hasNetworkTactic && !hasInfoTactic) {
-    return Promise.resolve([]);
-  }
-
-  return fetch('/api/cost/tactic-contributions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(function(r) { return r.ok ? r.json() : null; })
-  .then(function(data) {
-    if (!data) return [];
-    return data.contributions || [];
-  })
-  .catch(function(err) {
-    console.warn('collectTacticContributions backend call failed:', err.message);
-    return [];
-  });
-}
-
-/* =====================================================================
    Aggregate all cloud service costs from sessionStorage into
    window._lastCloudInfraCost so renderComparisonFromBackend can use it
 ===================================================================== */
@@ -597,17 +573,9 @@ function recalculateAlb() {
   sessionStorage.setItem('tco_alb_cost', (fixedM + lcuM).toFixed(4));
   sessionStorage.setItem('tco_alb_label', count + ' ALB' + (count > 1 ? 's' : ''));
 
-  /* Refresh live comparison when cloud tactic cost changes */
+  /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-  if (_bRpsR) {
-    var _effR = _bRpsR;
-    var _retryCbR = document.getElementById('tactic-retry');
-    if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
-      _effR += Math.round(_effR * _errPR / 100);
-    }
-    updateLiveComparison(_bRpsR, _effR);
-  }
+  if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
 
 function recalculateAvailability() {
@@ -734,17 +702,9 @@ function recalculateDbCost() {
   if (total > 0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
   else sessionStorage.removeItem('tco_db_cost');
 
-  /* Refresh live comparison when cloud tactic cost changes */
+  /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-  if (_bRpsR) {
-    var _effR = _bRpsR;
-    var _retryCbR = document.getElementById('tactic-retry');
-    if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
-      _effR += Math.round(_effR * _errPR / 100);
-    }
-    updateLiveComparison(_bRpsR, _effR);
-  }
+  if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
 
 function recalculateSecCost() {
@@ -768,17 +728,9 @@ function recalculateSecCost() {
     + lines.map(function (l) { return '<div style="font-size:.78rem;margin-top:4px;color:var(--ink-medium);">\u2022 ' + l + '</div>'; }).join('');
   sessionStorage.setItem('tco_sec_cost', total.toFixed(4));
 
-  /* Refresh live comparison when cloud tactic cost changes */
+  /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-  if (_bRpsR) {
-    var _effR = _bRpsR;
-    var _retryCbR = document.getElementById('tactic-retry');
-    if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
-      _effR += Math.round(_effR * _errPR / 100);
-    }
-    updateLiveComparison(_bRpsR, _effR);
-  }
+  if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
 
 function recalculateCostOpt() {
@@ -846,7 +798,7 @@ function recalculateCostOpt() {
     + _fpHtml;
   /* Refresh live comparison delta */
   var _bRco = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-  if (_bRco) updateLiveComparison(_bRco, _bRco);
+  if (_bRco) updateLiveComparison(_bRco, _getEffectiveRps());
   /* Fetch service-specific RI prices when EC2 instance is configured */
   var _instSel = document.getElementById('input-ec2-instance');
   var _instTyp = _instSel && _instSel.value ? _instSel.value.split('|')[0] : null;
@@ -865,7 +817,7 @@ function recalculateCostOpt() {
         if (newBest2 > 0) {
           sessionStorage.setItem('tco_finops_saving', newBest2.toFixed(4));
           sessionStorage.setItem('tco_finops_spend', spend.toFixed(4));
-          if (_bRco) updateLiveComparison(_bRco, _bRco);
+          if (_bRco) updateLiveComparison(_bRco, _getEffectiveRps());
         }
         /* Append live price note */
         if (res) {
@@ -904,17 +856,9 @@ function recalculateCaching() {
   sessionStorage.setItem('tco_cache_cost', prMo.toFixed(4));
   sessionStorage.setItem('tco_cache_label', nodes + 'x cache.' + node + ' (' + engine + ')');
 
-  /* Refresh live comparison when cloud tactic cost changes */
+  /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-  if (_bRpsR) {
-    var _effR = _bRpsR;
-    var _retryCbR = document.getElementById('tactic-retry');
-    if (_retryCbR && _retryCbR.checked) {
-      var _errPR = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5;
-      _effR += Math.round(_effR * _errPR / 100);
-    }
-    updateLiveComparison(_bRpsR, _effR);
-  }
+  if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
 
 function recalculateContainerCost() {
@@ -984,12 +928,7 @@ function recalculateContainerCost() {
     }
   }
   var _bR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-  if (_bR) {
-    var _eR = _bR;
-    var _rOn = !!(document.getElementById('tactic-retry') && document.getElementById('tactic-retry').checked);
-    if (_rOn) { var _ep = parseInt((document.getElementById('input-retry-error-pct') || { value: '5' }).value) || 5; _eR += Math.round(_eR * _ep / 100); }
-    updateLiveComparison(_bR, _eR);
-  }
+  if (_bR) updateLiveComparison(_bR, _getEffectiveRps());
 }
 
 function escHtml(s) {
@@ -1113,7 +1052,7 @@ function wireAllHandlers() {
   on('phase3CalcBtn', 'click', function () { submitProtoAndCalculate(); });
 
   on('tactic-client-lb', 'change', function () {
-    if (document.getElementById('tactic-client-lb').checked) autoEnableAlb();
+    /* Client-side LB is a code pattern (e.g. gRPC round-robin) — no cloud ALB needed */
     recalculateRps(); scheduleSessionSave(); updateCloudTacticsBadge();
     if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
