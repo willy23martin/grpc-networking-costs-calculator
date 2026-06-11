@@ -37,7 +37,7 @@ public class EffectiveRequestPerSecondRequest {
         this.mtlsEnabled = false;
         this.tlsReconnectsPerHour = 0;
         this.oauthEnabled = false;
-        this.tokenValidationMode = OAuthTokenValidationModes.NONE.name();
+        this.tokenValidationMode = OAuthTokenValidationModes.LOCAL.name();
         this.tokenTtlSeconds = 0;
         this.concurrentClients = 1;
     }
