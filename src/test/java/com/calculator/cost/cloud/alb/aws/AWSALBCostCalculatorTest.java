@@ -1,15 +1,9 @@
 package com.calculator.cost.cloud.alb.aws;
 
 import com.calculator.application.services.calculators.cost.cloud.alb.aws.alb.AWSALBCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.aws.AWSCloudCalculator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
 import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
@@ -18,69 +12,130 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class AWSALBCostCalculatorTest {
 
-    @Mock private PricingClient pricingMock;
-    @Mock private ObjectMapper mapperMock;
-    @Mock private JsonNode rootMock;
+    // Minimal valid pricing API JSON for one ALB fixed-charge product
+    private static final String FIXED_PRODUCT_JSON = """
+        {
+          "product": {
+            "attributes": {
+              "usagetype": "USE1-LoadBalancerUsage"
+            }
+          },
+          "terms": {
+            "OnDemand": {
+              "term1": {
+                "priceDimensions": {
+                  "dim1": {
+                    "description": "ALB per hour",
+                    "beginRange": "0",
+                    "endRange": "Inf",
+                    "pricePerUnit": { "USD": "0.008" },
+                    "unit": "Hrs"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
+
+    // Minimal valid pricing API JSON for one LCU product
+    private static final String LCU_PRODUCT_JSON = """
+        {
+          "product": {
+            "attributes": {
+              "usagetype": "USE1-LCUUsage"
+            }
+          },
+          "terms": {
+            "OnDemand": {
+              "term1": {
+                "priceDimensions": {
+                  "dim1": {
+                    "description": "ALB LCU per hour",
+                    "beginRange": "0",
+                    "endRange": "Inf",
+                    "pricePerUnit": { "USD": "0.008" },
+                    "unit": "LCU-Hrs"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """;
 
     private AWSALBCostCalculator calculator;
+    private PricingClient mockPricing;
 
     @BeforeEach
     void setUp() throws Exception {
-        calculator = new AWSALBCostCalculator();
-        injectMocks(calculator);
+        calculator  = new AWSALBCostCalculator();
+        mockPricing = Mockito.mock(PricingClient.class);
+
+        // Inject mock via reflection — because PricingClient is built in the constructor
+        Field pricingField = calculator.getClass()
+                .getSuperclass() // AWSCloudCalculator
+                .getDeclaredField("pricing");
+        pricingField.setAccessible(true);
+        pricingField.set(calculator, mockPricing);
     }
 
     @Test
-    void calculateALBCosts_apiEmptyList_usesAWSPricingAPI() {
-        when(pricingMock.getProducts((GetProductsRequest) any()))
-                .thenReturn(GetProductsResponse.builder().priceList(List.of()).build());
+    void calculateALBCosts_apiReturnsProducts_parsesCorrectly() {
+        when(mockPricing.getProducts(any(GetProductsRequest.class)))
+                .thenReturn(GetProductsResponse.builder()
+                        .priceList(List.of(FIXED_PRODUCT_JSON, LCU_PRODUCT_JSON))
+                        .build());
 
         Map<String, Object> result = calculator.calculateALBCosts();
 
-        assertEquals(0.008, result.get("fixedPerHourUsd"));
-        assertEquals(0.008, result.get("lcuPerHourUsd"));
-        assertEquals(5.84, result.get("fixedPerMonthUsd"));
-        assertEquals(5.84, result.get("lcuPerMonthBase"));
-        assertEquals("AWS Pricing API", result.get("source"));
+        assertThat(result.get("fixedPerHourUsd")).isEqualTo(0.008);
+        assertThat(result.get("lcuPerHourUsd")).isEqualTo(0.008);
+        assertThat(result.get("fixedPerMonthUsd")).isEqualTo(5.84);
+        assertThat(result.get("source")).isEqualTo("AWS Pricing API");
     }
 
     @Test
-    void calculateALBCosts_apiException_fullFallback() {
-        when(pricingMock.getProducts((GetProductsRequest) any())).thenThrow(new RuntimeException("API timeout"));
+    void calculateALBCosts_apiEmptyList_usesFallback() {
+        when(mockPricing.getProducts(any(GetProductsRequest.class)))
+                .thenReturn(GetProductsResponse.builder()
+                        .priceList(List.of())   // ← empty, NOT null JSON strings
+                        .build());
 
         Map<String, Object> result = calculator.calculateALBCosts();
 
-        assertEquals(0.008, result.get("fixedPerHourUsd"));
-        assertEquals(5.84, result.get("fixedPerMonthUsd"));
-        assertEquals("fallback", result.get("source"));
+        assertThat(result.get("fixedPerHourUsd")).isEqualTo(0.008);
+        assertThat(result.get("source")).isEqualTo("fallback");
+    }
+
+    @Test
+    void calculateALBCosts_apiException_usesFallback() {
+        when(mockPricing.getProducts(any(GetProductsRequest.class)))
+                .thenThrow(new RuntimeException("API timeout"));
+
+        Map<String, Object> result = calculator.calculateALBCosts();
+
+        assertThat(result.get("source")).isEqualTo("fallback");
+        assertThat(result.get("fixedPerMonthUsd")).isEqualTo(5.84);
     }
 
     @Test
     void calculateALBCosts_monthlyRounding_correctMath() {
-        when(pricingMock.getProducts((GetProductsRequest) any()))
-                .thenReturn(GetProductsResponse.builder().priceList(List.of("")).build());
+        when(mockPricing.getProducts(any(GetProductsRequest.class)))
+                .thenReturn(GetProductsResponse.builder()
+                        .priceList(List.of(FIXED_PRODUCT_JSON, LCU_PRODUCT_JSON))
+                        .build());
 
         Map<String, Object> result = calculator.calculateALBCosts();
 
-        double expectedMonthly = Math.round(0.008 * 730 * 100.0) / 100.0;
-        assertEquals(expectedMonthly, result.get("fixedPerMonthUsd"));
-        assertEquals(5.84, result.get("fixedPerMonthUsd"));  // Verified calc
-    }
-
-    private void injectMocks(AWSALBCostCalculator awsalbCostCalculator) throws Exception {
-        Field pricingField = AWSCloudCalculator.class.getDeclaredField("pricing");
-        pricingField.setAccessible(true);
-        pricingField.set(awsalbCostCalculator, pricingMock);
-
-        Field mapperField = AWSCloudCalculator.class.getSuperclass().getDeclaredField("mapper");
-        mapperField.setAccessible(true);
-        mapperField.set(awsalbCostCalculator, mapperMock);
+        // 0.008 * 730 = 5.84
+        assertThat(result.get("fixedPerMonthUsd")).isEqualTo(5.84);
+        assertThat(result.get("lcuPerMonthBase")).isEqualTo(5.84);
     }
 }

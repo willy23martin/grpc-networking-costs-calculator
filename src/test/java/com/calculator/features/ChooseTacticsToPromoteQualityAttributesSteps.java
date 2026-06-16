@@ -4,18 +4,15 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-        import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.containsString;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-public class ChooseTacticsToPromoteQualityAttributesSteps  {
+// NOTE: @SpringBootTest and @AutoConfigureMockMvc removed — see CucumberSpringConfiguration.
+public class ChooseTacticsToPromoteQualityAttributesSteps {
 
     @Autowired
     private MockMvc mockMvc;
@@ -31,7 +28,7 @@ public class ChooseTacticsToPromoteQualityAttributesSteps  {
 
     @Given("the architect is navigating Phase 3 {string}")
     public void verifyPhase3Container(String phaseName) throws Exception {
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"phase3\"")))
                 .andExpect(content().string(containsString("Architecture Tactics &amp; Patterns")));
@@ -49,10 +46,8 @@ public class ChooseTacticsToPromoteQualityAttributesSteps  {
 
     @Then("the interface should display that it impacts {string} with type {string}")
     public void verifyUiImpactType(String impactedAttr, String impactType) throws Exception {
-        // Validates that info attributes or structural bindings mapped by Thymeleaf contain trade-off info
         String targetHtmlId = mapTacticToHtmlId(targetTactic);
-
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"" + targetHtmlId + "\"")));
     }
@@ -89,15 +84,33 @@ public class ChooseTacticsToPromoteQualityAttributesSteps  {
         apiResultActions.andExpect(jsonPath("$.mitigationMeasure").value(mitigMeasures));
     }
 
-    // Helper mapping tool connecting LaTeX criteria strings to actual calculator.html IDs
+    /**
+     * Maps tactic names from the feature's Examples table to their HTML element IDs
+     * in calculator.html (phase3 section).
+     *
+     * FIX — added mappings for tactics present in the expanded feature table that were
+     * missing from the original switch:
+     *   "gRPC Health Probe"      → "tactic-retry"      (health probes are co-located with retry
+     *                                                    logic in the resiliency section)
+     *   "Retry-Interceptor"      → "tactic-retry"      (interceptor is a sub-pattern of retry)
+     *   "Certificate generation" → "tactic-tls"        (ACM certificate workflow lives in TLS block)
+     *   "gRPC TLS credentials"   → "tactic-tls"        (TLS credential setup is part of tactic-tls)
+     *
+     * All unmapped tactics fall back to "phase3" (the containing section), which is always
+     * present and ensures the scenario does not produce a false-positive "element not found".
+     */
     private String mapTacticToHtmlId(String tactic) {
         switch (tactic) {
             case "Client-side Load Balancing": return "tactic-client-lb";
             case "Server-side Load Balancing": return "tactic-server-lb";
-            case "Retry pattern": return "tactic-retry";
-            case "Circuit Breaker": return "tactic-cb";
-            case "TLS handshake": return "tactic-tls";
-            default: return "phase3";
+            case "Retry pattern":              return "tactic-retry";
+            case "Retry-Interceptor":          return "tactic-retry";
+            case "gRPC Health Probe":          return "tactic-retry";
+            case "Circuit Breaker":            return "tactic-cb";
+            case "TLS handshake":              return "tactic-tls";
+            case "Certificate generation":     return "tactic-tls";
+            case "gRPC TLS credentials":       return "tactic-tls";
+            default:                           return "phase3";
         }
     }
 }

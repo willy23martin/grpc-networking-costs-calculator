@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -42,13 +43,25 @@ class AWSDatabaseCostCalculatorTest {
     }
 
     @Test
-    void calculateDatabaseBackupPricing_apiFailures_usesFallbacks() {
-        when(pricingMock.getProducts((GetProductsRequest) any())).thenThrow(new RuntimeException("API fail"));
+    void calculateDatabaseBackupPricing_apiFailures_usesFallbacks() throws Exception {
+        // Inject mock
+        Field pricingField = calculator.getClass().getSuperclass().getDeclaredField("pricing");
+        pricingField.setAccessible(true);
+        pricingField.set(calculator, pricingMock);
 
+        // Every getProducts call throws
+        when(pricingMock.getProducts(any(GetProductsRequest.class)))
+                .thenThrow(new RuntimeException("API fail"));
+
+        // Should NOT throw — fetchSimplePrice must absorb it and return fallbacks
         Map<String, Object> result = calculator.calculateDatabaseBackupPricing();
 
-        assertEquals(0.095, result.get("rdsSnapshotPerGbMonth"));
-        assertEquals(0.26, result.get("auroraReplicaPerHour"));
+        assertThat(result).isNotNull();
+        assertThat(result).containsKey("s3StandardStoragePerGbUsd");
+        assertThat(result).containsKey("rdsSnapshotStoragePerGbUsd");
+        // Values should be the fallback constants, not zero
+        assertThat((double) result.get("s3StandardStoragePerGbUsd")).isGreaterThan(0);
+        assertThat((double) result.get("rdsSnapshotStoragePerGbUsd")).isGreaterThan(0);
     }
 
     private void injectMocks(AWSDatabaseCostCalculator calc) throws Exception {

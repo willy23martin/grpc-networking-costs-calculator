@@ -4,19 +4,16 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-        import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+// NOTE: @SpringBootTest and @AutoConfigureMockMvc removed — see CucumberSpringConfiguration.
 public class CloudServiceConfigurationSteps {
 
     @Autowired
@@ -30,14 +27,16 @@ public class CloudServiceConfigurationSteps {
 
     @Given("the architect is managing configurations on the TCO Calculator")
     public void verifyDashboardContext() throws Exception {
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(status().isOk());
     }
 
+    // FIX: Original check tested for "AWS ACM" (present in calculator.html as a class="acm-note"
+    // label), "Azure Key Vault" (absent — correct), and "Google Certificate Authority Service"
+    // (absent — correct). All three checks are valid against the actual HTML content.
     @Given("the configuration dashboard is verified to contain only AWS cloud environments")
     public void verifyAwsOnlyConstraint() throws Exception {
-        // Strict baseline assertion enforcing that non-AWS platforms like Azure or GCP are absent
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(content().string(containsString("AWS ACM")))
                 .andExpect(content().string(not(containsString("Azure Key Vault"))))
                 .andExpect(content().string(not(containsString("Google Certificate Authority Service"))));
@@ -76,7 +75,6 @@ public class CloudServiceConfigurationSteps {
 
     @When("I configure timeout values of {string} and failure threshold of {string}")
     public void configureResiliencyThresholds(String timeoutVal, String threshold) throws Exception {
-        // Strips "ms" unit and targets the calculator backend context for processing
         String rawTimeout = timeoutVal.replace("ms", "");
         responseResult = mockMvc.perform(post("/api/finops/config/resiliency")
                 .param("timeoutMs", rawTimeout)

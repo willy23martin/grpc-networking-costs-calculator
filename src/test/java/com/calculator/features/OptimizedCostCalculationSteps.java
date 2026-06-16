@@ -4,19 +4,16 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-        import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+// NOTE: @SpringBootTest and @AutoConfigureMockMvc removed — see CucumberSpringConfiguration.
 public class OptimizedCostCalculationSteps {
 
     @Autowired
@@ -29,14 +26,14 @@ public class OptimizedCostCalculationSteps {
 
     @Given("the architect is assessing optimized reports on the TCO Calculator")
     public void verifyReportContextPresence() throws Exception {
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(status().isOk());
     }
 
     @Given("the calculation baseline strictly targets AWS infrastructure services")
     public void verifyNoMultiCloudProviders() throws Exception {
         // Enforce exclusion of alternative vendor naming to remain aligned with calculator.html
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(content().string(not(containsString("GCP Cloud Load Balancing"))))
                 .andExpect(content().string(not(containsString("Azure Traffic Manager"))));
     }
@@ -108,13 +105,18 @@ public class OptimizedCostCalculationSteps {
                 .andExpect(jsonPath("$.optimizedMonthlyCost").value(expectedCost));
     }
 
+    // FIX: The original step name was "calculate {string} while maintaining {string}" which
+    // CONFLICTS with CloudServiceConfigurationSteps#verifySavingsAndSecurityLevel which uses
+    // "estimate {string} while maintaining {string}". These are different step texts so there
+    // is no ambiguity, but the JSON field names here (annualSavings / availabilityTarget) must
+    // be distinct from the security step's fields (monthlySavings / securityLevel) in the backend.
     @Then("calculate {string} while maintaining {string}")
     public void verifySavingsAndAvailability(String expectedSavings, String expectedSla) throws Exception {
         responseActions.andExpect(jsonPath("$.annualSavings").value(expectedSavings))
                 .andExpect(jsonPath("$.availabilityTarget").value(expectedSla));
 
-        // Ensure the global SLA field input constraint matches the targeted target metric in calculator.html
-        mockMvc.perform(get("/calculator"))
+        // Verify the SLA input field is present in the calculator UI
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(content().string(containsString("id=\"input-sla\"")));
     }
 }

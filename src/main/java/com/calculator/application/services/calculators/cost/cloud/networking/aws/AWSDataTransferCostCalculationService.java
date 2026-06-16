@@ -3,6 +3,8 @@ package com.calculator.application.services.calculators.cost.cloud.networking.aw
 import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Value;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -16,6 +18,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+
+import static com.calculator.shared.JSONLogger.logAsJSON;
 
 public class AWSDataTransferCostCalculationService implements NetworkingCostCalculator {
 
@@ -104,10 +108,10 @@ public class AWSDataTransferCostCalculationService implements NetworkingCostCalc
                 .build();
 
         GetProductsResponse response = pricingClient.getProducts(request);
-        log.info("AWS Pricing API has been used for rates");
-        return parseTieredRates(response.priceList());
+            logAsJSON(log, response);
+            return parseTieredRates(response.priceList());
     } catch (Exception e) {
-            log.info("AWS Pricing API unavailable, using fallback rates: ");
+            log.severe("AWS Pricing API unavailable, using fallback rates: " + e.getMessage());
             return fallbackRates;
         }
     }
@@ -131,7 +135,7 @@ public class AWSDataTransferCostCalculationService implements NetworkingCostCalc
                         });
 
             } catch (Exception e) {
-                log.info("Failed to parse price Tiered Rates JSON: " + e.getMessage());
+                log.severe("Failed to parse price Tiered Rates JSON: " + e.getMessage());
             }
         }
 

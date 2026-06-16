@@ -48,5 +48,5 @@ Feature: Software Architectural Characteristic / Driver / Quality Attribute Sele
     Examples:
       | business_requirement              | quality_attr | recommended_tactics                                                                           |
       | Failure recovery needs            | Resiliency   | Retry pattern, Circuit Breaker pattern, gRPC Health Probe, Retry-Interceptor                  |
-      | Correct operation over time needs | Reliability  | Timeout-Deadline, Timeout-Cancellation, Client Side Load Balancing, Server-side Load Balancing |
+      | Correct operation over time needs | Reliability  | Timeout-Deadline, Timeout-Cancellation, Client Side Load Balancing, Server-side Load Balancing|
       | Data protection needs             | Security     | TLS Handshake, Certificates, gRPC TLS credentials                                             |

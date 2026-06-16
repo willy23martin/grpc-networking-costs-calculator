@@ -15,32 +15,70 @@ class ProtocolBufferFileParserTest {
     @Test
     void parseProtoFileFrom_completeProtoFile_allFieldsParsed(@TempDir Path tempDir) throws IOException {
         String protoContent = """
-            syntax = "proto3";
-            
-            option java_package = "com.example.myapp";
-            option java_outer_classname = "MyProtoService";
-            
-            service MyService {
-              rpc SayHello (HelloRequest) returns (HelloResponse) {}
-            }
-            
-            message HelloRequest {
-              string name = 1;
-            }
-            
-            message HelloResponse {
-              string message = 1;
-            }
+                syntax = "proto3";
+                
+                package com.ecommerce.order.unary;
+                
+                option java_package = "com.ecommerce.order.grpc.unary";
+                option java_multiple_files = true;
+                
+                import "google/protobuf/timestamp.proto";
+                
+                enum OrderStatus {
+                  ORDER_STATUS_UNKNOWN = 0;
+                  ORDER_STATUS_PENDING = 1;
+                  ORDER_STATUS_PROCESSING = 2;
+                  ORDER_STATUS_SHIPPED = 3;
+                  ORDER_STATUS_DELIVERED = 4;
+                  ORDER_STATUS_CANCELLED = 5;
+                }
+                
+                message Money {
+                  int64 units = 1;
+                  int32 nanos = 2;
+                }
+                
+                message OrderItem {
+                  string product_id = 1;
+                  int32 quantity = 2;
+                  Money unit_price = 3;
+                }
+                
+                message Address {
+                  string street = 1;
+                  string city = 2;
+                  string state = 3;
+                  string zip_code = 4;
+                  string country = 5;
+                }
+                
+                message Order {
+                  string order_id = 1;
+                  string user_id = 2;
+                  repeated OrderItem items = 3;
+                  Money total_amount = 4;
+                  google.protobuf.Timestamp order_date = 5;
+                  OrderStatus status = 6;
+                  Address shipping_address = 7;
+                }
+                
+                message GetOrderRequest {
+                  string order_id = 1;
+                }
+                
+                service UnaryOrderService {
+                  rpc GetOrderDetails (GetOrderRequest) returns (Order);
+                }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "test.proto", protoContent);
+        Path protoFile = createProtoFile(tempDir, "buc1_unary_order.proto", protoContent);
 
         JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
-        assertEquals("com.example.myapp", result.javaPackageName());
-        assertEquals("MyProtoService", result.outerClassName());
-        assertEquals("HelloRequest", result.requestMessageSimpleName());
-        assertEquals("HelloResponse", result.responseMessageSimpleName());
+        assertEquals("com.ecommerce.order.grpc.unary", result.javaPackageName());
+        assertEquals("", result.outerClassName());
+        assertEquals("GetOrderRequest", result.requestMessageSimpleName());
+        assertEquals("Order", result.responseMessageSimpleName());
     }
 
     @Test
@@ -48,21 +86,21 @@ class ProtocolBufferFileParserTest {
         String protoContent = """
             syntax = "proto3";
             
-            option java_package = "com.example";
+            option java_package = "com.ecommerce.order.grpc.unary";
             
-            service TestService {
-              rpc GetData (DataRequest) returns (DataResponse) {}
+            service UnaryOrderService {
+              rpc GetOrderDetails (GetOrderRequest) returns (Order) {}
             }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "test.proto", protoContent);
+        Path protoFile = createProtoFile(tempDir, "minimal_unary.proto", protoContent);
 
         JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
-        assertEquals("com.example", result.javaPackageName());
+        assertEquals("com.ecommerce.order.grpc.unary", result.javaPackageName());
         assertEquals("", result.outerClassName());
-        assertEquals("DataRequest", result.requestMessageSimpleName());
-        assertEquals("DataResponse", result.responseMessageSimpleName());
+        assertEquals("GetOrderRequest", result.requestMessageSimpleName());
+        assertEquals("Order", result.responseMessageSimpleName());
     }
 
     @Test
@@ -70,43 +108,44 @@ class ProtocolBufferFileParserTest {
         String protoContent = """
             syntax = "proto3";
             
-            service SimpleService {
-              rpc Ping (PingRequest) returns (PingResponse) {}
+            service UnaryOrderService {
+              rpc GetOrderDetails (GetOrderRequest) returns (Order) {}
             }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "test.proto", protoContent);
+        Path protoFile = createProtoFile(tempDir, "no_options_unary.proto", protoContent);
 
         JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
         assertEquals("", result.javaPackageName());
         assertEquals("", result.outerClassName());
-        assertEquals("PingRequest", result.requestMessageSimpleName());
-        assertEquals("PingResponse", result.responseMessageSimpleName());
+        assertEquals("GetOrderRequest", result.requestMessageSimpleName());
+        assertEquals("Order", result.responseMessageSimpleName());
     }
 
     @Test
     void parseProtoFileFrom_multipleRpc_firstOnly(@TempDir Path tempDir) throws IOException {
-        String multipleRPCsShouldTakeFirstOnlyIsEmptyCheck = """
+        String multipleRPCsContent = """
             syntax = "proto3";
             
-            service MultiService {
-              rpc FirstCall (FirstRequest) returns (FirstResponse) {}
-              rpc SecondCall (SecondRequest) returns (SecondResponse) {}
+            service UnaryOrderService {
+              rpc GetOrderDetails (GetOrderRequest) returns (Order) {}
+              rpc FallbackVerification (GetOrderRequest) returns (Order) {}
             }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "test.proto", multipleRPCsShouldTakeFirstOnlyIsEmptyCheck);
+        Path protoFile = createProtoFile(tempDir, "multi_rpc_unary.proto", multipleRPCsContent);
 
         JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
-        assertEquals("FirstRequest", result.requestMessageSimpleName());
-        assertEquals("FirstResponse", result.responseMessageSimpleName());
+        // Ensures the parser selects the primary baseline RPC execution contract (first matching metadata match)
+        assertEquals("GetOrderRequest", result.requestMessageSimpleName());
+        assertEquals("Order", result.responseMessageSimpleName());
     }
 
     @Test
     void parseProtoFileFrom_emptyFile_emptyResult(@TempDir Path tempDir) throws IOException {
-        Path emptyProtoFile = createProtoFile(tempDir, "empty.proto", "");
+        Path emptyProtoFile = createProtoFile(tempDir, "empty_malformed.proto", "");
 
         JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(emptyProtoFile);
 

@@ -16,7 +16,7 @@ import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import static com.calculator.infrastructure.web.rest.TCOCalculatorControllerTest.VALID_PROTO_CONTENT;
+import static com.calculator.shared.ProtocolBuffersUtilsTest.VALID_PROTO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

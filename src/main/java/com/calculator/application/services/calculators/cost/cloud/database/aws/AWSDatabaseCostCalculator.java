@@ -29,14 +29,16 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
         return databaseBackupCosts;
     }
 
-    private void mapS3StandardStorageForBackupsCosts(Map<String, Object> databaseBackupCosts) {
-        databaseBackupCosts.put("s3StandardPerGbMonth",   fetchSimplePrice("AmazonS3",  "S3 Standard", 0.023));
+    // AWSDatabaseCostCalculator — current (broken for API failure test)
+    private void mapS3StandardStorageForBackupsCosts(Map<String, Object> map) {
+        double price = fetchSimplePrice("AmazonS3", "Storage", 0.023); // throws, not caught here
+        map.put("s3StandardStoragePerGbUsd", price);
         log.info("S3 Standard Storage For Backups Costs have been mapped");
     }
 
-    private void mapRDSSnapshotStorageCosts(Map<String, Object> databaseBackupCosts) {
-        databaseBackupCosts.put("rdsSnapshotPerGbMonth",  fetchSimplePrice("AmazonRDS", "RDS Snapshot", 0.095));
-        log.info("RDS Snapshot Storage Costs have been mapped");
+    private void mapRDSSnapshotStorageCosts(Map<String, Object> map) {
+        double price = fetchSimplePrice("AmazonRDS", "Database Storage", 0.095); // throws, not caught here
+        map.put("rdsSnapshotStoragePerGbUsd", price);
     }
 
     private static void mapRDSMultiAZSurchargeCosts(Map<String, Object> databaseBackupCosts) {
@@ -67,6 +69,7 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
             GetProductsResponse resp = pricing.getProducts(req);
+            System.out.println("GetProductsResponse database " + resp);
             if (resp.priceList().isEmpty()) return 0.26;
             JsonNode root = mapper.readTree(resp.priceList().get(0));
             return root.path("terms").path("OnDemand").fields().next()

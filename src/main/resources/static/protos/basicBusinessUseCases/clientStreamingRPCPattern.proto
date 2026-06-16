@@ -25,6 +25,21 @@ enum UpdateAction {
   UPDATE_ACTION_CANCEL = 5;
 }
 
+message ShippingAddress {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string postal_code = 4;
+  string country = 5;
+}
+
+message ShippingUpdate {
+  string tracking_number = 1;
+  string carrier = 2;
+  google.protobuf.Timestamp estimated_delivery = 3;
+  ShippingAddress new_address = 4;
+}
+
 message OrderUpdateRequest {
   string order_id = 1;
   UpdateAction action = 2;
@@ -38,19 +53,13 @@ message OrderUpdateRequest {
   google.protobuf.Timestamp request_time = 10;
 }
 
-message ShippingUpdate {
-  string tracking_number = 1;
-  string carrier = 2;
-  google.protobuf.Timestamp estimated_delivery = 3;
-  ShippingAddress new_address = 4;
-}
-
-message ShippingAddress {
-  string street = 1;
-  string city = 2;
-  string state = 3;
-  string postal_code = 4;
-  string country = 5;
+message UpdateResult {
+  string order_id = 1;
+  bool success = 2;
+  string error_message = 3;
+  OrderStatus previous_status = 4;
+  OrderStatus current_status = 5;
+  google.protobuf.Timestamp updated_at = 6;
 }
 
 message BatchUpdateResponse {
@@ -61,15 +70,6 @@ message BatchUpdateResponse {
   google.protobuf.Timestamp processing_started = 5;
   google.protobuf.Timestamp processing_completed = 6;
   double processing_duration_seconds = 7;
-}
-
-message UpdateResult {
-  string order_id = 1;
-  bool success = 2;
-  string error_message = 3;
-  OrderStatus previous_status = 4;
-  OrderStatus current_status = 5;
-  google.protobuf.Timestamp updated_at = 6;
 }
 
 service OrderBatchUpdateService {

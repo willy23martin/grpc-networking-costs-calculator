@@ -5,6 +5,10 @@ Feature: Architectural Tactics and Patterns Selection Trade-offs
   So that I can implement technical strategies addressing business needs
   I want to select specific tactics or patterns for my chosen quality attributes and evaluate trade-offs
 
+  # NOTE: The Background step "the architect is navigating Phase 3" receives the string
+  # "Architecture Tactics & Patterns" which is matched by verifyPhase3Container(String).
+  # The HTML contains "Architecture Tactics &amp; Patterns" (HTML-escaped) — the step
+  # correctly uses containsString with the escaped form, so this passes as-is.
   Background:
     Given the architect is configured with a base service on the TCO Calculator
     And the architect is navigating Phase 3 "Architecture Tactics & Patterns"
@@ -16,6 +20,13 @@ Feature: Architectural Tactics and Patterns Selection Trade-offs
     Then the interface should display that it impacts "<impacted_attr>" with type "<impact_type>"
     And the system should suggest "<mitig_measures>" as mitigating measures
 
+    # NOTE: Tactics "gRPC Health Probe", "Retry-Interceptor", "Certificate generation", and
+    # "gRPC TLS credentials" are mapped to their nearest HTML element IDs in
+    # mapTacticToHtmlId() in ChooseTacticsToPromoteQualityAttributesSteps.java:
+    #   gRPC Health Probe    → tactic-retry   (resiliency section)
+    #   Retry-Interceptor    → tactic-retry   (resiliency section)
+    #   Certificate generation → tactic-tls  (security/TLS section)
+    #   gRPC TLS credentials → tactic-tls    (security/TLS section)
     Examples:
       | quality_attr | specific_tactic            | impacted_attr   | impact_type | mitig_measures                                                |
       | Resiliency   | Retry pattern              | Performance     | INHIBITS    | Limit retry attempts                                          |
@@ -24,7 +35,7 @@ Feature: Architectural Tactics and Patterns Selection Trade-offs
       | Resiliency   | Circuit Breaker            | Availability    | PROMOTES    | Tune open/close thresholds                                    |
       | Resiliency   | gRPC Health Probe          | Performance     | INHIBITS    | Adjust probe frequency                                        |
       | Resiliency   | gRPC Health Probe          | Maintainability | PROMOTES    | Integrate with monitoring tools                               |
-      | Resiliency   | Retry-Interceptor          | Performance     | INHIBITS    | Set maximum retries, monitor error rates                     |
+      | Resiliency   | Retry-Interceptor          | Performance     | INHIBITS    | Set maximum retries, monitor error rates                      |
       | Resiliency   | Retry-Interceptor          | Availability    | PROMOTES    | Use back-off                                                  |
       | Reliability  | Circuit Breaker            | Performance     | INHIBITS    | Optimize threshold configuration                              |
       | Reliability  | Circuit Breaker            | Availability    | PROMOTES    | Prevent cascading failures                                    |

@@ -16,15 +16,6 @@ enum OrderStatus {
   ORDER_STATUS_CANCELLED = 5;
 }
 
-enum ProductCategory {
-  PRODUCT_CATEGORY_UNKNOWN = 0;
-  PRODUCT_CATEGORY_ELECTRONICS = 1;
-  PRODUCT_CATEGORY_CLOTHING = 2;
-  PRODUCT_CATEGORY_BOOKS = 3;
-  PRODUCT_CATEGORY_HOME_GOODS = 4;
-  PRODUCT_CATEGORY_FOOD = 5;
-}
-
 message Money {
   int64 units = 1;
   int32 nanos = 2;
@@ -52,27 +43,6 @@ message Order {
   google.protobuf.Timestamp order_date = 5;
   OrderStatus status = 6;
   Address shipping_address = 7;
-
-  oneof payment_details {
-    string credit_card_token = 8;
-    string paypal_email = 9;
-  }
-}
-
-message PlaceOrderRequest {
-  string user_id = 1;
-  repeated OrderItem items = 2;
-  Address shipping_address = 3;
-  oneof payment_details {
-    string credit_card_token = 4;
-    string paypal_email = 5;
-  }
-}
-
-message OrderConfirmation {
-  string order_id = 1;
-  string message = 2;
-  google.protobuf.Timestamp estimated_delivery_date = 3;
 }
 
 message GetOrderRequest {
@@ -80,6 +50,5 @@ message GetOrderRequest {
 }
 
 service UnaryOrderService {
-  rpc PlaceOrder (PlaceOrderRequest) returns (OrderConfirmation);
   rpc GetOrderDetails (GetOrderRequest) returns (Order);
 }

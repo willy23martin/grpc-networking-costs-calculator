@@ -4,19 +4,20 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-        import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+// NOTE: @SpringBootTest and @AutoConfigureMockMvc have been intentionally removed.
+// Spring context and MockMvc are provided by CucumberSpringConfiguration, which is the
+// single @CucumberContextConfiguration class in this glue package. Having those
+// annotations on individual step classes caused Cucumber to attempt multiple Spring
+// context instantiations, breaking step discovery entirely.
 public class BaseCostCalculationSteps {
 
     @Autowired
@@ -33,10 +34,12 @@ public class BaseCostCalculationSteps {
         // Prepare mock sessions or reference databases
     }
 
+    // FIX: The original assertion checked for the literal string "Fetching ALB pricing from AWS"
+    // which is accurate (it exists inside #alb-loading in calculator.html).
+    // The Azure/GCP absence checks are also correct against the HTML.
     @Given("the architect has verified that only AWS components are available in the view")
     public void verifyExclusionOfAzureAndGcp() throws Exception {
-        // Assert that Azure and GCP markup elements are completely absent from calculator.html
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(not(containsString("Azure Load Balancer"))))
                 .andExpect(content().string(not(containsString("Google Cloud Service Directory"))))
@@ -62,14 +65,14 @@ public class BaseCostCalculationSteps {
 
     @Then("I calculate the base costs")
     public void triggerBaseCostCalculation() {
-        // Simulates triggering the frontend's computeCloudInfraCost function or backend processing
+        // Simulates triggering the frontend computeCloudInfraCost function or backend processing
     }
 
     @Then("the system should show {string} estimates")
     public void verifyUiHourlyCostEstimate(String expectedHourlyCost) throws Exception {
         String inputFieldId = mapServiceToHtmlInputId(targetService);
 
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(get("/calculateTCO"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"" + inputFieldId + "\"")));
     }
@@ -106,13 +109,28 @@ public class BaseCostCalculationSteps {
         apiResponse.andExpect(jsonPath("$.primaryDrivers").value(expectedDrivers));
     }
 
-    // Utility connector matching service string directly with calculator.html control elements
+    /**
+     * Maps a cloud service name from the feature file to its corresponding HTML element ID
+     * in calculator.html.
+     *
+     * FIX — original mappings were wrong:
+     *   "API Gateway"        → "sec-waf"      WRONG  (sec-waf is AWS WAF, not API Gateway)
+     *   "Certificate Manager"→ "acm-note"     WRONG  (acm-note is a CSS class, not an id)
+     *
+     * Corrected mappings:
+     *   "Elastic Load Balancer (ELB)" → "tactic-alb"       (checkbox inside #body-alb)
+     *   "App Mesh"                    → "tactic-client-lb"  (client-side LB is implemented via App Mesh)
+     *   "API Gateway"                 → "sec-waf"           kept — WAF is co-located with API Gateway
+     *                                   Better target: "body-cloud" (the cloud services section)
+     *   "Certificate Manager"         → "tactic-tls"        TLS tactic is where ACM appears in the UI
+     */
     private String mapServiceToHtmlInputId(String service) {
         switch (service) {
             case "Elastic Load Balancer (ELB)": return "tactic-alb";
-            case "API Gateway": return "sec-waf";
-            case "Certificate Manager": return "acm-note";
-            default: return "body-alb";
+            case "App Mesh":                    return "tactic-client-lb";
+            case "API Gateway":                 return "body-cloud";
+            case "Certificate Manager":         return "tactic-tls";
+            default:                            return "body-alb";
         }
     }
 }
