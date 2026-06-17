@@ -11,7 +11,7 @@ This service calculates the TCO costs for a gRPC-based Microservices MACH Archit
 
 
 ## Protocol Buffer files:
-You can find the **Protocol Buffers files** in the [protos](src/main/resources/static/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/static/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/static/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
+You can find the **Protocol Buffers files** in the [protos](src/main/resources/static/protos) folder, each of which is related to the [Business Use Cases](src/main/resources/static/protos/)
 in the context of an **E-Commerce microservice**:
 1. **BUC1**: **gRPC Unary pattern**: Retrieve orders by using an order ID from client to server.
 2. **BUC2**: **gRPC Server Streaming pattern**: The business needs to retrieve all possible orders that match a search criterion (term or filter).

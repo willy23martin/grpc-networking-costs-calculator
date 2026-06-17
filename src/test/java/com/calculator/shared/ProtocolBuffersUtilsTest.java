@@ -1,6 +1,8 @@
 package com.calculator.shared;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -276,6 +278,7 @@ public class ProtocolBuffersUtilsTest {
     }
 
     @Test
+    @EnabledOnOs(OS.WINDOWS)
     void resolveProtocolBufferFilesCompiler_windowsPath() {
         System.setProperty("os.name", "Windows 10");
         System.setProperty("os.arch", "x86_64");
@@ -287,6 +290,7 @@ public class ProtocolBuffersUtilsTest {
         assertEquals(Path.of(expected), result);
     }
 
+    @EnabledOnOs(OS.MAC)
     @Test
     void resolveProtocolBufferFilesCompiler_macAarch64_executable() {
         System.setProperty("os.name", "Mac OS X");
@@ -299,6 +303,7 @@ public class ProtocolBuffersUtilsTest {
     }
 
     @Test
+    @EnabledOnOs(OS.LINUX)
     void resolveProtocolBufferFilesCompiler_linuxArm64_fallsToAarch64() {
         System.setProperty("os.name", "Linux");
         System.setProperty("os.arch", "arm64");

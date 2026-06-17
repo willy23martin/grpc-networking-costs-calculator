@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/session/tactics")
 public class TacticsSessionController {
 
-    static final String SESSION_KEY = "architecturalDecisions";
+    public static final String SESSION_KEY = "architecturalDecisions";
 
     @PostMapping
     public ResponseEntity<Void> saveTactics(

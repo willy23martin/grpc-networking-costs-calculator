@@ -5,7 +5,7 @@ const BUSINESS_USE_CASE_PROTO_MAP = {
   'BUC4': 'biDirectionalStreamingRPCPattern.proto'
 };
 
-const PROTO_BASE_URL = '/protos/basicBusinessUseCases/';
+const PROTO_BASE_URL = '/protos/';
 
 function selectBusinessUseCase(useCase, cardElement) {
   document.querySelectorAll('.buc-card').forEach(card => card.classList.remove('selected'));
@@ -88,7 +88,7 @@ function autoLoadProtoForUseCase(useCase) {
     .catch(error => {
       console.warn(
         `Proto auto-load failed for ${useCase}:`, error.message,
-        '— Upload the file manually or ensure Spring Boot serves /protos/basicBusinessUseCases/'
+        '— Upload the file manually or ensure Spring Boot serves /protos/'
       );
       if (indicator) {
         indicator.textContent = `⚠️ Could not auto-load ${fileName} — please upload manually.`;
