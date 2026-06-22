@@ -27,6 +27,10 @@ public class SecurityTradeoffsDTO {
     private String vulnerabilityPrevented;
     @JsonProperty("costFactor")
     private String costFactor;
+    @JsonProperty("impactedAttribute")
+    private String impactedAttribute;
+    @JsonProperty("impactType")
+    private String impactType;
     // Only for Cloud Services
     @JsonProperty("supportedArchitecturalDecisions")
     private List<String> supportedArchitecturalDecisions;

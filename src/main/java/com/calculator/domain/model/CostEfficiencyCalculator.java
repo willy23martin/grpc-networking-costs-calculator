@@ -1,4 +1,4 @@
-package com.calculator.domain.model.economics;
+package com.calculator.domain.model;
 
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
 import com.calculator.domain.model.quality.TradeoffType;
@@ -197,20 +197,10 @@ public class CostEfficiencyCalculator {
         return AffordabilityImpact.ORTHOGONAL;
     }
 
-    /**
-     * Returns the architectural decisions held by this calculator.
-     */
     public List<ArchitecturalDecision> getArchitecturalDecisions() {
         return architecturalDecisions;
     }
 
-    // ── Consolidated affordability signal ────────────────────────────────────
-
-    /**
-     * Consolidated affordability impact across all architectural decisions.
-     * Maps directly to the TradeoffType enum values used in the domain model,
-     * expressed in cost-facing language for the UnitEconomics context.
-     */
     public enum AffordabilityImpact {
         /** At least one tactic increases egress or infra cost (e.g. Retry, TLS, ALB). */
         INHIBITS,

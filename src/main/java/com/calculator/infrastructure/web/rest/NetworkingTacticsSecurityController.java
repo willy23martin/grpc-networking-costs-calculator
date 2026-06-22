@@ -1,18 +1,12 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
-import com.calculator.application.services.mapper.tradeoffs.reliability.ReliabilityTradeoffMapperService;
-import com.calculator.application.services.mapper.tradeoffs.resiliency.ResiliencyTradeoffMapperService;
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
-import com.calculator.domain.dto.tactics.reliability.ReliabilityTradeoffDTO;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
-import com.calculator.domain.dto.tactics.resiliency.ResiliencyTradeoffDTO;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
-import com.calculator.domain.dto.tactics.security.SecurityTradeoffsDTO;
-import com.calculator.application.services.mapper.tradeoffs.security.SecurityTradeoffMapperService;
 import com.calculator.domain.dto.requests.EffectiveRequestPerSecondRequest;
 import com.calculator.domain.dto.responses.EffectiveRequestPerSecondResponse;
 import com.calculator.domain.dto.tactics.security.authentication.BasicAuthenticationPattern;
@@ -25,21 +19,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 @RestController
 @CrossOrigin(origins = "*")
 public class NetworkingTacticsSecurityController {
 
-    // interceptorType: (document.getElementById('input-interceptor-type') || { value: 'UNARY' }).value || 'UNARY'
-
-    @Autowired
-    SecurityTradeoffMapperService securityTradeoffMapperService;
-
-    @Autowired
-    ReliabilityTradeoffMapperService reliabilityTradeoffMapperService;
-
-    @Autowired
-    ResiliencyTradeoffMapperService resiliencyTradeoffMapperService;
+    private final Logger log = Logger.getLogger(NetworkingTacticsSecurityController.class.getName());
 
     @Autowired
     RequestPerSecondCostCalculatorService requestPerSecondCostCalculatorService;
@@ -56,7 +42,6 @@ public class NetworkingTacticsSecurityController {
         EffectiveRequestPerSecondResponse effectiveRpsResponse = new EffectiveRequestPerSecondResponse();
         effectiveRpsResponse.setBaseRps(effectiveRpsRequest.getBaseRequestPerSecond());
 
-        // Fail-fast guard for baseline or invalid traffic
         if (effectiveRpsRequest.getBaseRequestPerSecond() <= 0) {
             effectiveRpsResponse.setEffectiveRps(0);
             effectiveRpsResponse.setRpsWasAdjusted(false);
@@ -171,33 +156,12 @@ public class NetworkingTacticsSecurityController {
 
         // Assign final payload states
         effectiveRpsResponse.setEffectiveRps((int) coreCalculatedEffectiveRps);
-        System.out.println("coreCalculatedEffectiveRps: " + coreCalculatedEffectiveRps);
-        System.out.println("TOTAL EXTRA: " + totalExtra);
+        log.info("coreCalculatedEffectiveRps: " + coreCalculatedEffectiveRps);
+        log.info("TOTAL EXTRA: " + totalExtra);
         effectiveRpsResponse.setRpsWasAdjusted(totalExtra != 0);
-        System.out.println("effectiveRpsResponse: " + totalExtra);
+        log.info("effectiveRpsResponse: " + totalExtra);
 
         return ResponseEntity.ok(effectiveRpsResponse);
-    }
-
-    @GetMapping("/api/security/tactic-mappings")
-    public ResponseEntity<List<SecurityTradeoffsDTO>> getTacticSecurityMappings() {
-        System.out.println("Security Tactics Mapping has been invoked");
-        List<SecurityTradeoffsDTO> securityMappings = securityTradeoffMapperService.getSecurityTradeoffs();
-        return ResponseEntity.ok(securityMappings);
-    }
-
-    @GetMapping("/api/reliability/tactic-mappings")
-    public ResponseEntity<List<ReliabilityTradeoffDTO>> getTacticReliabilityMappings() {
-        System.out.println("Reliability Tactics Mapping has been invoked");
-        List<ReliabilityTradeoffDTO> reliabilityMappings = reliabilityTradeoffMapperService.getReliabilityTradeoffs();
-        return ResponseEntity.ok(reliabilityMappings);
-    }
-
-    @GetMapping("/api/resiliency/tactic-mappings")
-    public ResponseEntity<List<ResiliencyTradeoffDTO>> getTacticResiliencyMappings() {
-        System.out.println("Resiliency Tactics Mapping has been invoked");
-        List<ResiliencyTradeoffDTO> reliabilityMappings = resiliencyTradeoffMapperService.getResiliencyTradeoffs();
-        return ResponseEntity.ok(reliabilityMappings);
     }
 
 }

@@ -50,6 +50,15 @@ public class SecurityTradeoffMapperService {
                 .map(
                 qualityTradeoff -> qualityTradeoff.getArchitecturalCharacteristic().getName()
         ).toList();
+        var inhibitedCharacteristic = architecturalTactic.getArchitecturalCharacteristic().getQualityTradeoffs().stream().filter(
+                qualityTradeoff -> qualityTradeoff.getTradeoffType().equals(TradeoffType.INHIBITS)
+        ).findFirst().orElse(
+                new QualityTradeoff(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.AFFORDABILITY.name())
+                                .build(),
+                        TradeoffType.ORTHOGONAL)
+        );
 
         return SecurityTradeoffsDTO.builder()
                 .tacticId(architecturalTactic.getId())
@@ -61,6 +70,8 @@ public class SecurityTradeoffMapperService {
                 .promotedISO25010AttributeTradeoffs(promotedISO25010AttributeTradeoffs)
                 .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
                 .costFactor(architecturalTactic.getCostFactor().getCostFactorNotes())
+                .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
+                .impactType(inhibitedCharacteristic.getTradeoffType().name())
                 .build();
     }
 
@@ -79,6 +90,15 @@ public class SecurityTradeoffMapperService {
                 .map(
                 qualityTradeoff -> qualityTradeoff.getArchitecturalCharacteristic().getName()
         ).toList();
+        var inhibitedCharacteristic = architecturalPattern.getArchitecturalCharacteristic().getQualityTradeoffs().stream().filter(
+                qualityTradeoff -> qualityTradeoff.getTradeoffType().equals(TradeoffType.INHIBITS)
+        ).findFirst().orElse(
+                new QualityTradeoff(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.AFFORDABILITY.name())
+                                .build(),
+                        TradeoffType.ORTHOGONAL)
+        );
         return SecurityTradeoffsDTO.builder()
                 .tacticId(architecturalPattern.getId())
                 .tacticName(architecturalPattern.getName())
@@ -89,6 +109,8 @@ public class SecurityTradeoffMapperService {
                 .promotedISO25010AttributeTradeoffs(promotedISO25010AttributeTradeoffs)
                 .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
                 .costFactor(architecturalPattern.getCostFactor().getCostFactorNotes())
+                .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
+                .impactType(inhibitedCharacteristic.getTradeoffType().name())
                 .build();
     }
 
@@ -111,6 +133,16 @@ public class SecurityTradeoffMapperService {
                 qualityTradeoff -> qualityTradeoff.getArchitecturalCharacteristic().getName()
                 )
                 .toList();
+
+        var inhibitedCharacteristic = cloudService.getArchitecturalCharacteristic().getQualityTradeoffs().stream().filter(
+                qualityTradeoff -> qualityTradeoff.getTradeoffType().equals(TradeoffType.INHIBITS)
+        ).findFirst().orElse(
+                new QualityTradeoff(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.AFFORDABILITY.name())
+                                .build(),
+                        TradeoffType.ORTHOGONAL)
+        );
         System.out.println("Cloud service: " + cloudService.getId() + " supported architectural decisions: " + supportedArchitecturalDecisions);
 
         return SecurityTradeoffsDTO.builder()
@@ -124,6 +156,8 @@ public class SecurityTradeoffMapperService {
                 .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
                 .costFactor(cloudService.getCostFactor().getCostFactorNotes())
                 .supportedArchitecturalDecisions(supportedArchitecturalDecisions)
+                .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
+                .impactType(inhibitedCharacteristic.getTradeoffType().name())
                 .build();
     }
 
@@ -144,6 +178,15 @@ public class SecurityTradeoffMapperService {
                         qualityTradeoff -> qualityTradeoff.getArchitecturalCharacteristic().getName()
                 )
                 .toList();
+        var inhibitedCharacteristic = finOpsStrategy.getArchitecturalCharacteristic().getQualityTradeoffs().stream().filter(
+                qualityTradeoff -> qualityTradeoff.getTradeoffType().equals(TradeoffType.INHIBITS)
+        ).findFirst().orElse(
+                new QualityTradeoff(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.AFFORDABILITY.name())
+                                .build(),
+                        TradeoffType.PROMOTES)
+        );
 
         return SecurityTradeoffsDTO.builder()
                 .tacticId(finOpsStrategy.getId())
@@ -155,6 +198,8 @@ public class SecurityTradeoffMapperService {
                 .promotedISO25010AttributeTradeoffs(promotedISO25010AttributeTradeoffs)
                 .vulnerabilityPrevented(securityTradeoff.getVulnerabilityPrevented())
                 .costFactor(finOpsStrategy.getCostFactor().getCostFactorNotes())
+                .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
+                .impactType(inhibitedCharacteristic.getTradeoffType().name())
                 .build();
     }
 

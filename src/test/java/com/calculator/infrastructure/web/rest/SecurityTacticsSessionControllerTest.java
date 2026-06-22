@@ -22,11 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-public class SecurityTacticsSessionControllerTest {
-
-    private final MockMvc mockMvc;
+public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Autowired
     SecurityTacticsSessionControllerTest(MockMvc mockMvc) {

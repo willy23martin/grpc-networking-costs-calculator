@@ -1,5 +1,6 @@
 package com.calculator.features;
 
+import com.calculator.infrastructure.web.rest.BaseIntegrationTest;
 import io.cucumber.spring.CucumberContextConfiguration;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +10,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @CucumberContextConfiguration
-@SpringBootTest
-@AutoConfigureMockMvc
-public class CucumberConfiguration {
+public class CucumberConfiguration extends BaseIntegrationTest {
 
     @Autowired
     private ApplicationContext ctx;

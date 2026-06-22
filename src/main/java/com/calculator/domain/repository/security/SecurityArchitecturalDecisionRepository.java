@@ -134,7 +134,7 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
-                                "5 TLS messages per handshake vs 2 for one-way TLS."
+                                "5 TLS messages per handshake vs 2 for one-way TLS. Increases networking cost and processing overhead."
                         )
                 )
                 .build();
@@ -209,7 +209,8 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
-                                "JWT adds ~650 B per request (inbound, free). Token-acquisition RPS = baseRPS / (TTL × clients)."
+                                "JWT header overhead ~650 B per request (inbound to service, AWS charges $0). " +
+                                        "Token acquisition adds calls to the auth server. TTL tuning is critical."
                         )
                 )
                 .build();

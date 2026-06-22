@@ -51,7 +51,7 @@ public class ResiliencyArchitecturalDecisionRepository {
                 .name("Timeout")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
-                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .name(ArchitecturalCharacteristics.RESILIENCY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost("No direct cloud cost impact.")
@@ -83,12 +83,13 @@ public class ResiliencyArchitecturalDecisionRepository {
                 .name("Retry")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
-                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .name(ArchitecturalCharacteristics.RESILIENCY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.REQUESTS_PER_SECOND,
-                                "Increases effective RPS proportional to the error rate configured."
+                                "Each retry adds to effective RPS. With a 10% error rate and 2 retries, " +
+                                        "effective RPS can increase by up to 20%."
                         )
                 )
                 .build();
@@ -118,7 +119,7 @@ public class ResiliencyArchitecturalDecisionRepository {
                 .name("Circuit Breaker")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
-                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .name(ArchitecturalCharacteristics.RESILIENCY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost("No direct cloud cost impact.")

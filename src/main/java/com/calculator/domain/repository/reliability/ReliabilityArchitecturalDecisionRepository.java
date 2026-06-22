@@ -53,7 +53,7 @@ public class ReliabilityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.NONE,
-                                "Bypasses central proxy overhead with client-side load balancing." // <-- CHANGE THIS LINE
+                                "Bypasses central proxy overhead with client-side load balancing."
                         )
                 )
                 .build();

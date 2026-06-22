@@ -1,9 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
-import com.calculator.application.services.mapper.tradeoffs.reliability.ReliabilityTradeoffMapperService;
-import com.calculator.application.services.mapper.tradeoffs.resiliency.ResiliencyTradeoffMapperService;
-import com.calculator.application.services.mapper.tradeoffs.security.SecurityTradeoffMapperService;
 import com.calculator.domain.dto.requests.EffectiveRequestPerSecondRequest;
 import com.calculator.domain.dto.responses.EffectiveRequestPerSecondResponse;
 import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
@@ -15,23 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Collections;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NetworkingTacticsSecurityControllerTest {
-
-    @Mock
-    private SecurityTradeoffMapperService securityTradeoffMapperService;
-
-    @Mock
-    private ReliabilityTradeoffMapperService reliabilityTradeoffMapperService;
-
-    @Mock
-    private ResiliencyTradeoffMapperService resiliencyTradeoffMapperService;
 
     @Mock
     private RequestPerSecondCostCalculatorService requestPerSecondCostCalculatorService;
@@ -126,26 +112,5 @@ class NetworkingTacticsSecurityControllerTest {
         assertEquals(10, resp.getHandshakeExtra());
         assertEquals(0, resp.getIntrospectionExtra());
         assertNotNull(resp.getOauthPreview());
-    }
-
-    @Test
-    void getTacticSecurityMappings_returnsList() {
-        when(securityTradeoffMapperService.getSecurityTradeoffs()).thenReturn(Collections.emptyList());
-        ResponseEntity<?> response = controller.getTacticSecurityMappings();
-        assertNotNull(response.getBody());
-    }
-
-    @Test
-    void getTacticReliabilityMappings_returnsList() {
-        when(reliabilityTradeoffMapperService.getReliabilityTradeoffs()).thenReturn(Collections.emptyList());
-        ResponseEntity<?> response = controller.getTacticReliabilityMappings();
-        assertNotNull(response.getBody());
-    }
-
-    @Test
-    void getTacticResiliencyMappings_returnsList() {
-        when(resiliencyTradeoffMapperService.getResiliencyTradeoffs()).thenReturn(Collections.emptyList());
-        ResponseEntity<?> response = controller.getTacticResiliencyMappings();
-        assertNotNull(response.getBody());
     }
 }

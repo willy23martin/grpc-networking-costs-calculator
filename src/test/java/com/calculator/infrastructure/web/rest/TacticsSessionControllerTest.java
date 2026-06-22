@@ -21,11 +21,7 @@ import static com.calculator.infrastructure.web.rest.helper.TacticsSessionContro
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class TacticsSessionControllerTest {
-
-    private final MockMvc mockMvc;
+class TacticsSessionControllerTest extends BaseIntegrationTest {
 
     @Autowired
     TacticsSessionControllerTest(MockMvc mockMvc) {

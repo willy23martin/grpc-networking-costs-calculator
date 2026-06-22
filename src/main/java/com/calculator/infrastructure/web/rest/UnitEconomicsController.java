@@ -1,5 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.domain.model.CostEfficiencyCalculator;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
 import com.calculator.domain.repository.ArchitecturalDecisionRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,23 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * UnitEconomicsController
- *
- * Two endpoints:
- *
- *   POST /api/cost/cloud-infra-total
- *     Aggregates all cloud service costs from sessionStorage values already
- *     computed by the individual /api/cost/* endpoints, subtracts FinOps
- *     savings, and returns the net cloud infrastructure total.
- *     The frontend reads sessionStorage directly and sends the pre-computed
- *     per-service costs — no re-calculation of individual services here.
- *
- *   POST /api/cost/unit-economics
- *     Receives egress networking cost + cloud infra total + consumer/revenue
- *     context, and computes the full unit economics: TCO, cost per request,
- *     cost per user, ROI, ARPU, break-even, and annual projections.
- */
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
@@ -39,9 +23,6 @@ public class UnitEconomicsController {
     @Autowired
     private ArchitecturalDecisionRepository architecturalDecisionRepository;
 
-    /* ================================================================
-       POST /api/cost/cloud-infra-total — REQUEST DTO
-    ================================================================ */
     public static class CloudInfraTotalRequest {
         /** Costs already computed by the individual /api/cost/* calls */
         @JsonProperty public double albMonthlyCostUsd        = 0.0;
@@ -55,19 +36,13 @@ public class UnitEconomicsController {
         @JsonProperty public double finopsMonthlySavingUsd   = 0.0;
     }
 
-    /* ================================================================
-       POST /api/cost/cloud-infra-total — RESPONSE DTO
-    ================================================================ */
-    public static class CloudInfraTotalResponse {
+     public static class CloudInfraTotalResponse {
         @JsonProperty public double grossCloudInfraCostUsd;   // sum before FinOps
         @JsonProperty public double finopsSavingUsd;
         @JsonProperty public double netCloudInfraCostUsd;     // after FinOps saving
         @JsonProperty public Map<String, Double> perServiceBreakdown = new LinkedHashMap<>();
     }
 
-    /* ================================================================
-       ENDPOINT: POST /api/cost/cloud-infra-total
-    ================================================================ */
     @PostMapping("/cloud-infra-total")
     public ResponseEntity<CloudInfraTotalResponse> calculateCloudInfraTotal(
             @RequestBody CloudInfraTotalRequest req) {
@@ -99,9 +74,6 @@ public class UnitEconomicsController {
         return ResponseEntity.ok(resp);
     }
 
-    /* ================================================================
-       POST /api/cost/unit-economics — REQUEST DTO
-    ================================================================ */
     public static class UnitEconomicsRequest {
         /** Networking egress cost from /calculateTCO backend render */
         @JsonProperty public double egressTransferCostUsd    = 0.0;
@@ -117,9 +89,6 @@ public class UnitEconomicsController {
         @JsonProperty public double revenuePerUserPerMonth   = 0.0;
     }
 
-    /* ================================================================
-       POST /api/cost/unit-economics — RESPONSE DTO
-    ================================================================ */
     public static class UnitEconomicsResponse {
         /* ── TCO ── */
         @JsonProperty public double totalMonthlyTcoUsd;
@@ -165,7 +134,7 @@ public class UnitEconomicsController {
         allDecisions.addAll(architecturalDecisionRepository.getAvailableResiliencyDecisions());
         allDecisions.addAll(architecturalDecisionRepository.getAvailableSecurityDecisions());
 
-        com.calculator.domain.model.economics.CostEfficiencyCalculator calculator = new com.calculator.domain.model.economics.CostEfficiencyCalculator(allDecisions)
+        CostEfficiencyCalculator calculator = new CostEfficiencyCalculator(allDecisions)
                 .withEgressCost(req.egressTransferCostUsd)
                 .withCloudInfraCost(req.cloudInfraCostUsd)
                 .withFinOpsSaving(req.finopsSavingUsd)
