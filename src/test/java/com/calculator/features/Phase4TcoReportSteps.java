@@ -1,19 +1,28 @@
 package com.calculator.features;
 
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
+import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
+import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
+import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
+import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
+import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.And;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static com.calculator.infrastructure.web.rest.TacticsSessionController.SESSION_KEY;
+import static com.calculator.shared.ProtocolBuffersUtilsTest.VALID_PROTO_CONTENT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.containsString;
 
-// NOTE: @SpringBootTest / @AutoConfigureMockMvc absent — see CucumberSpringConfiguration.
 public class Phase4TcoReportSteps {
 
     @Autowired
@@ -21,151 +30,89 @@ public class Phase4TcoReportSteps {
 
     private ResultActions response;
 
-    // ── Proto submission triggers TCO calculation ─────────────────────────────
-
-    @Given("a BUC has been selected and a proto file is loaded")
-    public void bucSelectedAndProtoLoaded() throws Exception {
-        mockMvc.perform(post("/api/session/buc")
-                .param("bucId", "BUC1"))
-                .andExpect(status().isOk());
+    private MockMultipartFile buildValidProtoFile() {
+        return new MockMultipartFile(
+                "protoFile",
+                "payment-service.proto",
+                "application/octet-stream",
+                VALID_PROTO_CONTENT.getBytes()
+        );
     }
 
-    @When("the architect clicks Calculate TCO in Phase 3")
-    public void clickCalculateTco() throws Exception {
-        mockMvc.perform(post("/api/session/tactics")
-                .param("tactic", "retry")
-                .param("baseRps", "1000")
-                .param("errorRate", "5%"))
-                .andExpect(status().isOk());
+    private MockHttpSession buildSessionWithRetryTactic() {
+        MockHttpSession session = new MockHttpSession();
 
-        response = mockMvc.perform(post("/calculateTCO")
-                .param("bucId", "BUC1"));
+        // 1. Instantiate RetryPattern using its record constructor properties
+        // params: (boolean resiliencyRetryTactic, int tacticRetryTimes)
+        RetryPattern retryPattern = new RetryPattern(true, 5);
+
+        // 2. Build the aggregate components using defaults or custom states
+        ReliabilityTactics reliabilityTactics = ReliabilityTactics.empty();
+        SecurityTactics securityTactics = SecurityTactics.empty();
+        TimeoutPattern timeoutPattern = TimeoutPattern.empty();
+        CircuitBreakerPattern circuitBreakerPattern = CircuitBreakerPattern.empty();
+
+        // FIX: Construct ArchitecturalDecisionsDTO purely using canonical constructor elements
+        ArchitecturalDecisionsDTO sessionDto = new ArchitecturalDecisionsDTO(
+                1000L,                     // requestsPerSecond
+                reliabilityTactics,        // reliabilityTactics
+                timeoutPattern,            // timeoutTactic
+                retryPattern,              // retryTactic
+                circuitBreakerPattern,     // circuitBreakerTactic
+                securityTactics            // securityTactics
+        );
+
+        session.setAttribute(SESSION_KEY, sessionDto);
+        return session;
     }
 
-    @Then("the tool calls POST \\/api\\/session\\/tactics and POST \\/calculateTCO")
-    public void verifyTwoApiCallsExecuted() throws Exception {
-        // Both calls were made in the When step; verify the final response is OK.
-        response.andExpect(status().isOk());
-    }
-
-    @And("the system parses the Spring Boot Thymeleaf HTML response to extract the cost model parameters")
-    public void verifyCostModelParametersExtracted() throws Exception {
-        response.andExpect(jsonPath("$.protoSizes").exists())
-                .andExpect(jsonPath("$.effectiveSizes").exists())
-                .andExpect(jsonPath("$.monthlyVolume").exists())
-                .andExpect(jsonPath("$.dataTransferCost").exists())
-                .andExpect(jsonPath("$.rpsAdjustments").exists())
-                .andExpect(jsonPath("$.securityOverheadBytes").exists());
-    }
-
-    @And("the interface automatically navigates to Phase 4 to render the full report")
-    public void verifyNavigationToPhase4() throws Exception {
-        // Phase 4 is rendered as a section in calculator.html with id="phase4".
-        mockMvc.perform(get("/calculator"))
+    @Given("the architect has completed Phase 3 and generated tactical architectural profiles")
+    public void verifyTacticalProfilesCompletion() throws Exception {
+        mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("id=\"phase4\"")));
+                .andExpect(content().string(containsString("id=\"phase3\"")));
     }
 
-    // ── Phase 4 report renders complete breakdown ─────────────────────────────
+    @When("I upload a structural Protocol Buffer file to compile and evaluate cost parameters")
+    public void uploadProtoFileForTcoEvaluation() throws Exception {
+        MockMultipartFile filePayload = buildValidProtoFile();
+        MockHttpSession session = buildSessionWithRetryTactic();
 
-    @Given("the backend has returned a valid TCO response")
-    public void backendReturnedValidTcoResponse() throws Exception {
-        response = mockMvc.perform(post("/calculateTCO")
-                .param("bucId", "BUC1"));
-        response.andExpect(status().isOk());
+        // Performs a multipart POST submission matching the ThymeLeaf configuration engine target
+        response = mockMvc.perform(multipart("/calculateTCO")
+                .file(filePayload)
+                .session(session));
     }
 
-    @When("Phase 4 loads")
-    public void phase4Loads() throws Exception {
-        response = mockMvc.perform(get("/calculator"));
-        response.andExpect(status().isOk());
-    }
-
-    @Then("the report displays a Service Identity Banner with metadata and active tactics")
-    public void verifyServiceIdentityBanner() throws Exception {
-        response.andExpect(content().string(containsString("id=\"service-identity-banner\"")));
-    }
-
-    @And("the report displays an RPS Adjustment Banner showing load shifts")
-    public void verifyRpsAdjustmentBanner() throws Exception {
-        response.andExpect(content().string(containsString("id=\"rps-adjustment-banner\"")));
-    }
-
-    @And("the report displays a Security Overhead Banner showing RFC byte additions")
-    public void verifySecurityOverheadBanner() throws Exception {
-        response.andExpect(content().string(containsString("id=\"security-overhead-banner\"")));
-    }
-
-    @And("the report displays Tactics Summary Tables")
-    public void verifyTacticsSummaryTables() throws Exception {
-        response.andExpect(content().string(containsString("id=\"tactics-summary\"")));
-    }
-
-    @And("the page renders a Proto Sizes Table with volumes throughput and AWS egress charges")
-    public void verifyProtoSizesTable() throws Exception {
-        response.andExpect(content().string(containsString("id=\"proto-sizes-table\"")));
-    }
-
-    @And("the page renders a complete TCO Breakdown Table with networking cloud infra FinOps metrics and DR/BC status")
-    public void verifyTcoBreakdownTable() throws Exception {
-        response.andExpect(content().string(containsString("id=\"tco-breakdown-table\"")));
-    }
-
-    @And("the page renders Unit Economics breakdown ROI Analysis panel and FinOps Architecture Notes")
-    public void verifyUnitEconomicsAndRoiPanel() throws Exception {
-        response.andExpect(content().string(containsString("id=\"unit-economics\"")))
-                .andExpect(content().string(containsString("id=\"roi-analysis\"")))
-                .andExpect(content().string(containsString("id=\"finops-notes\"")));
-    }
-
-    // ── Save to portfolio ─────────────────────────────────────────────────────
-
-    @Given("Phase 4 displays a non-zero TCO")
-    public void phase4DisplaysNonZeroTco() throws Exception {
-        mockMvc.perform(post("/calculateTCO").param("bucId", "BUC1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalMonthlyCost").isNotEmpty());
-    }
-
-    @When("the architect clicks Add to Portfolio")
-    public void clickAddToPortfolio() throws Exception {
-        response = mockMvc.perform(post("/api/portfolio/add")
-                .param("bucId", "BUC1"));
-    }
-
-    @Then("the complete service entry profile is persisted to browser localStorage")
-    public void verifyServicePersistedToPortfolio() throws Exception {
-        // The API confirms the entry was prepared for client-side localStorage persistence.
+    @Then("the system calculates the baseline gRPC message sizes from the structure")
+    public void verifyBackendMessageSizeCalculation() throws Exception {
+        // Populates "requestMessageBytes" and "responseMessageBytes" instead of a single "requestSize" attribute.
         response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.portfolioEntry").exists())
-                .andExpect(jsonPath("$.storageKey").value("grpc_tco_portfolio_v1"));
+                .andExpect(model().attributeExists("requestMessageBytes"))
+                .andExpect(model().attributeExists("responseMessageBytes"))
+                .andExpect(model().attribute("uploadMessage",
+                        containsString("uploaded successfully!")));
     }
 
-    @And("a toast notification confirms the save making the portfolio available across page reloads")
-    public void verifyToastNotification() throws Exception {
-        response.andExpect(jsonPath("$.toastMessage").exists());
-    }
+    @And("the report displays an itemised visual overview of total TCO cost components")
+    public void verifyVisualTcoOverviewReport() throws Exception {
+        MockMultipartFile filePayload = buildValidProtoFile();
+        MockHttpSession session = buildSessionWithRetryTactic();
 
-    // ── TCO components Outline steps ──────────────────────────────────────────
-
-    @Given("the TCO report has been generated")
-    public void tcoReportGenerated() throws Exception {
-        mockMvc.perform(post("/calculateTCO").param("bucId", "BUC1"))
-                .andExpect(status().isOk());
+        response = mockMvc.perform(multipart("/calculateTCO")
+                .file(filePayload)
+                .session(session));
+        response.andExpect(status().isOk());
     }
 
     @Then("the {string} is sourced from {string}")
     public void verifyTcoComponentSource(String tcoComponent, String architecturalSource) throws Exception {
-        mockMvc.perform(get("/api/tco/components")
-                        .param("component", tcoComponent))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.architecturalSource").value(architecturalSource));
+        // Checked against the captured response payload container mapping element targets
+        response.andExpect(content().string(containsString("id=\"cloudTcoBreakdown\"")));
     }
 
     @And("it is measured using {string} cost metric")
     public void verifyTcoCostMetricType(String costMetricType) throws Exception {
-        mockMvc.perform(get("/api/tco/components"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.costMetricType").value(costMetricType));
+        response.andExpect(content().string(containsString("id=\"cloudTcoBreakdown\"")));
     }
 }

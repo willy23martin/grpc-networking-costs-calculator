@@ -4,10 +4,11 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.containsString;
 
@@ -26,15 +27,23 @@ public class MapCloudServicesToImplementTheChosenTacticsSteps {
         // Sets up test security context/session if required
     }
 
-    // FIX: The original step asserted "Cloud Tactics &amp; Patterns" which is the correct
-    // HTML-encoded text in the template. No change needed here, but the assertion was only
-    // reachable after Spring context was properly shared via CucumberSpringConfiguration.
     @Given("the architect is configuring tactics in the Cloud Tactics & Patterns panel")
     public void verifyCloudTacticsPanelPresence() throws Exception {
-        mockMvc.perform(get("/calculateTCO"))
-                .andExpect(status().isOk())
+        // Create a dummy multipart file payload to satisfy the controller parameter
+        MockMultipartFile dummyFile = new MockMultipartFile(
+                "file",
+                "architecture.proto",
+                "application/octet-stream",
+                "syntax = \"proto3\";".getBytes()
+        );
+
+        // Change post("/calculateTCO") to a multipart request
+        mockMvc.perform(multipart("/calculateTCO")
+                        .file(dummyFile)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"cat-cloud-tactics\"")))
-                .andExpect(content().string(containsString("Cloud Tactics &amp; Patterns")));
+                .andExpect(content().string(containsString("Cloud Tactics &amp; Patterns")))
+                .andExpect(content().string(containsString("id=\"phase3\"")));
+
     }
 
     @Given("I have selected pattern or tactic {string} for implementation")
@@ -62,7 +71,7 @@ public class MapCloudServicesToImplementTheChosenTacticsSteps {
                 .andExpect(status().isOk());
         // AWS-specific UI assertions added only when provider is AWS:
         if ("AWS".equals(activeCloudProvider)) {
-            mockMvc.perform(get("/calculateTCO"))
+            mockMvc.perform(post("/calculateTCO"))
                     .andExpect(content().string(containsString("id=\"cat-cloud-tactics\"")));
         }
     }

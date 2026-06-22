@@ -3,6 +3,8 @@ package com.calculator.domain.repository.reliability;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
 import com.calculator.domain.model.architecture.ArchitecturalTactic;
 import com.calculator.domain.model.cost.InfrastructureCost;
+import com.calculator.domain.model.cost.NetworkingCost;
+import com.calculator.domain.model.cost.networking.NetworkingCostCriteria;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.QualityTradeoff;
@@ -46,10 +48,13 @@ public class ReliabilityArchitecturalDecisionRepository {
                 .name("Client-side Load Balancing")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
-                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .name(ArchitecturalCharacteristics.RELIABILITY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
-                        new InfrastructureCost("No additional costs as balancing happens in the gRPC client")
+                        new NetworkingCost(
+                                NetworkingCostCriteria.NONE,
+                                "Bypasses central proxy overhead with client-side load balancing." // <-- CHANGE THIS LINE
+                        )
                 )
                 .build();
     }
@@ -78,7 +83,7 @@ public class ReliabilityArchitecturalDecisionRepository {
                 .name("Server-side Load Balancing")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
-                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .name(ArchitecturalCharacteristics.RELIABILITY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(

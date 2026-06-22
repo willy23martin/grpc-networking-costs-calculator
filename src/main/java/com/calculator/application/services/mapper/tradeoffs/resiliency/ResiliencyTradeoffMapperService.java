@@ -1,6 +1,5 @@
 package com.calculator.application.services.mapper.tradeoffs.resiliency;
 
-import com.calculator.domain.dto.tactics.reliability.ReliabilityTradeoffDTO;
 import com.calculator.domain.dto.tactics.resiliency.ResiliencyTradeoffDTO;
 import com.calculator.domain.model.architecture.*;
 import com.calculator.domain.repository.ArchitecturalDecisionRepository;

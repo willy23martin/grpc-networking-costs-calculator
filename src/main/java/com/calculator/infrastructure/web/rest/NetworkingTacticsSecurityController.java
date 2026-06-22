@@ -69,7 +69,11 @@ public class NetworkingTacticsSecurityController {
                 effectiveRpsRequest.getRetryErrorPercentage()
         );
 
-        InterceptorType interceptorType = effectiveRpsRequest.getInterceptorType().equals(InterceptorType.UNARY.name()) ? InterceptorType.UNARY : InterceptorType.STREAM;
+        InterceptorType interceptorType = InterceptorType.UNARY;
+        if(effectiveRpsRequest.getInterceptorType() != null) {
+            interceptorType = effectiveRpsRequest.getInterceptorType().equals(InterceptorType.UNARY.name()) ? InterceptorType.UNARY : InterceptorType.STREAM;
+        }
+
         OAuthTokenValidationModes oAuthTokenValidationMode = effectiveRpsRequest.getTokenValidationMode().equals(OAuthTokenValidationModes.LOCAL.name()) ? OAuthTokenValidationModes.LOCAL : OAuthTokenValidationModes.REMOTE_INTROSPECTION;
 
         SecurityTactics securityTactics = new SecurityTactics(
@@ -168,7 +172,9 @@ public class NetworkingTacticsSecurityController {
         // Assign final payload states
         effectiveRpsResponse.setEffectiveRps((int) coreCalculatedEffectiveRps);
         System.out.println("coreCalculatedEffectiveRps: " + coreCalculatedEffectiveRps);
+        System.out.println("TOTAL EXTRA: " + totalExtra);
         effectiveRpsResponse.setRpsWasAdjusted(totalExtra != 0);
+        System.out.println("effectiveRpsResponse: " + totalExtra);
 
         return ResponseEntity.ok(effectiveRpsResponse);
     }

@@ -7,6 +7,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.List;
+
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
@@ -14,14 +16,18 @@ public final class FinOpsStrategy extends ArchitecturalDecision {
 
     private String name;
 
+    private List<CloudService> cloudServices;
+
     @Builder
     public FinOpsStrategy(
             String id,
             String name,
             ArchitecturalCharacteristic architecturalCharacteristic,
-            CostFactor costFactor
+            CostFactor costFactor,
+            List<CloudService> cloudServices
     ) {
         super(id, architecturalCharacteristic, costFactor);
         this.name = name;
+        this.cloudServices = cloudServices;
     }
 }

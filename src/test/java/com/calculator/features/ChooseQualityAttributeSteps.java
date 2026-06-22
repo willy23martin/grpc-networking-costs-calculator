@@ -3,24 +3,23 @@ package com.calculator.features;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
-import io.cucumber.datatable.DataTable;
+import io.cucumber.java.en.And;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
+import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.containsString;
 
-// NOTE: @SpringBootTest and @AutoConfigureMockMvc removed — see CucumberSpringConfiguration.
 public class ChooseQualityAttributeSteps {
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
 
     private String currentRequirement;
-    private String currentQualityAttr;
+    private String currentCharacteristic;
+    private ResultActions responseResult;
 
     @Given("the architect is on the TCO Networking Costs Calculator interface")
     public void navigateToCalculator() throws Exception {
@@ -29,73 +28,88 @@ public class ChooseQualityAttributeSteps {
                 .andExpect(view().name("calculator"));
     }
 
-    @Given("the system must operate correctly over time without failures")
-    public void setupReliabilityContext() {
-        this.currentRequirement = "Correct operation over time needs";
+    @Given("the system must withstand failures and recover quickly to maintain essential operations")
+    public void setupResiliencyPreconditions() {
+        // UI Context placeholder
     }
 
-    @Given("the system must withstand failures and recover quickly to maintain essential operations")
-    public void setupResiliencyContext() {
-        this.currentRequirement = "Failure recovery needs";
+    @When("I select {string} as the primary architectural driver")
+    public void selectPrimaryArchitecturalDriver(String attribute) throws Exception {
+        responseResult = mockMvc.perform(get("/").param("driver", attribute))
+                .andExpect(status().isOk());
+    }
+
+    @Then("the system should list applicable {string}")
+    public void verifyApplicableTacticsListed(String expectedTacticLabel) throws Exception {
+        // Validates that the parsed template lists structural components for the chosen attribute
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"cat-cloud-tactics\"")));
+    }
+
+    @And("suggest potential {string} supporting {string}")
+    public void verifyArchitecturalPatternsSuggested(String patternsLabel, String targetCharacteristic) throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"cat-cloud-tactics\"")));
+    }
+
+    @Given("the system must operate correctly over time without failures")
+    public void setupReliabilityPreconditions() {
+        // UI Context placeholder
+    }
+
+    @When("I select {string} as the primary quality attribute")
+    public void selectPrimaryQualityAttribute(String attribute) throws Exception {
+        responseResult = mockMvc.perform(get("/").param("driver", attribute))
+                .andExpect(status().isOk());
     }
 
     @Given("the system processes sensitive data")
-    public void setupSecurityContext() {
-        this.currentRequirement = "Data protection needs";
+    public void setupSecurityPreconditions() {
+        // UI Context placeholder
     }
 
-    @When("I view or select {string} tactics in the interface")
-    public void selectQualityAttributeInUi(String qualityAttr) {
-        this.currentQualityAttr = qualityAttr;
-    }
+    // --- API DataDriven Steps Configuration ---
 
-    @Then("the system should list the following applicable reliability options:")
-    public void verifyReliabilityOptions(DataTable table) throws Exception {
-        List<String> expectedOptions = table.asList();
-        mockMvc.perform(get("/calculateTCO"))
-                .andExpect(content().string(containsString("id=\"body-reliability\"")))
-                .andExpect(content().string(containsString("tactic-client-lb")))
-                .andExpect(content().string(containsString("tactic-server-lb")))
-                // Timeout-Deadline and Timeout-Cancellation are both represented by tactic-timeout
-                .andExpect(content().string(containsString("tactic-timeout")));
-    }
-
-    @Then("the system should list the following applicable resiliency options:")
-    public void verifyResiliencyOptions(DataTable table) throws Exception {
-        mockMvc.perform(get("/calculateTCO"))
-                .andExpect(content().string(containsString("id=\"body-resiliency\"")))
-                .andExpect(content().string(containsString("tactic-retry")))
-                .andExpect(content().string(containsString("tactic-cb")));
-    }
-
-    @Then("the system should list the following applicable security options:")
-    public void verifySecurityOptions(DataTable table) throws Exception {
-        mockMvc.perform(get("/calculateTCO"))
-                .andExpect(content().string(containsString("tactic-tls")))
-                .andExpect(content().string(containsString("tactic-oauth")));
-    }
-
-    @Then("suggest potential architectural patterns supporting {string}")
-    public void verifySuggestedPatterns(String attribute) {
-        // Asserts that the corresponding UI description block lists the correct architectural patterns
-    }
-
-    @Given("a project with business requirement {string}")
+    @Given("a project with {string}")
     public void setBusinessRequirement(String requirement) {
         this.currentRequirement = requirement;
     }
 
-    @When("the backend processes a request for quality attribute {string}")
+    @When("I select {string} as an architectural driver")
     public void processApiRequest(String qualityAttr) {
-        this.currentQualityAttr = qualityAttr;
+        this.currentCharacteristic = qualityAttr;
     }
 
     @Then("the REST service response should suggest {string} as potential implementation options")
-    public void verifyApiResponse(String expectedTactics) throws Exception {
-        mockMvc.perform(get("/api/tactics/recommend")
-                        .param("requirement", currentRequirement)
-                        .param("attribute", currentQualityAttr))
+    public void verifyApiResponse(String recommendedTactics) throws Exception {
+        String targetApiPath;
+        switch (currentCharacteristic.toLowerCase()) {
+            case "reliability": targetApiPath = "/api/reliability/tactic-mappings"; break;
+            case "resiliency":  targetApiPath = "/api/resiliency/tactic-mappings"; break;
+            case "security":    targetApiPath = "/api/security/tactic-mappings"; break;
+            default:            targetApiPath = "/api/tactics/recommend"; break;
+        }
+
+        String responseContent = mockMvc.perform(get(targetApiPath)
+                        .param("requirement", currentRequirement))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.recommendedTactics").value(expectedTactics));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        verify(recommendedTactics, responseContent);
+    }
+
+    private static void verify(String recommendedTactics, String responseContent) {
+        String[] tacticsArray = recommendedTactics.split(",");
+        for (String tactic : tacticsArray) {
+            String trimmedTactic = tactic.trim();
+            org.hamcrest.MatcherAssert.assertThat(
+                    responseContent,
+                    org.hamcrest.Matchers.containsString(trimmedTactic)
+            );
+        }
     }
 }

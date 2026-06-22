@@ -1,6 +1,9 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.domain.model.architecture.ArchitecturalDecision;
+import com.calculator.domain.repository.ArchitecturalDecisionRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +34,10 @@ public class UnitEconomicsController {
     private static final double SECONDS_PER_MONTH = 2_592_000.0;
     private static final int    MONTHS_PER_YEAR   = 12;
     private static final int    DAYS_PER_MONTH    = 30;
+
+    // Add injection below the existing constants:
+    @Autowired
+    private ArchitecturalDecisionRepository architecturalDecisionRepository;
 
     /* ================================================================
        POST /api/cost/cloud-infra-total — REQUEST DTO
@@ -139,6 +146,8 @@ public class UnitEconomicsController {
         @JsonProperty public int     breakEvenUsers;
         @JsonProperty public double  revenuePerDollarInfra;
         @JsonProperty public double  netMarginPerUserMonthly;
+        // Add to the existing UnitEconomicsResponse static inner class:
+        @JsonProperty public String affordabilityImpact; // "INHIBITS" | "PROMOTES" | "ORTHOGONAL"
     }
 
     /* ================================================================
@@ -148,45 +157,24 @@ public class UnitEconomicsController {
     public ResponseEntity<UnitEconomicsResponse> calculateUnitEconomics(
             @RequestBody UnitEconomicsRequest req) {
 
-        UnitEconomicsResponse resp = new UnitEconomicsResponse();
+        // Gather all available architectural decisions across all three
+        // characteristics (reliability, resiliency, security) so the
+        // affordability trade-off summary can reason across the full set.
+        List<ArchitecturalDecision> allDecisions = new ArrayList<>();
+        allDecisions.addAll(architecturalDecisionRepository.getAvailableReliabilityDecisions());
+        allDecisions.addAll(architecturalDecisionRepository.getAvailableResiliencyDecisions());
+        allDecisions.addAll(architecturalDecisionRepository.getAvailableSecurityDecisions());
 
-        int    safeConsumers = Math.max(1, req.consumerCount);
-        double totalTco      = Math.max(0, req.egressTransferCostUsd + req.cloudInfraCostUsd);
-        long   monthlyReqs   = (long) req.effectiveRps * (long) SECONDS_PER_MONTH;
+        com.calculator.domain.model.economics.CostEfficiencyCalculator calculator = new com.calculator.domain.model.economics.CostEfficiencyCalculator(allDecisions)
+                .withEgressCost(req.egressTransferCostUsd)
+                .withCloudInfraCost(req.cloudInfraCostUsd)
+                .withFinOpsSaving(req.finopsSavingUsd)
+                .withEffectiveRps(req.effectiveRps)
+                .withConsumerCount(req.consumerCount)
+                .withRevenuePerUserPerMonth(req.revenuePerUserPerMonth);
 
-        /* ── TCO ── */
-        resp.totalMonthlyTcoUsd  = round2(totalTco);
-        resp.totalAnnualTcoUsd   = round2(totalTco * MONTHS_PER_YEAR);
-        resp.egressCostUsd       = round2(req.egressTransferCostUsd);
-        resp.cloudInfraCostUsd   = round2(req.cloudInfraCostUsd);
-        resp.finopsSavingUsd     = round2(req.finopsSavingUsd);
-        resp.totalMonthlyRequests = monthlyReqs;
-
-        /* ── Unit costs ── */
-        resp.costPerRequestUsd       = monthlyReqs > 0 ? round6(totalTco / monthlyReqs) : 0;
-        resp.costPerUserPerMonthUsd  = round4(totalTco / safeConsumers);
-        resp.costPerUserPerDayUsd    = round6(resp.costPerUserPerMonthUsd / DAYS_PER_MONTH);
-
-        /* ── ROI (only when revenue is provided) ── */
-        double revenue = req.revenuePerUserPerMonth;
-        resp.hasRevenueData = revenue > 0;
-
-        if (resp.hasRevenueData) {
-            double totalMonthlyRevenue = revenue * safeConsumers;
-            double netProfit           = totalMonthlyRevenue - totalTco;
-
-            resp.totalMonthlyRevenueUsd  = round2(totalMonthlyRevenue);
-            resp.totalAnnualRevenueUsd   = round2(totalMonthlyRevenue * MONTHS_PER_YEAR);
-            resp.arpuMonthly             = round2(revenue);
-            resp.monthlyRoiPct           = totalTco > 0 ? round2(netProfit / totalTco * 100) : 0;
-            resp.annualRoiPct            = resp.monthlyRoiPct;  // same ratio, annualised inputs
-            resp.netMonthlyProfitUsd     = round2(netProfit);
-            resp.netAnnualProfitUsd      = round2(netProfit * MONTHS_PER_YEAR);
-            resp.breakEvenUsers          = (revenue > 0 && totalTco > 0)
-                    ? (int) Math.ceil(totalTco / revenue) : 0;
-            resp.revenuePerDollarInfra   = totalTco > 0 ? round2(totalMonthlyRevenue / totalTco) : 0;
-            resp.netMarginPerUserMonthly = round4(revenue - resp.costPerUserPerMonthUsd);
-        }
+        UnitEconomicsResponse resp = calculator.calculateUnitEconomics();
+        resp.affordabilityImpact = calculator.summariseAffordabilityImpact().name();
 
         return ResponseEntity.ok(resp);
     }

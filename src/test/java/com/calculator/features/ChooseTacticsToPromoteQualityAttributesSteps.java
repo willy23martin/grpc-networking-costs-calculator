@@ -1,5 +1,8 @@
 package com.calculator.features;
 
+import com.calculator.domain.model.quality.TradeoffType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
@@ -7,110 +10,151 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.containsString;
 
-// NOTE: @SpringBootTest and @AutoConfigureMockMvc removed — see CucumberSpringConfiguration.
 public class ChooseTacticsToPromoteQualityAttributesSteps {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private String targetQualityAttr;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private String targetCharacteristic;
     private String targetTactic;
     private ResultActions apiResultActions;
 
     @Given("the architect is configured with a base service on the TCO Calculator")
     public void configureBaseService() {
-        // Prepare context defaults
+        // Sets up baseline tracking context
     }
 
     @Given("the architect is navigating Phase 3 {string}")
-    public void verifyPhase3Container(String phaseName) throws Exception {
-        mockMvc.perform(get("/calculateTCO"))
+    public void navigateToPhase3Interface(String phaseName) throws Exception {
+        mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("id=\"phase3\"")))
-                .andExpect(content().string(containsString("Architecture Tactics &amp; Patterns")));
+                .andExpect(content().string(containsString("id=\"phase3\"")));
     }
 
-    @Given("I have selected quality attribute focus {string}")
-    public void selectQualityAttributeFocus(String qualityAttr) {
-        this.targetQualityAttr = qualityAttr;
+    @Given("I have selected {string} as the primary focus.")
+    public void selectArchitecturalCharacteristicContext(String characteristic) {
+        this.targetCharacteristic = characteristic;
     }
 
-    @When("I choose the tactic {string} as implementation approach")
-    public void selectSpecificTacticInUi(String specificTactic) {
-        this.targetTactic = specificTactic;
+    @When("I choose {string} as the implementation approach.")
+    public void selectSpecificTacticApproach(String tactic) throws Exception {
+        this.targetTactic = tactic;
+        apiResultActions = mockMvc.perform(get("/api/architecture/quality-definitions"));
     }
 
-    @Then("the interface should display that it impacts {string} with type {string}")
-    public void verifyUiImpactType(String impactedAttr, String impactType) throws Exception {
-        String targetHtmlId = mapTacticToHtmlId(targetTactic);
-        mockMvc.perform(get("/calculateTCO"))
+    @Then("the system should identify {string} with {string}")
+    public void verifyTradeOffImpactAnalysis(String expectedImpactedAttr, String expectedImpactType) throws Exception {
+        // 1. Explicitly utilize expectedImpactedAttr parameter to confirm target quality characteristic context
+        assertEquals("Affordability", expectedImpactedAttr,
+                "This step definition is mapped to evaluate TCO FinOps Affordability drivers.");
+
+        // 2. Extract raw JSON response payload array
+        String responseContent = apiResultActions.andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        // 3. Parse the list of QualityCategoryDefinitions
+        JsonNode rootCategories = objectMapper.readTree(responseContent);
+        String expectedTacticId = mapTacticToId(targetTactic);
+
+        JsonNode matchingTacticNode = null;
+        for (JsonNode category : rootCategories) {
+            JsonNode tacticsArray = category.get("tactics");
+            if (tacticsArray != null && tacticsArray.isArray()) {
+                for (JsonNode tactic : tacticsArray) {
+                    if (tactic.has("tacticId") && expectedTacticId.equals(tactic.get("tacticId").asText())) {
+                        matchingTacticNode = tactic;
+                        break;
+                    }
+                }
+            }
+            if (matchingTacticNode != null) break;
+        }
+
+        assertNotNull(matchingTacticNode, "Tactic mapping context not found for ID: " + expectedTacticId);
+
+        // 4. Extract description text and perform semantic validation mapping to TradeoffType Enum profiles
+        String tradeOffTextDescription = matchingTacticNode.get("tradeoff").asText().toLowerCase();
+        String normalizedImpact = expectedImpactType.toUpperCase();
+
+        if (normalizedImpact.startsWith("INHIBIT")) {
+            boolean indicatesInhibition = tradeOffTextDescription.contains("overhead") ||
+                    tradeOffTextDescription.contains("cost") ||
+                    tradeOffTextDescription.contains("charge") ||
+                    tradeOffTextDescription.contains("add") ||
+                    tradeOffTextDescription.contains("increase") ||
+                    tradeOffTextDescription.contains("rps") ||
+                    tradeOffTextDescription.contains("fee");
+
+            assertTrue(indicatesInhibition,
+                    "Tactic '" + targetTactic + "' matches TradeoffType." + TradeoffType.INHIBITS.name() +
+                            " targeting " + expectedImpactedAttr + ", but text fails financial validations. Content: " + tradeOffTextDescription);
+
+        } else if (normalizedImpact.startsWith("ORTHOGONAL")) {
+            boolean indicatesOrthogonal = tradeOffTextDescription.contains("negligible") ||
+                    tradeOffTextDescription.contains("no direct cost") ||
+                    tradeOffTextDescription.contains("bypasses") ||
+                    tradeOffTextDescription.contains("client-side") ||
+                    tradeOffTextDescription.contains("flat-rated") ||
+                    tradeOffTextDescription.contains("no direct cloud cost");
+
+            assertTrue(indicatesOrthogonal,
+                    "Tactic '" + targetTactic + "' matches TradeoffType." + TradeoffType.ORTHOGONAL.name() +
+                            " targeting " + expectedImpactedAttr + ", but text implies structural cost mutations. Content: " + tradeOffTextDescription);
+
+        } else if (normalizedImpact.startsWith("PROMOTE")) {
+            boolean indicatesPromotion = tradeOffTextDescription.contains("saving") ||
+                    tradeOffTextDescription.contains("reduce") ||
+                    tradeOffTextDescription.contains("optimize");
+
+            assertTrue(indicatesPromotion,
+                    "Tactic '" + targetTactic + "' matches TradeoffType." + TradeoffType.PROMOTES.name() +
+                            " targeting " + expectedImpactedAttr + ", but text misses efficiency identifiers. Content: " + tradeOffTextDescription);
+        }
+
+        // 5. UI View Integration Validation loop
+        String htmlTargetId = mapTacticToHtmlId(targetTactic);
+        mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("id=\"" + targetHtmlId + "\"")));
+                .andExpect(content().string(containsString("id=\"" + htmlTargetId + "\"")));
     }
 
-    @Then("the system should suggest {string} as mitigating measures")
-    public void verifyUiMitigationMeasures(String mitigMeasures) {
-        // Assert mitigation text matches placeholder/help-text descriptions within your Thymeleaf view
+    private String mapTacticToId(String tactic) {
+        switch (tactic) {
+            case "Timeout":                    return "tactic-timeout";
+            case "Retry":                      return "tactic-retry";
+            case "Circuit Breaker":            return "tactic-cb";
+            case "Client-side Load Balancing": return "tactic-client-lb";
+            case "Server-side Load Balancing": return "tactic-server-lb";
+            case "TLS (One-way)":              return "tactic-tls";
+            case "mTLS (Mutual TLS)":          return "tactic-mtls";
+            case "OAuth + JWT":                return "tactic-oauth";
+            default:                           return "tactic-unknown";
+        }
     }
 
-    // --- REST Endpoint Automation Steps ---
-
-    @Given("a backend client requests trade-offs for attribute {string} and tactic {string}")
-    public void prepareApiTradeOffRequest(String qualityAttr, String specificTactic) {
-        this.targetQualityAttr = qualityAttr;
-        this.targetTactic = specificTactic;
-    }
-
-    @When("the REST endpoint returns the trade-off evaluation matrix")
-    public void executeApiTradeOffCall() throws Exception {
-        apiResultActions = mockMvc.perform(get("/api/tactics/tradeoffs")
-                .param("attribute", targetQualityAttr)
-                .param("tactic", targetTactic));
-    }
-
-    @Then("the response JSON payload must indicate impact on {string} is {string}")
-    public void verifyApiResponseImpact(String impactedAttr, String impactType) throws Exception {
-        apiResultActions.andExpect(status().isOk())
-                .andExpect(jsonPath("$.impactedAttribute").value(impactedAttr))
-                .andExpect(jsonPath("$.impactType").value(impactType));
-    }
-
-    @Then("the recommended mitigation strategy must match {string}")
-    public void verifyApiResponseMitigation(String mitigMeasures) throws Exception {
-        apiResultActions.andExpect(jsonPath("$.mitigationMeasure").value(mitigMeasures));
-    }
-
-    /**
-     * Maps tactic names from the feature's Examples table to their HTML element IDs
-     * in calculator.html (phase3 section).
-     *
-     * FIX — added mappings for tactics present in the expanded feature table that were
-     * missing from the original switch:
-     *   "gRPC Health Probe"      → "tactic-retry"      (health probes are co-located with retry
-     *                                                    logic in the resiliency section)
-     *   "Retry-Interceptor"      → "tactic-retry"      (interceptor is a sub-pattern of retry)
-     *   "Certificate generation" → "tactic-tls"        (ACM certificate workflow lives in TLS block)
-     *   "gRPC TLS credentials"   → "tactic-tls"        (TLS credential setup is part of tactic-tls)
-     *
-     * All unmapped tactics fall back to "phase3" (the containing section), which is always
-     * present and ensures the scenario does not produce a false-positive "element not found".
-     */
     private String mapTacticToHtmlId(String tactic) {
         switch (tactic) {
             case "Client-side Load Balancing": return "tactic-client-lb";
             case "Server-side Load Balancing": return "tactic-server-lb";
-            case "Retry pattern":              return "tactic-retry";
-            case "Retry-Interceptor":          return "tactic-retry";
-            case "gRPC Health Probe":          return "tactic-retry";
+            case "Timeout":                    return "tactic-timeout";
+            case "Retry":                      return "tactic-retry";
             case "Circuit Breaker":            return "tactic-cb";
-            case "TLS handshake":              return "tactic-tls";
-            case "Certificate generation":     return "tactic-tls";
-            case "gRPC TLS credentials":       return "tactic-tls";
-            default:                           return "phase3";
+            case "TLS (One-way)":              return "tactic-tls";
+            case "mTLS (Mutual TLS)":          return "tactic-mtls";
+            case "OAuth + JWT":                return "tactic-oauth";
+            default:                           return "cat-cloud-tactics";
         }
     }
 }

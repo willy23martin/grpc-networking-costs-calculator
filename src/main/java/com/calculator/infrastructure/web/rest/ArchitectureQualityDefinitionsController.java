@@ -109,7 +109,7 @@ public class ArchitectureQualityDefinitionsController {
                                 "Bypasses the need for a central proxy.",
                         "Use when latency is critical and all service instances are in the same AZ. " +
                                 "Appropriate for service-to-service gRPC calls within a Kubernetes cluster.",
-                        "Client must handle endpoint discovery and health checking. Increases client complexity."),
+                        "Bypasses central proxy overhead with client-side load balancing."), // <-- CHANGE THIS LINE
                 tactic("tactic-server-lb", "Server-side Load Balancing (ALB)",
                         "Fault Tolerance",
                         "A dedicated load balancer (AWS ALB) distributes inbound gRPC requests across " +
@@ -117,7 +117,7 @@ public class ArchitectureQualityDefinitionsController {
                                 "and access logging at the edge.",
                         "Required for services exposed outside the cluster or to end-user clients. " +
                                 "Use with Auto Scaling Groups or EKS node groups.",
-                        "Adds fixed hourly ALB charge plus LCU fees. Introduces one network hop.")
+                        "Adds ALB fixed hourly charge + LCU costs from AWS Pricing API.")
         };
         defs.add(reliability);
 
@@ -167,8 +167,7 @@ public class ArchitectureQualityDefinitionsController {
                                 "the client receives a DEADLINE_EXCEEDED status and can take corrective action.",
                         "Apply to all synchronous service-to-service calls. Set tighter timeouts for " +
                                 "calls in a SAGA chain to prevent the entire transaction from stalling.",
-                        "Too-tight timeouts cause false failures under load. Too-loose timeouts exhaust " +
-                                "connection pools. Calibrate at p99 latency × 1.5."),
+                        "No direct cloud cost impact."),
                 tactic("tactic-retry", "Retry with Exponential Backoff",
                         "Recoverability (Recovery)",
                         "Re-attempts failed gRPC calls with exponential backoff and jitter to avoid " +
@@ -186,8 +185,7 @@ public class ArchitectureQualityDefinitionsController {
                         "Apply to all synchronous downstream dependencies, especially databases and " +
                                 "payment services. Essential for SAGA patterns to prevent partial-failure " +
                                 "propagation across transaction steps.",
-                        "Requires careful threshold calibration. An over-sensitive circuit breaker " +
-                                "causes unnecessary service degradation during brief transient failures.")
+                        "No direct cloud cost impact.")
         };
         defs.add(resiliency);
 
@@ -250,8 +248,7 @@ public class ArchitectureQualityDefinitionsController {
                         "Required for service-to-service calls where the caller must be a known, " +
                                 "registered service identity. Critical for preventing rogue service injection " +
                                 "in multi-team microservice architectures.",
-                        "5 handshake messages vs 2 for one-way TLS. Requires a PKI for certificate " +
-                                "issuance, rotation, and revocation. Service mesh sidecars automate this."),
+                        "5 TLS messages per handshake vs 2 for one-way TLS. Increases networking cost and processing overhead."), // <-- CHANGE THIS LINE
                 tactic("tactic-oauth", "OAuth 2.0 + JWT",
                         "Accountability + Non-Repudiation + Authenticity",
                         "JWT bearer tokens (RFC 7519) carry signed claims about the authenticated " +

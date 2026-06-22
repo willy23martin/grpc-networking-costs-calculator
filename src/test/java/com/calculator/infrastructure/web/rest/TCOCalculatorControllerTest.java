@@ -1,21 +1,5 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
-import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
-import com.calculator.application.services.compilators.CompilationService;
-import com.calculator.application.services.populator.TacticsPopulatorService;
-import com.calculator.application.services.protobuf.ProtocolBufferMessageSizeCalculationService;
-import com.calculator.application.services.protobuf.ProtocolBufferService;
-import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
-import com.calculator.domain.dto.compilers.ProtocCompiler;
-import com.calculator.domain.dto.properties.ProtoFileFullyQualifiedProperties;
-import com.calculator.domain.dto.protofiles.JavaParsedProtoFile;
-import com.calculator.domain.dto.protofiles.ParsedProtocolBufferFile;
-import com.calculator.domain.dto.results.CompilationResult;
-import com.calculator.domain.dto.results.MessageSizeCalculationResult;
-import com.calculator.domain.dto.tactics.security.SecurityTactics;
-import com.calculator.domain.dto.tactics.security.oauth.jwt.JWTTactic;
-import com.calculator.domain.dto.tactics.security.tls.TLSTactic;
 import com.calculator.shared.ProtocolBufferParsedFileUtils;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.AfterEach;
