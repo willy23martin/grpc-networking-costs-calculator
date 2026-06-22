@@ -6,8 +6,12 @@ import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Logger;
+
 @Service
 public class RequestPerSecondCostCalculatorService {
+
+    private final Logger log = Logger.getLogger(RequestPerSecondCostCalculatorService.class.getName());
 
     @Autowired
     RPSResiliencyCostCalculator rpsResiliencyCostCalculator;
@@ -15,7 +19,6 @@ public class RequestPerSecondCostCalculatorService {
     @Autowired
     RPSSecurityCostCalculator rpsSecurityCostCalculator;
 
-    // DESIGN PATTERN: COMPOSED METHOD
     public long calculateEffectiveRequestsPerSecond(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
         long effectiveRequestsPerSecond = architecturalDecisionsDTO.requestsPerSecond();
 
@@ -37,12 +40,12 @@ public class RequestPerSecondCostCalculatorService {
                     architecturalDecisionsDTO.retryTactic()
             );
         }
-        System.out.println("effectiveRequestsPerSecond addition from resiliency: " + addition);
-        System.out.println("effectiveRequestsPerSecond rps response: " + currentTrafficBaseline + addition);
+        log.info("effectiveRequestsPerSecond addition from resiliency: " + addition);
+        log.info("effectiveRequestsPerSecond rps response: " + currentTrafficBaseline + addition);
         return currentTrafficBaseline + addition;
     }
 
-    private static boolean resiliencyPatternsHaveBeenConfigured(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
+    private boolean resiliencyPatternsHaveBeenConfigured(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
         return architecturalDecisionsDTO.retryTactic().resiliencyRetryTactic() && architecturalDecisionsDTO.retryTactic().tacticRetryTimes() > 0;
     }
 

@@ -17,13 +17,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class NetworkingTacticsSecurityControllerTest {
+class EffectiveRPSCalculatorControllerTest {
 
     @Mock
     private RequestPerSecondCostCalculatorService requestPerSecondCostCalculatorService;
 
     @InjectMocks
-    private NetworkingTacticsSecurityController controller;
+    private EffectiveRPSCalculatorController controller;
 
     @Test
     void calculateEffectiveRps_zeroOrNegativeBaseRps() {

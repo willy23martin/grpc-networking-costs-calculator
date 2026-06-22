@@ -6,23 +6,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * TacticContributionController
- *
- * POST /api/cost/tactic-contributions
- *
- * Receives the full tactic state plus proto byte sizes already derived
- * by the backend from the uploaded .proto file.
- * Returns an itemised list of tactic contributions for the
- * "Cost contribution per selected tactic" breakdown table,
- * including the computed per-tactic monthly cost impact.
- *
- * AWS egress cost formula (tiered):
- *   Tier 1:  first 10,240 GB/mo  @ $0.09 /GB
- *   Tier 2:  next  40,960 GB/mo  @ $0.085/GB
- *   Tier 3:  next 102,400 GB/mo  @ $0.07 /GB
- *   Tier 4+: beyond 153,600 GB/mo @ $0.05 /GB
- */
+import static com.calculator.application.services.utils.MathUtils.round2;
+
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
@@ -253,8 +238,7 @@ public class TacticsContributionController {
 
         if (item.jwtOnRequestOnly && rpsCost == 0) {
             item.estimatedMonthlyCostUsd = 0;
-            item.costDisplayLabel = (jwtBytes > 0 ? "+" + jwtBytes + " B/req inbound (free) \u00b7 " : "")
-                    + "JWT egress cost = $0. Cost via token-acq RPS.";
+            item.costDisplayLabel = (jwtBytes > 0 ? "+" + jwtBytes + " B/req inbound (free)\n" : "");
         } else {
             item.estimatedMonthlyCostUsd = round2(rpsCost);
             item.costDisplayLabel = rpsCost >= 0.005
@@ -331,9 +315,5 @@ public class TacticsContributionController {
         }
 
         return cost;
-    }
-
-    private static double round2(double value) {
-        return Math.round(value * 100.0) / 100.0;
     }
 }
