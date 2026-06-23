@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase3 @Activity5 @CloudTactics
+@CostEfficiencyCalculator @Phase3 @Activity5 @CloudTactics
 Feature: Cloud Infrastructure Tactics and Live Cost Delta
   As a Software Architect
   So that I can include cloud infrastructure costs beyond network egress in my TCO model

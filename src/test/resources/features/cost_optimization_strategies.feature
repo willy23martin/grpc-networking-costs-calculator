@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Activity5 @FinOps
+@CostEfficiencyCalculator @Activity5 @FinOps
 Feature: Cost Optimization Strategy Definition
   As a Software Architect
   So that I can reduce operational expenses while maintaining quality

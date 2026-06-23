@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @MapCloudServicesToImplementTheChosenTactics
+@CostEfficiencyCalculator @MapCloudServicesToImplementTheChosenTactics
 Feature: Cloud Service Mapping
   As a Software Architect
   So that I can implement a cost-aware architecture using concrete cloud provider offerings

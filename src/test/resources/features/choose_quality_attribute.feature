@@ -1,4 +1,4 @@
-@ArchitectureCalculator @ChooseQualityAttributeFeature
+@CostEfficiencyCalculator @ChooseQualityAttributeFeature
 Feature: Software Architectural Characteristic / Driver / Quality Attribute Selection
   As a Software Architect
   So that I can design a MACH Architecture that meets business-context-driven non-functional requirements

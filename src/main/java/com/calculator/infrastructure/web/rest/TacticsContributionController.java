@@ -1,6 +1,8 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.application.services.mapper.tradeoffs.security.SecurityTradeoffMapperService;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -85,9 +87,9 @@ public class TacticsContributionController {
         @JsonProperty public boolean usedPlaceholderBytes;
     }
 
-    /* ================================================================
-       ENDPOINT
-    ================================================================ */
+    @Autowired
+    SecurityTradeoffMapperService securityTradeoffMapperService;
+
     @PostMapping("/tactic-contributions")
     public ResponseEntity<TacticContributionResponse> calculateTacticContributions(
             @RequestBody TacticContributionRequest req) {

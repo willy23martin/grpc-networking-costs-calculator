@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase3 @Activity6 @LiveCostDelta
+@CostEfficiencyCalculator @Phase3 @Activity6 @LiveCostDelta
 Feature: Live Cost Delta Validation
   As a Software Architect
   So that I can understand the cumulative financial impact of my tactical decisions before committing

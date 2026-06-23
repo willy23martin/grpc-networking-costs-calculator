@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase1 @ServiceIdentity
+@CostEfficiencyCalculator @Phase1 @ServiceIdentity
 Feature: Base RPS drives all downstream cost estimates
   As a Software Architect
   So that I can understand the financial baseline of my service workload

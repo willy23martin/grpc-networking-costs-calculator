@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Activity6 @FinOps @Configuration
+@CostEfficiencyCalculator @Activity6 @FinOps @Configuration
 Feature: Cloud Service Configuration Modification
   As a Software Architect
   I want to modify cloud service configurations based on optimization strategies

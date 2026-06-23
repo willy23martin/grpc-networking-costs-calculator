@@ -7,7 +7,8 @@ import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.QualityTradeoff;
 import com.calculator.domain.model.quality.TradeoffType;
 import com.calculator.domain.model.quality.security.SecurityQualityTradeoff;
-import com.calculator.domain.repository.ArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +19,17 @@ import java.util.List;
 public class SecurityTradeoffMapperService {
 
     @Autowired
-    ArchitecturalDecisionRepository architecturalDecisionRepository;
+    SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+
+    @Autowired
+    CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
 
     public List<SecurityTradeoffsDTO> getSecurityTradeoffs() {
         List<SecurityTradeoffsDTO> securityMappings = new ArrayList<>();
-        List<ArchitecturalDecision> securityDecisions = architecturalDecisionRepository.getAvailableSecurityDecisions();
+
+        List<ArchitecturalDecision> securityDecisions = new ArrayList<>();
+        securityDecisions.addAll(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions());
+        securityDecisions.addAll(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions());
 
         for(var securityDecision: securityDecisions) {
             switch (securityDecision) {

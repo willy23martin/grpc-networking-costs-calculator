@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase4 @TCOReport
+@CostEfficiencyCalculator @Phase4 @TCOReport
 Feature: TCO Report Generation and Detailed Breakdown
   As a Software Architect
   So that I can present a financially grounded architecture decision to business stakeholders
@@ -12,7 +11,7 @@ Feature: TCO Report Generation and Detailed Breakdown
   Scenario: Submitting the proto file triggers backend cost calculation
     Given a BUC has been selected and a proto file is loaded
     When the architect clicks Calculate TCO in Phase 3
-    Then the tool calls POST /api/session/tactics and POST /calculateTCO
+    Then the tool calls POST api-session-tactics and POST calculateTCO
     And the system parses the Spring Boot Thymeleaf HTML response to extract the cost model parameters
     And the interface automatically navigates to Phase 4 to render the full report
 
@@ -45,6 +44,5 @@ Feature: TCO Report Generation and Detailed Breakdown
       | tco_component          | architectural_source          | cost_metric_type                |
       | AWS Egress (Networking)| Protocol Payload Parser       | Tiered Volume Data Transfer     |
       | ALB                    | Gateway Infrastructure        | Fixed Core + LCU Scaling        |
-      | ElastiCache            | Application Cache Tier        | Fixed Active Node-Hours         |
       | EC2 Replicas           | Scaled Compute Tier           | Sized Replica Node-Hours        |
       | FinOps Saving          | Programmatic Commitments      | Applied Discount Percentage     |

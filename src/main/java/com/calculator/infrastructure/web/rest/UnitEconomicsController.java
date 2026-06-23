@@ -2,7 +2,12 @@ package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.model.CostEfficiencyCalculator;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
-import com.calculator.domain.repository.ArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.resiliency.CloudResiliencyArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
+import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,18 +15,28 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+import static com.calculator.application.services.utils.MathUtils.round2;
+
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
 public class UnitEconomicsController {
 
-    private static final double SECONDS_PER_MONTH = 2_592_000.0;
-    private static final int    MONTHS_PER_YEAR   = 12;
-    private static final int    DAYS_PER_MONTH    = 30;
-
-    // Add injection below the existing constants:
     @Autowired
-    private ArchitecturalDecisionRepository architecturalDecisionRepository;
+    SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+    @Autowired
+    CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
+
+    @Autowired
+    ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository;
+    @Autowired
+    CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository;
+
+    @Autowired
+    ResiliencyArchitecturalDecisionRepository resiliencyArchitecturalDecisionRepository;
+    @Autowired
+    CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
+
 
     public static class CloudInfraTotalRequest {
         /** Costs already computed by the individual /api/cost/* calls */
@@ -126,13 +141,16 @@ public class UnitEconomicsController {
     public ResponseEntity<UnitEconomicsResponse> calculateUnitEconomics(
             @RequestBody UnitEconomicsRequest req) {
 
-        // Gather all available architectural decisions across all three
-        // characteristics (reliability, resiliency, security) so the
-        // affordability trade-off summary can reason across the full set.
         List<ArchitecturalDecision> allDecisions = new ArrayList<>();
-        allDecisions.addAll(architecturalDecisionRepository.getAvailableReliabilityDecisions());
-        allDecisions.addAll(architecturalDecisionRepository.getAvailableResiliencyDecisions());
-        allDecisions.addAll(architecturalDecisionRepository.getAvailableSecurityDecisions());
+
+        allDecisions.addAll(reliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions());
+        allDecisions.addAll(cloudReliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions());
+
+        allDecisions.addAll(resiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions());
+        allDecisions.addAll(cloudResiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions());
+
+        allDecisions.addAll(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions());
+        allDecisions.addAll(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions());
 
         CostEfficiencyCalculator calculator = new CostEfficiencyCalculator(allDecisions)
                 .withEgressCost(req.egressTransferCostUsd)
@@ -148,10 +166,4 @@ public class UnitEconomicsController {
         return ResponseEntity.ok(resp);
     }
 
-    /* ================================================================
-       UTILITIES
-    ================================================================ */
-    private static double round2(double v) { return Math.round(v * 100.0)   / 100.0; }
-    private static double round4(double v) { return Math.round(v * 10000.0) / 10000.0; }
-    private static double round6(double v) { return Math.round(v * 1000000.0) / 1000000.0; }
 }

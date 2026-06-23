@@ -11,7 +11,8 @@ import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.QualityTradeoff;
 import com.calculator.domain.model.quality.TradeoffType;
 import com.calculator.domain.model.quality.security.SecurityQualityTradeoff;
-import com.calculator.domain.repository.ArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,14 +30,18 @@ import static org.mockito.Mockito.when;
 class SecurityTradeoffMapperServiceTest {
 
     @Mock
-    private ArchitecturalDecisionRepository architecturalDecisionRepository;
+    private SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+
+    @Mock
+    private CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
 
     @InjectMocks
     private SecurityTradeoffMapperService service;
 
     @Test
     void getSecurityTradeoffs_emptyRepository_returnsEmptyList() {
-        when(architecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
+        when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
+        when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
 
         List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
 
@@ -76,7 +81,8 @@ class SecurityTradeoffMapperServiceTest {
                 .costFactor(new NetworkingCost(NetworkingCostCriteria.OVERHEAD, "Adds 650 Bytes per request header"))
                 .build();
 
-        when(architecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(List.of(tactic));
+        when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(List.of(tactic));
+        when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
 
         // Act
         List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
@@ -125,7 +131,9 @@ class SecurityTradeoffMapperServiceTest {
                 .costFactor(new InfrastructureCost("Flat rate of $1.00 per month per key"))
                 .build();
 
-        when(architecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(List.of(cloudService));
+        when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
+        when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(List.of(cloudService));
+
 
         // Act
         List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();

@@ -6,7 +6,8 @@ import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.QualityTradeoff;
 import com.calculator.domain.model.quality.TradeoffType;
-import com.calculator.domain.repository.ArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,16 @@ import java.util.List;
 public class ReliabilityTradeoffMapperService {
 
     @Autowired
-    ArchitecturalDecisionRepository architecturalDecisionRepository;
+    ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository;
+    @Autowired
+    CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository;
 
     public List<ReliabilityTradeoffDTO> getReliabilityTradeoffs() {
         List<ReliabilityTradeoffDTO> reliabilityMappings = new ArrayList<>();
-        List<ArchitecturalDecision> reliabilityDecisions = architecturalDecisionRepository.getAvailableReliabilityDecisions();
+
+        List<ArchitecturalDecision> reliabilityDecisions = new ArrayList<>();
+        reliabilityDecisions.addAll(reliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions());
+        reliabilityDecisions.addAll(cloudReliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions());
 
         for(var reliabilityDecision: reliabilityDecisions) {
             switch (reliabilityDecision) {

@@ -1,7 +1,8 @@
 package com.calculator.domain.repository.security;
 
-import com.calculator.domain.model.architecture.ArchitecturalDecision;
-import com.calculator.domain.model.architecture.ArchitecturalTactic;
+import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
+import com.calculator.domain.model.architecture.*;
+import com.calculator.domain.model.architecture.tactics.security.JWTOverhead;
 import com.calculator.domain.model.cost.NetworkingCost;
 import com.calculator.domain.model.cost.networking.NetworkingCostCriteria;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
@@ -13,9 +14,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class SecurityArchitecturalDecisionRepository {
+
+
 
     public List<ArchitecturalDecision> getAvailableSecurityDecisions() {
         return List.of(
@@ -71,7 +75,9 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
-                                "Adds ~29 B/frame TLS overhead. Reconnect RPS adds handshake requests."
+                                "Adds ~" +
+                                        TLSOverhead.RFC_8446_AES_GCM_AEAD_TLS_WITHOUT_PADDING_OVERHEAD_BYTES_MAX.getOverhead()
+                                + " B/frame TLS overhead. Reconnect RPS adds handshake requests."
                         )
                 )
                 .build();
@@ -134,7 +140,8 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
-                                "5 TLS messages per handshake vs 2 for one-way TLS. Increases networking cost and processing overhead."
+                                TLSOverhead.MTLS_HANDSHAKE_MESSAGES.getOverhead() +
+                                " TLS messages per handshake vs 2 for one-way TLS. Increases networking cost and processing overhead."
                         )
                 )
                 .build();
@@ -209,7 +216,9 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
-                                "JWT header overhead ~650 B per request (inbound to service, AWS charges $0). " +
+                                "JWT header overhead ~"
+                                        + JWTOverhead.JWT_OVERHEAD_BYTES_TYPICAL.getOverhead()
+                                        + " B (bytes) per request (inbound to service, AWS charges $0). " +
                                         "Token acquisition adds calls to the auth server. TTL tuning is critical."
                         )
                 )
@@ -249,10 +258,31 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.NONE,
-                                "No byte or RPS overhead."
+                                "0 B (bytes) or RPS overhead."
                         )
                 )
                 .build();
+    }
+
+    public Optional<ArchitecturalDecision> findByName(String name) {
+        for (var securityTactic: getAvailableSecurityDecisions()) {
+            switch (securityTactic) {
+                case ArchitecturalTactic architecturalTactic when architecturalTactic.getName().equals(name) -> {
+                    return Optional.of(architecturalTactic);
+                }
+                case ArchitecturalPattern architecturalPattern when architecturalPattern.getName().equals(name) -> {
+                    return Optional.of(architecturalPattern);
+                }
+                case CloudService cloudService when cloudService.getName().equals(name) -> {
+                    return Optional.of(cloudService);
+                }
+                case FinOpsStrategy finOpsStrategy when finOpsStrategy.getName().equals(name) -> {
+                    return Optional.of(finOpsStrategy);
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + securityTactic);
+            }
+        }
+        return Optional.empty();
     }
 
 

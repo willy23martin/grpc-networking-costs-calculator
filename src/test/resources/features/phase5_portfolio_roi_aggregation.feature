@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase5 @Portfolio
+@CostEfficiencyCalculator @Phase5 @Portfolio
 Feature: Multi-Service Portfolio TCO and ROI Aggregation
   As a Software Architect
   So that I can present the total financial footprint of a MACH microservice portfolio to Finance and Leadership

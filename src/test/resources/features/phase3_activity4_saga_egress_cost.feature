@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase3 @Activity4 @SAGAPattern
+@CostEfficiencyCalculator @Phase3 @Activity4 @SAGAPattern
 Feature: SAGA Pattern and Inter-Service Egress Cost
   As a Software Architect
   So that I can understand the networking cost of distributed transactions

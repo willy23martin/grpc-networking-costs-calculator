@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase2 @ProtoContract
+@CostEfficiencyCalculator @Phase2 @ProtoContract
 Feature: gRPC Pattern Selection and Proto Contract Loading
   As a Software Architect
   So that the backend can derive exact serialised message sizes

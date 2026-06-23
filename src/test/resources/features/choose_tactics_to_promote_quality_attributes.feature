@@ -1,4 +1,4 @@
-@ArchitectureCalculator @ChooseTacticsToPromoteQualityAttributes
+@CostEfficiencyCalculator @ChooseTacticsToPromoteQualityAttributes
 Feature: Architecture Tactics and Patterns Selection
   As a Software Architect
   So that I can implement technical strategies addressing business needs

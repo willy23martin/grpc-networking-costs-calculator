@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Phase3 @Activity2 @ResiliencyPatterns
+@CostEfficiencyCalculator @Phase3 @Activity2 @ResiliencyPatterns
 Feature: Resiliency Pattern Configuration and RPS Impact
   As a Software Architect
   So that I can quantify the networking cost of fault-tolerance mechanisms

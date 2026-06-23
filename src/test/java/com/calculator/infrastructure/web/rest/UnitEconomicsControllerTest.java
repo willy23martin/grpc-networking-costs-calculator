@@ -1,6 +1,11 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.repository.ArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.resiliency.CloudResiliencyArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
+import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,16 +23,33 @@ import static org.junit.jupiter.api.Assertions.*;
 class UnitEconomicsControllerTest {
 
     @Mock
-    private ArchitecturalDecisionRepository architecturalDecisionRepository;
+    SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+    @Mock
+    CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
+
+    @Mock
+    ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository;
+    @Mock
+    CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository;
+
+    @Mock
+    ResiliencyArchitecturalDecisionRepository resiliencyArchitecturalDecisionRepository;
+    @Mock
+    CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
 
     @InjectMocks
     private UnitEconomicsController controller;
 
     @BeforeEach
     void setUp() {
-        Mockito.lenient().when(architecturalDecisionRepository.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(architecturalDecisionRepository.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(architecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
+        Mockito.lenient().when(reliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
+        Mockito.lenient().when(cloudReliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
+
+        Mockito.lenient().when(resiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
+        Mockito.lenient().when(cloudResiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
+
+        Mockito.lenient().when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
+        Mockito.lenient().when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
     }
 
     @Test

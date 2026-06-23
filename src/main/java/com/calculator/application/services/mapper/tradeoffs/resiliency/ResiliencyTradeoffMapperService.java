@@ -6,7 +6,8 @@ import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.QualityTradeoff;
 import com.calculator.domain.model.quality.TradeoffType;
-import com.calculator.domain.repository.ArchitecturalDecisionRepository;
+import com.calculator.domain.repository.cloud.resiliency.CloudResiliencyArchitecturalDecisionRepository;
+import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,16 @@ import java.util.List;
 public class ResiliencyTradeoffMapperService {
 
     @Autowired
-    ArchitecturalDecisionRepository architecturalDecisionRepository;
+    ResiliencyArchitecturalDecisionRepository resiliencyArchitecturalDecisionRepository;
+    @Autowired
+    CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
 
     public List<ResiliencyTradeoffDTO> getResiliencyTradeoffs() {
         List<ResiliencyTradeoffDTO> resiliencyMappings = new ArrayList<>();
-        List<ArchitecturalDecision> resiliencyDecisions = architecturalDecisionRepository.getAvailableResiliencyDecisions();
+
+        List<ArchitecturalDecision> resiliencyDecisions = new ArrayList<>();
+        resiliencyDecisions.addAll(resiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions());
+        resiliencyDecisions.addAll(cloudResiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions());
 
         for(var resiliencyDecision: resiliencyDecisions) {
             switch (resiliencyDecision) {

@@ -1,5 +1,4 @@
-# Language: en
-@ArchitectureCalculator @Activity7 @FinOps @CostCalculation
+@CostEfficiencyCalculator @Activity7 @FinOps @CostCalculation
 Feature: Optimized Cost Calculation
   As a Software Architect
   I want to calculate costs after applying optimization strategies
