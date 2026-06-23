@@ -17,9 +17,21 @@ import com.calculator.application.services.calculators.cost.cloud.security.aws.A
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.pricing.PricingClient;
 
 @Configuration
 public class CostCalculatorsConfiguration {
+
+    @Bean
+    @Profile(CloudProvider.AWS)
+    public PricingClient pricingClient(){
+        return PricingClient.builder()
+                .region(Region.US_EAST_1) // Because AWS Pricing API is only available in us-east-1
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+    }
 
     @Bean
     @Profile(CloudProvider.AWS)

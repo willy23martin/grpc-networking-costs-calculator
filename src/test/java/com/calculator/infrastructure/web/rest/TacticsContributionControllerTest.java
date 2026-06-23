@@ -1,17 +1,26 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.domain.dto.requests.TacticContributionRequest;
+import com.calculator.domain.dto.responses.TacticContributionResponse;
+import com.calculator.domain.model.architecture.tactics.security.OAuthTokenValidationModes;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-class TacticsContributionControllerTest {
+class TacticsContributionControllerTest extends BaseIntegrationTest{
 
-    private final TacticsContributionController controller = new TacticsContributionController();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
-    void calculateTacticContributions_allStructuralAndInfoTactics() {
-        TacticsContributionController.TacticContributionRequest req = new TacticsContributionController.TacticContributionRequest();
+    void calculateTacticContributions_allStructuralAndInfoTactics() throws Exception {
+        TacticContributionRequest req = new TacticContributionRequest();
         req.baseRps = 100;
         req.protoResponseSizeEffectiveBytes = 500;
         req.clientSideLoadBalancingEnabled = true;
@@ -21,8 +30,16 @@ class TacticsContributionControllerTest {
         req.timeoutEnabled = true;
         req.timeoutMs = 250;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response = controller.calculateTacticContributions(req);
-        TacticsContributionController.TacticContributionResponse resp = response.getBody();
+        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        TacticContributionResponse resp = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
 
         assertNotNull(resp);
         assertFalse(resp.usedPlaceholderBytes);
@@ -31,15 +48,23 @@ class TacticsContributionControllerTest {
     }
 
     @Test
-    void calculateTacticContributions_retryBranchAndLowCostLabel() {
-        TacticsContributionController.TacticContributionRequest req = new TacticsContributionController.TacticContributionRequest();
+    void calculateTacticContributions_retryBranchAndLowCostLabel() throws Exception {
+        TacticContributionRequest req = new TacticContributionRequest();
         req.baseRps = 1;
         req.protoResponseSizeEffectiveBytes = 10;
         req.retryEnabled = true;
         req.retryErrorRatePct = 5.0;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response = controller.calculateTacticContributions(req);
-        TacticsContributionController.TacticContributionResponse resp = response.getBody();
+        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        TacticContributionResponse resp = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
 
         assertNotNull(resp);
         assertEquals(1, resp.contributions.size());
@@ -47,81 +72,141 @@ class TacticsContributionControllerTest {
     }
 
     @Test
-    void calculateTacticContributions_tlsAndMtlsBranches() {
-        TacticsContributionController.TacticContributionRequest req1 = new TacticsContributionController.TacticContributionRequest();
+    void calculateTacticContributions_tlsAndMtlsBranches() throws Exception {
+        TacticContributionRequest req1 = new TacticContributionRequest();
         req1.baseRps = 5000;
         req1.protoResponseSizeEffectiveBytes = 0;
         req1.tlsEnabled = true;
         req1.tlsReconnectsPerHour = 3600;
         req1.tlsOverheadBytesFromBackend = 50;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response1 = controller.calculateTacticContributions(req1);
-        assertNotNull(response1.getBody());
-        assertTrue(response1.getBody().usedPlaceholderBytes);
-        assertEquals(1, response1.getBody().contributions.size());
+        MvcResult result1 = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req1)))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        TacticsContributionController.TacticContributionRequest req2 = new TacticsContributionController.TacticContributionRequest();
+        TacticContributionResponse resp1 = objectMapper.readValue(
+                result1.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
+
+        assertNotNull(resp1);
+        assertTrue(resp1.usedPlaceholderBytes);
+        assertEquals(1, resp1.contributions.size());
+
+        TacticContributionRequest req2 = new TacticContributionRequest();
         req2.baseRps = 1000;
         req2.mtlsEnabled = true;
         req2.tlsReconnectsPerHour = 0;
         req2.tlsOverheadBytesFromBackend = 0;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response2 = controller.calculateTacticContributions(req2);
-        assertNotNull(response2.getBody());
-        assertEquals("bytes", response2.getBody().contributions.get(0).kind);
+        MvcResult result2 = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req2)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        TacticContributionResponse resp2 = objectMapper.readValue(
+                result2.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
+
+        assertNotNull(resp2);
+        assertEquals("bytes", resp2.contributions.get(0).kind);
     }
 
     @Test
-    void calculateTacticContributions_oauthLocalAndRemoteModes() {
-        TacticsContributionController.TacticContributionRequest req1 = new TacticsContributionController.TacticContributionRequest();
+    void calculateTacticContributions_oauthLocalAndRemoteModes() throws Exception {
+        TacticContributionRequest req1 = new TacticContributionRequest();
         req1.baseRps = 1000;
         req1.protoResponseSizeEffectiveBytes = 1000;
         req1.oauthEnabled = true;
-        req1.tokenValidationMode = "LOCAL";
+        req1.tokenValidationMode = OAuthTokenValidationModes.LOCAL.name();
         req1.tokenTtlSeconds = 0;
         req1.concurrentClients = 0;
         req1.jwtOverheadBytesFromBackend = 0;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response1 = controller.calculateTacticContributions(req1);
-        assertNotNull(response1.getBody());
-        assertEquals(0.0, response1.getBody().contributions.get(0).estimatedMonthlyCostUsd);
+        MvcResult result1 = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req1)))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        TacticsContributionController.TacticContributionRequest req2 = new TacticsContributionController.TacticContributionRequest();
+        TacticContributionResponse resp1 = objectMapper.readValue(
+                result1.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
+
+        assertNotNull(resp1);
+        assertEquals(0.0, resp1.contributions.get(0).estimatedMonthlyCostUsd);
+
+        TacticContributionRequest req2 = new TacticContributionRequest();
         req2.baseRps = 200000;
         req2.protoResponseSizeEffectiveBytes = 2000;
         req2.oauthEnabled = true;
-        req2.tokenValidationMode = "REMOTE_INTROSPECTION";
+        req2.tokenValidationMode = OAuthTokenValidationModes.REMOTE_INTROSPECTION.name();
         req2.tokenTtlSeconds = 60;
         req2.concurrentClients = 2;
         req2.jwtOverheadBytesFromBackend = 800;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response2 = controller.calculateTacticContributions(req2);
-        assertNotNull(response2.getBody());
-        assertTrue(response2.getBody().totalTacticNetworkingDeltaUsd > 0);
+        MvcResult result2 = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req2)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        TacticContributionResponse resp2 = objectMapper.readValue(
+                result2.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
+
+        assertNotNull(resp2);
+        assertTrue(resp2.totalTacticNetworkingDeltaUsd > 0);
     }
 
     @Test
-    void calculateTacticContributions_allEgressPricingTiers() {
-        TacticsContributionController.TacticContributionRequest req = new TacticsContributionController.TacticContributionRequest();
+    void calculateTacticContributions_allEgressPricingTiers() throws Exception {
+        TacticContributionRequest req = new TacticContributionRequest();
         req.baseRps = 5_000_000;
         req.protoResponseSizeEffectiveBytes = 5_000;
         req.retryEnabled = true;
         req.retryErrorRatePct = 50.0;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response = controller.calculateTacticContributions(req);
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().totalTacticNetworkingDeltaUsd > 0);
+        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        TacticContributionResponse resp = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
+
+        assertNotNull(resp);
+        assertTrue(resp.totalTacticNetworkingDeltaUsd > 0);
     }
 
     @Test
-    void calculateTacticContributions_zeroEgressCost() {
-        TacticsContributionController.TacticContributionRequest req = new TacticsContributionController.TacticContributionRequest();
+    void calculateTacticContributions_zeroEgressCost() throws Exception {
+        TacticContributionRequest req = new TacticContributionRequest();
         req.baseRps = 0;
         req.protoResponseSizeEffectiveBytes = -100;
         req.retryEnabled = true;
 
-        ResponseEntity<TacticsContributionController.TacticContributionResponse> response = controller.calculateTacticContributions(req);
-        assertNotNull(response.getBody());
-        assertEquals(0.0, response.getBody().totalTacticNetworkingDeltaUsd);
+        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        TacticContributionResponse resp = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TacticContributionResponse.class
+        );
+
+        assertNotNull(resp);
+        assertEquals(0.0, resp.totalTacticNetworkingDeltaUsd);
     }
 }

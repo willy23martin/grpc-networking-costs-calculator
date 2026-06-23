@@ -1,131 +1,71 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
+import com.calculator.application.services.calculators.cost.cloud.networking.aws.AWSDataTransferCostCalculationService;
 import com.calculator.application.services.mapper.tradeoffs.security.SecurityTradeoffMapperService;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.calculator.domain.dto.responses.TacticContributionItem;
+import com.calculator.domain.dto.requests.TacticContributionRequest;
+import com.calculator.domain.dto.responses.TacticContributionResponse;
+import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
+import com.calculator.domain.model.architecture.tactics.security.JWTOverhead;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+import static com.calculator.application.services.calculators.cost.cloud.networking.aws.AWSDataTransferCostCalculationService.AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB;
 import static com.calculator.application.services.utils.MathUtils.round2;
+import static com.calculator.infrastructure.web.rest.TCOCalculatorController.BYTES_PER_GB;
+import static com.calculator.infrastructure.web.rest.TCOCalculatorController.SECONDS_PER_MONTH;
 
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
 public class TacticsContributionController {
 
-    // ── AWS egress tiers ──────────────────────────────────────────────────────
-    private static final double SECONDS_PER_MONTH        = 2_592_000.0;
-    private static final double BYTES_PER_GB             = 1_073_741_824.0;
-    private static final double TIER_1_LIMIT_GB          = 10_240.0;
-    private static final double TIER_2_LIMIT_GB          = 40_960.0;
-    private static final double TIER_3_LIMIT_GB          = 102_400.0;
-    private static final double TIER_1_RATE              = 0.09;
-    private static final double TIER_2_RATE              = 0.085;
-    private static final double TIER_3_RATE              = 0.07;
-    private static final double TIER_4_RATE              = 0.05;
-    // ── RFC byte overhead constants ───────────────────────────────────────────
-    private static final int RFC_8446_TLS_FRAME_BYTES    = 29;   // AES-GCM typical
-    private static final int RFC_7519_JWT_HEADER_BYTES   = 650;  // typical bearer token
-
-    /* ================================================================
-       REQUEST DTO
-    ================================================================ */
-    public static class TacticContributionRequest {
-        @JsonProperty public int     baseRps                       = 0;
-
-        // Sizes from the last /calculateTCO response (0 = use placeholder)
-        @JsonProperty public int     protoResponseSizeEffectiveBytes = 0;
-        @JsonProperty public int     tlsOverheadBytesFromBackend     = 0;
-        @JsonProperty public int     jwtOverheadBytesFromBackend     = 0;
-
-        // Structural / no-cost tactics
-        @JsonProperty public boolean clientSideLoadBalancingEnabled = false;
-        @JsonProperty public boolean serverSideLoadBalancingEnabled = false;
-        @JsonProperty public boolean circuitBreakerEnabled          = false;
-        @JsonProperty public boolean basicAuthEnabled               = false;
-        @JsonProperty public boolean timeoutEnabled                 = false;
-        @JsonProperty public int     timeoutMs                      = 0;
-
-        // Retry
-        @JsonProperty public boolean retryEnabled                  = false;
-        @JsonProperty public double  retryErrorRatePct             = 5.0;
-
-        // TLS / mTLS
-        @JsonProperty public boolean tlsEnabled                    = false;
-        @JsonProperty public boolean mtlsEnabled                   = false;
-        @JsonProperty public int     tlsReconnectsPerHour          = 0;
-
-        // OAuth 2.0 + JWT
-        @JsonProperty public boolean oauthEnabled                  = false;
-        @JsonProperty public String  tokenValidationMode           = "LOCAL";
-        @JsonProperty public int     tokenTtlSeconds               = 3600;
-        @JsonProperty public int     concurrentClients             = 1;
-    }
-
-    /* ================================================================
-       RESPONSE DTO
-    ================================================================ */
-    public static class TacticContributionItem {
-        @JsonProperty public String  label;
-        @JsonProperty public String  value;          // optional sub-label, e.g. "5% error rate"
-        @JsonProperty public String  kind;           // "info" | "rps" | "bytes" | "both"
-        @JsonProperty public String  detail;         // one-line formula summary for the UI
-        @JsonProperty public String  note;           // optional warning note
-        @JsonProperty public int     rpsAdded;
-        @JsonProperty public int     bytesAdded;
-        @JsonProperty public boolean jwtOnRequestOnly;
-        @JsonProperty public double  estimatedMonthlyCostUsd;  // 0 for kind="info"
-        @JsonProperty public String  costDisplayLabel;         // formatted string for UI
-    }
-
-    public static class TacticContributionResponse {
-        @JsonProperty public List<TacticContributionItem> contributions = new ArrayList<>();
-        @JsonProperty public double  totalTacticNetworkingDeltaUsd;  // sum of networking cost increases
-        @JsonProperty public int     placeholderResponseBytes;        // what was used when proto not available
-        @JsonProperty public boolean usedPlaceholderBytes;
-    }
-
     @Autowired
     SecurityTradeoffMapperService securityTradeoffMapperService;
 
+    @Autowired
+    NetworkingCostCalculator networkingCostCalculator;
+
     @PostMapping("/tactic-contributions")
     public ResponseEntity<TacticContributionResponse> calculateTacticContributions(
-            @RequestBody TacticContributionRequest req) {
+            @RequestBody TacticContributionRequest tacticContributionRequest) {
 
         TacticContributionResponse resp = new TacticContributionResponse();
 
-        int    placeholderBytes = 1_200;  // default proto response size placeholder
-        int    responseBytes    = req.protoResponseSizeEffectiveBytes > 0
-                ? req.protoResponseSizeEffectiveBytes
+        int placeholderBytes = 0;  // default proto response size placeholder
+        int responseBytes    = tacticContributionRequest.protoResponseSizeEffectiveBytes > 0
+                ? tacticContributionRequest.protoResponseSizeEffectiveBytes
                 : placeholderBytes;
         resp.placeholderResponseBytes = placeholderBytes;
-        resp.usedPlaceholderBytes     = req.protoResponseSizeEffectiveBytes <= 0;
+        resp.usedPlaceholderBytes = tacticContributionRequest.protoResponseSizeEffectiveBytes <= 0;
 
         // ── 1. Structural / informational tactics (no cost impact) ──────────
-        addInfoTactic(resp, req.clientSideLoadBalancingEnabled,
+        addInfoTactic(resp, tacticContributionRequest.clientSideLoadBalancingEnabled,
                 "Client-side Load Balancing", null, null);
-        addInfoTactic(resp, req.serverSideLoadBalancingEnabled,
+        addInfoTactic(resp, tacticContributionRequest.serverSideLoadBalancingEnabled,
                 "Server-side Load Balancing", null, null);
-        addInfoTactic(resp, req.circuitBreakerEnabled,
+        addInfoTactic(resp, tacticContributionRequest.circuitBreakerEnabled,
                 "Circuit Breaker", null, null);
-        addInfoTactic(resp, req.basicAuthEnabled,
+        addInfoTactic(resp, tacticContributionRequest.basicAuthEnabled,
                 "Basic Authentication", null,
                 "\u26a0 Not recommended for production");
-        if (req.timeoutEnabled) {
+        if (tacticContributionRequest.timeoutEnabled) {
             addInfoTactic(resp, true,
-                    "Timeout (" + req.timeoutMs + " ms)", null, null);
+                    "Timeout (" + tacticContributionRequest.timeoutMs + " ms)", null, null);
         }
 
         // ── 3. Retry ─────────────────────────────────────────────────────────
-        buildRetryContribution(resp, req, responseBytes);
+        buildRetryContribution(resp, tacticContributionRequest, responseBytes);
 
         // ── 4. TLS / mTLS ────────────────────────────────────────────────────
-        buildTlsContribution(resp, req, responseBytes);
+        buildTlsContribution(resp, tacticContributionRequest, responseBytes);
 
         // ── 5. OAuth 2.0 + JWT ───────────────────────────────────────────────
-        buildOAuthContribution(resp, req, responseBytes);
+        buildOAuthContribution(resp, tacticContributionRequest, responseBytes);
 
         // ── Total networking delta ────────────────────────────────────────────
         double total = resp.contributions.stream()
@@ -173,7 +113,7 @@ public class TacticsContributionController {
                 (double) req.tlsReconnectsPerHour * messagesPerReconnect / 3600.0);
         int  tlsBytesOverhead     = (req.tlsOverheadBytesFromBackend > 0)
                 ? req.tlsOverheadBytesFromBackend
-                : RFC_8446_TLS_FRAME_BYTES;
+                : TLSOverhead.TLS_HANDSHAKE_MESSAGES.getOverhead();
         String byteSource = req.tlsOverheadBytesFromBackend > 0 ? ", from backend" : ", est. typical";
         String label      = req.mtlsEnabled ? "mTLS (mutual TLS)" : "TLS (one-way)";
 
@@ -211,7 +151,7 @@ public class TacticsContributionController {
         int  totalRpsAdded  = tokenAcqRps + introspRps;
         int  jwtBytes       = (req.jwtOverheadBytesFromBackend > 0)
                 ? req.jwtOverheadBytesFromBackend
-                : RFC_7519_JWT_HEADER_BYTES;
+                : JWTOverhead.JWT_OVERHEAD_BYTES_TYPICAL.getOverhead();
         String byteSource   = req.jwtOverheadBytesFromBackend > 0 ? ", from backend" : ", est. typical";
         String modeSuffix   = "REMOTE_INTROSPECTION".equals(req.tokenValidationMode)
                 ? " (remote)" : " (local)";
@@ -252,7 +192,7 @@ public class TacticsContributionController {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-    private static void addInfoTactic(TacticContributionResponse resp,
+    private void addInfoTactic(TacticContributionResponse resp,
                                       boolean enabled,
                                       String label,
                                       String value,
@@ -274,7 +214,7 @@ public class TacticsContributionController {
      * Monthly egress cost delta from adding extra RPS at a fixed response size.
      * delta = cost(baseRps + rpsAdded, bytes) - cost(baseRps, bytes)
      */
-    private static double egressCostDeltaUsd(int baseRps, int rpsAdded, int responseBytes) {
+    private  double egressCostDeltaUsd(int baseRps, int rpsAdded, int responseBytes) {
         return monthlyCostUsd(baseRps + rpsAdded, responseBytes)
                 - monthlyCostUsd(baseRps, responseBytes);
     }
@@ -283,7 +223,7 @@ public class TacticsContributionController {
      * Monthly egress cost delta from adding extra bytes per response at a fixed RPS.
      * delta = cost(rps, bytes + extraBytes) - cost(rps, bytes)
      */
-    private static double egressByteDeltaUsd(int rps, int responseBytes, int extraBytes) {
+    private double egressByteDeltaUsd(int rps, int responseBytes, int extraBytes) {
         return monthlyCostUsd(rps, responseBytes + extraBytes)
                 - monthlyCostUsd(rps, responseBytes);
     }
@@ -291,29 +231,32 @@ public class TacticsContributionController {
     /**
      * Monthly egress cost for the given RPS and response size using AWS tiered pricing.
      */
-    private static double monthlyCostUsd(int rps, int responseBytes) {
+    private double monthlyCostUsd(int rps, int responseBytes) {
+
+        List<Double> dataTransferRates = ((AWSDataTransferCostCalculationService) networkingCostCalculator).getDataTransferRates();
+
         double gbPerMonth = (double) rps * SECONDS_PER_MONTH * responseBytes / BYTES_PER_GB;
         double cost = 0;
         double remaining = gbPerMonth;
 
         if (remaining <= 0) return 0;
 
-        double tier1Used = Math.min(remaining, TIER_1_LIMIT_GB);
-        cost += tier1Used * TIER_1_RATE;
+        double tier1Used = Math.min(remaining, AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0]);
+        cost += tier1Used * dataTransferRates.getFirst();
         remaining -= tier1Used;
 
         if (remaining > 0) {
-            double tier2Used = Math.min(remaining, TIER_2_LIMIT_GB);
-            cost += tier2Used * TIER_2_RATE;
+            double tier2Used = Math.min(remaining, AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[1]);
+            cost += tier2Used * dataTransferRates.get(1);
             remaining -= tier2Used;
         }
         if (remaining > 0) {
-            double tier3Used = Math.min(remaining, TIER_3_LIMIT_GB);
-            cost += tier3Used * TIER_3_RATE;
+            double tier3Used = Math.min(remaining, AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[2]);
+            cost += tier3Used * dataTransferRates.get(2);
             remaining -= tier3Used;
         }
         if (remaining > 0) {
-            cost += remaining * TIER_4_RATE;
+            cost += remaining * dataTransferRates.getLast();
         }
 
         return cost;

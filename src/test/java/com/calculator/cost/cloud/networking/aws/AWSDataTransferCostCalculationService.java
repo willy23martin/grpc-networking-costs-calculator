@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 @SpringBootTest
-@TestPropertySource(properties = "aws.pricing.ec2.rates=0.09, 0.085, 0.07, 0.05")
+@TestPropertySource(properties = "aws.pricing.ec2.rates")
 class AWSDataTransferCostCalculationServiceTest {
 
     @Autowired

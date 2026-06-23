@@ -28,7 +28,7 @@ public class RequestPerSecondCostCalculatorService {
         );
         effectiveRequestsPerSecond = calculateForResiliencyPatterns(architecturalDecisionsDTO, effectiveRequestsPerSecond);
 
-        System.out.println("effectiveRequestsPerSecond security: " + effectiveRequestsPerSecond);
+        log.info("effectiveRequestsPerSecond security: " + effectiveRequestsPerSecond);
         return effectiveRequestsPerSecond;
     }
 
