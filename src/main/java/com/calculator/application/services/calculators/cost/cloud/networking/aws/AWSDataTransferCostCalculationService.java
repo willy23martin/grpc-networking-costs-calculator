@@ -58,11 +58,9 @@ public class AWSDataTransferCostCalculationService implements NetworkingCostCalc
 
     @PostConstruct
     private List<Double> fetchDataTransferRates() {
-        List<Double> cachedRates = null;
-        if (cachedRates == null || Instant.now().isAfter(cacheExpiry)) {
-            cachedRates = fetchDataTransferOutTiers();
-            cacheExpiry = Instant.now().plus(CACHE_TTL);
-        }
+        List<Double> cachedRates;
+        cachedRates = fetchDataTransferOutTiers();
+        cacheExpiry = Instant.now().plus(CACHE_TTL);
         dataTransferRates = cachedRates;
         return cachedRates;
     }
@@ -136,7 +134,7 @@ public class AWSDataTransferCostCalculationService implements NetworkingCostCalc
             }
         }
 
-        Collections.sort(rates, Collections.reverseOrder());
+        rates.sort(Collections.reverseOrder());
         log.info(rates.toString()); // [0.09, 0.085, 0.07, 0.05]
         return rates;
     }

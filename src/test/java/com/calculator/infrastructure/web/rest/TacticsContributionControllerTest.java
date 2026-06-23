@@ -68,7 +68,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
         assertNotNull(resp);
         assertEquals(1, resp.contributions.size());
-        assertEquals("< +$0.01/mo", resp.contributions.get(0).costDisplayLabel);
+        assertEquals("< +$0.01/mo", resp.contributions.getFirst().costDisplayLabel);
     }
 
     @Test
@@ -113,7 +113,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
         );
 
         assertNotNull(resp2);
-        assertEquals("bytes", resp2.contributions.get(0).kind);
+        assertEquals("bytes", resp2.contributions.getFirst().kind);
     }
 
     @Test
@@ -139,7 +139,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
         );
 
         assertNotNull(resp1);
-        assertEquals(0.0, resp1.contributions.get(0).estimatedMonthlyCostUsd);
+        assertEquals(0.0, resp1.contributions.getFirst().estimatedMonthlyCostUsd);
 
         TacticContributionRequest req2 = new TacticContributionRequest();
         req2.baseRps = 200000;

@@ -1,26 +1,47 @@
 package com.calculator.domain.dto.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.ToString;
 
+@Builder
+@ToString
 public class TacticContributionItem {
     @JsonProperty
-    public String  label;
+    @Builder.Default
+    public String label = "";
+
     @JsonProperty
-    public String  value;          // optional sub-label, e.g. "5% error rate"
+    @Builder.Default
+    public String value = "";          // optional sub-label, e.g. "5% error rate"
+
     @JsonProperty
-    public String  kind;           // "info" | "rps" | "bytes" | "both"
+    @Builder.Default
+    public String kind = "info";       // "info" | "rps" | "bytes" | "both"
+
     @JsonProperty
-    public String  detail;         // one-line formula summary for the UI
+    public String detail;              // one-line formula summary for the UI
+
     @JsonProperty
-    public String  note;           // optional warning note
+    @Builder.Default
+    public String note = "";           // optional warning note
+
     @JsonProperty
-    public int     rpsAdded;
+    @Builder.Default
+    public int rpsAdded = 0;
+
     @JsonProperty
-    public int     bytesAdded;
+    @Builder.Default
+    public int bytesAdded = 0;
+
     @JsonProperty
     public boolean jwtOnRequestOnly;
+
     @JsonProperty
-    public double  estimatedMonthlyCostUsd;  // 0 for kind="info"
+    @Builder.Default
+    public double estimatedMonthlyCostUsd = 0.0;  // 0 for kind="info"
+
     @JsonProperty
-    public String  costDisplayLabel;         // formatted string for UI
+    @Builder.Default
+    public String costDisplayLabel = "\u2014";    // formatted string for UI
 }

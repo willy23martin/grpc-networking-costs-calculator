@@ -230,13 +230,13 @@ public class SecurityArchitecturalDecisionRepository {
         qualityTradeoffs.add(
                 new SecurityQualityTradeoff(
                         ArchitecturalCharacteristic.builder()
-                                .name(ArchitecturalCharacteristics.CONFIDENTIALITY.name())
+                                .name(ArchitecturalCharacteristics.SECURITY.name())
                                 .build(),
                         TradeoffType.PROMOTES,
                         new String[]{"A02:2021","A07:2021"},
                         new String[]{"Cryptographic Failures","Identification and Authentication Failures"},
                         new String[]{"CWE-256","CWE-522","CWE-287"},
-                        "⚠ NOT RECOMMENDED FOR PRODUCTION. No token rotation or scope-based access control."
+                        "\u26a0 NOT RECOMMENDED FOR PRODUCTION. No token rotation or scope-based access control."
                 )
         );
         qualityTradeoffs.add(
