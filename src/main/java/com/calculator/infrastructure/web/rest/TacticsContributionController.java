@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-
 import static com.calculator.application.services.utils.MathUtils.round2;
 
 @RestController
@@ -17,7 +15,7 @@ import static com.calculator.application.services.utils.MathUtils.round2;
 public class TacticsContributionController {
 
     @Autowired
-    TacticsContributionService tacticsContributionService;
+    private TacticsContributionService tacticsContributionService;
 
     @PostMapping("/tactic-contributions")
     public ResponseEntity<TacticContributionResponse> calculateTacticContributions(
@@ -37,8 +35,8 @@ public class TacticsContributionController {
         tacticContributionResponse.contributions.addAll(tacticsContributionService.buildOAuthContribution(tacticContributionRequest, responseBytes));
 
         double total = tacticContributionResponse.contributions.stream()
-                .mapToDouble(c -> c.estimatedMonthlyCostUsd)
-                .filter(v -> v > 0)
+                .mapToDouble(item -> item.estimatedMonthlyCostUsd)
+                .filter(estimatedMonthlyCostUsd -> estimatedMonthlyCostUsd > 0)
                 .sum();
         tacticContributionResponse.totalTacticNetworkingDeltaUsd = round2(total);
 

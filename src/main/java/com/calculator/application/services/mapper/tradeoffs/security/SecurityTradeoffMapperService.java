@@ -165,6 +165,7 @@ public class SecurityTradeoffMapperService {
                 .supportedArchitecturalDecisions(supportedArchitecturalDecisions)
                 .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
                 .impactType(inhibitedCharacteristic.getTradeoffType().name())
+                .cloudProvider(cloudService.getCloudProvider().name())
                 .build();
     }
 

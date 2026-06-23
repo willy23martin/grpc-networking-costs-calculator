@@ -32,6 +32,8 @@ public class SecurityTradeoffsDTO {
     @JsonProperty("impactType")
     private String impactType;
     // Only for Cloud Services
+    @JsonProperty
+    private String cloudProvider;
     @JsonProperty("supportedArchitecturalDecisions")
     private List<String> supportedArchitecturalDecisions;
 }

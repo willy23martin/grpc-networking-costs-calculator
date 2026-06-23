@@ -33,7 +33,8 @@ public class CloudSecurityArchitecturalDecisionRepository {
                         getAmazonMacieCloudService(),
                         getAmazonCloudWatchCloudService(),
                         getAWSAuditManagerCloudService(),
-                        getAWSKMSCloudService()
+                        getAWSKMSCloudService(),
+                        getAWSCertificateManagerCloudService()
                 )
         );
     }
@@ -325,7 +326,7 @@ public class CloudSecurityArchitecturalDecisionRepository {
         return CloudService.builder()
                 .cloudProvider(CloudProvider.AWS)
                 .id("sec-cloudwatch")
-                .name("CloudWatch Logs")
+                .name("Amazon CloudWatch")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
                                 .name(ArchitecturalCharacteristics.SECURITY.name())
@@ -442,7 +443,7 @@ public class CloudSecurityArchitecturalDecisionRepository {
         return CloudService.builder()
                 .cloudProvider(CloudProvider.AWS)
                 .id("sec-kms")
-                .name("AWS KMS (Encryption)")
+                .name("AWS KMS")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
                                 .name(ArchitecturalCharacteristics.SECURITY.name())
@@ -459,5 +460,50 @@ public class CloudSecurityArchitecturalDecisionRepository {
                 .build();
     }
 
+    public ArchitecturalDecision getAWSCertificateManagerCloudService() {
+        ArchitecturalTactic mTLSTactic = (ArchitecturalTactic) securityArchitecturalDecisionRepository.getMTLSTactic();
+        ArchitecturalTactic tlsTactic = (ArchitecturalTactic) securityArchitecturalDecisionRepository.getTLSTactic();
+
+        List<QualityTradeoff> qualityTradeoffs = new ArrayList<>(1);
+        qualityTradeoffs.add(
+                new SecurityQualityTradeoff(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .build(),
+                        TradeoffType.PROMOTES,
+                        new String[]{"A02:2021"},
+                        new String[]{"Cryptographic Failures"},
+                        new String[]{"CWE-295", "CWE-311", "CWE-319", "CWE-326"},
+                        "Provides automated provisioning, management, and deployment of public and private Transport Layer Security (TLS/SSL) certificates. Operating under strict <a href=\"https://aws.amazon.com/compliance/fips/\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS FIPS 140-3 Validation Parameters</a> endpoints, this service secures data-in-transit by automating the renewal of cryptographic certificates and enforcing strong cipher suites, eliminating vulnerabilities associated with expired, misconfigured, or weak cryptographic bindings across AWS resources."
+                )
+        );
+        qualityTradeoffs.add(
+                new QualityTradeoff(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.AFFORDABILITY.name())
+                                .build(),
+                        TradeoffType.ORTHOGONAL
+                )
+        );
+
+        return CloudService.builder()
+                .cloudProvider(CloudProvider.AWS)
+                .id("sec-acm")
+                .name("Certificate Manager")
+                .architecturalCharacteristic(
+                        ArchitecturalCharacteristic.builder()
+                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .qualityTradeoffs(qualityTradeoffs).build()
+                ).costFactor(
+                        new InfrastructureCost(
+                                "$0 no cost" // TODO - LOAD FROM AWS
+                        )
+                )
+                .supportedArchitecturalTactic(tlsTactic)
+                .supportedArchitecturalDecisions(
+                        List.of(tlsTactic, mTLSTactic)
+                )
+                .build();
+    }
 
 }

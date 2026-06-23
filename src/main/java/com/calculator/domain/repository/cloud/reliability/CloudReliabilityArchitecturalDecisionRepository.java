@@ -58,7 +58,7 @@ public class CloudReliabilityArchitecturalDecisionRepository {
                 .name("Elastic Load Balancer - ALB Layer 7")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()
-                                .name(ArchitecturalCharacteristics.SECURITY.name())
+                                .name(ArchitecturalCharacteristics.RELIABILITY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(

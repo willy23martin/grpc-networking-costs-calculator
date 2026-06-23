@@ -125,16 +125,14 @@ public class TacticsContributionService {
         List<TacticContributionItem> tacticContributionItems = new ArrayList<>();
         if(tacticContributionRequest.tlsEnabled || tacticContributionRequest.mtlsEnabled) {
             int  messagesPerReconnect = tacticContributionRequest.mtlsEnabled ? 5 : 2;
-            int  handshakeRps         = (int) Math.round(
-                    (double) tacticContributionRequest.tlsReconnectsPerHour * messagesPerReconnect / 3600.0);
-            int  tlsBytesOverhead     = (tacticContributionRequest.tlsOverheadBytesFromBackend > 0)
+            int  handshakeRps = (int) Math.round((double) tacticContributionRequest.tlsReconnectsPerHour * messagesPerReconnect / 3600.0);
+            int  tlsBytesOverhead = (tacticContributionRequest.tlsOverheadBytesFromBackend > 0)
                     ? tacticContributionRequest.tlsOverheadBytesFromBackend
                     : TLSOverhead.TLS_HANDSHAKE_MESSAGES.getOverhead();
             String byteSource = tacticContributionRequest.tlsOverheadBytesFromBackend > 0 ? ", from backend" : ", est. typical";
             String label      = tacticContributionRequest.mtlsEnabled ?
                     ((ArchitecturalTactic)securityArchitecturalDecisionRepository.getMTLSTactic()).getName()
                     : ((ArchitecturalTactic)securityArchitecturalDecisionRepository.getTLSTactic()).getName();
-
             double rpsCost   = handshakeRps > 0
                     ? getMonthlyEgressRPSDeltaCost(tacticContributionRequest.baseRps, handshakeRps, responseBytes) : 0;
             double byteCost  = getMonthlyEgressByteDeltaCost(tacticContributionRequest.baseRps, responseBytes, tlsBytesOverhead);

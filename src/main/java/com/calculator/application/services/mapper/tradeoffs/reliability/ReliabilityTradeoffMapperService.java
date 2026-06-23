@@ -51,7 +51,7 @@ public class ReliabilityTradeoffMapperService {
                         TradeoffType.ORTHOGONAL)
         );
 
-        ReliabilityTradeoffDTO reliabilityTradeoff = ReliabilityTradeoffDTO.builder()
+        return ReliabilityTradeoffDTO.builder()
                 .tacticId(architecturalTactic.getId())
                 .tacticName(architecturalTactic.getName())
                 .tacticCategory(architecturalTactic.getArchitecturalCharacteristic().getName())
@@ -59,7 +59,6 @@ public class ReliabilityTradeoffMapperService {
                 .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
                 .impactType(inhibitedCharacteristic.getTradeoffType().name())
                 .build();
-        return reliabilityTradeoff;
     }
 
     private ReliabilityTradeoffDTO mapReliabilityPattern(ArchitecturalPattern architecturalPattern) {
@@ -73,7 +72,7 @@ public class ReliabilityTradeoffMapperService {
                         TradeoffType.ORTHOGONAL)
         );
 
-        ReliabilityTradeoffDTO reliabilityTradeoff = ReliabilityTradeoffDTO.builder()
+        return ReliabilityTradeoffDTO.builder()
                 .tacticId(architecturalPattern.getId())
                 .tacticName(architecturalPattern.getName())
                 .tacticCategory(architecturalPattern.getArchitecturalCharacteristic().getName())
@@ -81,7 +80,6 @@ public class ReliabilityTradeoffMapperService {
                 .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
                 .impactType(inhibitedCharacteristic.getTradeoffType().name())
                 .build();
-        return reliabilityTradeoff;
     }
 
     private ReliabilityTradeoffDTO mapCloudReliabilityService(CloudService cloudService) {
@@ -95,15 +93,20 @@ public class ReliabilityTradeoffMapperService {
                         TradeoffType.INHIBITS)
         );
 
-        ReliabilityTradeoffDTO reliabilityTradeoff = ReliabilityTradeoffDTO.builder()
+        List<String> supportedArchitecturalDecisions = new ArrayList<>(cloudService.getSupportedArchitecturalDecisions().stream().map(
+                ArchitecturalDecision::getId
+        ).toList());
+
+        return ReliabilityTradeoffDTO.builder()
                 .tacticId(cloudService.getId())
                 .tacticName(cloudService.getName())
                 .tacticCategory(cloudService.getArchitecturalCharacteristic().getName())
                 .costFactor(cloudService.getCostFactor().getCostFactorNotes())
                 .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
                 .impactType(inhibitedCharacteristic.getTradeoffType().name())
+                .supportedArchitecturalDecisions(supportedArchitecturalDecisions)
+                .cloudProvider(cloudService.getCloudProvider().name())
                 .build();
-        return reliabilityTradeoff;
     }
 
     private ReliabilityTradeoffDTO mapFinOpsStrategy(FinOpsStrategy finOpsStrategy) {
@@ -117,7 +120,7 @@ public class ReliabilityTradeoffMapperService {
                         TradeoffType.PROMOTES)
         );
 
-        ReliabilityTradeoffDTO reliabilityTradeoff = ReliabilityTradeoffDTO.builder()
+        return ReliabilityTradeoffDTO.builder()
                 .tacticId(finOpsStrategy.getId())
                 .tacticName(finOpsStrategy.getName())
                 .tacticCategory(finOpsStrategy.getArchitecturalCharacteristic().getName())
@@ -125,7 +128,6 @@ public class ReliabilityTradeoffMapperService {
                 .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
                 .impactType(inhibitedCharacteristic.getTradeoffType().name())
                 .build();
-        return reliabilityTradeoff;
     }
 
 }

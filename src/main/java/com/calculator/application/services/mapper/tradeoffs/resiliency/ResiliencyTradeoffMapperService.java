@@ -98,6 +98,7 @@ public class ResiliencyTradeoffMapperService {
                 .costFactor(cloudService.getCostFactor().getCostFactorNotes())
                 .impactedAttribute(inhibitedCharacteristic.getArchitecturalCharacteristic().getName())
                 .impactType(inhibitedCharacteristic.getTradeoffType().name())
+                .cloudProvider(cloudService.getCloudProvider().name())
                 .build();
     }
 

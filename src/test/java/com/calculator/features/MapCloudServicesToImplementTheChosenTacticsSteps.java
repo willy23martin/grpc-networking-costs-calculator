@@ -1,109 +1,93 @@
 package com.calculator.features;
 
+import com.calculator.infrastructure.web.rest.BaseIntegrationTest;
+import com.jayway.jsonpath.JsonPath;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import io.cucumber.java.en.When;
+import org.springframework.test.web.servlet.MvcResult;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.containsString;
+import java.util.Arrays;
+import java.util.List;
 
-// NOTE: @SpringBootTest and @AutoConfigureMockMvc removed — see CucumberSpringConfiguration.
-public class MapCloudServicesToImplementTheChosenTacticsSteps {
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-    @Autowired
-    private MockMvc mockMvc;
+public class MapCloudServicesToImplementTheChosenTacticsSteps extends BaseIntegrationTest {
 
-    private String activePatternOrTactic;
-    private String activeCloudProvider;
-    private ResultActions restApiResponse;
+    private String architecturalCharacteristic;
+    private String patternOrTactic;
+    private String cloudProvider;
 
     @Given("the architect is authenticated on the TCO Calculator application")
-    public void authenticateUser() {
-        // Sets up test security context/session if required
+    public void architectIsAuthenticated() {
+        // MockMvc context authentication setup if needed
     }
 
     @Given("the architect is configuring tactics in the Cloud Tactics & Patterns panel")
-    public void verifyCloudTacticsPanelPresence() throws Exception {
-        // Create a dummy multipart file payload to satisfy the controller parameter
-        MockMultipartFile dummyFile = new MockMultipartFile(
-                "file",
-                "architecture.proto",
-                "application/octet-stream",
-                "syntax = \"proto3\";".getBytes()
-        );
-
-        // Change post("/calculateTCO") to a multipart request
-        mockMvc.perform(multipart("/calculateTCO")
-                        .file(dummyFile)).andExpect(status().isOk())
-                .andExpect(content().string(containsString("id=\"cat-cloud-tactics\"")))
-                .andExpect(content().string(containsString("Cloud Tactics &amp; Patterns")))
-                .andExpect(content().string(containsString("id=\"phase3\"")));
-
+    public void architectIsConfiguringTactics() {
+        // Context placeholder matching the background step
     }
 
-    @Given("I have selected pattern or tactic {string} for implementation")
-    public void setPatternOrTactic(String patternOrTactic) {
-        this.activePatternOrTactic = patternOrTactic;
+    @Given("I have selected pattern or tactic {string} for implementation that promotes {string}")
+    public void selectPatternOrTacticWithCharacteristic(String patternOrTactic, String architecturalCharacteristic) {
+        this.patternOrTactic = patternOrTactic;
+        this.architecturalCharacteristic = architecturalCharacteristic;
     }
 
     @When("I specify {string} as my deployment target")
-    public void setCloudProvider(String cloudProvider) {
-        this.activeCloudProvider = cloudProvider;
+    public void specifyCloudProvider(String cloudProvider) {
+        this.cloudProvider = cloudProvider;
     }
 
-    // FIX: The feature's @UI Scenario Outline includes Azure and GCP rows, but the calculator.html
-    // is AWS-only. The UI assertion here only verifies that the /calculator endpoint accepts the
-    // request (status 200) — it does NOT assert the presence of Azure/GCP-specific HTML, because
-    // those providers are not rendered in the current single-cloud UI implementation.
-    // The multi-cloud data (Azure, GCP rows) is intentionally kept in the feature to document
-    // the full logical mapping matrix; those rows are validated at the API layer (REST scenarios)
-    // where the backend service IS expected to handle multi-cloud routing.
     @Then("the system should map the configuration to specific services {string}")
-    public void verifyUiMappedServices(String expectedServices) throws Exception {
-        mockMvc.perform(get("/calculateTCO")
-                        .param("tactic", activePatternOrTactic)
-                        .param("provider", activeCloudProvider))
-                .andExpect(status().isOk());
-        // AWS-specific UI assertions added only when provider is AWS:
-        if ("AWS".equals(activeCloudProvider)) {
-            mockMvc.perform(post("/calculateTCO"))
-                    .andExpect(content().string(containsString("id=\"cat-cloud-tactics\"")));
+    public void verifyCloudServiceMapping(String expectedServicesString) throws Exception {
+        String targetApiPath = getEndpointForCharacteristic(architecturalCharacteristic);
+
+        // Execute the API call and get the raw JSON response payload
+        MvcResult result = mockMvc.perform(get(targetApiPath))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+
+        // 1. Extract the parent tacticId dynamically based on the patternOrTactic name
+        // Example: Finds "tactic-server-lb" where tacticName matches "Server-side Load Balancing"
+        String parentTacticIdPath = "$[?(@.tacticName == '" + patternOrTactic + "')].tacticId";
+        List<String> parentIdList = JsonPath.read(responseBody, parentTacticIdPath);
+
+        if (parentIdList.isEmpty()) {
+            throw new AssertionError("Could not find a parent tactic matching the name: " + patternOrTactic);
+        }
+        String parentTacticId = parentIdList.get(0);
+
+        // 2. Split comma-separated cloud service names from the Examples table
+        String[] expectedServices = Arrays.stream(expectedServicesString.split(","))
+                .map(String::trim)
+                .toArray(String[]::new);
+
+        // 3. For each expected cloud service, assert it links back to the parent tactic ID
+        for (String serviceName : expectedServices) {
+            String serviceDecisionsPath = "$[?(@.tacticName == '" + serviceName + "' && @.cloudProvider == '" + cloudProvider + "')].supportedArchitecturalDecisions[*]";
+            List<String> supportedDecisions = JsonPath.read(responseBody, serviceDecisionsPath);
+
+            assertTrue(
+                    supportedDecisions.contains(parentTacticId),
+                    String.format("Expected cloud service '%s' to support parent tactic ID '%s' (%s), but its decisions were: %s",
+                            serviceName, parentTacticId, patternOrTactic, supportedDecisions)
+            );
         }
     }
 
-    @Then("display configuration guidance matching {string}")
-    public void verifyUiConfigurationGuidance(String expectedGuidance) throws Exception {
-        // Assert that guidance placeholders or tooltips contain the correct architecture guidelines
-    }
-
-    // --- REST Endpoint Automation Steps ---
-
-    @Given("a backend component requests deployment mappings for tactic {string} on provider {string}")
-    public void initializeApiRequest(String tactic, String provider) {
-        this.activePatternOrTactic = tactic;
-        this.activeCloudProvider = provider;
-    }
-
-    @When("the multi-cloud provider routing endpoint processes the request")
-    public void executeApiCall() throws Exception {
-        restApiResponse = mockMvc.perform(get("/api/cloud/mappings")
-                .param("tactic", activePatternOrTactic)
-                .param("provider", activeCloudProvider));
-    }
-
-    @Then("the API response contains target services {string}")
-    public void verifyApiResponseServices(String expectedServices) throws Exception {
-        restApiResponse.andExpect(status().isOk())
-                .andExpect(jsonPath("$.specificServices").value(expectedServices));
-    }
-
-    @Then("the schema details the configuration rule {string}")
-    public void verifyApiResponseGuidance(String expectedGuidance) throws Exception {
-        restApiResponse.andExpect(jsonPath("$.configGuidance").value(expectedGuidance));
+    private String getEndpointForCharacteristic(String characteristic) {
+        return switch (characteristic.toLowerCase()) {
+            case "security" -> "/api/security/tactic-mappings";
+            case "reliability" -> "/api/reliability/tactic-mappings";
+            case "resiliency" -> "/api/resiliency/tactic-mappings";
+            default -> throw new IllegalArgumentException("Unknown characteristic: " + characteristic);
+        };
     }
 }
