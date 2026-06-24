@@ -1,9 +1,8 @@
 package com.calculator.application.services.calculators.cost.cloud.aws;
 
 import com.calculator.application.services.calculators.cost.cloud.CloudCalculator;
-import com.calculator.application.services.calculators.cost.cloud.database.aws.AWSDatabaseCostCalculator;
 import com.fasterxml.jackson.databind.JsonNode;
-import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.Filter;
@@ -20,14 +19,8 @@ public abstract class AWSCloudCalculator extends CloudCalculator {
 
     private static final Logger log = Logger.getLogger(AWSCloudCalculator.class.getName());
 
-    protected PricingClient pricing;
-
-    protected AWSCloudCalculator(){
-        this.pricing = PricingClient.builder()
-                .region(AWS_PRICING_REGION)
-                .credentialsProvider(DefaultCredentialsProvider.create())
-                .build();
-    }
+    @Autowired
+    protected PricingClient pricingClient;
 
     protected double fetchSimplePrice(String serviceCode, String productFamily, double fallback) {
         try {
@@ -39,7 +32,7 @@ public abstract class AWSCloudCalculator extends CloudCalculator {
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
 
-            GetProductsResponse resp = pricing.getProducts(req); // <-- mock throws here
+            GetProductsResponse resp = pricingClient.getProducts(req); // <-- mock throws here
 
             if (resp.priceList().isEmpty()) {
                 log.info("GetProductsResponse is empty, using fallback for: " + serviceCode + "/" + productFamily);

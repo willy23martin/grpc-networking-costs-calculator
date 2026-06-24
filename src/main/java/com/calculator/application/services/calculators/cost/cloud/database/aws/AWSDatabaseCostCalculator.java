@@ -68,7 +68,7 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
                             Filter.builder().type(FilterType.TERM_MATCH).field("deploymentOption").value("Multi-AZ").build()
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
-            GetProductsResponse resp = pricing.getProducts(req);
+            GetProductsResponse resp = pricingClient.getProducts(req);
             System.out.println("GetProductsResponse database " + resp);
             if (resp.priceList().isEmpty()) return 0.26;
             JsonNode root = mapper.readTree(resp.priceList().get(0));

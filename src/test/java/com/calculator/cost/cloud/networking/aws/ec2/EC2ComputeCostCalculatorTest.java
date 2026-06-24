@@ -84,7 +84,7 @@ class EC2ComputeCostCalculatorTest {
     }
 
     private void injectMocks(EC2ComputeCostCalculator calc) throws Exception {
-        Field pricingField = AWSCloudCalculator.class.getDeclaredField("pricing");
+        Field pricingField = AWSCloudCalculator.class.getDeclaredField("pricingClient");
         pricingField.setAccessible(true);
         pricingField.set(calc, pricingMock);
 

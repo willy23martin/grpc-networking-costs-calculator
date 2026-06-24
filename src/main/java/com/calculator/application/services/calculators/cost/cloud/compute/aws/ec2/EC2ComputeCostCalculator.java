@@ -88,7 +88,7 @@ public class EC2ComputeCostCalculator extends AWSCloudCalculator implements Clou
                     .formatVersion("aws_v1")
                     .maxResults(1)
                     .build();
-            GetProductsResponse resp = pricing.getProducts(req);
+            GetProductsResponse resp = pricingClient.getProducts(req);
             if (resp.priceList().isEmpty()) return 0.0;
             JsonNode root = mapper.readTree(resp.priceList().get(0));
             return root.path("terms").path("OnDemand").fields().next()

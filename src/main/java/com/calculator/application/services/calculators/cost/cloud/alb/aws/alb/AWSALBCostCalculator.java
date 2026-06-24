@@ -22,7 +22,7 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
     public Map<String, Object> calculateALBCosts() {
         Map<String, Object> albCostMap = new LinkedHashMap<>();
         try {
-            GetProductsResponse resp = pricing.getProducts(buildRequest());
+            GetProductsResponse resp = pricingClient.getProducts(buildRequest());
             System.out.println("GetProductsResponse" + resp);
             log.info("ALB raw product count: " + resp.priceList().size());
 

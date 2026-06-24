@@ -47,7 +47,7 @@ public class ElastiCacheCostCalculator extends AWSCloudCalculator implements Cac
                             Filter.builder().type(FilterType.TERM_MATCH).field("instanceType").value(nodeType).build()
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
-            GetProductsResponse resp = pricing.getProducts(productsRequest);
+            GetProductsResponse resp = pricingClient.getProducts(productsRequest);
             if (resp.priceList().isEmpty()) return 0.0;
             JsonNode root = mapper.readTree(resp.priceList().get(0));
             return root.path("terms").path("OnDemand").fields().next()

@@ -81,7 +81,7 @@ class AWSALBCostCalculatorTest {
         // Inject mock via reflection — because PricingClient is built in the constructor
         Field pricingField = calculator.getClass()
                 .getSuperclass() // AWSCloudCalculator
-                .getDeclaredField("pricing");
+                .getDeclaredField("pricingClient");
         pricingField.setAccessible(true);
         pricingField.set(calculator, mockPricing);
     }
