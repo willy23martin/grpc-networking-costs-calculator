@@ -98,10 +98,6 @@ class ContainerizedEnvironmentCostControllerTest {
         when(usdNode.asText("0")).thenReturn(String.valueOf(price));
     }
 
-    /* ================================================================
-       ENDPOINT 1: GET /api/aws/container-pricing
-    ================================================================ */
-
     @Test
     void getContainerPricing_apiSuccess_allFieldsPopulated() throws Exception {
         GetProductsResponse mockResponse = GetProductsResponse.builder()

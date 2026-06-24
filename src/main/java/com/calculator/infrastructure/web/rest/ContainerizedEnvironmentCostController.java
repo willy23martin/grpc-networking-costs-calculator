@@ -1,9 +1,11 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.application.services.calculators.cost.cloud.alb.aws.alb.AWSALBCostCalculator;
+import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,15 +13,17 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.Filter;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
+import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/aws")
 @CrossOrigin(origins = "*")
 public class ContainerizedEnvironmentCostController {
 
-    private static final Logger log = LoggerFactory.getLogger(ContainerizedEnvironmentCostController.class);
+    private static final java.util.logging.Logger log = Logger.getLogger(ContainerizedEnvironmentCostController.class.getName());
     private final ObjectMapper mapper = new ObjectMapper();
 
     /* ================================================================
@@ -218,7 +222,7 @@ public class ContainerizedEnvironmentCostController {
             enrichEc2Prices(resp.ec2OnDemandPrices);
             resp.source = "AWS Pricing API (live) + fallback for unavailable types";
         } catch (Exception e) {
-            log.warn("Could not fetch EC2 prices from Pricing API: {}", e.getMessage());
+            log.warning("Could not fetch EC2 prices from Pricing API:" + e.getMessage());
             resp.source = "Hardcoded fallback (Q1-2025) — AWS Pricing API unavailable";
         }
 
@@ -228,7 +232,7 @@ public class ContainerizedEnvironmentCostController {
             resp.fargateVcpuPerHour = fargatePrices[0];
             resp.fargateGbPerHour   = fargatePrices[1];
         } catch (Exception e) {
-            log.warn("Could not fetch Fargate prices: {}", e.getMessage());
+            log.warning("Could not fetch Fargate prices: " + e.getMessage());
         }
 
         return ResponseEntity.ok(resp);
@@ -267,7 +271,7 @@ public class ContainerizedEnvironmentCostController {
                 resp.httpApiPer1MCallsFirst1B  = livePrices.get("http-per-1m-first");
             resp.source = "AWS Pricing API (live)";
         } catch (Exception e) {
-            log.warn("Could not fetch API Gateway prices: {}", e.getMessage());
+            log.warning("Could not fetch API Gateway prices: " + e.getMessage());
             resp.source = "Hardcoded fallback (Q1-2025) — AWS Pricing API unavailable";
         }
 
@@ -466,15 +470,17 @@ public class ContainerizedEnvironmentCostController {
                             .formatVersion("aws_v1")
                             .build();
 
-                    var result = pricingClient.getProducts(req);
+                    GetProductsResponse result = pricingClient.getProducts(req);
+                    log.info("GetProductsResponse" + result);
+                    JSONLogger.logAsJSON(log, result);
                     if (!result.priceList().isEmpty()) {
-                        String priceJson = result.priceList().get(0);
+                        String priceJson = result.priceList().getFirst();
                         JsonNode root = mapper.readTree(priceJson);
                         double price = extractOnDemandPriceFromJson(root);
                         if (price > 0) prices.put(instanceType, price);
                     }
                 } catch (Exception e) {
-                    log.debug("Could not fetch price for {}: {}", instanceType, e.getMessage());
+                    log.severe("Could not fetch price for " + instanceType +": " + e.getMessage());
                 }
             }
         }
@@ -496,6 +502,7 @@ public class ContainerizedEnvironmentCostController {
     /* ================================================================
        HELPER: Fetch Fargate prices from AWS Pricing API (SDK v2)
     ================================================================ */
+    @PostConstruct
     private double[] fetchFargatePrices() throws Exception {
         try (PricingClient pricingClient = PricingClient.builder()
                 .region(Region.US_EAST_1)
@@ -515,9 +522,11 @@ public class ContainerizedEnvironmentCostController {
                     .formatVersion("aws_v1")
                     .build();
 
-            var vcpuResult = pricingClient.getProducts(vcpuReq);
+            GetProductsResponse vcpuResult = pricingClient.getProducts(vcpuReq);
+            log.info("GetProductsResponse" + vcpuResult);
+            JSONLogger.logAsJSON(log, vcpuResult);
             if (!vcpuResult.priceList().isEmpty()) {
-                double p = extractOnDemandPriceFromJson(mapper.readTree(vcpuResult.priceList().get(0)));
+                double p = extractOnDemandPriceFromJson(mapper.readTree(vcpuResult.priceList().getFirst()));
                 if (p > 0) vcpuPrice = p;
             }
 
@@ -534,7 +543,7 @@ public class ContainerizedEnvironmentCostController {
 
             var gbResult = pricingClient.getProducts(gbReq);
             if (!gbResult.priceList().isEmpty()) {
-                double p = extractOnDemandPriceFromJson(mapper.readTree(gbResult.priceList().get(0)));
+                double p = extractOnDemandPriceFromJson(mapper.readTree(gbResult.priceList().getFirst()));
                 if (p > 0) gbPrice = p;
             }
 
@@ -562,9 +571,12 @@ public class ContainerizedEnvironmentCostController {
                     .formatVersion("aws_v1")
                     .build();
 
-            var restResult = pricingClient.getProducts(restReq);
+            GetProductsResponse restResult = pricingClient.getProducts(restReq);
+            log.info("GetProductsResponse" + restResult);
+            JSONLogger.logAsJSON(log, restResult);
+
             if (!restResult.priceList().isEmpty()) {
-                double p = extractOnDemandPriceFromJson(mapper.readTree(restResult.priceList().get(0)));
+                double p = extractOnDemandPriceFromJson(mapper.readTree(restResult.priceList().getFirst()));
                 if (p > 0) prices.put("rest-per-1m", p * 1_000_000); // per-request → per-million
             }
 
@@ -588,8 +600,9 @@ public class ContainerizedEnvironmentCostController {
             String usdPrice = dim.path("pricePerUnit").path("USD").asText("0");
             return Double.parseDouble(usdPrice);
         } catch (Exception e) {
-            log.debug("Could not parse price from JSON: {}", e.getMessage());
+            log.severe("Could not parse price from JSON: " + e.getMessage());
             return -1;
         }
     }
+
 }

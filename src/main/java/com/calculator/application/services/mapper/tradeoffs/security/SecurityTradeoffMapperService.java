@@ -9,11 +9,13 @@ import com.calculator.domain.model.quality.TradeoffType;
 import com.calculator.domain.model.quality.security.SecurityQualityTradeoff;
 import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
 import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
+import com.calculator.infrastructure.web.rest.ContainerizedEnvironmentCostController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 public class SecurityTradeoffMapperService {
@@ -23,6 +25,8 @@ public class SecurityTradeoffMapperService {
 
     @Autowired
     CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
+
+    private static final java.util.logging.Logger log = Logger.getLogger(SecurityTradeoffMapperService.class.getName());
 
     public List<SecurityTradeoffsDTO> getSecurityTradeoffs() {
         List<SecurityTradeoffsDTO> securityMappings = new ArrayList<>();
@@ -150,7 +154,7 @@ public class SecurityTradeoffMapperService {
                                 .build(),
                         TradeoffType.ORTHOGONAL)
         );
-        System.out.println("Cloud service: " + cloudService.getId() + " supported architectural decisions: " + supportedArchitecturalDecisions);
+        log.info("Cloud service: " + cloudService.getId() + " supported architectural decisions: " + supportedArchitecturalDecisions);
 
         return SecurityTradeoffsDTO.builder()
                 .tacticId(cloudService.getId())

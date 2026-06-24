@@ -180,8 +180,8 @@ function toggleOAuthParams(show) {
 function loadAlbSection() {
   return fetchAwsPrice('alb-pricing')
     .then(data => {
-      console.warn("ALB pricing data: ");
-          console.warn(data);
+    console.warn("ALB pricing data: ");
+              console.warn(data);
       applicationLoadBalancerPricingData = data;
       window._albData = data;   /* expose for unit-economics.js */
       const descriptionContainer = document.getElementById('alb-price-desc');
@@ -192,8 +192,8 @@ function loadAlbSection() {
       toggleUiVisibility('alb-content', true);
     })
     .catch(error => {
-    console.error("ERROR ALB pricing data: ");
-          console.error(error);
+    console.error("ERROR ALB pricing error: ");
+              console.error(error);
       const loadingLabel = document.getElementById('alb-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch ALB pricing: ${error.message}`;
     });
@@ -202,16 +202,16 @@ function loadAlbSection() {
 function loadDbBackupSection() {
   fetchAwsPrice('database-backup-pricing')
     .then(data => {
-    console.warn("Database pricing data: ");
-           console.warn(data);
+    console.warn("Database Backup pricing data: ");
+              console.warn(data);
       databaseBackupPricingData = data;
       window._dbData = data;   /* expose for unit-economics.js */
       toggleUiVisibility('dbbackup-loading', false);
       toggleUiVisibility('dbbackup-content', true);
     })
     .catch(error => {
-     console.error("ERROR Database Backup pricing data: ");
-           console.error(error);
+    console.error("ERROR Database pricing data: ");
+              console.error(error);
       const loadingLabel = document.getElementById('dbbackup-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch DB pricing: ${error.message}`;
     });
@@ -220,8 +220,8 @@ function loadDbBackupSection() {
 function loadCloudSecSection() {
   fetchAwsPrice('security-services')
     .then(data => {
-    console.warn("Security pricing data: ");
-          console.warn(data);
+    console.warn("Security Services pricing data: ");
+              console.warn(data);
       cloudSecurityPricingData = data;
       window._secData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('cloudsec-content');
@@ -285,7 +285,7 @@ function loadCloudSecSection() {
       }
     })
     .catch(error => {
-        console.error("ERROR Security pricing data: ");
+    console.error("ERROR Security pricing data: ");
               console.error(error);
       const loadingLabel = document.getElementById('cloudsec-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch security pricing: ${error.message}`;
@@ -295,7 +295,7 @@ function loadCloudSecSection() {
 function loadCostOptSection() {
   fetchAwsPrice('cost-optimisation')
     .then(data => {
-    console.warn("Cost optimization pricing data: ");
+    console.warn("FinOps Cost optimization data: ");
               console.warn(data);
       cloudCostOptimizationPricingData = data;
       const contentContainer = document.getElementById('costopt-content');
@@ -367,8 +367,8 @@ function loadCostOptSection() {
       recalculateCostOpt();
     })
     .catch(error => {
-    console.error("ERROR Cost optimization pricing data: ");
-                  console.error(error);
+    console.error("ERROR FinOps Cost optimization data: ");
+              console.error(error);
       const loadingLabel = document.getElementById('costopt-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch cost optimisation: ${error.message}`;
     });
@@ -377,8 +377,6 @@ function loadCostOptSection() {
 function loadCachingSection() {
   fetchAwsPrice('caching-pricing')
     .then(data => {
-     console.warn("Caching section pricing data: ");
-                  console.warn(data);
       cacheInfrastructurePricingData = data;
       window._cacheData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('caching-content');
@@ -434,8 +432,6 @@ function loadCachingSection() {
       contentContainer.style.display = 'block';
     })
     .catch(error => {
-    console.error("ERROR Caching section pricing data: ");
-                      console.error(error);
       const loadingLabel = document.getElementById('caching-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch caching pricing: ${error.message}`;
     });
@@ -493,7 +489,8 @@ function recalculateApiGw() {
   .then(function(response) { return response.ok ? response.json() : null; })
   .then(function(data) {
     if (!data) return;
-
+    console.warn("API Gateway pricing data: ");
+              console.warn(data);
     var resultContainer = document.getElementById('apigw-result');
     if (resultContainer) {
       var executionSummary = callsPerMonthMillions > 0
@@ -517,7 +514,7 @@ function recalculateApiGw() {
     var currentBaseRps = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
     if (currentBaseRps) updateLiveComparison(currentBaseRps, currentBaseRps);
   })
-  .catch(function(error) { console.warn('recalculateApiGw failed:', error.message); });
+  .catch(function(error) { console.error('recalculateApiGw failed:', error.message); });
 }
 
 
@@ -567,6 +564,10 @@ function collectTacticContributions(baseRequestsPerSecond, backendResult) {
   .then(function(response) { return response.ok ? response.json() : null; })
   .then(function(data) {
     if (!data) return [];
+    console.warn("Tactics contribution data: ");
+              console.warn(data);
+    console.warn("Tactics contribution response data: ");
+              console.warn(data);
     window._lastTacticContributions = data.contributions;
     return data.contributions;
   })

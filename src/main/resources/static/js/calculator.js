@@ -144,10 +144,13 @@ function recalculateRps() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
-  .then(function(r) { return r.ok ? r.json() : null; })
+  .then(function(r) {
+  return r.ok ? r.json() : null;
+  })
   .then(function(d) {
     if (!d) return;
-
+    console.warn("Effective RPS response data: ");
+              console.warn(d);
     window._lastEffectiveRps  = d.effectiveRps;
     window._lastRetryExtra    = d.retryExtra    || 0;   /* authoritative retry req/s from backend */
     window._lastHandshakeExtra= d.handshakeExtra|| 0;
@@ -182,7 +185,7 @@ function recalculateRps() {
     updateLiveComparison(baseRps, d.effectiveRps);
   })
   .catch(function(e) {
-    console.warn('recalculateRps backend call failed:', e.message);
+    console.error('recalculateRps backend call failed:', e.message);
     updateLiveComparison(baseRps, baseRps);
   });
 }
@@ -575,12 +578,24 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
 ===================================================================== */
 function aggregateCloudInfraCost() {
   var infraKeys = ['tco_alb_cost','tco_cache_cost','tco_db_cost','tco_container_cost','tco_apigw_cost'];
-  var secKeys   = ['tco_sec_sec-guardduty','tco_sec_sec-inspector','tco_sec_sec-waf','tco_sec_sec-macie',
-                   'tco_sec_sec-cloudwatch','tco_sec_sec-audit','tco_sec_sec-kms',
-                   'tco_sec_sec-cloudtrail','tco_sec_sec-acm'];
-  var total = infraKeys.concat(secKeys).reduce(function(sum, k) {
+  var total = infraKeys.reduce(function(sum, k) {
     return sum + (parseFloat(sessionStorage.getItem(k) || '0'));
   }, 0);
+  // Security services: only count a sessionStorage key when its checkbox is ACTUALLY
+  // checked in the DOM right now.  sessionStorage persists across page reloads within
+  // the same browser tab, so stale keys from a previous session must never be counted
+  // before the user has selected any checkbox.
+  var secServiceIds = [
+    'sec-guardduty','sec-inspector','sec-waf','sec-macie',
+    'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
+  ];
+  secServiceIds.forEach(function(id) {
+    var cb = document.getElementById(id);
+    if (cb && cb.checked) {
+      total += parseFloat(sessionStorage.getItem('tco_sec_' + id) || '0');
+    }
+    // unchecked or cloud-sec panel not yet rendered → skip even if a stale key exists
+  });
   var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
   window._lastCloudInfraCost = Math.max(0, Math.round((total - saving) * 100) / 100);
   return window._lastCloudInfraCost;
@@ -956,6 +971,8 @@ function recalculateCostOpt() {
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (riData) {
         if (!riData) return;
+        console.warn("FinOps reserved instances response data: ");
+                  console.warn(riData);
         /* Update rows with live actual % */
         _fpRows.forEach(function (row) {
           if (row.s.indexOf('1-yr') >= 0 && riData.ri1yrActualDiscountPct > 0) row.p = riData.ri1yrActualDiscountPct;
@@ -1026,7 +1043,12 @@ function recalculateContainerCost() {
   /* If live prices not yet loaded, kick off the fetch */
   if (!window._containerPriceData) {
     fetch('/api/aws/container-pricing').then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { if (d) { window._containerPriceData = d; recalculateContainerCost(); } }).catch(function () { });
+      .then(function (d) { if (d) {
+      console.warn("Container pricing data: ");
+                console.warn(d);
+      window._containerPriceData = d;
+      recalculateContainerCost();
+      } }).catch(function () { });
   }
   var aLines = [], aTotal = 0;
   if (chk('cef-clusters')) {
@@ -1279,6 +1301,15 @@ function wireAllHandlers() {
    DOM READY — single registration
 ===================================================================== */
 document.addEventListener('DOMContentLoaded', function () {
+
+  // Clear all per-service security sessionStorage keys immediately on page load.
+  // sessionStorage persists across reloads within the same browser tab, so keys written
+  // in a previous session would otherwise be read by aggregateCloudInfraCost and appear
+  // in the cost breakdown before the user has checked any checkbox.
+  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
+  ].forEach(function(id) { sessionStorage.removeItem('tco_sec_' + id); });
+  sessionStorage.removeItem('tco_sec_cost');
 
   wireAllHandlers();
   renderPhase5Portfolio();

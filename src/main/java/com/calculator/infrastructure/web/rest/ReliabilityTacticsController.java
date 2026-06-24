@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -17,10 +18,13 @@ public class ReliabilityTacticsController {
     @Autowired
     ReliabilityTradeoffMapperService reliabilityTradeoffMapperService;
 
+    private static final java.util.logging.Logger log = Logger.getLogger(ReliabilityTacticsController.class.getName());
+
     @GetMapping("/api/reliability/tactic-mappings")
     public ResponseEntity<List<ReliabilityTradeoffDTO>> getTacticReliabilityMappings() {
-        System.out.println("Reliability Tactics Mapping has been invoked");
+        log.info("Reliability Tactics Mapping has been invoked");
         List<ReliabilityTradeoffDTO> reliabilityMappings = reliabilityTradeoffMapperService.getReliabilityTradeoffs();
+        log.info("Reliability Mappings: \n" + reliabilityMappings);
         return ResponseEntity.ok(reliabilityMappings);
     }
 
