@@ -2,6 +2,7 @@ package com.calculator.application.services.calculators.cost.cloud.alb.aws.alb;
 
 import com.calculator.application.services.calculators.cost.cloud.alb.ALBCostCalculator;
 import com.calculator.application.services.calculators.cost.cloud.aws.AWSCloudCalculator;
+import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.databind.JsonNode;
 import software.amazon.awssdk.services.pricing.model.Filter;
 import software.amazon.awssdk.services.pricing.model.FilterType;
@@ -23,7 +24,8 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
         Map<String, Object> albCostMap = new LinkedHashMap<>();
         try {
             GetProductsResponse resp = pricingClient.getProducts(buildRequest());
-            System.out.println("GetProductsResponse" + resp);
+            log.info("GetProductsResponse" + resp);
+            JSONLogger.logAsJSON(log, resp);
             log.info("ALB raw product count: " + resp.priceList().size());
 
             double fixedPerHour = 0.0;
@@ -116,7 +118,7 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
 
     private GetProductsRequest buildRequest() {
         return GetProductsRequest.builder()
-                .serviceCode("AWSElasticLoadBalancing")
+                .serviceCode("AmazonEC2") // FIX: AWS catalog groups ELB under AmazonEC2
                 .filters(
                         Filter.builder()
                                 .type(FilterType.TERM_MATCH)
@@ -126,11 +128,11 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
                         Filter.builder()
                                 .type(FilterType.TERM_MATCH)
                                 .field("productFamily")
-                                .value("Load Balancer-Application")
+                                .value("Load Balancer") // FIX: Must be "Load Balancer"
                                 .build()
                 )
                 .formatVersion("aws_v1")
-                .maxResults(25)
+                .maxResults(100) // Increase slightly to ensure both Usage and LCU types return in the same page
                 .build();
     }
 
