@@ -502,7 +502,7 @@ public class ContainerizedEnvironmentCostController {
     /* ================================================================
        HELPER: Fetch Fargate prices from AWS Pricing API (SDK v2)
     ================================================================ */
-    @PostConstruct
+    // TODO - @PostConstruct
     private double[] fetchFargatePrices() throws Exception {
         try (PricingClient pricingClient = PricingClient.builder()
                 .region(Region.US_EAST_1)
