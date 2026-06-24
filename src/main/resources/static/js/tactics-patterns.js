@@ -163,6 +163,8 @@ function toggleOAuthParams(show) {
 function loadAlbSection() {
   return fetchAwsPrice('alb-pricing')
     .then(data => {
+      console.warn("ALB pricing data: ");
+      console.warn(data);
       applicationLoadBalancerPricingData = data;
       window._albData = data;   /* expose for unit-economics.js */
       const descriptionContainer = document.getElementById('alb-price-desc');
@@ -173,6 +175,8 @@ function loadAlbSection() {
       toggleUiVisibility('alb-content', true);
     })
     .catch(error => {
+      console.error("ERROR ALB pricing data: ");
+      console.error(error);
       const loadingLabel = document.getElementById('alb-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch ALB pricing: ${error.message}`;
     });

@@ -7,6 +7,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.*;
 

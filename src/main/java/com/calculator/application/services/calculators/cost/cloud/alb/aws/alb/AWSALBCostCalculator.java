@@ -4,6 +4,7 @@ import com.calculator.application.services.calculators.cost.cloud.alb.ALBCostCal
 import com.calculator.application.services.calculators.cost.cloud.aws.AWSCloudCalculator;
 import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.PostConstruct;
 import software.amazon.awssdk.services.pricing.model.Filter;
 import software.amazon.awssdk.services.pricing.model.FilterType;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
@@ -19,6 +20,7 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
     private static final double ALB_FIXED_CHARGE_PER_HOUR = 0.008;
     private static final double LCU_FIXED_CHARGE_PER_HOUR = 0.008;
 
+    @PostConstruct
     @Override
     public Map<String, Object> calculateALBCosts() {
         Map<String, Object> albCostMap = new LinkedHashMap<>();
@@ -149,4 +151,5 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
     private static double round2(double v) {
         return Math.round(v * 100.0) / 100.0;
     }
+
 }
