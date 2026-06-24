@@ -137,21 +137,38 @@ function toggleRetry(checked) {
 }
 
 function toggleTlsOptions() {
-  const isTlsActive = Boolean(document.getElementById('tactic-tls')?.checked);
+  const isTlsActive  = Boolean(document.getElementById('tactic-tls')?.checked);
   const isMtlsActive = Boolean(document.getElementById('tactic-mtls')?.checked);
 
-  toggleUiVisibility('tls-params', isTlsActive);
-  toggleUiVisibility('mtls-params', isMtlsActive);
-  toggleUiVisibility('tls-byte-badge', isTlsActive, 'inline-flex');
+  toggleUiVisibility('tls-params',      isTlsActive);
+  toggleUiVisibility('mtls-params',     isMtlsActive);
+  toggleUiVisibility('tls-byte-badge',  isTlsActive,  'inline-flex');
   toggleUiVisibility('mtls-byte-badge', isMtlsActive, 'inline-flex');
+
+  // FIX 3a — auto-select (or deselect) cloud services driven by backend mapping
+  // supportedArchitecturalDecisions from CloudSecurityArchitecturalDecisionRepository:
+  //   tactic-tls  → sec-inspector, sec-waf, sec-cloudwatch, sec-audit, sec-kms, sec-acm
+  //   tactic-mtls → sec-inspector, sec-waf, sec-cloudwatch, sec-audit, sec-kms, sec-acm
+  if (typeof window.syncCloudServicesForTactic === 'function') {
+    window.syncCloudServicesForTactic('tactic-tls',  isTlsActive);
+    window.syncCloudServicesForTactic('tactic-mtls', isMtlsActive);
+  }
 
   recalculateRps();
   scheduleSessionSave();
 }
 
 function toggleOAuthParams(show) {
-  toggleUiVisibility('oauth-params', show);
+  toggleUiVisibility('oauth-params',   show);
   toggleUiVisibility('jwt-byte-badge', show, 'inline-flex');
+
+  // FIX 3a — auto-select (or deselect) cloud services driven by backend mapping
+  // supportedArchitecturalDecisions from CloudSecurityArchitecturalDecisionRepository:
+  //   tactic-oauth → sec-guardduty, sec-cloudtrail, sec-macie, sec-cloudwatch, sec-audit
+  if (typeof window.syncCloudServicesForTactic === 'function') {
+    window.syncCloudServicesForTactic('tactic-oauth', show);
+  }
+
   recalculateRps();
   scheduleSessionSave();
 }
@@ -163,8 +180,6 @@ function toggleOAuthParams(show) {
 function loadAlbSection() {
   return fetchAwsPrice('alb-pricing')
     .then(data => {
-      console.warn("ALB pricing data: ");
-      console.warn(data);
       applicationLoadBalancerPricingData = data;
       window._albData = data;   /* expose for unit-economics.js */
       const descriptionContainer = document.getElementById('alb-price-desc');
@@ -175,8 +190,6 @@ function loadAlbSection() {
       toggleUiVisibility('alb-content', true);
     })
     .catch(error => {
-      console.error("ERROR ALB pricing data: ");
-      console.error(error);
       const loadingLabel = document.getElementById('alb-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch ALB pricing: ${error.message}`;
     });
@@ -185,16 +198,12 @@ function loadAlbSection() {
 function loadDbBackupSection() {
   fetchAwsPrice('database-backup-pricing')
     .then(data => {
-       console.warn("Database pricing data: ");
-       console.warn(data);
       databaseBackupPricingData = data;
       window._dbData = data;   /* expose for unit-economics.js */
       toggleUiVisibility('dbbackup-loading', false);
       toggleUiVisibility('dbbackup-content', true);
     })
     .catch(error => {
-       console.error("ERROR Database Backup pricing data: ");
-       console.error(error);
       const loadingLabel = document.getElementById('dbbackup-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch DB pricing: ${error.message}`;
     });
@@ -203,8 +212,6 @@ function loadDbBackupSection() {
 function loadCloudSecSection() {
   fetchAwsPrice('security-services')
     .then(data => {
-      console.warn("Security pricing data: ");
-      console.warn(data);
       cloudSecurityPricingData = data;
       window._secData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('cloudsec-content');
@@ -236,7 +243,8 @@ function loadCloudSecSection() {
             <div id="meta-container-${service.id}"></div>
           </div>
           <div class="tactic-input-group">
-            <input type="number" id="${service.inputId}" min="0" placeholder="0" oninput="recalculateSecCost()">
+            <input type="number" id="${service.inputId}" min="0" placeholder="0"
+                   oninput="if(document.getElementById('${service.id}') && document.getElementById('${service.id}').checked) recalculateSecCost();">
             <span class="tactic-unit">${service.inputUnit}</span>
           </div>
         </div>
@@ -249,14 +257,24 @@ function loadCloudSecSection() {
       if (window.refreshTacticMappingDisplay) {
         window.refreshTacticMappingDisplay();
       }
-      /* Also re-evaluate cloud-service visibility against active tactics */
+      /* Re-evaluate cloud-service visibility (dim/highlight) against active tactics */
       if (typeof evaluateCloudServiceRelevance === 'function') {
         evaluateCloudServiceRelevance();
       }
+      /* FIX 3a — if a tactic (tls/mtls/oauth/server-lb) was already checked before this panel
+         was rendered, auto-check the corresponding cloud-service checkboxes now that they exist */
+      if (typeof window.syncCloudServicesForTactic === 'function') {
+        [
+          { id: 'tactic-tls'  },
+          { id: 'tactic-mtls' },
+          { id: 'tactic-oauth' }
+        ].forEach(function(t) {
+          var el = document.getElementById(t.id);
+          if (el && el.checked) window.syncCloudServicesForTactic(t.id, true);
+        });
+      }
     })
     .catch(error => {
-    console.error("ERROR Security pricing data: ");
-          console.error(error);
       const loadingLabel = document.getElementById('cloudsec-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch security pricing: ${error.message}`;
     });

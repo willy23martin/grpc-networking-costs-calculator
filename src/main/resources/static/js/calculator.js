@@ -189,12 +189,28 @@ function recalculateRps() {
 
 
 function hasAnyImpactingTactic() {
-  var allIds = ['tactic-retry', 'tactic-tls', 'tactic-mtls', 'tactic-oauth',
+  var allIds = [
+    // Resiliency tactics
+    'tactic-retry', 'tactic-tls', 'tactic-mtls', 'tactic-oauth',
+    // Reliability / cloud infra
     'tactic-alb', 'tactic-cache', 'tactic-s3-backup', 'tactic-aurora-replica', 'tactic-apigw',
-    'cef-clusters', 'cef-cluster-lb', 'cef-host-storage', 'cef-workload-license'];
-  for (var i = 0; i < allIds.length; i++) { var el = document.getElementById(allIds[i]); if (el && el.checked) return true; }
+    // Container
+    'cef-clusters', 'cef-cluster-lb', 'cef-host-storage', 'cef-workload-license',
+    // FIX 2 — security cloud-service checkboxes were missing, causing updateLiveComparison
+    // to return early before ever calling collectTacticContributions or renderComparison
+    'sec-guardduty', 'sec-inspector', 'sec-waf', 'sec-macie',
+    'sec-cloudwatch', 'sec-audit', 'sec-kms', 'sec-cloudtrail', 'sec-acm',
+    // DB/DR cloud services
+    'tactic-rds-snapshot', 'tactic-rds-multiaz', 'tactic-dynamo-global'
+  ];
+  for (var i = 0; i < allIds.length; i++) {
+    var el = document.getElementById(allIds[i]);
+    if (el && el.checked) return true;
+  }
   var ssK = ['tco_alb_cost', 'tco_cache_cost', 'tco_db_cost', 'tco_sec_cost', 'tco_container_cost', 'tco_apigw_cost'];
-  for (var k = 0; k < ssK.length; k++) { if (parseFloat(sessionStorage.getItem(ssK[k]) || '0') > 0) return true; }
+  for (var k = 0; k < ssK.length; k++) {
+    if (parseFloat(sessionStorage.getItem(ssK[k]) || '0') > 0) return true;
+  }
   return false;
 }
 
@@ -360,15 +376,27 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
     networkingCostDelta = Math.round(networkingCostDelta * 100) / 100;
   }
 
-  var tacticsTotalCost      = base.cost + networkingCostDelta + cachedCloudInfraCost;
+  // FIX 1 — before a proto file is uploaded we only have a placeholder byte estimate.
+  // Showing a fabricated dollar figure is misleading so we display $0.00 with a tooltip.
+  // base.cost is also forced to 0 in renderComparisonEstimate / renderComparisonEstimateWithBytes
+  // when !window._lastProtoFile, so the tactics column only shows the delta costs.
+  var hasRealProto     = !!window._lastProtoFile;
+  var displayBaseCost  = hasRealProto ? base.cost : 0;
+
+  var tacticsTotalCost      = displayBaseCost + networkingCostDelta + cachedCloudInfraCost;
   var totalMonthlyCostDelta = networkingCostDelta + cachedCloudInfraCost;
   var el;
 
   el = document.getElementById('cmp-base-cost');
-  if (el) el.textContent = '$' + base.cost.toFixed(2) + ' / mo';
+  if (el) {
+    el.textContent = '$' + displayBaseCost.toFixed(2) + ' / mo';
+    el.title = hasRealProto ? '' : 'Upload your .proto file in Phase 2 to calculate the real base networking cost.';
+  }
 
   el = document.getElementById('cmp-base-rps');
-  if (el) el.textContent = baseRps.toLocaleString() + ' RPS (networking only)';
+  if (el) el.textContent = hasRealProto
+    ? baseRps.toLocaleString() + ' RPS (networking only)'
+    : baseRps.toLocaleString() + ' RPS — awaiting .proto upload';
 
   el = document.getElementById('cmp-tactics-cost');
   if (el) el.textContent = '$' + tacticsTotalCost.toFixed(2) + ' / mo';
@@ -472,9 +500,30 @@ function buildCloudServiceBreakdownRows() {
   var dbCost = parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
   if (dbCost > 0) rows += buildCloudRow('Database Backup / DR', '$' + dbCost.toFixed(2) + '/mo', dbCost);
 
-  // Cloud security — reads sessionStorage written by recalculateSecCost() → /api/cost/security-services
-  var secCost = parseFloat(sessionStorage.getItem('tco_sec_cost') || '0');
-  if (secCost > 0) rows += buildCloudRow('Cloud Security Services', 'GuardDuty / WAF / Inspector / KMS / Macie / CloudWatch', secCost);
+  // Cloud security — one row per checked service with a real cost > 0.
+  // Per-service costs are written to sessionStorage by recalculateSecCost() as tco_sec_<id>.
+  // We guard on BOTH the checkbox state AND cost > 0: a service that is checked but has no
+  // volume entered yet (cost = 0) is intentionally omitted until the user fills in the volume.
+  var secServiceDefs = [
+    { id: 'sec-guardduty',  label: 'Amazon GuardDuty'    },
+    { id: 'sec-inspector',  label: 'Amazon Inspector'     },
+    { id: 'sec-waf',        label: 'AWS WAF'              },
+    { id: 'sec-macie',      label: 'Amazon Macie'         },
+    { id: 'sec-cloudwatch', label: 'CloudWatch Logs'      },
+    { id: 'sec-audit',      label: 'AWS Audit Manager'    },
+    { id: 'sec-kms',        label: 'AWS KMS (Encryption)' },
+    { id: 'sec-cloudtrail', label: 'AWS CloudTrail'       },
+    { id: 'sec-acm',        label: 'AWS ACM'              }
+  ];
+  secServiceDefs.forEach(function(svc) {
+    var cbEl = document.getElementById(svc.id);
+    if (!cbEl || !cbEl.checked) return;                          // not checked → skip
+    var svcCost = parseFloat(sessionStorage.getItem('tco_sec_' + svc.id) || '0');
+    if (svcCost > 0) {                                           // only show when cost is real
+      rows += buildCloudRow(svc.label, '$' + svcCost.toFixed(2) + '/mo', svcCost);
+    }
+    // cost = 0 → checked but no volume yet → silently omit (no $0.00 row)
+  });
 
   // API Gateway — reads sessionStorage written by recalculateApiGw() → /api/cost/api-gateway
   var apiGatewayCost = parseFloat(sessionStorage.getItem('tco_apigw_cost') || '0');
@@ -525,9 +574,11 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
    window._lastCloudInfraCost so renderComparisonFromBackend can use it
 ===================================================================== */
 function aggregateCloudInfraCost() {
-  var keys = ['tco_alb_cost','tco_cache_cost','tco_db_cost','tco_sec_cost',
-              'tco_container_cost','tco_apigw_cost'];
-  var total = keys.reduce(function(sum, k) {
+  var infraKeys = ['tco_alb_cost','tco_cache_cost','tco_db_cost','tco_container_cost','tco_apigw_cost'];
+  var secKeys   = ['tco_sec_sec-guardduty','tco_sec_sec-inspector','tco_sec_sec-waf','tco_sec_sec-macie',
+                   'tco_sec_sec-cloudwatch','tco_sec_sec-audit','tco_sec_sec-kms',
+                   'tco_sec_sec-cloudtrail','tco_sec_sec-acm'];
+  var total = infraKeys.concat(secKeys).reduce(function(sum, k) {
     return sum + (parseFloat(sessionStorage.getItem(k) || '0'));
   }, 0);
   var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
@@ -536,10 +587,15 @@ function aggregateCloudInfraCost() {
 }
 
 function renderComparisonEstimate(baseRps, effectiveRps) {
-  var baseCost    = calcMonthlyCost(baseRps,    PLACEHOLDER_RESP_BYTES);
+  var baseCost    = calcMonthlyCost(baseRps,      PLACEHOLDER_RESP_BYTES);
   var tacticsCost = calcMonthlyCost(effectiveRps, PLACEHOLDER_RESP_BYTES);
   aggregateCloudInfraCost();
-  var base    = { cost: baseCost.cost,    respGb: baseCost.gbPerMonth,    responseSizeEff: null };
+  // FIX 1 — show $0.00 base cost until a real proto file is uploaded
+  var base    = {
+    cost:            window._lastProtoFile ? baseCost.cost : 0,
+    respGb:          baseCost.gbPerMonth,
+    responseSizeEff: null
+  };
   var tactics = { cost: tacticsCost.cost, respGb: tacticsCost.gbPerMonth, responseSizeEff: null };
   collectTacticContributions(baseRps, null).then(function(contributions) {
     renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, true, contributions);
@@ -555,10 +611,15 @@ function renderComparisonEstimateWithBytes(baseRps, effectiveRps) {
   var estRespBytes = PLACEHOLDER_RESP_BYTES + estTlsB;
   var fakeBackend  = { responseSizeEff: PLACEHOLDER_RESP_BYTES, tlsOverheadBytes: estTlsB, jwtOverheadBytes: estJwtB };
   aggregateCloudInfraCost();
+  // FIX 1 — show $0.00 base cost until a real proto file is uploaded
   var base = {
-    cost: calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).cost,
-    respGb: calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).gbPerMonth,
-    responseSizeEff: PLACEHOLDER_RESP_BYTES, tlsOverheadBytes: estTlsB, jwtOverheadBytes: estJwtB
+    cost: window._lastProtoFile
+            ? calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).cost
+            : 0,
+    respGb:          calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).gbPerMonth,
+    responseSizeEff: PLACEHOLDER_RESP_BYTES,
+    tlsOverheadBytes: estTlsB,
+    jwtOverheadBytes: estJwtB
   };
   var tactics2 = {
     cost: calcMonthlyCost(effectiveRps, estRespBytes).cost,
@@ -727,26 +788,96 @@ function recalculateDbCost() {
 
 function recalculateSecCost() {
   if (!_secData) return;
-  var total = 0; var lines = [];
+
   var rps = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   var rpm = rps * 2592000;
-  var g = function (id) { return document.getElementById(id) || {}; };
-  if (g('sec-guardduty').checked) { var gb = parseFloat(g('input-guardduty-gb').value) || 0; var c = Math.max(0, gb - 500) * _secData.guardDutyPerGbLogs; total += c; lines.push('GuardDuty: $' + c.toFixed(2) + '/mo'); }
-  if (g('sec-inspector').checked) { var i = parseInt(g('input-inspector-instances').value) || 1; var c2 = i * _secData.inspectorPerInstanceMonth; total += c2; lines.push('Inspector: $' + c2.toFixed(2) + '/mo (' + i + ' instances)'); }
-  if (g('sec-waf').checked) { var r = parseInt(g('input-waf-rules').value) || 5; var c3 = _secData.wafWebAclPerMonth + r * _secData.wafRulePerMonth + (rpm / 1000000) * _secData.wafPer1MRequests; total += c3; lines.push('WAF: $' + c3.toFixed(2) + '/mo'); }
-  if (g('sec-macie').checked) { var gbM = parseFloat(g('input-macie-gb').value) || 0; var c4 = Math.max(0, gbM - 1) * _secData.maciePerGbClassified; total += c4; lines.push('Macie: $' + c4.toFixed(2) + '/mo'); }
-  if (g('sec-cloudwatch').checked) { var gbC = parseFloat(g('input-cw-gb').value) || 1; var c5 = gbC * _secData.cloudwatchLogsIngestionPerGb + gbC * _secData.cloudwatchLogsStoragePerGbMonth; total += c5; lines.push('CloudWatch Logs: $' + c5.toFixed(2) + '/mo'); }
-  if (g('sec-audit').checked) { var a = parseInt(g('input-audit-assessments').value) || 1; var c6 = a * _secData.auditManagerPerAssessmentMonth; total += c6; lines.push('Audit Manager: $' + c6.toFixed(2) + '/mo'); }
-  if (g('sec-kms').checked) { var k = parseInt(g('input-kms-keys').value) || 1; var c7 = k * _secData.kmsCmkPerMonth + (rpm / 10000) * _secData.kmsApiCallsPer10k; total += c7; lines.push('KMS: $' + c7.toFixed(2) + '/mo'); }
+  var g   = function (id) { return document.getElementById(id) || {}; };
+
+  // Always clear every per-service key first so a deselected service can never leave a
+  // stale cost in sessionStorage (fixes: deselect not removing row from breakdown table).
+  var ALL_SEC_IDS = [
+    'sec-guardduty','sec-inspector','sec-waf','sec-macie',
+    'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
+  ];
+  ALL_SEC_IDS.forEach(function(id) { sessionStorage.removeItem('tco_sec_' + id); });
+
+  var total = 0;
+  var lines = [];
+
+  // GuardDuty — cost only when checkbox checked AND GB > 0 beyond free tier
+  if (g('sec-guardduty').checked) {
+    var gb    = parseFloat(g('input-guardduty-gb').value) || 0;
+    var gdC   = Math.max(0, gb - 500) * _secData.guardDutyPerGbLogs;
+    if (gdC > 0) { sessionStorage.setItem('tco_sec_sec-guardduty', gdC.toFixed(4)); total += gdC; }
+    lines.push('GuardDuty: $' + gdC.toFixed(2) + '/mo');
+  }
+
+  // Inspector — cost whenever checked (per instance, always > 0)
+  if (g('sec-inspector').checked) {
+    var inst  = parseInt(g('input-inspector-instances').value) || 1;
+    var inC   = inst * _secData.inspectorPerInstanceMonth;
+    if (inC > 0) { sessionStorage.setItem('tco_sec_sec-inspector', inC.toFixed(4)); total += inC; }
+    lines.push('Inspector: $' + inC.toFixed(2) + '/mo (' + inst + ' instances)');
+  }
+
+  // WAF — always has a base WebACL cost when checked
+  if (g('sec-waf').checked) {
+    var r     = parseInt(g('input-waf-rules').value) || 5;
+    var wafC  = _secData.wafWebAclPerMonth + r * _secData.wafRulePerMonth + (rpm / 1000000) * _secData.wafPer1MRequests;
+    if (wafC > 0) { sessionStorage.setItem('tco_sec_sec-waf', wafC.toFixed(4)); total += wafC; }
+    lines.push('WAF: $' + wafC.toFixed(2) + '/mo');
+  }
+
+  // Macie — cost only when GB > free tier (1 GB)
+  if (g('sec-macie').checked) {
+    var gbM   = parseFloat(g('input-macie-gb').value) || 0;
+    var macC  = Math.max(0, gbM - 1) * _secData.maciePerGbClassified;
+    if (macC > 0) { sessionStorage.setItem('tco_sec_sec-macie', macC.toFixed(4)); total += macC; }
+    lines.push('Macie: $' + macC.toFixed(2) + '/mo');
+  }
+
+  // CloudWatch — always has a cost when checked (ingestion + storage)
+  if (g('sec-cloudwatch').checked) {
+    var gbC   = parseFloat(g('input-cw-gb').value) || 1;
+    var cwC   = gbC * _secData.cloudwatchLogsIngestionPerGb + gbC * _secData.cloudwatchLogsStoragePerGbMonth;
+    if (cwC > 0) { sessionStorage.setItem('tco_sec_sec-cloudwatch', cwC.toFixed(4)); total += cwC; }
+    lines.push('CloudWatch Logs: $' + cwC.toFixed(2) + '/mo');
+  }
+
+  // Audit Manager — always has a cost when checked (per assessment)
+  if (g('sec-audit').checked) {
+    var a     = parseInt(g('input-audit-assessments').value) || 1;
+    var audC  = a * _secData.auditManagerPerAssessmentMonth;
+    if (audC > 0) { sessionStorage.setItem('tco_sec_sec-audit', audC.toFixed(4)); total += audC; }
+    lines.push('Audit Manager: $' + audC.toFixed(2) + '/mo');
+  }
+
+  // KMS — always has a cost when checked (per CMK + API calls)
+  if (g('sec-kms').checked) {
+    var k     = parseInt(g('input-kms-keys').value) || 1;
+    var kmsC  = k * _secData.kmsCmkPerMonth + (rpm / 10000) * _secData.kmsApiCallsPer10k;
+    if (kmsC > 0) { sessionStorage.setItem('tco_sec_sec-kms', kmsC.toFixed(4)); total += kmsC; }
+    lines.push('KMS: $' + kmsC.toFixed(2) + '/mo');
+  }
+
+  // Update the summary panel
   var tot = document.getElementById('cloudsec-total');
   if (!tot) return;
-  if (!lines.length) { tot.style.display = 'none'; return; }
-  tot.style.display = 'block';
-  tot.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;"></i><strong>Cloud security: <span style="color:var(--red);">$' + total.toFixed(2) + '/mo</span></strong>'
-    + lines.map(function (l) { return '<div style="font-size:.78rem;margin-top:4px;color:var(--ink-medium);">\u2022 ' + l + '</div>'; }).join('');
-  sessionStorage.setItem('tco_sec_cost', total.toFixed(4));
+  if (!lines.length) {
+    tot.style.display = 'none';
+    sessionStorage.removeItem('tco_sec_cost');
+  } else {
+    tot.style.display = 'block';
+    tot.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;"></i>'
+      + '<strong>Cloud security: <span style="color:var(--red);">$' + total.toFixed(2) + '/mo</span></strong>'
+      + lines.map(function (l) {
+          return '<div style="font-size:.78rem;margin-top:4px;color:var(--ink-medium);">\u2022 ' + l + '</div>';
+        }).join('');
+    if (total > 0) sessionStorage.setItem('tco_sec_cost', total.toFixed(4));
+    else           sessionStorage.removeItem('tco_sec_cost');
+  }
 
-  /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
+  /* Refresh live comparison */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
@@ -964,7 +1095,12 @@ function startNewService(skipConfirm) {
   ['svc_name', 'svc_purpose', 'svc_rps', 'svc_buc', 'svc_consumers', 'svc_consumer_type',
     'svc_revenue_per_tx', 'tco_alb_cost', 'tco_alb_label', 'tco_cache_cost', 'tco_cache_label',
     'tco_db_cost', 'tco_sec_cost', 'tco_tls_overhead', 'tco_jwt_overhead',
-    'tco_container_cost', 'tco_apigw_cost', 'tco_finops_saving', 'tco_finops_spend'].forEach(function (k) { sessionStorage.removeItem(k); });
+    'tco_container_cost', 'tco_apigw_cost', 'tco_finops_saving', 'tco_finops_spend',
+    // Per-service security keys
+    'tco_sec_sec-guardduty','tco_sec_sec-inspector','tco_sec_sec-waf','tco_sec_sec-macie',
+    'tco_sec_sec-cloudwatch','tco_sec_sec-audit','tco_sec_sec-kms',
+    'tco_sec_sec-cloudtrail','tco_sec_sec-acm'
+  ].forEach(function (k) { sessionStorage.removeItem(k); });
   goToPhase(1);
 }
 
@@ -1067,16 +1203,19 @@ function wireAllHandlers() {
 
   on('tactic-tls', 'change', function () {
     toggleTlsOptions();
+    if (window.syncCloudServicesForTactic) window.syncCloudServicesForTactic('tactic-tls', this.checked);
     if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
   on('tactic-mtls', 'change', function () {
     toggleTlsOptions();
+    if (window.syncCloudServicesForTactic) window.syncCloudServicesForTactic('tactic-mtls', this.checked);
     if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
   on('input-tls-reconnects', 'input', function () { recalculateRps(); scheduleSessionSave(); });
 
   on('tactic-oauth', 'change', function () {
     toggleOAuthParams(this.checked);
+    if (window.syncCloudServicesForTactic) window.syncCloudServicesForTactic('tactic-oauth', this.checked);
     enforceAuthMutualExclusivityBetweenOAuthAndBasicCheckboxes('oauth');
     if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
@@ -1104,7 +1243,9 @@ function wireAllHandlers() {
     if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });
   on('tactic-server-lb', 'change', function () {
-    if (document.getElementById('tactic-server-lb').checked) autoEnableAlb();
+    var checked = document.getElementById('tactic-server-lb').checked;
+    if (checked) autoEnableAlb();
+    if (window.syncCloudServicesForTactic) window.syncCloudServicesForTactic('tactic-server-lb', checked);
     recalculateRps(); scheduleSessionSave(); updateCloudTacticsBadge();
     if (window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();
   });

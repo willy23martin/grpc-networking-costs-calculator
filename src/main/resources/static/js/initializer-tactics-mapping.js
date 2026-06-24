@@ -170,48 +170,62 @@ function getAllCloudServiceMappings() {
 }
 
 /**
- * Checks every cloud-service checkbox whose supportedArchitecturalDecisions
- * array includes the given tacticId, if that tactic is currently enabled.
- * Safe to call multiple times (idempotent on already-checked boxes).
+ * Checks or unchecks every cloud-service checkbox whose
+ * supportedArchitecturalDecisions array includes tacticId.
  *
- * @param {string} tacticId  e.g. 'tactic-tls', 'tactic-oauth', 'tactic-server-lb'
+ * When ENABLING a tactic  → auto-checks all dependent services.
+ * When DISABLING a tactic → auto-unchecks dependent services ONLY if no
+ *   other currently-active tactic also requires them (shared services such
+ *   as sec-cloudwatch, needed by both oauth AND tls, stay checked when
+ *   only one of the two tactics is removed).
+ *
+ * @param {string}  tacticId   e.g. 'tactic-tls', 'tactic-oauth', 'tactic-server-lb'
+ * @param {boolean} [isEnabled] the tactic's new state; if omitted, reads the DOM
  */
-function syncCloudServicesForTactic(tacticId) {
-    const tacticEl  = document.getElementById(tacticId);
-    const isEnabled = tacticEl && tacticEl.checked;
-
-    /* Nothing to do when tactic is being disabled — intentionally do not
-       auto-uncheck because services may be needed by other active tactics. */
-    if (!isEnabled) return;
+function syncCloudServicesForTactic(tacticId, isEnabled) {
+    if (isEnabled === undefined) {
+        const tacticEl = document.getElementById(tacticId);
+        isEnabled = !!(tacticEl && tacticEl.checked);
+    }
 
     const cloudServices = getAllCloudServiceMappings();
     let anyMissingFromDom = false;
 
     cloudServices.forEach(serviceMapping => {
-        const deps = serviceMapping.supportedArchitecturalDecisions; // string[] of tactic IDs
+        const deps = serviceMapping.supportedArchitecturalDecisions;
         if (!deps.includes(tacticId)) return;
 
         const serviceEl = document.getElementById(serviceMapping.tacticId);
         if (!serviceEl) {
-            /* The cloud-service panel has not been rendered yet (lazy). */
-            anyMissingFromDom = true;
+            if (isEnabled) anyMissingFromDom = true; // only retry-load when enabling
             return;
         }
 
-        if (!serviceEl.checked) {
-            serviceEl.checked = true;
-            /* Fire onchange so recalculate* + sessionStorage + updateLiveComparison all run */
-            serviceEl.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log(`[tactics-mapping] Auto-checked ${serviceMapping.tacticId} (required by ${tacticId})`);
+        if (isEnabled) {
+            if (!serviceEl.checked) {
+                serviceEl.checked = true;
+                serviceEl.dispatchEvent(new Event('change', { bubbles: true }));
+                console.log(`[tactics-mapping] Auto-checked ${serviceMapping.tacticId} (required by ${tacticId})`);
+            }
+        } else {
+            // Uncheck only if no other currently-active tactic also requires this service
+            const stillNeededByAnotherTactic = deps
+                .filter(depId => depId !== tacticId)
+                .some(depId => {
+                    const depEl = document.getElementById(depId);
+                    return depEl && depEl.checked;
+                });
+            if (!stillNeededByAnotherTactic && serviceEl.checked) {
+                serviceEl.checked = false;
+                serviceEl.dispatchEvent(new Event('change', { bubbles: true }));
+                console.log(`[tactics-mapping] Auto-unchecked ${serviceMapping.tacticId} (${tacticId} disabled, no other dep active)`);
+            }
         }
     });
 
-    /* If some cloud-service checkboxes weren't in the DOM yet, ensure the
-       relevant panels are loaded and then retry once. */
     if (anyMissingFromDom) {
         _ensureCloudPanelsLoaded().then(() => {
-            /* Single retry after panels are rendered */
-            setTimeout(() => syncCloudServicesForTactic(tacticId), 150);
+            setTimeout(() => syncCloudServicesForTactic(tacticId, isEnabled), 150);
         });
     }
 }
@@ -266,7 +280,7 @@ function wireTacticToCloudServiceAutoSelect() {
 
         const triggers = getActiveTacticTriggers();
         if (triggers.has(el.id)) {
-            syncCloudServicesForTactic(el.id);
+            syncCloudServicesForTactic(el.id, el.checked);
         }
     });
 
