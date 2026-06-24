@@ -185,12 +185,16 @@ function loadAlbSection() {
 function loadDbBackupSection() {
   fetchAwsPrice('database-backup-pricing')
     .then(data => {
+       console.warn("Database pricing data: ");
+       console.warn(data);
       databaseBackupPricingData = data;
       window._dbData = data;   /* expose for unit-economics.js */
       toggleUiVisibility('dbbackup-loading', false);
       toggleUiVisibility('dbbackup-content', true);
     })
     .catch(error => {
+       console.error("ERROR Database Backup pricing data: ");
+       console.error(error);
       const loadingLabel = document.getElementById('dbbackup-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch DB pricing: ${error.message}`;
     });
@@ -199,6 +203,8 @@ function loadDbBackupSection() {
 function loadCloudSecSection() {
   fetchAwsPrice('security-services')
     .then(data => {
+      console.warn("Security pricing data: ");
+      console.warn(data);
       cloudSecurityPricingData = data;
       window._secData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('cloudsec-content');
@@ -249,6 +255,8 @@ function loadCloudSecSection() {
       }
     })
     .catch(error => {
+    console.error("ERROR Security pricing data: ");
+          console.error(error);
       const loadingLabel = document.getElementById('cloudsec-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch security pricing: ${error.message}`;
     });

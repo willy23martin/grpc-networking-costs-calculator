@@ -1,9 +1,9 @@
 package com.calculator.application.services.calculators.cost.cloud.aws;
 
 import com.calculator.application.services.calculators.cost.cloud.CloudCalculator;
+import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.Filter;
 import software.amazon.awssdk.services.pricing.model.FilterType;
@@ -14,15 +14,12 @@ import java.util.logging.Logger;
 
 public abstract class AWSCloudCalculator extends CloudCalculator {
 
-    protected static final Region AWS_PRICING_REGION = Region.US_EAST_1;
     protected static final String AWS_LOCATION = "US East (N. Virginia)";
-
-    private static final Logger log = Logger.getLogger(AWSCloudCalculator.class.getName());
 
     @Autowired
     protected PricingClient pricingClient;
 
-    protected double fetchSimplePrice(String serviceCode, String productFamily, double fallback) {
+    protected double fetchSimplePrice(Logger log, String serviceCode, String productFamily, double fallback) {
         try {
             GetProductsRequest req = GetProductsRequest.builder()
                     .serviceCode(serviceCode)
@@ -32,14 +29,16 @@ public abstract class AWSCloudCalculator extends CloudCalculator {
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
 
-            GetProductsResponse resp = pricingClient.getProducts(req); // <-- mock throws here
+            GetProductsResponse resp = pricingClient.getProducts(req);
+            log.info("GetProductsResponse: " + resp);
+            JSONLogger.logAsJSON(log, resp);
 
             if (resp.priceList().isEmpty()) {
                 log.info("GetProductsResponse is empty, using fallback for: " + serviceCode + "/" + productFamily);
                 return fallback;
             }
 
-            String productJson = resp.priceList().get(0);
+            String productJson = resp.priceList().getFirst();
             if (productJson == null || productJson.isBlank()) return fallback;
 
             JsonNode root = mapper.readTree(productJson);

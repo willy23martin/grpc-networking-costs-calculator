@@ -2,12 +2,17 @@ package com.calculator.application.services.calculators.cost.cloud.security.aws;
 
 import com.calculator.application.services.calculators.cost.cloud.aws.AWSCloudCalculator;
 import com.calculator.application.services.calculators.cost.cloud.security.SecurityCostCalculator;
+import jakarta.annotation.PostConstruct;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class AWSSecurityCostCalculator extends AWSCloudCalculator implements SecurityCostCalculator {
 
+    private static final Logger log = Logger.getLogger(AWSSecurityCostCalculator.class.getName());
+
+    @PostConstruct
     @Override
     public Map<String, Object> calculateSecurityCosts() {
         Map<String, Object> securityCosts = new LinkedHashMap<>();
@@ -30,7 +35,7 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
     }
 
     private void mapAWSAuditManagerPerAssessmentCosts(Map<String, Object> securityCosts) {
-        securityCosts.put("auditManagerPerAssessmentMonth", fetchSimplePrice("AWSAuditManager","Assessment", 6.00));
+        securityCosts.put("auditManagerPerAssessmentMonth", fetchSimplePrice(log, "AWSAuditManager","Assessment", 6.00));
     }
 
     private static void mapCloudWatchLogsIngestionAndStorageCosts(Map<String, Object> securityCosts) {
@@ -39,22 +44,22 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
     }
 
     private void mapMaciePerGBOfS3DataClassifiedCosts(Map<String, Object> securityCosts) {
-        securityCosts.put("maciePerGbClassified",      fetchSimplePrice("AmazonMacie", "Data Classification", 1.00));
+        securityCosts.put("maciePerGbClassified",      fetchSimplePrice(log, "AmazonMacie", "Data Classification", 1.00));
         securityCosts.put("macieFirstGbFreeNote",      "First 1 GB/month free. $1.00/GB thereafter.");
     }
 
     private void mapAWSWAFPerACLAndRuleAndMillionRequestsCosts(Map<String, Object> securityCosts) {
-        securityCosts.put("wafWebAclPerMonth",         fetchSimplePrice("awswaf", "WebACL", 5.00));
-        securityCosts.put("wafRulePerMonth",            fetchSimplePrice("awswaf", "Rule", 1.00));
-        securityCosts.put("wafPer1MRequests",           fetchSimplePrice("awswaf", "Request", 0.60));
+        securityCosts.put("wafWebAclPerMonth",         fetchSimplePrice(log, "awswaf", "WebACL", 5.00));
+        securityCosts.put("wafRulePerMonth",            fetchSimplePrice(log, "awswaf", "Rule", 1.00));
+        securityCosts.put("wafPer1MRequests",           fetchSimplePrice(log, "awswaf", "Request", 0.60));
     }
 
     private void mapAmazonInspectorPerEC2Instance(Map<String, Object> securityCosts) {
-        securityCosts.put("inspectorPerInstanceMonth", fetchSimplePrice("AmazonInspector", "EC2 Instance", 1.178));
+        securityCosts.put("inspectorPerInstanceMonth", fetchSimplePrice(log, "AmazonInspector", "EC2 Instance", 1.178));
     }
 
     private void mapGuardDutyPerGBCloudTrailVPCForLogsAnalysedCosts(Map<String, Object> securityCosts) {
-        securityCosts.put("guardDutyPerGbLogs",       fetchSimplePrice("AmazonGuardDuty", "Logs", 1.00));
+        securityCosts.put("guardDutyPerGbLogs",       fetchSimplePrice(log, "AmazonGuardDuty", "Logs", 1.00));
         securityCosts.put("guardDutyFirstGbFreeNote", "First 500 GB/month free. $1.00/GB thereafter (tiered).");
     }
 }

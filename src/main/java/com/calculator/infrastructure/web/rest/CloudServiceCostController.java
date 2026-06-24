@@ -114,9 +114,6 @@ public class CloudServiceCostController {
         return ResponseEntity.ok(resp);
     }
 
-    /* ================================================================
-       POST /api/cost/security-services
-    ================================================================ */
     public static class SecurityServicesCostRequest {
         @JsonProperty public int    requestsPerSecond            = 0;
 

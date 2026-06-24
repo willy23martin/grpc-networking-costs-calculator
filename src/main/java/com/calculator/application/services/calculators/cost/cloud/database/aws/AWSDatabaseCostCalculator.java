@@ -3,6 +3,7 @@ package com.calculator.application.services.calculators.cost.cloud.database.aws;
 import com.calculator.application.services.calculators.cost.cloud.aws.AWSCloudCalculator;
 import com.calculator.application.services.calculators.cost.cloud.database.DatabaseCostCalculator;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.PostConstruct;
 import software.amazon.awssdk.services.pricing.model.Filter;
 import software.amazon.awssdk.services.pricing.model.FilterType;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
@@ -16,6 +17,7 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
 
     private static final Logger log = Logger.getLogger(AWSDatabaseCostCalculator.class.getName());
 
+    @PostConstruct
     @Override
     public Map<String, Object> calculateDatabaseBackupPricing() {
         Map<String, Object> databaseBackupCosts = new LinkedHashMap<>();
@@ -31,13 +33,13 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
 
     // AWSDatabaseCostCalculator — current (broken for API failure test)
     private void mapS3StandardStorageForBackupsCosts(Map<String, Object> map) {
-        double price = fetchSimplePrice("AmazonS3", "Storage", 0.023); // throws, not caught here
+        double price = fetchSimplePrice(log, "AmazonS3", "Storage", 0.023); // throws, not caught here
         map.put("s3StandardStoragePerGbUsd", price);
         log.info("S3 Standard Storage For Backups Costs have been mapped");
     }
 
     private void mapRDSSnapshotStorageCosts(Map<String, Object> map) {
-        double price = fetchSimplePrice("AmazonRDS", "Database Storage", 0.095); // throws, not caught here
+        double price = fetchSimplePrice(log, "AmazonRDS", "Database Storage", 0.095); // throws, not caught here
         map.put("rdsSnapshotStoragePerGbUsd", price);
     }
 
@@ -69,7 +71,7 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
                     )
                     .formatVersion("aws_v1").maxResults(1).build();
             GetProductsResponse resp = pricingClient.getProducts(req);
-            System.out.println("GetProductsResponse database " + resp);
+            log.info("GetProductsResponse database " + resp);
             if (resp.priceList().isEmpty()) return 0.26;
             JsonNode root = mapper.readTree(resp.priceList().get(0));
             return root.path("terms").path("OnDemand").fields().next()
