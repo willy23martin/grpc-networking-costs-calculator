@@ -87,24 +87,24 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
                         String sku3yr = null;
 
                         /**
-                         *  "products" : [ {
+                         * "products" : [ {
                          * {
-                         *     "sku" : "BB7BKBSC6NZW7P5B",
-                         *     "productFamily" : "ComputeSavingsPlans",
-                         *     "serviceCode" : "ComputeSavingsPlans",
-                         *     "usageType" : "ComputeSP:1yrNoUpfront",
-                         *     "operation" : "",
-                         *     "attributes" : {
-                         *       "purchaseOption" : "No Upfront",
-                         *       "productFamily" : "ComputeSavingsPlans",
-                         *       "serviceCode" : "ComputeSavingsPlans",
-                         *       "granularity" : "hourly",
-                         *       "locationType" : "AWS Region",
-                         *       "purchaseTerm" : "1yr",
-                         *       "location" : "Any",
-                         *       "usageType" : "ComputeSP:1yrNoUpfront"
-                         *     }
-                         *   },
+                         * "sku" : "BB7BKBSC6NZW7P5B",
+                         * "productFamily" : "ComputeSavingsPlans",
+                         * "serviceCode" : "ComputeSavingsPlans",
+                         * "usageType" : "ComputeSP:1yrNoUpfront",
+                         * "operation" : "",
+                         * "attributes" : {
+                         * "purchaseOption" : "No Upfront",
+                         * "productFamily" : "ComputeSavingsPlans",
+                         * "serviceCode" : "ComputeSavingsPlans",
+                         * "granularity" : "hourly",
+                         * "locationType" : "AWS Region",
+                         * "purchaseTerm" : "1yr",
+                         * "location" : "Any",
+                         * "usageType" : "ComputeSP:1yrNoUpfront"
+                         * }
+                         * },
                          */
                         // Phase 1: Identify SKUs using attributes metadata
                         JsonNode products = rootBulkNode.path("products");
@@ -134,27 +134,27 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
                         /**
                          * "terms" : {
                          *{
-                         *       "sku" : "8GU23DFTKP2N43SD",
-                         *       "description" : "1 year All Upfront Compute Savings Plan",
-                         *       "effectiveDate" : "2026-06-23T21:58:42Z",
-                         *       "leaseContractLength" : {
-                         *         "duration" : 1,
-                         *         "unit" : "year"
-                         *       },
-                         *       "rates" : [ {
-                         *         "discountedSku" : "22CU75SME3BFPJU8",
-                         *         "discountedUsageType" : "DEN1-BoxUsage:c5d.2xlarge",
-                         *         "discountedOperation" : "RunInstances:0004",
-                         *         "discountedServiceCode" : "AmazonEC2",
-                         *         "rateCode" : "8GU23DFTKP2N43SD.22CU75SME3BFPJU8",
-                         *         "unit" : "Hrs",
-                         *         "discountedRate" : {
-                         *           "price" : "1.285",
-                         *           "currency" : "USD"
-                         *         },
-                         *         "discountedRegionCode" : "us-west-2-den-1",
-                         *         "discountedInstanceType" : "c5d.2xlarge"
-                         *       },
+                         * "sku" : "8GU23DFTKP2N43SD",
+                         * "description" : "1 year All Upfront Compute Savings Plan",
+                         * "effectiveDate" : "2026-06-23T21:58:42Z",
+                         * "leaseContractLength" : {
+                         * "duration" : 1,
+                         * "unit" : "year"
+                         * },
+                         * "rates" : [ {
+                         * "discountedSku" : "22CU75SME3BFPJU8",
+                         * "discountedUsageType" : "DEN1-BoxUsage:c5d.2xlarge",
+                         * "discountedOperation" : "RunInstances:0004",
+                         * "discountedServiceCode" : "AmazonEC2",
+                         * "rateCode" : "8GU23DFTKP2N43SD.22CU75SME3BFPJU8",
+                         * "unit" : "Hrs",
+                         * "discountedRate" : {
+                         * "price" : "1.285",
+                         * "currency" : "USD"
+                         * },
+                         * "discountedRegionCode" : "us-west-2-den-1",
+                         * "discountedInstanceType" : "c5d.2xlarge"
+                         * },
                          */
                         // Phase 2: Traverse terms.savingsPlan using matched SKUs with null protection
                         JsonNode savingsPlans = rootBulkNode.path("terms").path("savingsPlan");
@@ -168,15 +168,25 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
 
                                 if (is1yr || is3yr) {
                                     JsonNode rates = planNode.path("rates");
-                                    if (rates.isArray() && !rates.isEmpty()) {
-                                        double extractedPrice = rates.get(0).path("discountedRate").path("price").asDouble(0.0);
+                                    if (rates.isArray()) {
+                                        // Loop through all regional objects within the matrix until we isolate us-east-1
+                                        for (JsonNode rateNode : rates) {
+                                            String regionCode = rateNode.path("discountedRegionCode").asText("");
 
-                                        if (is1yr) {
-                                            compute1yr = extractedPrice;
-                                            log.info("End value of compute1yr: " + compute1yr);
-                                        } else {
-                                            compute3yr = extractedPrice;
-                                            log.info("End value of compute3yr: " + compute3yr);
+                                            if ("us-east-1".equalsIgnoreCase(regionCode)) {
+                                                double extractedPrice = rateNode.path("discountedRate").path("price").asDouble(0.0);
+
+                                                if (is1yr) {
+                                                    compute1yr = extractedPrice;
+                                                    // TODO NOT PTINTING
+                                                    log.info("End value of compute1yr (us-east-1): " + compute1yr);
+                                                } else {
+                                                    compute3yr = extractedPrice;
+                                                    // TODO NOT PRINTING
+                                                    log.info("End value of compute3yr (us-east-1): " + compute3yr);
+                                                }
+                                                break; // Break loop for rates once the us-east-1 match is resolved
+                                            }
                                         }
                                     }
                                 }

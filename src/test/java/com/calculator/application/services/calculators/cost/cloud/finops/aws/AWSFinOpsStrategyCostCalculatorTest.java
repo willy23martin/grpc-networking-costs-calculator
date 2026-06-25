@@ -69,6 +69,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
 
         when(pricingClient.getProducts(any(GetProductsRequest.class))).thenReturn(mockProductsResponse);
 
+        // Updated mock JSON to include the nested rates matrix with discountedRegionCode set to us-east-1
         String mockBulkManifestJson = "{"
                 + "\"products\": ["
                 + "  {"
@@ -96,6 +97,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
                 + "      \"sku\": \"MOCK-SKU-1YR\","
                 + "      \"rates\": ["
                 + "        {"
+                + "          \"discountedRegionCode\": \"us-east-1\","
                 + "          \"discountedRate\": {"
                 + "            \"price\": \"31.0\""
                 + "          }"
@@ -106,6 +108,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
                 + "      \"sku\": \"MOCK-SKU-3YR\","
                 + "      \"rates\": ["
                 + "        {"
+                + "          \"discountedRegionCode\": \"us-east-1\","
                 + "          \"discountedRate\": {"
                 + "            \"price\": \"50.0\""
                 + "          }"
