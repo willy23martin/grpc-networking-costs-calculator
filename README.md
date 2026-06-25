@@ -98,6 +98,19 @@ Pending
 | `ReplicaSizingController` | `POST /api/cost/replica-sizing` | `recalculateReplicas()` |
 | `UnitEconomicsController` | `POST /api/cost/unit-economics` | `populateUnitEcon()` |
 
+## AWS APIs for pricing - JSON responses:
+
+- **AWS Price List Query API**: 
+  - ELB / ALB pricing: [alb-pricing.json](src/main/resources/awspricelistapiexamples/alb-pricing.json)
+  - RDS database pricing: [RDS-database-pricing.json](src/main/resources/awspricelistapiexamples/RDS-database-pricing.json)
+  - FinOps CostOptimization Reserved Instances response: [ReservedInstances-finops-strategies-pricing.json](src/main/resources/awspricelistapiexamples/ReservedInstances-finops-strategies-pricing.json)
+  - S3 database pricing: [S3-database-pricing.json](src/main/resources/awspricelistapiexamples/S3-database-pricing.json)
+
+- **AWS Price List Bulk API**:
+  - PriceList Bulk response: [pricelist-bul-api.json](src/main/resources/awspricelistbulkapiexamples/pricelist-bul-api.json)
+  - FinOps strategies pricing: [finops-strategies-pricing.json](src/main/resources/awspricelistbulkapiexamples/finops-strategies-pricing.json)
+  - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/main/resources/awspricelistbulkapiexamples/computesavingsplans-jsonpricingfile-response.json)
+
 ## Design principle
 
 - Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/aws/*`) to each endpoint.
