@@ -1,0 +1,46 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "Web Application Firewall",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "awswaf",
+        "groupDescription" : "Request Processed Tier4 3000WCU",
+        "usagetype" : "USE1-RequestV2-Tier4-3000WCU",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AWS WAF",
+        "operation" : "",
+        "group" : "Request"
+      },
+      "sku" : "369ZWCEHA572ASKF"
+    },
+    "serviceCode" : "awswaf",
+    "terms" : {
+      "OnDemand" : {
+        "369ZWCEHA572ASKF.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "369ZWCEHA572ASKF.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Request",
+              "endRange" : "Inf",
+              "description" : "$1.20 per million requests processed",
+              "appliesTo" : [ ],
+              "rateCode" : "369ZWCEHA572ASKF.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000012000"
+              }
+            }
+          },
+          "sku" : "369ZWCEHA572ASKF",
+          "effectiveDate" : "2025-12-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260107213453",
+    "publicationDate" : "2026-01-07T21:34:53Z"
+  } ]
+}

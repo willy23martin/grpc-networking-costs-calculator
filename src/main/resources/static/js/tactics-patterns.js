@@ -44,6 +44,21 @@ function toggleCategory(categoryId) {
   contentBody.classList.toggle('open', targetOpenState);
   headerElement?.classList.toggle('active', targetOpenState);
 
+  // When opening cloudsec, ensure the parent cloud-tactics body is also open.
+  // If the user clicks the cloudsec header directly without having opened
+  // cloud-tactics first, body-cloud-tactics has max-height:0 (CSS collapsed)
+  // and body-cloudsec is rendered inside an overflow:hidden parent — invisible
+  // regardless of its own .open class or contentContainer display:block.
+  if (targetOpenState && categoryId === 'cloudsec') {
+    const cloudTacticsBody = document.getElementById('body-cloud-tactics');
+    if (cloudTacticsBody && !cloudTacticsBody.classList.contains('open')) {
+      cloudTacticsBody.classList.add('open');
+      const cloudTacticsHeader = cloudTacticsBody.previousElementSibling;
+      if (cloudTacticsHeader) cloudTacticsHeader.classList.add('active');
+    }
+    loadCloudSecSection();
+  }
+
   // If opening for the first time, execute lazy resource allocation
   if (targetOpenState && !awsSectionLoadingHistoryState[categoryId]) {
     awsSectionLoadingHistoryState[categoryId] = true;
@@ -57,6 +72,17 @@ function toggleCategory(categoryId) {
         loadApiGwSection();
       }
     } else if (categoryId === 'cloud-tactics') {
+      // Open cloudsec body so its CSS max-height constraint is lifted before
+      // loadCloudSecSection writes content into it. Without this, content is
+      // rendered inside a max-height:0/overflow:hidden parent and never visible.
+      const cloudsecBody   = document.getElementById('body-cloudsec');
+      const cloudsecHeader = cloudsecBody ? cloudsecBody.previousElementSibling : null;
+      if (cloudsecBody) {
+        cloudsecBody.classList.add('open');
+        if (cloudsecHeader) cloudsecHeader.classList.add('active');
+        const chevron = document.getElementById('chevron-cloudsec');
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+      }
       // Direct Group Evaluation Loop
       Object.keys(AWS_SECTION_LOADERS).forEach(subId => {
         if (!awsSectionLoadingHistoryState[subId]) {
@@ -180,9 +206,11 @@ function toggleOAuthParams(show) {
 function loadAlbSection() {
   return fetchAwsPrice('alb-pricing')
     .then(data => {
-    console.warn("ALB pricing data: ");
-              console.warn(data);
       applicationLoadBalancerPricingData = data;
+
+      console.warn("SUCCESS - /alb-pricing:");
+      console.warn(data);
+
       window._albData = data;   /* expose for unit-economics.js */
       const descriptionContainer = document.getElementById('alb-price-desc');
       if (descriptionContainer) {
@@ -192,8 +220,7 @@ function loadAlbSection() {
       toggleUiVisibility('alb-content', true);
     })
     .catch(error => {
-    console.error("ERROR ALB pricing error: ");
-              console.error(error);
+      console.error("ERROR - /alb-pricing: \n" + error);
       const loadingLabel = document.getElementById('alb-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch ALB pricing: ${error.message}`;
     });
@@ -202,102 +229,153 @@ function loadAlbSection() {
 function loadDbBackupSection() {
   fetchAwsPrice('database-backup-pricing')
     .then(data => {
-    console.warn("Database Backup pricing data: ");
-              console.warn(data);
       databaseBackupPricingData = data;
+
+      console.warn("SUCCESS - /database-backup-pricing:");
+      console.warn(data);
+
       window._dbData = data;   /* expose for unit-economics.js */
       toggleUiVisibility('dbbackup-loading', false);
       toggleUiVisibility('dbbackup-content', true);
     })
     .catch(error => {
-    console.error("ERROR Database pricing data: ");
-              console.error(error);
+      console.error("ERROR - /database-backup-pricing: \n" + error);
       const loadingLabel = document.getElementById('dbbackup-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch DB pricing: ${error.message}`;
     });
 }
 
 function loadCloudSecSection() {
-  fetchAwsPrice('security-services')
-    .then(data => {
-    console.warn("Security Services pricing data: ");
-              console.warn(data);
-      cloudSecurityPricingData = data;
-      window._secData = data;   /* expose for unit-economics.js */
-      const contentContainer = document.getElementById('cloudsec-content');
-      if (!contentContainer) return;
+  // Hardcoded 2025 AWS published prices — used when the backend is unavailable.
+  const SEC_FALLBACK = {
+    guardDutyPerGbLogs:              1.00,
+    inspectorPerInstanceMonth:       1.178,
+    wafWebAclPerMonth:               5.00,
+    wafRulePerMonth:                 1.00,
+    wafPer1MRequests:                0.60,
+    maciePerGbClassified:            1.00,
+    cloudwatchLogsIngestionPerGb:    0.50,
+    cloudwatchLogsStoragePerGbMonth: 0.03,
+    auditManagerPerAssessmentMonth:  6.00,
+    kmsCmkPerMonth:                  1.00,
+    kmsApiCallsPer10k:               0.03
+  };
 
-      // Declarative Infrastructure Security Map Structure
-      const securityServicesSchema = [
-        { id: 'sec-guardduty', icon: 'fa-shield-halved', owasp: 'OWASP A09', label: 'Amazon GuardDuty', inputId: 'input-guardduty-gb', inputUnit: 'GB logs/mo', desc: `Threat detection via VPC Flow Logs & CloudTrail. First 500 GB/mo free. $${data.guardDutyPerGbLogs}/GB after.` },
-        { id: 'sec-inspector', icon: 'fa-magnifying-glass', label: 'Amazon Inspector', owasp: 'OWASP A06', inputId: 'input-inspector-instances', inputUnit: 'EC2 instances', desc: `CVE & network-exposure scans of EC2 and containers. $${data.inspectorPerInstanceMonth}/instance/mo.` },
-        { id: 'sec-waf', icon: 'fa-shield', label: 'AWS WAF', owasp: 'OWASP A03·A04', inputId: 'input-waf-rules', inputUnit: 'custom rules', desc: `Layer-7 firewall for ALB/API GW. Blocks SQLi, XSS, rate abuse. $${data.wafWebAclPerMonth} WebACL + $${data.wafRulePerMonth}/rule + $${data.wafPer1MRequests}/1M req.` },
-        { id: 'sec-macie', icon: 'fa-eye', label: 'Amazon Macie', owasp: 'OWASP A02', inputId: 'input-macie-gb', inputUnit: 'GB S3 data', desc: `ML PII & credential discovery in S3. First 1 GB/mo free. $${data.maciePerGbClassified}/GB.` },
-        { id: 'sec-cloudwatch', icon: 'fa-chart-line', label: 'CloudWatch Logs', owasp: 'OWASP A09', inputId: 'input-cw-gb', inputUnit: 'GB ingested/mo', desc: `Log ingestion & alerting. $${data.cloudwatchLogsIngestionPerGb}/GB in · $${data.cloudwatchLogsStoragePerGbMonth}/GB-mo stored.` },
-        { id: 'sec-audit', icon: 'fa-clipboard-check', label: 'AWS Audit Manager', owasp: 'OWASP A09', inputId: 'input-audit-assessments', inputUnit: 'active assessments', desc: `SOC2/PCI/ISO compliance evidence. $${data.auditManagerPerAssessmentMonth}/assessment/mo.` },
-        { id: 'sec-kms', icon: 'fa-key', label: 'AWS KMS (Encryption)', owasp: 'OWASP A02', inputId: 'input-kms-keys', inputUnit: 'CMKs (keys)', desc: `Envelope encryption for S3/RDS/EBS. $${data.kmsCmkPerMonth}/CMK/mo + $${data.kmsApiCallsPer10k}/10K API calls. Typically 1–3 CMKs per service.` }
-      ];
+  function renderPanel(data) {
+    // Always re-query the DOM inside renderPanel — do NOT close over a value
+    // captured at loadCloudSecSection() call time, which may have been null if
+    // the category body was not yet in the DOM (e.g. called from cloud-tactics
+    // group loader before Phase 3 was rendered).
+    const contentContainer = document.getElementById('cloudsec-content');
+    const loadingEl        = document.getElementById('cloudsec-loading');
 
-      contentContainer.innerHTML = securityServicesSchema.map(service => `
-        <div class="tactic-row" id="row-${service.id}">
-          <input type="checkbox" class="tactic-check cloud-service-check" id="${service.id}"
-                 onchange="recalculateSecCost(); updateCloudTacticsBadge(); if(window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();">
-          <div class="tactic-label-group">
-            <label class="tactic-label" for="${service.id}">
-              <i class="fas ${service.icon}" style="margin-right:5px;width:16px;"></i>${service.label}
-              <span class="warning-badge badge-red">+ cost</span>
-              ${service.owasp ? `<span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">${service.owasp}</span>` : ''}
-            </label>
-            <span class="tactic-description">${service.desc}</span>
-            <!-- Dynamic OWASP/CWE/ISO badge injection target for initializer-tactics-mapping.js -->
-            <div id="meta-container-${service.id}"></div>
-          </div>
-          <div class="tactic-input-group">
-            <input type="number" id="${service.inputId}" min="0" placeholder="0"
-                   oninput="if(document.getElementById('${service.id}') && document.getElementById('${service.id}').checked) recalculateSecCost();">
-            <span class="tactic-unit">${service.inputUnit}</span>
-          </div>
-        </div>
-      `).join('');
-
-      toggleUiVisibility('cloudsec-loading', false);
+    // If content is already rendered INSIDE cloudsec-content, just ensure visibility.
+    // IMPORTANT: check inside contentContainer only — there is a static sec-guardduty
+    // checkbox in body-cloud (the old HTML structure) that document.getElementById
+    // would find first, causing a false positive and skipping the render entirely.
+    if (contentContainer && contentContainer.querySelector('#sec-guardduty')) {
+      if (loadingEl)        loadingEl.style.display        = 'none';
       contentContainer.style.display = 'block';
+      return;  // panel already rendered — nothing more to do
+    }
 
-      /* After rendering, inject the OWASP/CWE/ISO badges from the cached mapping data */
-      if (window.refreshTacticMappingDisplay) {
-        window.refreshTacticMappingDisplay();
-      }
-      /* Re-evaluate cloud-service visibility (dim/highlight) against active tactics */
-      if (typeof evaluateCloudServiceRelevance === 'function') {
-        evaluateCloudServiceRelevance();
-      }
-      /* FIX 3a — if a tactic (tls/mtls/oauth/server-lb) was already checked before this panel
-         was rendered, auto-check the corresponding cloud-service checkboxes now that they exist */
-      if (typeof window.syncCloudServicesForTactic === 'function') {
-        [
-          { id: 'tactic-tls'  },
-          { id: 'tactic-mtls' },
-          { id: 'tactic-oauth' }
-        ].forEach(function(t) {
-          var el = document.getElementById(t.id);
-          if (el && el.checked) window.syncCloudServicesForTactic(t.id, true);
-        });
-      }
+    cloudSecurityPricingData = data;
+    window._secData          = data;
+
+    if (!contentContainer) {
+      // DOM not ready yet — retry once after a short delay
+      setTimeout(function() { renderPanel(data); }, 150);
+      return;
+    }
+
+    const schema = [
+      { id: 'sec-guardduty',  icon: 'fa-shield-halved',    owasp: 'OWASP A09',      label: 'Amazon GuardDuty',      inputId: 'input-guardduty-gb',        inputUnit: 'GB logs/mo',         desc: `Threat detection via VPC Flow Logs & CloudTrail. First 500 GB/mo free. $${data.guardDutyPerGbLogs}/GB after.` },
+      { id: 'sec-inspector',  icon: 'fa-magnifying-glass', owasp: 'OWASP A06',      label: 'Amazon Inspector',      inputId: 'input-inspector-instances', inputUnit: 'EC2 instances',      desc: `CVE & network-exposure scans of EC2 and containers. $${data.inspectorPerInstanceMonth}/instance/mo.` },
+      { id: 'sec-waf',        icon: 'fa-shield',           owasp: 'OWASP A03·A04', label: 'AWS WAF',           inputId: 'input-waf-rules',           inputUnit: 'custom rules',       desc: `Layer-7 firewall. Blocks SQLi, XSS, rate abuse. $${data.wafWebAclPerMonth} WebACL + $${data.wafRulePerMonth}/rule + $${data.wafPer1MRequests}/1M req.` },
+      { id: 'sec-macie',      icon: 'fa-eye',              owasp: 'OWASP A02',      label: 'Amazon Macie',          inputId: 'input-macie-gb',            inputUnit: 'GB S3 data',         desc: `ML PII discovery in S3. First 1 GB/mo free. $${data.maciePerGbClassified}/GB.` },
+      { id: 'sec-cloudwatch', icon: 'fa-chart-line',       owasp: 'OWASP A09',      label: 'CloudWatch Logs',       inputId: 'input-cw-gb',               inputUnit: 'GB ingested/mo',     desc: `Log ingestion & alerting. $${data.cloudwatchLogsIngestionPerGb}/GB in · $${data.cloudwatchLogsStoragePerGbMonth}/GB-mo stored.` },
+      { id: 'sec-audit',      icon: 'fa-clipboard-check',  owasp: 'OWASP A09',      label: 'AWS Audit Manager',     inputId: 'input-audit-assessments',   inputUnit: 'active assessments', desc: `Compliance evidence (SOC2/PCI/ISO). $${data.auditManagerPerAssessmentMonth}/assessment/mo.` },
+      { id: 'sec-kms',        icon: 'fa-key',              owasp: 'OWASP A02',      label: 'AWS KMS (Encryption)',  inputId: 'input-kms-keys',            inputUnit: 'CMKs (keys)',        desc: `Envelope encryption for S3/RDS/EBS. $${data.kmsCmkPerMonth}/CMK/mo + $${data.kmsApiCallsPer10k}/10K API calls.` }
+    ];
+
+    contentContainer.innerHTML = schema.map(svc => `
+      <div class="tactic-row" id="row-${svc.id}">
+        <input type="checkbox" class="tactic-check cloud-service-check" id="${svc.id}"
+               onchange="recalculateSecCost(); updateCloudTacticsBadge(); if(window.refreshTacticMappingDisplay) window.refreshTacticMappingDisplay();">
+        <div class="tactic-label-group">
+          <label class="tactic-label" for="${svc.id}">
+            <i class="fas ${svc.icon}" style="margin-right:5px;width:16px;"></i>${svc.label}
+            <span class="warning-badge badge-red">+ cost</span>
+            ${svc.owasp ? `<span class="warning-badge" style="background:rgba(124,58,237,.1);color:#7c3aed;font-size:.6rem;">${svc.owasp}</span>` : ''}
+          </label>
+          <span class="tactic-description">${svc.desc}</span>
+          <div id="meta-container-${svc.id}"></div>
+        </div>
+        <div class="tactic-input-group">
+          <input type="number" id="${svc.inputId}" min="0" placeholder="0"
+                 oninput="if(document.getElementById('${svc.id}')&&document.getElementById('${svc.id}').checked) recalculateSecCost();">
+          <span class="tactic-unit">${svc.inputUnit}</span>
+        </div>
+      </div>`).join('');
+
+    // Hide spinner, show content
+    if (loadingEl)        loadingEl.style.display        = 'none';
+    contentContainer.style.display = 'block';
+
+    // Inject OWASP/CWE badges and relevance highlighting
+    if (window.refreshTacticMappingDisplay)          window.refreshTacticMappingDisplay();
+    if (typeof evaluateCloudServiceRelevance === 'function') evaluateCloudServiceRelevance();
+  }
+
+  // Step 1: render immediately with fallback so the panel is NEVER blocked.
+  renderPanel(SEC_FALLBACK);
+
+  // Step 2: upgrade with live AWS prices in the background.
+  // Updates pricing data and refreshes only the description text in each row
+  // without rebuilding innerHTML (which would wipe checkbox states).
+  fetchAwsPrice('security-services')
+    .then(function(data) {
+    console.warn("SUCCESS - /security-services:");
+          console.warn(data);
+
+      cloudSecurityPricingData = data;
+      window._secData          = data;
+      // Patch description spans with live prices — leave checkboxes untouched
+      var liveDescs = {
+        'sec-guardduty':  'Threat detection via VPC Flow Logs & CloudTrail. First 500 GB/mo free. $' + (data.guardDutyPerGbLogs||1.00) + '/GB after.',
+        'sec-inspector':  'CVE & network-exposure scans of EC2 and containers. $' + (data.inspectorPerInstanceMonth||1.178) + '/instance/mo.',
+        'sec-waf':        'Layer-7 firewall. Blocks SQLi, XSS, rate abuse. $' + (data.wafWebAclPerMonth||5.00) + ' WebACL + $' + (data.wafRulePerMonth||1.00) + '/rule + $' + (data.wafPer1MRequests||0.60) + '/1M req.',
+        'sec-macie':      'ML PII discovery in S3. First 1 GB/mo free. $' + (data.maciePerGbClassified||1.00) + '/GB.',
+        'sec-cloudwatch': 'Log ingestion & alerting. $' + (data.cloudwatchLogsIngestionPerGb||0.50) + '/GB in · $' + (data.cloudwatchLogsStoragePerGbMonth||0.03) + '/GB-mo stored.',
+        'sec-audit':      'Compliance evidence (SOC2/PCI/ISO). $' + (data.auditManagerPerAssessmentMonth||6.00) + '/assessment/mo.',
+        'sec-kms':        'Envelope encryption for S3/RDS/EBS. $' + (data.kmsCmkPerMonth||1.00) + '/CMK/mo + $' + (data.kmsApiCallsPer10k||0.03) + '/10K API calls.'
+      };
+      Object.keys(liveDescs).forEach(function(id) {
+        var row = document.getElementById('row-' + id);
+        if (!row) return;
+        var descSpan = row.querySelector('.tactic-description');
+        if (descSpan) descSpan.textContent = liveDescs[id];
+      });
+      console.log('[CloudSec] Live AWS pricing applied to descriptions.');
     })
-    .catch(error => {
-    console.error("ERROR Security pricing data: ");
-              console.error(error);
-      const loadingLabel = document.getElementById('cloudsec-loading');
-      if (loadingLabel) loadingLabel.textContent = `Could not fetch security pricing: ${error.message}`;
+    .catch(function(err) {
+     console.error("ERROR - /security-services: \n" + error);
+
+      console.info('[CloudSec] Using fallback pricing (' + err.message + ')');
     });
+
+  return Promise.resolve();
 }
 
 function loadCostOptSection() {
   fetchAwsPrice('cost-optimisation')
     .then(data => {
-    console.warn("FinOps Cost optimization data: ");
+
+     console.warn("SUCCESS - /cost-optimisation:");
               console.warn(data);
+
       cloudCostOptimizationPricingData = data;
+      window._coData = data;   /* expose for recalculateCostOpt() in calculator.js */
       const contentContainer = document.getElementById('costopt-content');
       if (!contentContainer) return;
 
@@ -367,8 +445,7 @@ function loadCostOptSection() {
       recalculateCostOpt();
     })
     .catch(error => {
-    console.error("ERROR FinOps Cost optimization data: ");
-              console.error(error);
+    console.error("ERROR - /cost-optimisation: \n" +error);
       const loadingLabel = document.getElementById('costopt-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch cost optimisation: ${error.message}`;
     });
@@ -377,6 +454,8 @@ function loadCostOptSection() {
 function loadCachingSection() {
   fetchAwsPrice('caching-pricing')
     .then(data => {
+    console.warn("SUCCESS - /caching-pricing:");
+                  console.warn(data);
       cacheInfrastructurePricingData = data;
       window._cacheData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('caching-content');
@@ -432,6 +511,7 @@ function loadCachingSection() {
       contentContainer.style.display = 'block';
     })
     .catch(error => {
+    console.error("ERROR - /caching-pricing: \n" + error);
       const loadingLabel = document.getElementById('caching-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch caching pricing: ${error.message}`;
     });
@@ -450,10 +530,15 @@ function loadApiGwSection() {
   fetch('/api/aws/api-gateway-pricing')
     .then(response => response.ok ? response.json() : null)
     .then(data => {
+
+    console.warn("SUCCESS - /api/aws/api-gateway-pricing:");
+    console.warn(data);
+
       apiGatewayPricingDatabase = data || API_GATEWAY_FALLBACK_PRICING;
       renderApiGwContent();
     })
     .catch(() => {
+    console.error("ERROR - /api/aws/api-gateway-pricing:");
       apiGatewayPricingDatabase = API_GATEWAY_FALLBACK_PRICING;
       renderApiGwContent();
     });
@@ -489,8 +574,10 @@ function recalculateApiGw() {
   .then(function(response) { return response.ok ? response.json() : null; })
   .then(function(data) {
     if (!data) return;
-    console.warn("API Gateway pricing data: ");
-              console.warn(data);
+
+    console.warn("SUCCESS - /api/cost/api-gateway:");
+        console.warn(data);
+
     var resultContainer = document.getElementById('apigw-result');
     if (resultContainer) {
       var executionSummary = callsPerMonthMillions > 0
@@ -514,7 +601,7 @@ function recalculateApiGw() {
     var currentBaseRps = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
     if (currentBaseRps) updateLiveComparison(currentBaseRps, currentBaseRps);
   })
-  .catch(function(error) { console.error('recalculateApiGw failed:', error.message); });
+  .catch(function(error) { console.error('ERROR recalculateApiGw failed:', error.message); });
 }
 
 
@@ -564,15 +651,15 @@ function collectTacticContributions(baseRequestsPerSecond, backendResult) {
   .then(function(response) { return response.ok ? response.json() : null; })
   .then(function(data) {
     if (!data) return [];
-    console.warn("Tactics contribution data: ");
-              console.warn(data);
-    console.warn("Tactics contribution response data: ");
-              console.warn(data);
+
+    console.warn("SUCCESS - /api/cost/tactic-contributions:");
+    console.warn(data);
+
     window._lastTacticContributions = data.contributions;
     return data.contributions;
   })
   .catch(function(err) {
-    console.warn('collectTacticContributions backend call failed:', err.message);
+    console.error('ERROR - /api/cost/tactic-contributions collectTacticContributions backend call failed \n:', err.message);
     return [];
   });
 }

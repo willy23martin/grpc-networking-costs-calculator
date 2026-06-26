@@ -26,7 +26,6 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
     private static final String BENCHMARK_INSTANCE_TYPE = "t3.medium";
     public static final String COMPUTE_SAVINGS_PLANS = "ComputeSavingsPlans";
 
-    @PostConstruct
     @Override
     public Map<String, Object> calculateFinOpsStrategiesCosts() {
         Map<String, Object> finOpsStrategiesCosts = new LinkedHashMap<>();
@@ -334,5 +333,10 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
         targetMap.put("convertibleRi1yrSavingsPct", (int) convertible1yr);
         targetMap.put("convertibleRi3yrSavingsPct", (int) convertible3yr);
         targetMap.put("riNote", "Reserved Instances (RIs) suit predictable, constant workloads like servers that must stay active around the clock.");
+    }
+
+    @PostConstruct
+    private void init(){
+        calculateFinOpsStrategiesCosts();
     }
 }

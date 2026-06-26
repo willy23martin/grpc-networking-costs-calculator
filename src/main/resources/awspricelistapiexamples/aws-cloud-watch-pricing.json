@@ -1,0 +1,1050 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "CloudWatch Database Insights",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Granular database and SQL query metrics in a curated observability experience for Amazon Aurora and RDS databases",
+        "databaseEngineType" : "Aurora-PostgreSQL",
+        "instanceConfigurationType" : "Provisioned",
+        "usagetype" : "USE1-CW:DatabaseInsights-vCPU-Hours",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "Aurora-PostgreSQL:Provisioned",
+        "group" : "CW-DatabaseInsights"
+      },
+      "sku" : "23KYR9JGZ2VY4UFS"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "23KYR9JGZ2VY4UFS.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "23KYR9JGZ2VY4UFS.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Hours",
+              "endRange" : "Inf",
+              "description" : "$0.0125 per vCPU-Hour monitored by Database Insights for Aurora-PostgreSQL provisioned databases in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "23KYR9JGZ2VY4UFS.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0125000000"
+              }
+            }
+          },
+          "sku" : "23KYR9JGZ2VY4UFS",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "CloudWatch Logs Data Protection",
+        "usagetype" : "USE1-DataProtection-Bytes",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "PutLogEvents",
+        "group" : "DataProtection Logs"
+      },
+      "sku" : "2G2RG8TB9A6ZVN56"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "2G2RG8TB9A6ZVN56.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "2G2RG8TB9A6ZVN56.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.12 per GB for data scanned with Data Protection in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "2G2RG8TB9A6ZVN56.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.1200000000"
+              }
+            }
+          },
+          "sku" : "2G2RG8TB9A6ZVN56",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "CloudWatch Database Insights",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Granular database and SQL query metrics in a curated observability experience for Amazon Aurora and RDS databases",
+        "databaseEngineType" : "Aurora-MySQL",
+        "instanceConfigurationType" : "Provisioned",
+        "usagetype" : "USE1-CW:DatabaseInsights-vCPU-Hours",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "Aurora-MySQL:Provisioned",
+        "group" : "CW-DatabaseInsights"
+      },
+      "sku" : "2GGHQDEG4JRW9QUJ"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "2GGHQDEG4JRW9QUJ.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "2GGHQDEG4JRW9QUJ.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Hours",
+              "endRange" : "Inf",
+              "description" : "$0.0125 per vCPU-Hour monitored by Database Insights for Aurora-MySQL provisioned databases in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "2GGHQDEG4JRW9QUJ.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0125000000"
+              }
+            }
+          },
+          "sku" : "2GGHQDEG4JRW9QUJ",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Logs generated by Amazon CloudFront and delivered to Firehose as Vended Logs",
+        "usagetype" : "USE1-FH-Egress-Bytes-CFLogs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "",
+        "version" : "Current",
+        "group" : "Delivered Logs",
+        "logsDestination" : "Amazon Kinesis Data Firehose"
+      },
+      "sku" : "3DYG3BP6HCKUJRQV"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "3DYG3BP6HCKUJRQV.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "3DYG3BP6HCKUJRQV.JRTCKXETXF.AQTKZ3QBDA" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.05 per GB of CloudFront log data delivered to Kinesis Firehose over 50TB  -  US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "3DYG3BP6HCKUJRQV.JRTCKXETXF.AQTKZ3QBDA",
+              "beginRange" : "51200",
+              "pricePerUnit" : {
+                "USD" : "0.0500000000"
+              }
+            },
+            "3DYG3BP6HCKUJRQV.JRTCKXETXF.Q3Z75P77EN" : {
+              "unit" : "GB",
+              "endRange" : "10240",
+              "description" : "$0.25 per GB of CloudFront log data delivered to Kinesis Firehose for the first 10TB  -  US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "3DYG3BP6HCKUJRQV.JRTCKXETXF.Q3Z75P77EN",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            },
+            "3DYG3BP6HCKUJRQV.JRTCKXETXF.AMET9K77J3" : {
+              "unit" : "GB",
+              "endRange" : "51200",
+              "description" : "$0.075 per GB of CloudFront log data delivered to Kinesis Firehose for the next 20TB  -  US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "3DYG3BP6HCKUJRQV.JRTCKXETXF.AMET9K77J3",
+              "beginRange" : "30720",
+              "pricePerUnit" : {
+                "USD" : "0.0750000000"
+              }
+            },
+            "3DYG3BP6HCKUJRQV.JRTCKXETXF.JM86AE7V7B" : {
+              "unit" : "GB",
+              "endRange" : "30720",
+              "description" : "$0.15 per GB of CloudFront log data delivered to Kinesis Firehose for the next 20TB  -  US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "3DYG3BP6HCKUJRQV.JRTCKXETXF.JM86AE7V7B",
+              "beginRange" : "10240",
+              "pricePerUnit" : {
+                "USD" : "0.1500000000"
+              }
+            }
+          },
+          "sku" : "3DYG3BP6HCKUJRQV",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "CloudWatch RUM free events",
+        "usagetype" : "USE1-CW:RUM-free-events",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "PutRumEvents",
+        "group" : "CW-RUM"
+      },
+      "sku" : "42JEY9E69W2KQN47"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "42JEY9E69W2KQN47.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "42JEY9E69W2KQN47.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Events",
+              "endRange" : "Inf",
+              "description" : "$0.0 per CloudWatch RUM events first time free tier in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "42JEY9E69W2KQN47.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "42JEY9E69W2KQN47",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Log data queried using CloudWatch Logs Insights",
+        "usagetype" : "USE1-DataScanned-Bytes",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "StartQuery",
+        "group" : "Queried Logs"
+      },
+      "sku" : "466C636KV6VS3849"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "466C636KV6VS3849.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "466C636KV6VS3849.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.005 per GB log data scanned by CloudWatch Logs Insights queries - US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "466C636KV6VS3849.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0050000000"
+              }
+            }
+          },
+          "sku" : "466C636KV6VS3849",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Application Signals Bytes",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "CloudWatch Application Signals Bytes",
+        "usagetype" : "USE1-Application-Signals-Bytes",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "",
+        "group" : "CW-Application-Signals-bundle"
+      },
+      "sku" : "4DAN5Z24DZ67DTM2"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "4DAN5Z24DZ67DTM2.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4DAN5Z24DZ67DTM2.JRTCKXETXF.JM86AE7V7B" : {
+              "unit" : "GB",
+              "endRange" : "30720",
+              "description" : "$0.20 per GB of Application Signals data ingested for the next 20TB - US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "4DAN5Z24DZ67DTM2.JRTCKXETXF.JM86AE7V7B",
+              "beginRange" : "10240",
+              "pricePerUnit" : {
+                "USD" : "0.2000000000"
+              }
+            },
+            "4DAN5Z24DZ67DTM2.JRTCKXETXF.Q3Z75P77EN" : {
+              "unit" : "GB",
+              "endRange" : "10240",
+              "description" : "$0.35 per GB of Application Signals data ingested for the first 10TB - US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "4DAN5Z24DZ67DTM2.JRTCKXETXF.Q3Z75P77EN",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.3500000000"
+              }
+            },
+            "4DAN5Z24DZ67DTM2.JRTCKXETXF.YKK5MB6R7S" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.15 per GB of Application Signals data ingested for over 30TB - US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "4DAN5Z24DZ67DTM2.JRTCKXETXF.YKK5MB6R7S",
+              "beginRange" : "30720",
+              "pricePerUnit" : {
+                "USD" : "0.1500000000"
+              }
+            }
+          },
+          "sku" : "4DAN5Z24DZ67DTM2",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "CloudWatch Database Insights",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Granular database and SQL query metrics in a curated observability experience for Amazon Aurora and RDS databases",
+        "databaseEngineType" : "RDS Oracle",
+        "instanceConfigurationType" : "Provisioned",
+        "usagetype" : "USE1-CW:DatabaseInsights-vCPU-Hours",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "RDS-Oracle:Provisioned",
+        "group" : "CW-DatabaseInsights"
+      },
+      "sku" : "4QMADNHKY23SWZKV"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "4QMADNHKY23SWZKV.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4QMADNHKY23SWZKV.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Hours",
+              "endRange" : "Inf",
+              "description" : "$0.0125 per vCPU-Hour monitored by Database Insights for RDS Oracle provisioned databases in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "4QMADNHKY23SWZKV.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0125000000"
+              }
+            }
+          },
+          "sku" : "4QMADNHKY23SWZKV",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "CloudWatch Database Insights",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Granular database and SQL query metrics in a curated observability experience for Amazon Aurora and RDS databases",
+        "databaseEngineType" : "RDS PostgreSQL",
+        "instanceConfigurationType" : "Provisioned",
+        "usagetype" : "USE1-CW:DatabaseInsights-vCPU-Hours",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "RDS-PostgreSQL:Provisioned",
+        "group" : "CW-DatabaseInsights"
+      },
+      "sku" : "5HUKG7GCV5YVUX8F"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "5HUKG7GCV5YVUX8F.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "5HUKG7GCV5YVUX8F.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Hours",
+              "endRange" : "Inf",
+              "description" : "$0.0125 per vCPU-Hour monitored by Database Insights for RDS PostgreSQL provisioned databases in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "5HUKG7GCV5YVUX8F.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0125000000"
+              }
+            }
+          },
+          "sku" : "5HUKG7GCV5YVUX8F",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Canaries",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "CloudWatch Synthetics Canaries",
+        "usagetype" : "USE1-CW:Canary-runs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "",
+        "group" : "CW-Canaries"
+      },
+      "sku" : "5UHPES8UN3HUSRZ5"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "5UHPES8UN3HUSRZ5.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "5UHPES8UN3HUSRZ5.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Runs",
+              "endRange" : "Inf",
+              "description" : "$0.0012 per canary run per month - US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "5UHPES8UN3HUSRZ5.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0012000000"
+              }
+            }
+          },
+          "sku" : "5UHPES8UN3HUSRZ5",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Logs generated by AWS WAF and delivered to Amazon Data Firehose",
+        "usagetype" : "USE1-FH-Egress-Bytes-WAFLogs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "",
+        "version" : "Current",
+        "group" : "Delivered Logs",
+        "logsDestination" : "Amazon Kinesis Data Firehose"
+      },
+      "sku" : "6EWKAUBRZAN3H6MV"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "6EWKAUBRZAN3H6MV.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "6EWKAUBRZAN3H6MV.JRTCKXETXF.AMET9K77J3" : {
+              "unit" : "GB",
+              "endRange" : "51200",
+              "description" : "$0.075 per GB for the next 20TB of vended log data delivered to Kinesis Firehose per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6EWKAUBRZAN3H6MV.JRTCKXETXF.AMET9K77J3",
+              "beginRange" : "30720",
+              "pricePerUnit" : {
+                "USD" : "0.0750000000"
+              }
+            },
+            "6EWKAUBRZAN3H6MV.JRTCKXETXF.JM86AE7V7B" : {
+              "unit" : "GB",
+              "endRange" : "30720",
+              "description" : "$0.15 per GB for the next 20TB of vended log data delivered to Kinesis Firehose per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6EWKAUBRZAN3H6MV.JRTCKXETXF.JM86AE7V7B",
+              "beginRange" : "10240",
+              "pricePerUnit" : {
+                "USD" : "0.1500000000"
+              }
+            },
+            "6EWKAUBRZAN3H6MV.JRTCKXETXF.AQTKZ3QBDA" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.05 per GB for over 50TB of vended log data delivered to Kinesis Firehose per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6EWKAUBRZAN3H6MV.JRTCKXETXF.AQTKZ3QBDA",
+              "beginRange" : "51200",
+              "pricePerUnit" : {
+                "USD" : "0.0500000000"
+              }
+            },
+            "6EWKAUBRZAN3H6MV.JRTCKXETXF.Q3Z75P77EN" : {
+              "unit" : "GB",
+              "endRange" : "10240",
+              "description" : "$0.25 per GB for the first 10TB of vended log data delivered to Kinesis Firehose per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6EWKAUBRZAN3H6MV.JRTCKXETXF.Q3Z75P77EN",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            }
+          },
+          "sku" : "6EWKAUBRZAN3H6MV",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Storage Snapshot",
+      "attributes" : {
+        "storageMedia" : "Amazon S3",
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "usagetype" : "USE1-TimedStorage-ByteHrs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "",
+        "version" : "Current"
+      },
+      "sku" : "6K9ADYQAHV5KX9KZ"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "6K9ADYQAHV5KX9KZ.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "6K9ADYQAHV5KX9KZ.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB-Mo",
+              "endRange" : "Inf",
+              "description" : "$0.03 per GB-mo of log storage - US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6K9ADYQAHV5KX9KZ.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0300000000"
+              }
+            }
+          },
+          "sku" : "6K9ADYQAHV5KX9KZ",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Logs generated by Elemental MediaTailor and delivered to Amazon S3",
+        "usagetype" : "USE1-S3-Egress-Bytes-MTLogs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "",
+        "version" : "Current",
+        "group" : "Delivered Logs",
+        "logsDestination" : "Amazon S3"
+      },
+      "sku" : "6RSABGMXGADP2M5F"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "6RSABGMXGADP2M5F.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "6RSABGMXGADP2M5F.JRTCKXETXF.AMET9K77J3" : {
+              "unit" : "GB",
+              "endRange" : "51200",
+              "description" : "$0.075 per GB for the next 20TB of vended log data delivered to S3 per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6RSABGMXGADP2M5F.JRTCKXETXF.AMET9K77J3",
+              "beginRange" : "30720",
+              "pricePerUnit" : {
+                "USD" : "0.0750000000"
+              }
+            },
+            "6RSABGMXGADP2M5F.JRTCKXETXF.Q3Z75P77EN" : {
+              "unit" : "GB",
+              "endRange" : "10240",
+              "description" : "$0.25 per GB for the first 10TB of vended log data delivered to S3 per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6RSABGMXGADP2M5F.JRTCKXETXF.Q3Z75P77EN",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            },
+            "6RSABGMXGADP2M5F.JRTCKXETXF.JM86AE7V7B" : {
+              "unit" : "GB",
+              "endRange" : "30720",
+              "description" : "$0.15 per GB for the next 20TB of vended log data delivered to S3 per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6RSABGMXGADP2M5F.JRTCKXETXF.JM86AE7V7B",
+              "beginRange" : "10240",
+              "pricePerUnit" : {
+                "USD" : "0.1500000000"
+              }
+            },
+            "6RSABGMXGADP2M5F.JRTCKXETXF.AQTKZ3QBDA" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.05 per GB for over 50TB of vended log data delivered to S3 per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "6RSABGMXGADP2M5F.JRTCKXETXF.AQTKZ3QBDA",
+              "beginRange" : "51200",
+              "pricePerUnit" : {
+                "USD" : "0.0500000000"
+              }
+            }
+          },
+          "sku" : "6RSABGMXGADP2M5F",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "CloudWatch Evidently free EAU",
+        "usagetype" : "USE1-CW:Evidently-free-eau",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "evidently",
+        "group" : "CW-Evidently"
+      },
+      "sku" : "78W76959H8DFSPXM"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "78W76959H8DFSPXM.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "78W76959H8DFSPXM.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Units",
+              "endRange" : "Inf",
+              "description" : "$0.00 per Evidently Analysis Unit - first 10 million units free trial",
+              "appliesTo" : [ ],
+              "rateCode" : "78W76959H8DFSPXM.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "78W76959H8DFSPXM",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Alarm",
+      "attributes" : {
+        "alarmType" : "High Resolution",
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "CloudWatch Alarms",
+        "usagetype" : "CW:HighResAlarmMonitorUsage",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "",
+        "group" : "Alarm"
+      },
+      "sku" : "7BK9TRWG8E43D4AJ"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "7BK9TRWG8E43D4AJ.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "7BK9TRWG8E43D4AJ.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Alarms",
+              "endRange" : "Inf",
+              "description" : "$0.30 per alarm metric month (high resolution) - US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "7BK9TRWG8E43D4AJ.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.3000000000"
+              }
+            }
+          },
+          "sku" : "7BK9TRWG8E43D4AJ",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "CloudWatch Evidently free event",
+        "usagetype" : "USE1-CW:Evidently-free-event",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "evidently",
+        "group" : "CW-Evidently"
+      },
+      "sku" : "7WTV6SFX2HRJQKW5"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "7WTV6SFX2HRJQKW5.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "7WTV6SFX2HRJQKW5.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Events",
+              "endRange" : "Inf",
+              "description" : "$0.00 per Evidently event - first time 3 million events free trial",
+              "appliesTo" : [ ],
+              "rateCode" : "7WTV6SFX2HRJQKW5.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "7WTV6SFX2HRJQKW5",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Log delivered from AWS services to log destinations other than CloudWatch",
+        "usagetype" : "USE1-S3-Egress-InputBytes",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "ParquetConversion",
+        "version" : "Current",
+        "group" : "Converted Logs",
+        "logsDestination" : "Amazon S3"
+      },
+      "sku" : "8ETUXTX3PYWVY3QV"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "8ETUXTX3PYWVY3QV.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "8ETUXTX3PYWVY3QV.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.03 per GB of log data converted to Parquet format - US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "8ETUXTX3PYWVY3QV.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0300000000"
+              }
+            }
+          },
+          "sku" : "8ETUXTX3PYWVY3QV",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Logs generated by Amazon CloudFront and delivered to CloudWatch-Standard as Vended Logs",
+        "usagetype" : "USE1-VendedLog-Bytes-CFLogs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "PutLogEvents",
+        "version" : "Current",
+        "group" : "Ingested Logs",
+        "logsDestination" : "Amazon CloudWatch Logs"
+      },
+      "sku" : "8F6VXFPPPW3MWGAY"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "8F6VXFPPPW3MWGAY.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "8F6VXFPPPW3MWGAY.JRTCKXETXF.AMET9K77J3" : {
+              "unit" : "GB",
+              "endRange" : "51200",
+              "description" : "$0.10 per GB of CloudFront vended logs ingested in Standard log class for the next 20TB  -  US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "8F6VXFPPPW3MWGAY.JRTCKXETXF.AMET9K77J3",
+              "beginRange" : "30720",
+              "pricePerUnit" : {
+                "USD" : "0.1000000000"
+              }
+            },
+            "8F6VXFPPPW3MWGAY.JRTCKXETXF.Q3Z75P77EN" : {
+              "unit" : "GB",
+              "endRange" : "10240",
+              "description" : "$0.50 per GB of CloudFront vended logs ingested in Standard log class for the first 10TB  -  US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "8F6VXFPPPW3MWGAY.JRTCKXETXF.Q3Z75P77EN",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.5000000000"
+              }
+            },
+            "8F6VXFPPPW3MWGAY.JRTCKXETXF.JM86AE7V7B" : {
+              "unit" : "GB",
+              "endRange" : "30720",
+              "description" : "$0.25 per GB of CloudFront vended logs ingested in Standard log class for the next 20TB  -  US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "8F6VXFPPPW3MWGAY.JRTCKXETXF.JM86AE7V7B",
+              "beginRange" : "10240",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            },
+            "8F6VXFPPPW3MWGAY.JRTCKXETXF.AQTKZ3QBDA" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.05 per GB of CloudFront vended logs ingested in Standard log class over 50TB  - US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "8F6VXFPPPW3MWGAY.JRTCKXETXF.AQTKZ3QBDA",
+              "beginRange" : "51200",
+              "pricePerUnit" : {
+                "USD" : "0.0500000000"
+              }
+            }
+          },
+          "sku" : "8F6VXFPPPW3MWGAY",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Existing system, application, and custom log files",
+        "usagetype" : "DataProcessing-Bytes",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "PutLogEvents",
+        "version" : "Legacy",
+        "group" : "Ingested Logs",
+        "logsDestination" : "Amazon CloudWatch Logs"
+      },
+      "sku" : "96K55R2PV3ZZZ3AM"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "96K55R2PV3ZZZ3AM.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "96K55R2PV3ZZZ3AM.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.50 per GB custom log data ingested in Standard log class - US East (Northern Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "96K55R2PV3ZZZ3AM.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.5000000000"
+              }
+            }
+          },
+          "sku" : "96K55R2PV3ZZZ3AM",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  }, {
+    "product" : {
+      "productFamily" : "Data Payload",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonCloudWatch",
+        "groupDescription" : "Logs generated by AWS WAF and delivered to CloudWatch as Vended Logs Standard",
+        "usagetype" : "USE1-VendedLog-Bytes-WAFLogs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AmazonCloudWatch",
+        "operation" : "PutLogEvents",
+        "version" : "Current",
+        "group" : "Ingested Logs",
+        "logsDestination" : "Amazon CloudWatch Logs"
+      },
+      "sku" : "9H6CF78HYXNF6MRS"
+    },
+    "serviceCode" : "AmazonCloudWatch",
+    "terms" : {
+      "OnDemand" : {
+        "9H6CF78HYXNF6MRS.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "9H6CF78HYXNF6MRS.JRTCKXETXF.JM86AE7V7B" : {
+              "unit" : "GB",
+              "endRange" : "30720",
+              "description" : "$0.25 per GB for the next 20TB of vended log data ingested to CloudWatch logs per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "9H6CF78HYXNF6MRS.JRTCKXETXF.JM86AE7V7B",
+              "beginRange" : "10240",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            },
+            "9H6CF78HYXNF6MRS.JRTCKXETXF.Q3Z75P77EN" : {
+              "unit" : "GB",
+              "endRange" : "10240",
+              "description" : "$0.50 per GB for the first 10TB of vended log data ingested to CloudWatch logs per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "9H6CF78HYXNF6MRS.JRTCKXETXF.Q3Z75P77EN",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.5000000000"
+              }
+            },
+            "9H6CF78HYXNF6MRS.JRTCKXETXF.AQTKZ3QBDA" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.05 per GB for over 50TB of vended log data ingested to CloudWatch logs per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "9H6CF78HYXNF6MRS.JRTCKXETXF.AQTKZ3QBDA",
+              "beginRange" : "51200",
+              "pricePerUnit" : {
+                "USD" : "0.0500000000"
+              }
+            },
+            "9H6CF78HYXNF6MRS.JRTCKXETXF.AMET9K77J3" : {
+              "unit" : "GB",
+              "endRange" : "51200",
+              "description" : "$0.10 per GB for the next 20TB of vended log data ingested to CloudWatch logs per month in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "9H6CF78HYXNF6MRS.JRTCKXETXF.AMET9K77J3",
+              "beginRange" : "30720",
+              "pricePerUnit" : {
+                "USD" : "0.1000000000"
+              }
+            }
+          },
+          "sku" : "9H6CF78HYXNF6MRS",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260622031607",
+    "publicationDate" : "2026-06-22T03:16:07Z"
+  } ]
+}

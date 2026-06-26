@@ -21,6 +21,8 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.pricing.PricingClient;
 
+import java.time.Duration;
+
 @Configuration
 public class CostCalculatorsConfiguration {
 
@@ -30,6 +32,10 @@ public class CostCalculatorsConfiguration {
         return PricingClient.builder()
                 .region(Region.US_EAST_1) // Because AWS Pricing API is only available in us-east-1
                 .credentialsProvider(DefaultCredentialsProvider.create())
+                .overrideConfiguration(builder -> builder
+                        .apiCallAttemptTimeout(Duration.ofSeconds(4))
+                        .apiCallTimeout(Duration.ofSeconds(10))
+                )
                 .build();
     }
 

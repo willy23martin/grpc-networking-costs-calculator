@@ -134,9 +134,6 @@ public class UnitEconomicsController {
         @JsonProperty public String affordabilityImpact; // "INHIBITS" | "PROMOTES" | "ORTHOGONAL"
     }
 
-    /* ================================================================
-       ENDPOINT: POST /api/cost/unit-economics
-    ================================================================ */
     @PostMapping("/unit-economics")
     public ResponseEntity<UnitEconomicsResponse> calculateUnitEconomics(
             @RequestBody UnitEconomicsRequest req) {

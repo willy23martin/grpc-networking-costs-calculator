@@ -11,8 +11,10 @@ import software.amazon.awssdk.services.pricing.model.FilterType;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
 import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -21,7 +23,6 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
 
     private static final Logger log = Logger.getLogger(AWSSecurityCostCalculator.class.getName());
 
-    @PostConstruct
     @Override
     public Map<String, Object> calculateSecurityCosts() {
         Map<String, Object> securityCosts = new LinkedHashMap<>();
@@ -38,50 +39,103 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
     }
 
     private void mapKMSCMKPerMonthAndPerTenThousendAPICallsCosts(Map<String, Object> securityCosts) {
-        // AWS KMS service code is "awskms"
-        securityCosts.put("kmsCmkPerMonth",            fetchSimplePrice(log, "awskms", "Encryption Key", 1.00));
-        securityCosts.put("kmsApiCallsPer10k",         fetchSimplePrice(log, "awskms", "API Calls", 0.03));
+        securityCosts.put("kmsCmkPerMonth",            fetchSecurityServicePrice("awskms", "Customer Managed Key", 1.00));
+        securityCosts.put("kmsApiCallsPer10k",         fetchSecurityServicePrice("awskms", "KMS apiKey", 0.03));
         securityCosts.put("kmsNote",                   "Data encryption at rest via KMS. Dynamic pricing fetched per CMK/month and per API call tier.");
     }
 
     private void mapAWSAuditManagerPerAssessmentCosts(Map<String, Object> securityCosts) {
-        // Service Code: "AWSAuditManager", Product Family: "Audit Manager"
-        securityCosts.put("auditManagerPerAssessmentMonth", fetchSimplePrice(log, "AWSAuditManager", "Audit Manager", 6.00));
+        // Standard industry pricing fallback value ($6.00 per resource assessment per month)
+        double auditManagerFallbackPrice = 6.00;
+
+        try {
+            double fetchedPrice = fetchSecurityServicePrice("AuditManager", "Resource Assessment", auditManagerFallbackPrice);
+            securityCosts.put("auditManagerPerAssessmentMonth", fetchedPrice);
+        } catch (Exception e) {
+            log.severe("AuditManager fetch triggered an unexpected exception, falling back directly: " + e.getMessage());
+            securityCosts.put("auditManagerPerAssessmentMonth", auditManagerFallbackPrice);
+        }
     }
 
     private void mapCloudWatchLogsIngestionAndStorageCosts(Map<String, Object> securityCosts) {
-        // Amazon CloudWatch service code is "AmazonCloudWatch"
-        securityCosts.put("cloudwatchLogsIngestionPerGb", fetchSimplePrice(log, "AmazonCloudWatch", "Log Ingestion", 0.50));
-        securityCosts.put("cloudwatchLogsStoragePerGbMonth", fetchSimplePrice(log, "AmazonCloudWatch", "Storage Snapshot", 0.03));
+        securityCosts.put("cloudwatchLogsIngestionPerGb", fetchSecurityServicePrice("AmazonCloudWatch", "PutLogEvents", 0.50));
+        securityCosts.put("cloudwatchLogsStoragePerGbMonth", fetchSecurityServicePrice("AmazonCloudWatch", "ArchiveStorage", 0.03));
     }
 
     private void mapMaciePerGBOfS3DataClassifiedCosts(Map<String, Object> securityCosts) {
-        // AWS Macie service code is "AmazonMacie"
-        securityCosts.put("maciePerGbClassified",      fetchSimplePrice(log, "AmazonMacie", "Data Classification", 1.00));
+        securityCosts.put("maciePerGbClassified",      fetchSecurityServicePrice("AmazonMacie", "Data Discovery", 1.00));
         securityCosts.put("macieFirstGbFreeNote",      "First 1 GB/month free. $1.00/GB thereafter.");
     }
 
     private void mapAWSWAFPerACLAndRuleAndMillionRequestsCosts(Map<String, Object> securityCosts) {
-        // AWS WAF requires specialized filter parsing because filtering relies on the 'group' attribute
         securityCosts.put("wafWebAclPerMonth",         fetchWafPrice("WebACL", 5.00));
         securityCosts.put("wafRulePerMonth",           fetchWafPrice("Rule", 1.00));
         securityCosts.put("wafPer1MRequests",          fetchWafPrice("Request", 0.60));
     }
 
     private void mapAmazonInspectorPerEC2Instance(Map<String, Object> securityCosts) {
-        // Amazon Inspector family mapping is "System Management"
-        securityCosts.put("inspectorPerInstanceMonth", fetchSimplePrice(log, "AmazonInspector", "System Management", 1.178));
+        securityCosts.put("inspectorPerInstanceMonth", fetchSecurityServicePrice("AmazonInspector", "EC2", 1.178));
     }
 
     private void mapGuardDutyPerGBCloudTrailVPCForLogsAnalysedCosts(Map<String, Object> securityCosts) {
-        // Amazon GuardDuty family mapping is "Security"
-        securityCosts.put("guardDutyPerGbLogs",       fetchSimplePrice(log, "AmazonGuardDuty", "Security", 1.00));
+        securityCosts.put("guardDutyPerGbLogs",       fetchSecurityServicePrice("AmazonGuardDuty", "Analysis", 1.00));
         securityCosts.put("guardDutyFirstGbFreeNote", "First 500 GB/month free. $1.00/GB thereafter (tiered).");
     }
 
     /**
-     * Tailored API caller for AWS WAF using modern non-deprecated Jackson extraction via .elements()
+     * Flexible extraction method designed for security services that safely navigates AWS Price List API index discrepancies.
      */
+    private double fetchSecurityServicePrice(String serviceCode, String lookupKeyword, double fallback) {
+        try {
+            List<Filter> apiFilters = new ArrayList<>();
+
+            // Conditional filtering: AuditManager bypasses location parameters to avoid empty matrix returns
+            if ("AuditManager".equalsIgnoreCase(serviceCode) || "AWSAuditManager".equalsIgnoreCase(serviceCode)) {
+                apiFilters.add(Filter.builder().type(FilterType.TERM_MATCH).field("productFamily").value("Audit Manager").build());
+            } else {
+                apiFilters.add(Filter.builder().type(FilterType.TERM_MATCH).field("location").value(AWS_LOCATION).build());
+            }
+
+            GetProductsRequest req = GetProductsRequest.builder()
+                    .serviceCode(serviceCode)
+                    .filters(apiFilters)
+                    .formatVersion("aws_v1")
+                    .maxResults(20)
+                    .build();
+
+            GetProductsResponse resp = pricingClient.getProducts(req);
+            log.info("GetProductsResponse for fetchSecurityServicePrice (" + serviceCode + "): " + resp);
+            JSONLogger.logAsJSON(log, resp);
+
+            if (resp.priceList().isEmpty()) return fallback;
+
+            String lowerKeyword = lookupKeyword.toLowerCase();
+
+            for (String productJson : resp.priceList()) {
+                if (productJson == null || productJson.isBlank()) continue;
+
+                JsonNode root = mapper.readTree(productJson);
+                String usageType = root.path("product").path("attributes").path("usagetype").asText("").toLowerCase();
+                String description = root.path("product").path("attributes").path("description").asText("").toLowerCase();
+
+                if (lookupKeyword.isBlank() || usageType.contains(lowerKeyword) || description.contains(lowerKeyword)) {
+                    Iterator<JsonNode> termsIt = root.path("terms").path("OnDemand").elements();
+                    if (!termsIt.hasNext()) continue;
+
+                    Iterator<JsonNode> priceDimensionsIt = termsIt.next().path("priceDimensions").elements();
+                    if (!priceDimensionsIt.hasNext()) continue;
+
+                    double price = priceDimensionsIt.next().path("pricePerUnit").path("USD").asDouble(fallback);
+                    if (price > 0) return price;
+                }
+            }
+            return fallback;
+        } catch (Exception e) {
+            log.severe("Flexible fetch failed for security service " + serviceCode + ": " + e.getMessage());
+            return fallback;
+        }
+    }
+
     private double fetchWafPrice(String groupType, double fallback) {
         try {
             GetProductsRequest req = GetProductsRequest.builder()
@@ -93,7 +147,7 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
                     .formatVersion("aws_v1").maxResults(1).build();
 
             GetProductsResponse resp = pricingClient.getProducts(req);
-            log.info("GetProductsResponse  for fetchWafPrice: " + resp);
+            log.info("GetProductsResponse for fetchWafPrice: " + resp);
             JSONLogger.logAsJSON(log, resp);
 
             if (resp.priceList().isEmpty()) return fallback;
@@ -110,8 +164,20 @@ public class AWSSecurityCostCalculator extends AWSCloudCalculator implements Sec
             return price > 0 ? price : fallback;
 
         } catch (Exception e) {
-            log.warning("Tailored WAF fetch failed for " + groupType + ": " + e.getMessage());
+            log.severe("Tailored WAF fetch failed for " + groupType + ": " + e.getMessage());
             return fallback;
         }
+    }
+
+    @PostConstruct
+    public void init(){
+        Map<String, Object> securityCosts = new LinkedHashMap<>();
+        mapGuardDutyPerGBCloudTrailVPCForLogsAnalysedCosts(securityCosts);
+        mapAmazonInspectorPerEC2Instance(securityCosts);
+        mapAWSWAFPerACLAndRuleAndMillionRequestsCosts(securityCosts);
+        mapMaciePerGBOfS3DataClassifiedCosts(securityCosts);
+        mapCloudWatchLogsIngestionAndStorageCosts(securityCosts);
+        mapAWSAuditManagerPerAssessmentCosts(securityCosts);
+        mapKMSCMKPerMonthAndPerTenThousendAPICallsCosts(securityCosts);
     }
 }

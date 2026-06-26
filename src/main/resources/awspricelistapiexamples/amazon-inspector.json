@@ -1,0 +1,132 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "Amazon Inspector Network Assessment",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "freeUsageIncluded" : "250 Network instance-assessments or 90 days",
+        "servicecode" : "AmazonInspector",
+        "usagetype" : "network-assessments-free",
+        "description" : "Free Trial Network instance-assessments",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon Inspector",
+        "operation" : ""
+      },
+      "sku" : "6UAQHSW4MZ9QNSG6"
+    },
+    "serviceCode" : "AmazonInspector",
+    "terms" : {
+      "OnDemand" : {
+        "6UAQHSW4MZ9QNSG6.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "6UAQHSW4MZ9QNSG6.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "InstanceAssessments",
+              "endRange" : "Inf",
+              "description" : "Free Trial instance-assessments",
+              "appliesTo" : [ ],
+              "rateCode" : "6UAQHSW4MZ9QNSG6.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "6UAQHSW4MZ9QNSG6",
+          "effectiveDate" : "2024-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20250116160645",
+    "publicationDate" : "2025-01-16T16:06:45Z"
+  }, {
+    "product" : {
+      "productFamily" : "Amazon Inspector Network Assessment",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "freeUsageIncluded" : "None",
+        "servicecode" : "AmazonInspector",
+        "usagetype" : "network-assessments",
+        "description" : "Tiered Usage Network instance-assessments",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon Inspector",
+        "operation" : ""
+      },
+      "sku" : "S27MKS4G4GBJBPEZ"
+    },
+    "serviceCode" : "AmazonInspector",
+    "terms" : {
+      "OnDemand" : {
+        "S27MKS4G4GBJBPEZ.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "S27MKS4G4GBJBPEZ.JRTCKXETXF.9DMZF6E7MY" : {
+              "unit" : "InstanceAssessments",
+              "endRange" : "250",
+              "description" : "First 250 instance-assessments",
+              "appliesTo" : [ ],
+              "rateCode" : "S27MKS4G4GBJBPEZ.JRTCKXETXF.9DMZF6E7MY",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.1500000000"
+              }
+            },
+            "S27MKS4G4GBJBPEZ.JRTCKXETXF.AXSXEJHBB3" : {
+              "unit" : "InstanceAssessments",
+              "endRange" : "5000",
+              "description" : "Next 4,000 instance-assessments",
+              "appliesTo" : [ ],
+              "rateCode" : "S27MKS4G4GBJBPEZ.JRTCKXETXF.AXSXEJHBB3",
+              "beginRange" : "1000",
+              "pricePerUnit" : {
+                "USD" : "0.1000000000"
+              }
+            },
+            "S27MKS4G4GBJBPEZ.JRTCKXETXF.KJSF5Y4MUU" : {
+              "unit" : "InstanceAssessments",
+              "endRange" : "50000",
+              "description" : "Next 45,000 instance-assessments",
+              "appliesTo" : [ ],
+              "rateCode" : "S27MKS4G4GBJBPEZ.JRTCKXETXF.KJSF5Y4MUU",
+              "beginRange" : "5000",
+              "pricePerUnit" : {
+                "USD" : "0.0700000000"
+              }
+            },
+            "S27MKS4G4GBJBPEZ.JRTCKXETXF.6MJTHCY3AS" : {
+              "unit" : "InstanceAssessments",
+              "endRange" : "1000",
+              "description" : "Next 750 instance-assessments",
+              "appliesTo" : [ ],
+              "rateCode" : "S27MKS4G4GBJBPEZ.JRTCKXETXF.6MJTHCY3AS",
+              "beginRange" : "250",
+              "pricePerUnit" : {
+                "USD" : "0.1300000000"
+              }
+            },
+            "S27MKS4G4GBJBPEZ.JRTCKXETXF.GK6CZWW823" : {
+              "unit" : "InstanceAssessments",
+              "endRange" : "Inf",
+              "description" : "All other instance-assessments",
+              "appliesTo" : [ ],
+              "rateCode" : "S27MKS4G4GBJBPEZ.JRTCKXETXF.GK6CZWW823",
+              "beginRange" : "50000",
+              "pricePerUnit" : {
+                "USD" : "0.0400000000"
+              }
+            }
+          },
+          "sku" : "S27MKS4G4GBJBPEZ",
+          "effectiveDate" : "2024-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20250116160645",
+    "publicationDate" : "2025-01-16T16:06:45Z"
+  } ]
+}

@@ -17,7 +17,6 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
 
     private static final Logger log = Logger.getLogger(AWSDatabaseCostCalculator.class.getName());
 
-    @PostConstruct
     @Override
     public Map<String, Object> calculateDatabaseBackupPricing() {
         Map<String, Object> databaseBackupCosts = new LinkedHashMap<>();
@@ -78,5 +77,10 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
                     .getValue().path("priceDimensions").fields().next()
                     .getValue().path("pricePerUnit").path("USD").asDouble(0.26);
         } catch (Exception e) { return 0.26; }
+    }
+
+    @PostConstruct
+    private void init(){
+        calculateDatabaseBackupPricing();
     }
 }

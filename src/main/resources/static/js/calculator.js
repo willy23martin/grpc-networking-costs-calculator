@@ -144,13 +144,13 @@ function recalculateRps() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   })
-  .then(function(r) {
-  return r.ok ? r.json() : null;
-  })
+  .then(function(r) { return r.ok ? r.json() : null; })
   .then(function(d) {
     if (!d) return;
-    console.warn("Effective RPS response data: ");
-              console.warn(d);
+
+    console.warn("SUCCESS - /api/tco/effective-rps:");
+            console.warn(d);
+
     window._lastEffectiveRps  = d.effectiveRps;
     window._lastRetryExtra    = d.retryExtra    || 0;   /* authoritative retry req/s from backend */
     window._lastHandshakeExtra= d.handshakeExtra|| 0;
@@ -185,7 +185,7 @@ function recalculateRps() {
     updateLiveComparison(baseRps, d.effectiveRps);
   })
   .catch(function(e) {
-    console.error('recalculateRps backend call failed:', e.message);
+    console.error('ERROR - recalculateRps backend call failed:', e.message);
     updateLiveComparison(baseRps, baseRps);
   });
 }
@@ -290,6 +290,10 @@ function fetchBackendCost(file, useBase) {
     return fetch('/calculateTCO', { method: 'POST', body: fd });
   }).then(function (resp) {
     if (!resp.ok) return null;
+
+    console.warn("SUCCESS - /api/session/tactics:");
+                console.warn(resp);
+
     return resp.text();
   }).then(function (html) {
     if (!html) return null;
@@ -577,25 +581,44 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
    window._lastCloudInfraCost so renderComparisonFromBackend can use it
 ===================================================================== */
 function aggregateCloudInfraCost() {
-  var infraKeys = ['tco_alb_cost','tco_cache_cost','tco_db_cost','tco_container_cost','tco_apigw_cost'];
-  var total = infraKeys.reduce(function(sum, k) {
-    return sum + (parseFloat(sessionStorage.getItem(k) || '0'));
-  }, 0);
-  // Security services: only count a sessionStorage key when its checkbox is ACTUALLY
-  // checked in the DOM right now.  sessionStorage persists across page reloads within
-  // the same browser tab, so stale keys from a previous session must never be counted
-  // before the user has selected any checkbox.
+  // For EVERY cost key, only count the value when the corresponding DOM checkbox
+  // is currently checked.  This prevents stale sessionStorage values from any
+  // previous session from inflating the cost before the user selects anything.
+  function checkedCost(checkboxId, storageKey) {
+    var cb = document.getElementById(checkboxId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(storageKey) || '0');
+  }
+
+  var total = 0;
+  total += checkedCost('tactic-alb',            'tco_alb_cost');
+  total += checkedCost('tactic-cache',          'tco_cache_cost');
+  total += checkedCost('tactic-apigw',          'tco_apigw_cost');
+
+  // DB options are rendered dynamically — use key presence + any of their checkboxes
+  var dbKeys = ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
+                'tactic-aurora-replica','tactic-dynamo-global','tactic-dynamo-pitr'];
+  var anyDbChecked = dbKeys.some(function(id) {
+    var cb = document.getElementById(id); return cb && cb.checked;
+  });
+  if (anyDbChecked) total += parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
+
+  // Container cost — gated on any EKS/container checkbox
+  var cefKeys = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'];
+  var anyCefChecked = cefKeys.some(function(id) {
+    var cb = document.getElementById(id); return cb && cb.checked;
+  });
+  if (anyCefChecked) total += parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
+
+  // Security services — one key per service, guarded individually
   var secServiceIds = [
     'sec-guardduty','sec-inspector','sec-waf','sec-macie',
     'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
   ];
   secServiceIds.forEach(function(id) {
-    var cb = document.getElementById(id);
-    if (cb && cb.checked) {
-      total += parseFloat(sessionStorage.getItem('tco_sec_' + id) || '0');
-    }
-    // unchecked or cloud-sec panel not yet rendered → skip even if a stale key exists
+    total += checkedCost(id, 'tco_sec_' + id);
   });
+
   var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
   window._lastCloudInfraCost = Math.max(0, Math.round((total - saving) * 100) / 100);
   return window._lastCloudInfraCost;
@@ -971,8 +994,10 @@ function recalculateCostOpt() {
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (riData) {
         if (!riData) return;
-        console.warn("FinOps reserved instances response data: ");
-                  console.warn(riData);
+
+        console.warn("SUCCESS - /api/finops/ri-prices/" + encodeURIComponent(_instTyp) +" :");
+            console.warn(riData);
+
         /* Update rows with live actual % */
         _fpRows.forEach(function (row) {
           if (row.s.indexOf('1-yr') >= 0 && riData.ri1yrActualDiscountPct > 0) row.p = riData.ri1yrActualDiscountPct;
@@ -1044,10 +1069,10 @@ function recalculateContainerCost() {
   if (!window._containerPriceData) {
     fetch('/api/aws/container-pricing').then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { if (d) {
-      console.warn("Container pricing data: ");
-                console.warn(d);
-      window._containerPriceData = d;
-      recalculateContainerCost();
+      console.warn("SUCCESS - /api/aws/container-pricing:");
+                      console.warn(d);
+
+      window._containerPriceData = d; recalculateContainerCost();
       } }).catch(function () { });
   }
   var aLines = [], aTotal = 0;
@@ -1302,6 +1327,24 @@ function wireAllHandlers() {
 ===================================================================== */
 document.addEventListener('DOMContentLoaded', function () {
 
+  // Purge ALL cloud-infra sessionStorage keys on every page load.
+  // sessionStorage survives tab reloads, so stale values from the previous
+  // session would otherwise appear in aggregateCloudInfraCost before the
+  // user checks any checkbox.
+  (function clearStaleCloudCostKeys() {
+    var keysToRemove = [
+      'tco_alb_cost','tco_alb_label','tco_cache_cost','tco_cache_label',
+      'tco_db_cost','tco_container_cost','tco_apigw_cost','tco_sec_cost',
+      'sec-guardduty','sec-inspector','sec-waf','sec-macie',
+      'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
+    ];
+    keysToRemove.forEach(function(k) { sessionStorage.removeItem(k); });
+    // per-service sec keys
+    ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+     'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
+    ].forEach(function(id) { sessionStorage.removeItem('tco_sec_' + id); });
+  }());
+
   // Clear all per-service security sessionStorage keys immediately on page load.
   // sessionStorage persists across reloads within the same browser tab, so keys written
   // in a previous session would otherwise be read by aggregateCloudInfraCost and appear
@@ -1370,6 +1413,10 @@ document.addEventListener('DOMContentLoaded', function () {
       return res.json();
     }).then(function (dto) {
       if (!dto || dto.requestsPerSecond === 0) return;
+
+      console.warn("SUCCESS - /api/session/tactics");
+                  console.warn(dto);
+
       var s = function (id, v) { var el = document.getElementById(id); if (el) el.checked = !!v; };
       var v = function (id, val) { var el = document.getElementById(id); if (el) el.value = val || ''; };
 

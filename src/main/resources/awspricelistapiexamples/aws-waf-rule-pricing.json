@@ -1,0 +1,46 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "Web Application Firewall",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "awswaf",
+        "groupDescription" : "Rule Activated",
+        "usagetype" : "USE1-RuleV2",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "AWS WAF",
+        "operation" : "",
+        "group" : "Rule"
+      },
+      "sku" : "JGH3VFMTQFNJUV5W"
+    },
+    "serviceCode" : "awswaf",
+    "terms" : {
+      "OnDemand" : {
+        "JGH3VFMTQFNJUV5W.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "JGH3VFMTQFNJUV5W.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Month",
+              "endRange" : "Inf",
+              "description" : "$1.00 per rule created (prorated hourly)",
+              "appliesTo" : [ ],
+              "rateCode" : "JGH3VFMTQFNJUV5W.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "1.0000000000"
+              }
+            }
+          },
+          "sku" : "JGH3VFMTQFNJUV5W",
+          "effectiveDate" : "2025-12-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260107213453",
+    "publicationDate" : "2026-01-07T21:34:53Z"
+  } ]
+}

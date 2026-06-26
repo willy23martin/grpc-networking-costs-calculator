@@ -1,9 +1,23 @@
-var tacticMissionCriticalCheckbox = document.getElementById('tactic-mission-critical');
-var missionCriticalNoteElement = document.getElementById('p4-mission-critical-note');
-var finopsNotesElement = document.getElementById('p4-finops-notes');
+/* =======================================================================
+   unit-economics.js
+   Phase 4 — TCO Breakdown + Unit Economics + ROI
+
+   All cost computations use two existing backend endpoints:
+     POST /api/cost/cloud-infra-total  (UnitEconomicsController)
+     POST /api/cost/unit-economics     (UnitEconomicsController)
+
+   Security service costs are read from per-service sessionStorage keys
+   (written by recalculateSecCost() which uses /api/aws/security-services
+   pricing data) — one row per service, only when selected and cost > 0.
+   ======================================================================= */
+
 var runningTotalCost = 0;
 var hoursInMonth = 730;
 var billingMonthsInYear = 12;
+
+var tacticMissionCriticalCheckbox = document.getElementById('tactic-mission-critical');
+var missionCriticalNoteElement    = document.getElementById('p4-mission-critical-note');
+var finopsNotesElement            = document.getElementById('p4-finops-notes');
 
 function populateReportSummary() {
 
@@ -149,417 +163,308 @@ function populateReportSummary() {
     + '</div></div></div>';
 }
 
+/* =======================================================================
+   computeCloudInfraCost  — local fallback only
+   Reads sessionStorage keys written by backend-driven recalculate* fns.
+   Guards every key against its DOM checkbox so stale keys are ignored.
+   ======================================================================= */
 function computeCloudInfraCost() {
-  runningTotalCost = 0;   /* ← MUST reset each call; module-level var accumulates otherwise */
-  if (document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
-    if (window._albData) {
-      var albCount = parseInt((document.getElementById('input-alb-count') || { value: '1' }).value) || 1;
-      var albLcuCount = parseFloat((document.getElementById('input-alb-lcu') || { value: '0' }).value) || 0;
-      runningTotalCost += (window._albData.fixedPerMonthUsd * albCount) + (window._albData.lcuPerHourUsd * albLcuCount * hoursInMonth * albCount);
-    } else {
-      runningTotalCost += parseFloat(sessionStorage.getItem('tco_alb_cost') || '0');
-    }
+  function checkedCost(cbId, key) {
+    var cb = document.getElementById(cbId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(key) || '0');
   }
-
-  /* ── ElastiCache Distributed Caching Cost ── */
-  if (document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
-    if (window._cacheData) {
-      var cacheEngine = (document.getElementById('input-cache-engine') || { value: 'redis' }).value || 'redis';
-      var cacheNodeInstanceType = (document.getElementById('input-cache-node') || { value: 'r6g.large' }).value || 'r6g.large';
-      var cacheNodesCount = parseInt((document.getElementById('input-cache-nodes') || { value: '1' }).value) || 1;
-
-      var cachePriceMap = {
-        'redisr6glarge': window._cacheData.redisR6gLargePerHour,
-        'redisr6gxlarge': window._cacheData.redisR6gXlargePerHour,
-        'redisr6g2xlarge': window._cacheData.redisR6g2xlargePerHour,
-        'memcachedr6glarge': window._cacheData.memcachedR6gLargePerHour,
-        'memcachedr6gxlarge': window._cacheData.memcachedR6gXlargePerHour
-      };
-
-      var normalizedNodeKey = cacheEngine + cacheNodeInstanceType.replace(/\./g, '').replace('cache', '');
-      var cachePricePerHour = cachePriceMap[normalizedNodeKey] || cachePriceMap[cacheEngine + 'r6glarge'] || 0.166;
-
-      runningTotalCost += cachePricePerHour * hoursInMonth * cacheNodesCount;
-    } else {
-      runningTotalCost += parseFloat(sessionStorage.getItem('tco_cache_cost') || '0');
-    }
+  var total = 0;
+  total += checkedCost('tactic-alb',   'tco_alb_cost');
+  total += checkedCost('tactic-cache', 'tco_cache_cost');
+  total += checkedCost('tactic-apigw', 'tco_apigw_cost');
+  var dbKeys = ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
+                'tactic-aurora-replica','tactic-dynamo-global'];
+  if (dbKeys.some(function(id){ var cb=document.getElementById(id); return cb&&cb.checked; })) {
+    total += parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
   }
-
-  /* ── Database Backup Storage Cost (S3 Standard) ── */
-  if (document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked) {
-    if (window._dbData) {
-      var databaseGigabytes = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
-      runningTotalCost += databaseGigabytes * (window._dbData.s3StandardPerGbMonth || 0.023);
-    } else {
-      runningTotalCost += parseFloat(sessionStorage.getItem('tco_db_cost') || '0') * 0.5;
-    }
+  var cefKeys = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'];
+  if (cefKeys.some(function(id){ var cb=document.getElementById(id); return cb&&cb.checked; })) {
+    total += parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
   }
-
-  /* ── Aurora Database Read Replica Cost ── */
-  if (document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked) {
-    if (window._dbData) {
-      var auroraReplicaCount = parseInt((document.getElementById('aurora-replica-count') || { value: '1' }).value) || 1;
-      runningTotalCost += (window._dbData.auroraReplicaPerHour || 0.26) * hoursInMonth * auroraReplicaCount;
-    } else {
-      runningTotalCost += parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
-    }
-  }
-
-  /* ── AWS Security Services Cost Model ── */
-  if (!window._secData) {
-    runningTotalCost += parseFloat(sessionStorage.getItem('tco_sec_cost') || '0');
-  } else {
-    var baseRequestsPerSecond = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-    var totalRequestsPerMonth = baseRequestsPerSecond * 2592000;
-    var getElementReference = function (id) { return document.getElementById(id) || {}; };
-    var securityServicesCost = 0;
-
-    if (getElementReference('sec-guardduty').checked) {
-      var guardDutyLogsGb = parseFloat(getElementReference('input-guardduty-gb').value) || 0;
-      securityServicesCost += Math.max(0, guardDutyLogsGb - 500) * window._secData.guardDutyPerGbLogs;
-    }
-    if (getElementReference('sec-inspector').checked) {
-      var inspectorInstances = parseInt(getElementReference('input-inspector-instances').value) || 1;
-      securityServicesCost += inspectorInstances * window._secData.inspectorPerInstanceMonth;
-    }
-    if (getElementReference('sec-waf').checked) {
-      var wafRulesCount = parseInt(getElementReference('input-waf-rules').value) || 5;
-      securityServicesCost += window._secData.wafWebAclPerMonth + (wafRulesCount * window._secData.wafRulePerMonth) + ((totalRequestsPerMonth / 1000000) * window._secData.wafPer1MRequests);
-    }
-    if (getElementReference('sec-macie').checked) {
-      var macieClassifiedGb = parseFloat(getElementReference('input-macie-gb').value) || 0;
-      securityServicesCost += Math.max(0, macieClassifiedGb - 1) * window._secData.maciePerGbClassified;
-    }
-    if (getElementReference('sec-cloudwatch').checked) {
-      var cloudwatchLogsGb = parseFloat(getElementReference('input-cw-gb').value) || 1;
-      securityServicesCost += (cloudwatchLogsGb * window._secData.cloudwatchLogsIngestionPerGb) + (cloudwatchLogsGb * window._secData.cloudwatchLogsStoragePerGbMonth);
-    }
-    if (getElementReference('sec-audit').checked) {
-      var activeAssessments = parseInt(getElementReference('input-audit-assessments').value) || 1;
-      securityServicesCost += activeAssessments * window._secData.auditManagerPerAssessmentMonth;
-    }
-    if (getElementReference('sec-kms').checked) {
-      var kmsKeysCount = parseInt(getElementReference('input-kms-keys').value) || 1;
-      securityServicesCost += (kmsKeysCount * window._secData.kmsCmkPerMonth) + ((totalRequestsPerMonth / 10000) * window._secData.kmsApiCallsPer10k);
-    }
-
-    runningTotalCost += securityServicesCost;
-  }
-
-  /* ── Base Container & Shared Infrastructure Additions ── */
-  runningTotalCost += parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
-  runningTotalCost += parseFloat(sessionStorage.getItem('tco_apigw_cost') || '0');
-
-  /* ── FinOps Rate Optimization Savings Deduced ── */
-  var finopsSavingAmount = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
-  runningTotalCost = Math.max(0, runningTotalCost - finopsSavingAmount);
-
-  /* ── Target EC2 Compute Node Allocation (Scalability Strategy) ── */
-  var ec2InstanceSelectElement = document.getElementById('input-ec2-instance');
-  var replicaDisplayElement = document.getElementById('replica-count-display');
-  var ec2ReplicaCost = 0;
-
-  if (ec2InstanceSelectElement && ec2InstanceSelectElement.value) {
-    var rawInstanceValueParts = ec2InstanceSelectElement.value.split('|');
-    var targetInstanceName = rawInstanceValueParts[0];
-    var currentReplicaCount = replicaDisplayElement ? parseInt(replicaDisplayElement.textContent) || 0 : 0;
-
-    if (currentReplicaCount > 0) {
-      var ec2PriceLookupMap = window._ec2PriceMap || ((window._containerPriceData && window._containerPriceData.ec2OnDemandPrices) || {});
-      var resolvedInstancePrice = ec2PriceLookupMap[targetInstanceName] || (Object.keys(ec2PriceLookupMap).filter(function (key) { return key.indexOf(targetInstanceName) >= 0; })[0] && ec2PriceLookupMap[Object.keys(ec2PriceLookupMap).filter(function (key) { return key.indexOf(targetInstanceName) >= 0; })[0]]) || 0.096;
-      ec2ReplicaCost = resolvedInstancePrice * hoursInMonth * currentReplicaCount;
-    }
-  }
-
-  runningTotalCost += ec2ReplicaCost;
-  return Math.round(runningTotalCost * 100) / 100;
+  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
+  ].forEach(function(id) { total += checkedCost(id, 'tco_sec_' + id); });
+  var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
+  runningTotalCost = Math.max(0, Math.round((total - saving) * 100) / 100);
+  return runningTotalCost;
 }
 
+/* =======================================================================
+   populateUnitEconomics
+   Called when entering Phase 4. Collects all costs from sessionStorage
+   (written by backend-driven recalculate* functions), posts to:
+     POST /api/cost/cloud-infra-total  — server-side aggregation
+     POST /api/cost/unit-economics     — unit costs + ROI
+   Then renders the TCO table and Unit Economics grid.
+   ======================================================================= */
 function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRaw) {
   var unitEconGridElement = document.getElementById('unitEconGrid');
-  if (!unitEconGridElement || !transferCostUsd) return;
+  if (!unitEconGridElement) return;
 
-  var egressDataTransferCost = parseFloat(transferCostUsd);
-  var calculatedCloudInfraCost = computeCloudInfraCost();
-  var rawCalculatedTotalCost = Math.round((egressDataTransferCost + calculatedCloudInfraCost) * 100) / 100;
+  var egressCost   = parseFloat(transferCostUsd) || 0;
+  var baseRps      = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+  var numConsumers = parseInt((document.getElementById('numConsumers')||{value:'1'}).value)||1;
+  var consumerType = (document.getElementById('consumerType')||{value:'SERVICES'}).value||'SERVICES';
+  var revenue      = parseFloat((document.getElementById('revenuePerTransaction')||{value:'0'}).value)
+                   || parseFloat(sessionStorage.getItem('svc_revenue_per_tx')||'0') || 0;
+  var monthlyReqs  = requestsPerMonthRaw || Math.round((effectiveRps||baseRps)*2592000);
+  var finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
 
-  var numConsumersElement = document.getElementById('numConsumers');
-  var fallbackConsumerCount = (numConsumersElement && numConsumersElement.value) ? numConsumersElement.value : (sessionStorage.getItem('svc_consumers') || '1');
-  var totalConsumersCount = parseInt(fallbackConsumerCount) || 1;
-
-  var consumerTypeSelectElement = document.getElementById('consumerType');
-  var calculatedConsumerTypeValue = (consumerTypeSelectElement && consumerTypeSelectElement.value) ? consumerTypeSelectElement.value : (sessionStorage.getItem('svc_consumer_type') || 'SERVICES');
-
-  if (consumerTypeSelectElement && !consumerTypeSelectElement.value && calculatedConsumerTypeValue) {
-    consumerTypeSelectElement.value = calculatedConsumerTypeValue;
+  // ── Collect per-service costs from sessionStorage ──────────────────────
+  function checkedCost(cbId, key) {
+    var cb = document.getElementById(cbId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(key)||'0');
   }
 
-  var baselineRequestsPerSecond = parseInt((document.getElementById('requestsPerSecond') || { value: '1' }).value) || 1;
-  var resolvedRps = effectiveRps || baselineRequestsPerSecond;
-  var monthlyRequestsVolume = requestsPerMonthRaw || Math.round(resolvedRps * 60 * 60 * 24 * 30);
+  var albCost   = checkedCost('tactic-alb',   'tco_alb_cost');
+  var cacheCost = checkedCost('tactic-cache',  'tco_cache_cost');
+  var apiGwCost = checkedCost('tactic-apigw',  'tco_apigw_cost');
 
-  var businessUseCaseLabel = selectedBUC ? (selectedBUC.indexOf('CUSTOM:') === 0 ? selectedBUC.replace('CUSTOM:', '') : selectedBUC) : '\u2014';
+  var containerCost = 0;
+  ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'].some(function(id){
+    var cb=document.getElementById(id);
+    if(cb&&cb.checked){containerCost=parseFloat(sessionStorage.getItem('tco_container_cost')||'0');return true;}
+  });
 
-  var consumerTypeLabelMap = {
-    SERVICES: 'Microservices / APIs',
-    USERS: 'End Users',
-    BOTH: 'Mixed (Services + Users)'
-  };
-  var displayConsumerTypeLabel = consumerTypeLabelMap[calculatedConsumerTypeValue] || 'consumers';
+  var dbCost = 0;
+  ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
+   'tactic-aurora-replica','tactic-dynamo-global'].some(function(id){
+    var cb=document.getElementById(id);
+    if(cb&&cb.checked){dbCost=parseFloat(sessionStorage.getItem('tco_db_cost')||'0');return true;}
+  });
 
-  var smallValueFormatter = function (value, precisionDigits) {
-    return (value > 0 && value < Math.pow(10, -(precisionDigits - 1))) ? value.toExponential(4) : value.toFixed(precisionDigits);
-  };
+  var secCostByService = {};
+  var secCostTotal = 0;
+  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'].forEach(function(id){
+    var c = checkedCost(id, 'tco_sec_'+id);
+    if(c>0){ secCostByService[id]=c; secCostTotal+=c; }
+  });
 
-  /* ── Parse Component Grid Allocation ── */
-  var cloudTcoBreakdownContainer = document.getElementById('cloudTcoBreakdown');
-  if (cloudTcoBreakdownContainer) {
-    var costComponentsCollection = [];
-
-    costComponentsCollection.push({
-      label: 'AWS Egress (Response Transfer)',
-      cat: 'Networking',
-      badge: 'badge-bytes',
-      cost: egressDataTransferCost
-    });
-
-    var isTlsActive = !!(document.getElementById('tactic-tls') && document.getElementById('tactic-tls').checked);
-    var isMtlsActive = !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked);
-    var isOauthActive = !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked);
-
-    var computedTlsByteOverhead = window._lastTlsBytes || ((isTlsActive || isMtlsActive) ? 29 : 0);
-    var computedJwtByteOverhead = window._lastJwtBytes || (isOauthActive ? 650 : 0);
-
-    if ((isTlsActive || isMtlsActive) && computedTlsByteOverhead > 0) {
-      costComponentsCollection.push({
-        label: (isMtlsActive ? 'mTLS' : 'TLS') + ' frame overhead (+' + computedTlsByteOverhead + ' B/frame, RFC 8446 — included in egress above)',
-        cat: 'Security',
-        badge: 'badge-dr',
-        cost: 0,
-        zeroNote: 'TLS overhead is counted within AWS Egress cost above. No additional line charge.'
-      });
+  var ec2Cost = 0;
+  var ec2Sel = document.getElementById('input-ec2-instance');
+  var replicaDisp = document.getElementById('replica-count-display');
+  if(ec2Sel && ec2Sel.value){
+    var instName = ec2Sel.value.split('|')[0];
+    var replicas = replicaDisp ? parseInt(replicaDisp.textContent)||0 : 0;
+    if(replicas > 0){
+      var priceMap = window._ec2PriceMap || {};
+      var pricePerHr = priceMap[instName] || 0.096;
+      ec2Cost = pricePerHr * 730 * replicas;
     }
-    if (isOauthActive && computedJwtByteOverhead > 0) {
-      costComponentsCollection.push({
-        label: 'JWT header overhead (+' + computedJwtByteOverhead + ' B/req, RFC 7519 — request-side, AWS inbound)',
-        cat: 'Security',
-        badge: 'badge-dr',
-        cost: 0,
-        zeroNote: 'JWT tokens travel request-side (inbound). AWS does not charge for inbound data transfer.'
-      });
-    }
-
-    var cloudInfraSubComponents = [];
-
-    /* Segment: ALB */
-    var structuralAlbCost = 0;
-    if (window._albData && document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked) {
-      var localAlbCount = parseInt((document.getElementById('input-alb-count') || { value: '1' }).value) || 1;
-      var localAlbLcu = parseFloat((document.getElementById('input-alb-lcu') || { value: '0' }).value) || 0;
-      structuralAlbCost = (window._albData.fixedPerMonthUsd * localAlbCount) + (window._albData.lcuPerHourUsd * localAlbLcu * 730 * localAlbCount);
-    } else {
-      structuralAlbCost = parseFloat(sessionStorage.getItem('tco_alb_cost') || '0');
-    }
-    if (structuralAlbCost > 0) cloudInfraSubComponents.push({ n: 'ALB(s)', v: structuralAlbCost });
-
-    /* Segment: ElastiCache */
-    var structuralCacheCost = 0;
-    if (window._cacheData && document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked) {
-      var localCacheEngine = (document.getElementById('input-cache-engine') || { value: 'redis' }).value || 'redis';
-      var localCacheNode = (document.getElementById('input-cache-node') || { value: 'r6g.large' }).value || 'r6g.large';
-      var localCacheNodesCount = parseInt((document.getElementById('input-cache-nodes') || { value: '1' }).value) || 1;
-      var localCachePriceMap = {
-        'redisr6glarge': window._cacheData.redisR6gLargePerHour,
-        'redisr6gxlarge': window._cacheData.redisR6gXlargePerHour,
-        'redisr6g2xlarge': window._cacheData.redisR6g2xlargePerHour,
-        'memcachedr6glarge': window._cacheData.memcachedR6gLargePerHour,
-        'memcachedr6gxlarge': window._cacheData.memcachedR6gXlargePerHour
-      };
-      var targetNormalizedCacheKey = localCacheEngine + localCacheNode.replace(/\./g, '').replace('cache', '');
-      structuralCacheCost = (localCachePriceMap[targetNormalizedCacheKey] || localCachePriceMap[localCacheEngine + 'r6glarge'] || 0.166) * 730 * localCacheNodesCount;
-    } else {
-      structuralCacheCost = parseFloat(sessionStorage.getItem('tco_cache_cost') || '0');
-    }
-    if (structuralCacheCost > 0) cloudInfraSubComponents.push({ n: 'ElastiCache', v: structuralCacheCost });
-
-    /* Segment: Storage / Engine Relational Clusters */
-    var structuralDatabaseCost = 0;
-    if (window._dbData) {
-      var hasS3BackupActive = document.getElementById('tactic-s3-backup') && document.getElementById('tactic-s3-backup').checked;
-      var hasAuroraReplicaActive = document.getElementById('tactic-aurora-replica') && document.getElementById('tactic-aurora-replica').checked;
-      if (hasS3BackupActive) {
-        var localDbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
-        structuralDatabaseCost += localDbGb * (window._dbData.s3StandardPerGbMonth || 0.023);
-      }
-      if (hasAuroraReplicaActive) {
-        var localReplicaCount = parseInt((document.getElementById('aurora-replica-count') || { value: '1' }).value) || 1;
-        structuralDatabaseCost += (window._dbData.auroraReplicaPerHour || 0.26) * 730 * localReplicaCount;
-      }
-    } else {
-      structuralDatabaseCost = parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
-    }
-    if (structuralDatabaseCost > 0) cloudInfraSubComponents.push({ n: 'Database/Backup', v: structuralDatabaseCost });
-
-    /* Segment: Enterprise Security Services */
-    var structuralSecurityCost = 0;
-    if (window._secData) {
-      var getLocalReference = function (id) { return document.getElementById(id) || {}; };
-      var baseRpsLocal = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
-      var monthlyRequestsLocal = baseRpsLocal * 2592000;
-      if (getLocalReference('sec-guardduty').checked) structuralSecurityCost += Math.max(0, (parseFloat(getLocalReference('input-guardduty-gb').value) || 0) - 500) * window._secData.guardDutyPerGbLogs;
-      if (getLocalReference('sec-inspector').checked) structuralSecurityCost += (parseInt(getLocalReference('input-inspector-instances').value) || 1) * window._secData.inspectorPerInstanceMonth;
-      if (getLocalReference('sec-waf').checked) structuralSecurityCost += window._secData.wafWebAclPerMonth + (parseInt(getLocalReference('input-waf-rules').value) || 5) * window._secData.wafRulePerMonth + (monthlyRequestsLocal / 1000000) * window._secData.wafPer1MRequests;
-      if (getLocalReference('sec-macie').checked) structuralSecurityCost += Math.max(0, (parseFloat(getLocalReference('input-macie-gb').value) || 0) - 1) * window._secData.maciePerGbClassified;
-      if (getLocalReference('sec-cloudwatch').checked) { var localCwGb = parseFloat(getLocalReference('input-cw-gb').value) || 1; structuralSecurityCost += localCwGb * window._secData.cloudwatchLogsIngestionPerGb + localCwGb * window._secData.cloudwatchLogsStoragePerGbMonth; }
-      if (getLocalReference('sec-audit').checked) structuralSecurityCost += (parseInt(getLocalReference('input-audit-assessments').value) || 1) * window._secData.auditManagerPerAssessmentMonth;
-      if (getLocalReference('sec-kms').checked) { var localKmsKeys = parseInt(getLocalReference('input-kms-keys').value) || 1; structuralSecurityCost += localKmsKeys * window._secData.kmsCmkPerMonth + (monthlyRequestsLocal / 10000) * window._secData.kmsApiCallsPer10k; }
-    } else {
-      structuralSecurityCost = parseFloat(sessionStorage.getItem('tco_sec_cost') || '0');
-    }
-    if (structuralSecurityCost > 0) cloudInfraSubComponents.push({ n: 'Security Services', v: structuralSecurityCost });
-
-    /* Segment: Compute Node Orchestration */
-    var structuralContainerCost = parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
-    if (structuralContainerCost > 0) cloudInfraSubComponents.push({ n: 'Containerized Cluster', v: structuralContainerCost });
-
-    /* Segment: Core API Gateway Egress Point */
-    var structuralApiGatewayCost = parseFloat(sessionStorage.getItem('tco_apigw_cost') || '0');
-    if (structuralApiGatewayCost > 0) cloudInfraSubComponents.push({ n: 'API Gateway', v: structuralApiGatewayCost });
-
-    /* Consolidation step for overall Infrastructure allocation row */
-    var totalCloudInfrastructureSum = cloudInfraSubComponents.reduce(function (accumulator, component) { return accumulator + component.v; }, 0);
-    if (totalCloudInfrastructureSum > 0) {
-      var infrastructureBreakdownDetails = cloudInfraSubComponents.map(function (component) {
-        return component.n + ' $' + component.v.toFixed(2);
-      }).join(' | ');
-
-      costComponentsCollection.push({
-        label: 'Cloud Infrastructure',
-        cat: 'Cloud + Container',
-        badge: 'badge-warn',
-        cost: totalCloudInfrastructureSum,
-        detail: infrastructureBreakdownDetails
-      });
-    }
-
-    /* Rate Optimization Strategy Deduction Line */
-    var structuralFinopsSavings = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
-    if (structuralFinopsSavings > 0) {
-      costComponentsCollection.push({
-        label: 'FinOps Optimisation (RI/SP saving)',
-        cat: 'Cost Reduction',
-        badge: 'badge-bc',
-        cost: -structuralFinopsSavings,
-        isSaving: true
-      });
-    }
-
-    /* Resolve precise non-negative TCO value across categories */
-    var accurateTotalCostOfOwnership = Math.round(costComponentsCollection.reduce(function (accumulator, component) {
-      return accumulator + (component.zeroNote ? 0 : component.cost);
-    }, 0) * 100) / 100;
-
-    accurateTotalCostOfOwnership = Math.max(0, accurateTotalCostOfOwnership);
-    window._lastComputedTco = accurateTotalCostOfOwnership;
-
-    var sumOfPositiveAllocations = costComponentsCollection.filter(function (component) {
-      return !component.isSaving && !component.zeroNote && component.cost > 0;
-    }).reduce(function (accumulator, component) {
-      return accumulator + component.cost;
-    }, 0);
-
-    var generatedTcoRowsHtml = costComponentsCollection.map(function (component) {
-      var percentageOfTotal = (sumOfPositiveAllocations > 0 && component.cost > 0 && !component.isSaving ? (component.cost / sumOfPositiveAllocations * 100).toFixed(1) : '0.0');
-      var costValueCellHtml;
-
-      if (component.isSaving) {
-        costValueCellHtml = '<span style="font-family:monospace;color:var(--green);font-weight:700;">-$' + Math.abs(component.cost).toFixed(2) + ' saved</span>';
-      } else if (component.zeroNote) {
-        costValueCellHtml = '<span style="font-size:.73rem;color:var(--green);font-style:italic;">$0 egress</span>';
-      } else {
-        costValueCellHtml = '<span style="font-family:monospace;color:var(--blue-deep);">$' + component.cost.toFixed(2) + '</span>';
-      }
-
-      var percentageDisplayHtml = component.zeroNote ? '<span style="font-size:.73rem;color:var(--green);">free</span>' : (component.isSaving ? '<span style="color:var(--green);">saving</span>' : percentageOfTotal + '%');
-      var informationalRowHtml = component.zeroNote ? '<tr style="background:var(--green-bg);"><td colspan="4" style="padding:3px 12px 8px;font-size:.73rem;color:var(--green);font-style:italic;">\u2139 ' + component.zeroNote + '</td></tr>' : '';
-      var subTierDetailHtml = component.detail ? '<div style="font-size:.72rem;color:var(--ink-light);margin-top:2px;">' + component.detail + '</div>' : '';
-
-      return '<tr style="border-bottom:' + (component.zeroNote ? 'none' : '1px solid var(--rule)') + ';"><td style="padding:8px 12px;font-weight:' + (component.isSaving ? '700' : '600') + ';">' + component.label + subTierDetailHtml + '</td>'
-        + '<td style="padding:8px 12px;text-align:center;"><span class="warning-badge ' + component.badge + '">' + component.cat + '</span></td>'
-        + '<td style="padding:8px 12px;text-align:right;">' + costValueCellHtml + '</td>'
-        + '<td style="padding:8px 12px;text-align:right;">' + percentageDisplayHtml + '</td></tr>' + informationalRowHtml;
-    }).join('');
-
-    generatedTcoRowsHtml += '<tr style="background:var(--blue-deep);color:#fff;font-weight:700;">'
-      + '<td style="padding:9px 12px;" colspan="2">Total Cost of Ownership (TCO)</td>'
-      + '<td style="padding:9px 12px;text-align:right;font-family:monospace;">$' + accurateTotalCostOfOwnership.toFixed(2) + '/mo</td>'
-      + '<td style="padding:9px 12px;text-align:right;">100.0%</td></tr>';
-
-    cloudTcoBreakdownContainer.innerHTML = '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;'
-      + 'color:var(--blue-deep);margin-bottom:10px;display:flex;align-items:center;gap:8px;">'
-      + '<i class="fas fa-table"></i> Total Cost of Ownership (TCO) Breakdown</div>'
-      + '<table style="width:100%;border-collapse:collapse;font-size:.84rem;margin-bottom:4px;">'
-      + '<thead><tr style="background:var(--paper);">'
-      + '<th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--rule);">Cost Component</th>'
-      + '<th style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--rule);">DR / BC</th>'
-      + '<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">Monthly Cost</th>'
-      + '<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">% of TCO</th>'
-      + '</tr></thead><tbody>' + generatedTcoRowsHtml + '</tbody></table>'
-      + '<p style="font-size:.73rem;color:var(--ink-light);margin-top:6px;">'
-      + '* % of TCO is calculated against the sum of ALL cost rows shown above (must total 100%). '
-      + 'DR = Disaster Recovery &nbsp;|&nbsp; BC = Business Continuity.</p>';
   }
 
-  /* ── Master Cost Vector Assignment ── */
-  var authoritativeTcoMonthly = (typeof accurateTotalCostOfOwnership !== 'undefined' && accurateTotalCostOfOwnership > 0) ? accurateTotalCostOfOwnership : rawCalculatedTotalCost;
-  window._lastComputedTco = authoritativeTcoMonthly;
+  var grossInfra = albCost+cacheCost+apiGwCost+containerCost+dbCost+secCostTotal+ec2Cost;
+  var netInfra   = Math.max(0, grossInfra - finopsSaving);
+  var localTco   = Math.round((egressCost + netInfra)*100)/100;
 
-  var costPerUserMonthly = authoritativeTcoMonthly / totalConsumersCount;
-  var costPerRequestVolume = authoritativeTcoMonthly / monthlyRequestsVolume;
-  var costPerUserDaily = costPerUserMonthly / 30;
+  // ── POST to existing backend endpoints ─────────────────────────────────
+  var infraReqBody = {
+    albMonthlyCostUsd       : albCost,
+    cacheMonthlyCostUsd     : cacheCost,
+    databaseMonthlyCostUsd  : dbCost,
+    securityMonthlyCostUsd  : secCostTotal,
+    containerMonthlyCostUsd : containerCost,
+    apiGatewayMonthlyCostUsd: apiGwCost,
+    ec2ReplicaMonthlyCostUsd: ec2Cost,
+    finopsMonthlySavingUsd  : finopsSaving
+  };
+  var ueReqBody = {
+    egressTransferCostUsd  : egressCost,
+    cloudInfraCostUsd      : netInfra,
+    finopsSavingUsd        : finopsSaving,
+    effectiveRps           : effectiveRps || baseRps,
+    consumerCount          : numConsumers,
+    revenuePerUserPerMonth : revenue
+  };
 
-  unitEconGridElement.innerHTML =
+  Promise.all([
+    fetch('/api/cost/cloud-infra-total',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(infraReqBody)})
+      .then(function(r){
+      console.warn("SUCCESS - /api/cost/cloud-infra-total");
+      console.warn(r.json());
+      return r.ok? r.json():null;
+      }).catch(function(){
+      console.warn("ERROR - /api/cost/cloud-infra-total");
+      return null;
+      }),
+    fetch('/api/cost/unit-economics',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(ueReqBody)})
+      .then(function(r){
+      console.warn("SUCCESS - /api/cost/unit-economics");
+            console.warn(r.json());
+      return r.ok?r.json():null;
+      }).catch(function(){
+      console.warn("ERROR - /api/cost/unit-economics");
+      return null;
+      })
+  ]).then(function(results){
+    var infraResp = results[0];
+    var ueResp    = results[1];
+    var authTco   = (ueResp && ueResp.totalMonthlyTcoUsd > 0) ? ueResp.totalMonthlyTcoUsd : localTco;
+
+    console.warn("Infra response: infraResp: \n" + infraResp);
+    console.warn("Unit Economics: ueResp: \n" + ueResp);
+
+    window._lastComputedTco = authTco;
+
+    _renderTcoBreakdownTable(egressCost, albCost, cacheCost, dbCost,
+      secCostByService, containerCost, apiGwCost, ec2Cost,
+      finopsSaving, authTco, effectiveRps||baseRps);
+
+    _renderUnitEconomicsGrid(unitEconGridElement, ueResp, authTco, egressCost, netInfra,
+      numConsumers, consumerType, effectiveRps||baseRps, monthlyReqs, revenue);
+  });
+}
+
+/* =======================================================================
+   _renderTcoBreakdownTable — Phase 4 TCO cost breakdown table
+   One row per cost component. Security services: one row per service.
+   ======================================================================= */
+function _renderTcoBreakdownTable(
+  egressCost, albCost, cacheCost, dbCost,
+  secCostByService, containerCost, apiGwCost, ec2Cost,
+  finopsSaving, authTco, effectiveRps
+) {
+  var container = document.getElementById('cloudTcoBreakdown');
+  if (!container) return;
+
+  var rows = [];
+  var sumPositive = 0;
+  function addRow(label, cat, badge, cost, detail, isSaving, isInfo) {
+    rows.push({label:label, cat:cat, badge:badge||'badge-warn', cost:cost,
+               detail:detail||'', isSaving:!!isSaving, isInfo:!!isInfo});
+    if (!isSaving && !isInfo && cost > 0) sumPositive += cost;
+  }
+
+  addRow('AWS Egress (Response Transfer)', 'Networking', 'badge-bytes', egressCost,
+    effectiveRps + ' eff. RPS · AWS data-out tiers');
+
+  var isTls  = !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked);
+  var isMtls = !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked);
+  var isOauth= !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked);
+  if (isTls||isMtls) addRow((isMtls?'mTLS':'TLS')+' frame overhead (RFC 8446)',
+    'Security','badge-dr', 0, 'Included in egress above — no additional charge', false, true);
+  if (isOauth) addRow('JWT header overhead (RFC 7519 — request-side)',
+    'Security','badge-dr', 0, 'AWS inbound data transfer is free', false, true);
+
+  if (albCost > 0)       addRow('Application Load Balancer (ALB)', 'Cloud Infra', 'badge-warn', albCost, '$'+albCost.toFixed(2)+'/mo · /api/aws/alb-pricing');
+  if (cacheCost > 0)     addRow('Amazon ElastiCache', 'Cloud Infra', 'badge-warn', cacheCost, '$'+cacheCost.toFixed(2)+'/mo · /api/aws/caching-pricing');
+  if (dbCost > 0)        addRow('Database / Backup / DR', 'Cloud Infra', 'badge-warn', dbCost, '$'+dbCost.toFixed(2)+'/mo · /api/aws/database-backup-pricing');
+
+  var secLabels = {
+    'sec-guardduty':'Amazon GuardDuty', 'sec-inspector':'Amazon Inspector',
+    'sec-waf':'AWS WAF', 'sec-macie':'Amazon Macie', 'sec-cloudwatch':'CloudWatch Logs',
+    'sec-audit':'AWS Audit Manager', 'sec-kms':'AWS KMS', 'sec-cloudtrail':'AWS CloudTrail',
+    'sec-acm':'AWS ACM'
+  };
+  Object.keys(secCostByService).forEach(function(id){
+    var c = secCostByService[id];
+    if (c > 0) addRow(secLabels[id]||id, 'Security', 'badge-dr', c,
+      '$'+c.toFixed(2)+'/mo · /api/aws/security-services');
+  });
+
+  if (containerCost > 0) addRow('Containerized Cluster (EKS)', 'Cloud Infra', 'badge-warn', containerCost, '$'+containerCost.toFixed(2)+'/mo');
+  if (apiGwCost > 0)     addRow('API Gateway', 'Cloud Infra', 'badge-warn', apiGwCost, '$'+apiGwCost.toFixed(2)+'/mo · /api/aws/api-gateway-pricing');
+  if (ec2Cost > 0)       addRow('EC2 Compute Replicas', 'Cloud Infra', 'badge-warn', ec2Cost, '$'+ec2Cost.toFixed(2)+'/mo');
+  if (finopsSaving > 0)  addRow('FinOps Optimisation (RI / Savings Plan)', 'Cost Reduction', 'badge-bc',
+    -finopsSaving, 'Discount applied to compute spend · /api/finops/ri-prices', true);
+
+  var rowsHtml = rows.map(function(c){
+    var pct = (sumPositive>0&&c.cost>0&&!c.isSaving&&!c.isInfo)
+      ? (c.cost/sumPositive*100).toFixed(1)+'%'
+      : (c.isSaving ? '<span style="color:var(--green);">saving</span>'
+        : (c.isInfo ? '<span style="color:var(--green);font-size:.73rem;">free</span>' : '—'));
+    var costCell = c.isSaving
+      ? '<span style="font-family:monospace;color:var(--green);font-weight:700;">-$'+Math.abs(c.cost).toFixed(2)+' saved</span>'
+      : c.isInfo
+        ? '<span style="color:var(--green);font-size:.73rem;font-style:italic;">$0 (free)</span>'
+        : '<span style="font-family:monospace;color:var(--blue-deep);">$'+c.cost.toFixed(2)+'</span>';
+    var detailHtml = c.detail ? '<div style="font-size:.72rem;color:var(--ink-light);margin-top:2px;">'+c.detail+'</div>' : '';
+    return '<tr style="border-bottom:1px solid var(--rule);">'
+      +'<td style="padding:8px 12px;font-weight:600;">'+c.label+detailHtml+'</td>'
+      +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge '+c.badge+'">'+c.cat+'</span></td>'
+      +'<td style="padding:8px 12px;text-align:right;">'+costCell+'</td>'
+      +'<td style="padding:8px 12px;text-align:right;">'+pct+'</td></tr>';
+  }).join('');
+
+  rowsHtml += '<tr style="background:var(--blue-deep);color:#fff;font-weight:700;">'
+    +'<td style="padding:9px 12px;" colspan="2">Total Cost of Ownership (TCO)</td>'
+    +'<td style="padding:9px 12px;text-align:right;font-family:monospace;">$'+authTco.toFixed(2)+'/mo</td>'
+    +'<td style="padding:9px 12px;text-align:right;">100.0%</td></tr>';
+
+  container.innerHTML =
+    '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;color:var(--blue-deep);margin-bottom:10px;display:flex;align-items:center;gap:8px;">'
+    +'<i class="fas fa-table"></i> Total Cost of Ownership (TCO) Breakdown</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:.84rem;margin-bottom:4px;">'
+    +'<thead><tr style="background:var(--paper);">'
+    +'<th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--rule);">Cost Component</th>'
+    +'<th style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--rule);">Category</th>'
+    +'<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">Monthly Cost</th>'
+    +'<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">% of TCO</th>'
+    +'</tr></thead><tbody>'+rowsHtml+'</tbody></table>'
+    +'<p style="font-size:.73rem;color:var(--ink-light);margin-top:6px;">'
+    +'* Costs computed via AWS Pricing API backend. Security costs: one row per selected service when volume entered. '
+    +'DR = Disaster Recovery | BC = Business Continuity.</p>';
+}
+
+/* =======================================================================
+   _renderUnitEconomicsGrid — cost/user, cost/req, annual projection + ROI
+   ======================================================================= */
+function _renderUnitEconomicsGrid(gridEl, ueResp, tcoMonthly, egressCost, infraCost,
+                                   numConsumers, consumerType, rps, monthlyReqs, revenue) {
+  if (!gridEl) return;
+  var smallFmt = function(v,p){ return (v>0&&v<Math.pow(10,-(p-1)))?v.toExponential(4):v.toFixed(p); };
+  var consumerLabels = {SERVICES:'Microservices / APIs',USERS:'End Users',BOTH:'Mixed'};
+  var cLabel = consumerLabels[consumerType]||'consumers';
+  var bucLabel = window.selectedBUC
+    ? (window.selectedBUC.indexOf('CUSTOM:')===0?window.selectedBUC.replace('CUSTOM:',''):window.selectedBUC)
+    : '\u2014';
+
+  var costPerUser    = (ueResp&&ueResp.costPerUserPerMonthUsd) ? ueResp.costPerUserPerMonthUsd : tcoMonthly/numConsumers;
+  var costPerReq     = (ueResp&&ueResp.costPerRequestUsd)      ? ueResp.costPerRequestUsd      : (monthlyReqs>0?tcoMonthly/monthlyReqs:0);
+  var costPerUserDay = (ueResp&&ueResp.costPerUserPerDayUsd)   ? ueResp.costPerUserPerDayUsd   : costPerUser/30;
+
+  gridEl.innerHTML =
     '<div class="unit-econ-item" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;">'
-    + '<div class="unit-econ-label">Total Monthly TCO (Networking + Cloud Infra)</div>'
-    + '<div class="unit-econ-value" style="color:var(--blue-deep);">$' + authoritativeTcoMonthly.toFixed(2) + '</div>'
-    + '<div class="unit-econ-sub">'
-    + (calculatedCloudInfraCost > 0 ? '$' + egressDataTransferCost.toFixed(2) + ' egress + $' + calculatedCloudInfraCost.toFixed(2) + ' cloud infra' : '$' + egressDataTransferCost.toFixed(2) + ' egress networking only')
-    + '</div></div>'
+    +'<div class="unit-econ-label">Total Monthly TCO (Networking + Cloud Infra)</div>'
+    +'<div class="unit-econ-value" style="color:var(--blue-deep);">$'+tcoMonthly.toFixed(2)+'</div>'
+    +'<div class="unit-econ-sub">'
+    +(infraCost>0?'$'+egressCost.toFixed(2)+' egress + $'+infraCost.toFixed(2)+' cloud infra':'$'+egressCost.toFixed(2)+' egress networking only')
+    +'</div></div>'
 
-    + '<div class="unit-econ-item" style="grid-column:1/-1;background:var(--paper);border:none;padding:10px 0 4px;">'
-    + '<div style="font-family:\'DM Serif Display\',serif;font-size:.9rem;color:var(--blue-deep);'
-    + 'border-bottom:1px solid var(--rule);padding-bottom:6px;display:flex;align-items:center;gap:8px;">'
-    + '<i class="fas fa-microchip" style="font-size:.85rem;"></i> Per-Microservice Cost Metrics</div></div>'
+    +'<div class="unit-econ-item" style="grid-column:1/-1;background:var(--paper);border:none;padding:10px 0 4px;">'
+    +'<div style="font-family:\'DM Serif Display\',serif;font-size:.9rem;color:var(--blue-deep);border-bottom:1px solid var(--rule);padding-bottom:6px;">'
+    +'<i class="fas fa-microchip" style="font-size:.85rem;margin-right:6px;"></i> Per-Microservice Cost Metrics</div></div>'
+    +'<div class="unit-econ-item"><div class="unit-econ-label">TCO / Microservice / Month</div>'
+    +'<div class="unit-econ-value">$'+tcoMonthly.toFixed(2)+'</div><div class="unit-econ-sub">This service \u00b7 full TCO</div></div>'
+    +'<div class="unit-econ-item"><div class="unit-econ-label">Cost / Request</div>'
+    +'<div class="unit-econ-value">$'+smallFmt(costPerReq,8)+'</div><div class="unit-econ-sub">'+monthlyReqs.toLocaleString()+' req/mo</div></div>'
+    +'<div class="unit-econ-item"><div class="unit-econ-label">Annual Projection</div>'
+    +'<div class="unit-econ-value">$'+(tcoMonthly*12).toFixed(2)+'</div><div class="unit-econ-sub">12\u00d7 monthly TCO</div></div>'
 
-    + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / Microservice / Month</div>'
-    + '<div class="unit-econ-value">$' + authoritativeTcoMonthly.toFixed(2) + '</div>'
-    + '<div class="unit-econ-sub">This service · full TCO</div></div>'
+    +'<div class="unit-econ-item" style="grid-column:1/-1;background:var(--paper);border:none;padding:10px 0 4px;">'
+    +'<div style="font-family:\'DM Serif Display\',serif;font-size:.9rem;color:var(--blue-deep);border-bottom:1px solid var(--rule);padding-bottom:6px;">'
+    +'<i class="fas fa-users" style="font-size:.85rem;margin-right:6px;"></i> Per-End-User Cost Metrics'
+    +' <span style="font-size:.72rem;font-weight:400;color:var(--ink-light);">('+numConsumers.toLocaleString()+' '+cLabel+')</span></div></div>'
+    +'<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User / Month</div>'
+    +'<div class="unit-econ-value">$'+smallFmt(costPerUser,4)+'</div>'
+    +'<div class="unit-econ-sub">$'+tcoMonthly.toFixed(2)+' \u00f7 '+numConsumers.toLocaleString()+' users</div></div>'
+    +'<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User / Day</div>'
+    +'<div class="unit-econ-value">$'+smallFmt(costPerUserDay,6)+'</div><div class="unit-econ-sub">Monthly \u00f7 30</div></div>'
+    +'<div class="unit-econ-item"><div class="unit-econ-label">Business Use Case</div>'
+    +'<div class="unit-econ-value" style="font-size:.85rem;">'+bucLabel+'</div>'
+    +'<div class="unit-econ-sub">Pattern cost attribution</div></div>';
 
-    + '<div class="unit-econ-item"><div class="unit-econ-label">Cost / Request</div>'
-    + '<div class="unit-econ-value">$' + smallValueFormatter(costPerRequestVolume, 8) + '</div>'
-    + '<div class="unit-econ-sub">' + monthlyRequestsVolume.toLocaleString() + ' req/mo</div></div>'
-
-    + '<div class="unit-econ-item"><div class="unit-econ-label">Annual Projection</div>'
-    + '<div class="unit-econ-value">$' + (authoritativeTcoMonthly * billingMonthsInYear).toFixed(2) + '</div>'
-    + '<div class="unit-econ-sub">' + billingMonthsInYear + '× monthly TCO</div></div>'
-
-    + '<div class="unit-econ-item" style="grid-column:1/-1;background:var(--paper);border:none;padding:10px 0 4px;">'
-    + '<div style="font-family:\'DM Serif Display\',serif;font-size:.9rem;color:var(--blue-deep);'
-    + 'border-bottom:1px solid var(--rule);padding-bottom:6px;display:flex;align-items:center;gap:8px;">'
-    + '<i class="fas fa-users" style="font-size:.85rem;"></i> Per-End-User Cost Metrics'
-    + ' <span style="font-size:.72rem;font-weight:400;color:var(--ink-light);">(' + totalConsumersCount.toLocaleString() + ' end users)</span></div></div>'
-
-    + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User / Month</div>'
-    + '<div class="unit-econ-value">$' + smallValueFormatter(costPerUserMonthly, 4) + '</div>'
-    + '<div class="unit-econ-sub">$' + authoritativeTcoMonthly.toFixed(2) + ' ÷ ' + totalConsumersCount.toLocaleString() + ' users</div></div>'
-
-    + '<div class="unit-econ-item"><div class="unit-econ-label">TCO / End User / Day</div>'
-    + '<div class="unit-econ-value">$' + smallValueFormatter(costPerUserDaily, 6) + '</div>'
-    + '<div class="unit-econ-sub">Monthly ÷ 30</div></div>'
-
-    + '<div class="unit-econ-item"><div class="unit-econ-label">Business Use Case</div>'
-    + '<div class="unit-econ-value" style="font-size:.85rem;">' + businessUseCaseLabel + '</div>'
-    + '<div class="unit-econ-sub">Pattern cost attribution</div></div>';
+  window._lastComputedTco = tcoMonthly;
 
   /* ── Financial Return Matrix (ROI & ARPU Profiling) ── */
   var revenueInputModelElement = document.getElementById('revenuePerTransaction');
@@ -572,8 +477,8 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
     roiSectionContainerElement.id = 'ue-roi-section';
     roiSectionContainerElement.style.cssText = 'margin-top:16px;padding:16px 20px;border-radius:var(--r);'
       + 'background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid var(--amber-border);';
-    if (unitEconGridElement && unitEconGridElement.parentElement) {
-      unitEconGridElement.parentElement.appendChild(roiSectionContainerElement);
+    if (gridEl && gridEl.parentElement) {
+      gridEl.parentElement.appendChild(roiSectionContainerElement);
     }
   }
 
@@ -590,14 +495,14 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
     + '</div>';
 
   if (expectedRevenuePerUserElement > 0) {
-    var generatedMonthlyRevenue = expectedRevenuePerUserElement * totalConsumersCount;
+    var generatedMonthlyRevenue = expectedRevenuePerUserElement * numConsumers;
     var arpuValue = expectedRevenuePerUserElement;
-    var monthlyRoiValue = rawCalculatedTotalCost > 0 ? ((generatedMonthlyRevenue - rawCalculatedTotalCost) / rawCalculatedTotalCost * 100).toFixed(1) : '--';
-    var annualRoiValue = rawCalculatedTotalCost > 0 ? ((generatedMonthlyRevenue * billingMonthsInYear - rawCalculatedTotalCost * billingMonthsInYear) / (rawCalculatedTotalCost * billingMonthsInYear) * 100).toFixed(1) : '--';
+    var monthlyRoiValue = tcoMonthly > 0 ? ((generatedMonthlyRevenue - tcoMonthly) / tcoMonthly * 100).toFixed(1) : '--';
+    var annualRoiValue = tcoMonthly > 0 ? ((generatedMonthlyRevenue * 12 - tcoMonthly * 12) / (tcoMonthly * 12) * 100).toFixed(1) : '--';
 
-    var breakEvenUsersVolume = (expectedRevenuePerUserElement > 0 && rawCalculatedTotalCost > 0) ? Math.ceil(rawCalculatedTotalCost / expectedRevenuePerUserElement).toLocaleString() : '--';
-    var infrastructureEfficiencyRatio = (rawCalculatedTotalCost > 0) ? (generatedMonthlyRevenue / rawCalculatedTotalCost).toFixed(2) : '--';
-    var netMarginPerUserMonthly = expectedRevenuePerUserElement - costPerUserMonthly;
+    var breakEvenUsersVolume = (expectedRevenuePerUserElement > 0 && tcoMonthly > 0) ? Math.ceil(tcoMonthly / expectedRevenuePerUserElement).toLocaleString() : '--';
+    var infrastructureEfficiencyRatio = (tcoMonthly > 0) ? (generatedMonthlyRevenue / tcoMonthly).toFixed(2) : '--';
+    var netMarginPerUserMonthly = expectedRevenuePerUserElement - costPerUser;
 
     var roiColorTheme = (parseFloat(monthlyRoiValue) >= 0) ? 'var(--green)' : 'var(--red)';
     var marginColorTheme = netMarginPerUserMonthly >= 0 ? 'var(--green)' : 'var(--red)';
@@ -610,7 +515,7 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
       + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">'
       + '<div class="unit-econ-item"><div class="unit-econ-label">Total Monthly Revenue</div>'
       + '<div class="unit-econ-value">$' + generatedMonthlyRevenue.toLocaleString(undefined, { maximumFractionDigits: 2 }) + '</div>'
-      + '<div class="unit-econ-sub">$' + expectedRevenuePerUserElement.toFixed(2) + '/user \u00d7 ' + totalConsumersCount.toLocaleString() + ' users</div></div>'
+      + '<div class="unit-econ-sub">$' + expectedRevenuePerUserElement.toFixed(2) + '/user \u00d7 ' + numConsumers.toLocaleString() + ' users</div></div>'
       + '<div class="unit-econ-item"><div class="unit-econ-label">ARPU / Month</div>'
       + '<div class="unit-econ-value">$' + arpuValue.toLocaleString(undefined, { maximumFractionDigits: 2 }) + '</div>'
       + '<div class="unit-econ-sub">Revenue per end user / month</div></div>'
@@ -630,8 +535,8 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
       + '<div class="unit-econ-value">$' + infrastructureEfficiencyRatio + '</div>'
       + '<div class="unit-econ-sub">Revenue efficiency</div></div>'
       + '<div class="unit-econ-item"><div class="unit-econ-label">Annual Revenue</div>'
-      + '<div class="unit-econ-value">$' + (generatedMonthlyRevenue * billingMonthsInYear).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '</div>'
-      + '<div class="unit-econ-sub">' + billingMonthsInYear + '\u00d7 monthly revenue</div></div>'
+      + '<div class="unit-econ-value">$' + (generatedMonthlyRevenue * 12).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '</div>'
+      + '<div class="unit-econ-sub">' + 12 + '\u00d7 monthly revenue</div></div>'
       + '</div>';
   } else {
     roiSectionContainerElement.innerHTML =

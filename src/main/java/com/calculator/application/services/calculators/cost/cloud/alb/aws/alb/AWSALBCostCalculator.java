@@ -20,7 +20,6 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
     private static final double ALB_FIXED_CHARGE_PER_HOUR = 0.008;
     private static final double LCU_FIXED_CHARGE_PER_HOUR = 0.008;
 
-    @PostConstruct
     @Override
     public Map<String, Object> calculateALBCosts() {
         Map<String, Object> albCostMap = new LinkedHashMap<>();
@@ -150,6 +149,11 @@ public class AWSALBCostCalculator extends AWSCloudCalculator implements ALBCostC
 
     private static double round2(double v) {
         return Math.round(v * 100.0) / 100.0;
+    }
+
+    @PostConstruct
+    private void init(){
+        calculateALBCosts();
     }
 
 }

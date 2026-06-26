@@ -182,109 +182,117 @@ function getAllCloudServiceMappings() {
  * @param {string}  tacticId   e.g. 'tactic-tls', 'tactic-oauth', 'tactic-server-lb'
  * @param {boolean} [isEnabled] the tactic's new state; if omitted, reads the DOM
  */
+// ─── Tactic → Cloud Service auto-select ──────────────────────────────────────
+//
+// Design: SIMPLE AND CORRECT.
+//
+// When a security/reliability tactic checkbox changes, we look at the cached
+// backend mapping data to find which cloud-service checkboxes have that tactic
+// in their supportedArchitecturalDecisions list.
+//
+// Rules:
+//  • We ONLY call syncCloudServicesForTactic for the ARCHITECTURAL TACTIC IDs
+//    (tactic-tls, tactic-mtls, tactic-oauth, tactic-server-lb).
+//    We NEVER call it for cloud-service IDs (sec-inspector, sec-waf, …).
+//    This prevents the cascade where clicking one service activates others.
+//  • We set .checked SILENTLY (no dispatchEvent) to avoid triggering
+//    recalculateSecCost with default input values.
+//  • We call recalculateSecCost() ONCE after all boxes are set.
+//  • loadCloudSecSection() is idempotent (guards against re-render).
+//  • On disable: uncheck dependent services not needed by another active tactic.
+
+// The ONLY tactic IDs that may trigger cloud-service auto-select.
+// These are the architectural tactics from the domain model — NOT cloud service IDs.
+var ARCHITECTURAL_TACTIC_TRIGGER_IDS = new Set([
+    'tactic-tls', 'tactic-mtls', 'tactic-oauth', 'tactic-server-lb'
+]);
+
+/**
+ * Sync cloud-service checkboxes for a given architectural tactic.
+ * @param {string}  tacticId   Must be an architectural tactic id (tactic-tls etc.)
+ * @param {boolean} isEnabled  New state of the tactic
+ */
 function syncCloudServicesForTactic(tacticId, isEnabled) {
+    // Guard: only run for architectural tactic IDs, never for cloud-service IDs.
+    // This prevents cascades like "clicking sec-inspector activates all others".
+    if (!ARCHITECTURAL_TACTIC_TRIGGER_IDS.has(tacticId)) return;
+
     if (isEnabled === undefined) {
-        const tacticEl = document.getElementById(tacticId);
-        isEnabled = !!(tacticEl && tacticEl.checked);
+        var el = document.getElementById(tacticId);
+        isEnabled = !!(el && el.checked);
     }
 
-    const cloudServices = getAllCloudServiceMappings();
-    let anyMissingFromDom = false;
+    var cloudServices = getAllCloudServiceMappings();
+    if (!cloudServices.length) return;
 
-    cloudServices.forEach(serviceMapping => {
-        const deps = serviceMapping.supportedArchitecturalDecisions;
-        if (!deps.includes(tacticId)) return;
-
-        const serviceEl = document.getElementById(serviceMapping.tacticId);
-        if (!serviceEl) {
-            if (isEnabled) anyMissingFromDom = true; // only retry-load when enabling
-            return;
-        }
+    function applySync() {
+        var anyChanged = false;
 
         if (isEnabled) {
-            if (!serviceEl.checked) {
-                serviceEl.checked = true;
-                serviceEl.dispatchEvent(new Event('change', { bubbles: true }));
-                console.log(`[tactics-mapping] Auto-checked ${serviceMapping.tacticId} (required by ${tacticId})`);
-            }
+            // Check every cloud service whose deps include this tactic — SILENTLY
+            cloudServices.forEach(function(svc) {
+                if (!svc.supportedArchitecturalDecisions.includes(tacticId)) return;
+                var cb = document.getElementById(svc.tacticId);
+                if (cb && !cb.checked) {
+                    cb.checked = true;
+                    anyChanged = true;
+                    console.log('[tactics-mapping] checked', svc.tacticId, 'for', tacticId);
+                }
+            });
         } else {
-            // Uncheck only if no other currently-active tactic also requires this service
-            const stillNeededByAnotherTactic = deps
-                .filter(depId => depId !== tacticId)
-                .some(depId => {
-                    const depEl = document.getElementById(depId);
-                    return depEl && depEl.checked;
-                });
-            if (!stillNeededByAnotherTactic && serviceEl.checked) {
-                serviceEl.checked = false;
-                serviceEl.dispatchEvent(new Event('change', { bubbles: true }));
-                console.log(`[tactics-mapping] Auto-unchecked ${serviceMapping.tacticId} (${tacticId} disabled, no other dep active)`);
-            }
+            // Uncheck cloud services no longer needed by any active tactic — SILENTLY
+            cloudServices.forEach(function(svc) {
+                if (!svc.supportedArchitecturalDecisions.includes(tacticId)) return;
+                var cb = document.getElementById(svc.tacticId);
+                if (!cb || !cb.checked) return;
+
+                // Keep checked if another active tactic also needs it
+                var stillNeeded = svc.supportedArchitecturalDecisions
+                    .filter(function(d) { return d !== tacticId; })
+                    .some(function(d) {
+                        var dep = document.getElementById(d);
+                        return dep && dep.checked;
+                    });
+
+                if (!stillNeeded) {
+                    cb.checked = false;
+                    anyChanged = true;
+                    console.log('[tactics-mapping] unchecked', svc.tacticId, '(', tacticId, 'disabled)');
+                }
+            });
         }
-    });
 
-    if (anyMissingFromDom) {
-        _ensureCloudPanelsLoaded().then(() => {
-            setTimeout(() => syncCloudServicesForTactic(tacticId, isEnabled), 150);
+        if (anyChanged) {
+            // Recalculate costs ONCE after all boxes settled
+            if (typeof recalculateSecCost    === 'function') recalculateSecCost();
+            if (typeof updateCloudTacticsBadge === 'function') updateCloudTacticsBadge();
+            if (typeof evaluateCloudServiceRelevance === 'function') evaluateCloudServiceRelevance();
+        }
+    }
+
+    // If the cloud-sec panel is already in the DOM, sync immediately.
+    // Otherwise load the panel first (it is idempotent), then sync.
+    if (document.getElementById('sec-guardduty')) {
+        applySync();
+    } else if (isEnabled && typeof loadCloudSecSection === 'function') {
+        // loadCloudSecSection is now idempotent and returns a Promise
+        loadCloudSecSection().then(applySync).catch(function() {
+            // Panel failed to load — nothing to sync
         });
     }
 }
 
-/**
- * Triggers lazy loading of the cloud-service panels that may not have
- * been opened yet by the user.  Uses the loader functions already defined
- * in tactics-patterns.js (loadCloudSecSection, loadAlbSection, etc.).
- * Returns a Promise that resolves when loading has been initiated.
- */
-function _ensureCloudPanelsLoaded() {
-    const loaders = [];
-
-    /* Security services panel */
-    if (typeof loadCloudSecSection === 'function' &&
-        !document.getElementById('sec-guardduty')) {
-        loaders.push(loadCloudSecSection());
-    }
-
-    /* ALB panel */
-    if (typeof loadAlbSection === 'function' &&
-        !document.getElementById('tactic-alb')) {
-        loaders.push(loadAlbSection());
-    }
-
-    return Promise.all(loaders).catch(err =>
-        console.warn('[tactics-mapping] Panel lazy-load failed:', err)
-    );
-}
-
-/**
- * Wires event delegation on the document so that when any tactic checkbox
- * (tactic-tls, tactic-mtls, tactic-oauth, tactic-server-lb, etc.) changes,
- * the cloud-service auto-select runs.
- * Uses delegation so it works for checkboxes rendered after this script loads.
- */
 function wireTacticToCloudServiceAutoSelect() {
-    /* The set of tactic IDs that should trigger cloud-service auto-selection.
-       We derive this from the loaded mapping data — any ID that appears in
-       at least one supportedArchitecturalDecisions list. */
-    function getActiveTacticTriggers() {
-        const triggers = new Set();
-        getAllCloudServiceMappings().forEach(m => {
-            m.supportedArchitecturalDecisions.forEach(depId => triggers.add(depId));
-        });
-        return triggers;
-    }
-
-    document.addEventListener('change', function (e) {
-        const el = e.target;
+    // Single document-level listener.
+    // ONLY fires syncCloudServicesForTactic for the whitelisted architectural tactic IDs.
+    document.addEventListener('change', function(e) {
+        var el = e.target;
         if (!el || el.type !== 'checkbox') return;
-
-        const triggers = getActiveTacticTriggers();
-        if (triggers.has(el.id)) {
+        if (ARCHITECTURAL_TACTIC_TRIGGER_IDS.has(el.id)) {
             syncCloudServicesForTactic(el.id, el.checked);
         }
     });
-
-    console.log('[tactics-mapping] Tactic → cloud-service auto-select wired');
+    console.log('[tactics-mapping] auto-select wired (tactic IDs only)');
 }
 
 /* =================================================================
