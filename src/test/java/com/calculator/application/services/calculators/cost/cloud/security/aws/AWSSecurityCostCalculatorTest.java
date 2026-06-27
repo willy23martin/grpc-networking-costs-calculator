@@ -31,6 +31,9 @@ class AWSSecurityCostCalculatorTest {
     @Spy
     private ObjectMapper mapper = new ObjectMapper();
 
+    @Mock
+    private AWSSecurityWAFCostCalculator awsSecurityWAFCostCalculator;
+
     @InjectMocks
     private AWSSecurityCostCalculator securityCostCalculator;
 
@@ -66,6 +69,13 @@ class AWSSecurityCostCalculatorTest {
                 .priceList(Collections.singletonList(MOCK_PRICING_JSON))
                 .build();
 
+        when(awsSecurityWAFCostCalculator.calculateSecurityCosts()).thenReturn(
+                Map.ofEntries(
+                        Map.entry("wafWebAclPerMonth", 3.75),
+                        Map.entry("wafRulePerMonth", 3.75),
+                        Map.entry("wafPer1MRequests", 3.75)
+                )
+        );
         when(pricingClient.getProducts(any(GetProductsRequest.class))).thenReturn(mockResponse);
 
         Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
@@ -91,6 +101,13 @@ class AWSSecurityCostCalculatorTest {
                 .priceList(Collections.emptyList())
                 .build();
 
+        when(awsSecurityWAFCostCalculator.calculateSecurityCosts()).thenReturn(
+                Map.ofEntries(
+                        Map.entry("wafWebAclPerMonth", 5.00),
+                        Map.entry("wafRulePerMonth", 1.00),
+                        Map.entry("wafPer1MRequests", 0.60)
+                )
+        );
         when(pricingClient.getProducts(any(GetProductsRequest.class))).thenReturn(emptyResponse);
 
         Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
@@ -106,6 +123,14 @@ class AWSSecurityCostCalculatorTest {
     @Test
     @DisplayName("Should swiftly recover and use baseline fallbacks when the AWS SDK throws an ApiCallTimeoutException")
     void shouldFallbackGracefullyOnApiTimeout() {
+        when(awsSecurityWAFCostCalculator.calculateSecurityCosts()).thenReturn(
+                Map.ofEntries(
+                        Map.entry("wafWebAclPerMonth", 5.00),
+                        Map.entry("wafRulePerMonth", 1.00),
+                        Map.entry("wafPer1MRequests", 0.60)
+                )
+        );
+
         when(pricingClient.getProducts(any(GetProductsRequest.class)))
                 .thenThrow(ApiCallTimeoutException.create("API call exceeded configured total timeout threshold", null));
 

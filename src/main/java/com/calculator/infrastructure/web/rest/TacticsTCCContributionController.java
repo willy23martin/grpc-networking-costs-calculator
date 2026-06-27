@@ -1,8 +1,8 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.mapper.tactics.TacticsContributionService;
-import com.calculator.domain.dto.requests.TacticContributionRequest;
-import com.calculator.domain.dto.responses.TacticContributionResponse;
+import com.calculator.application.services.mapper.tactics.TacticsTCCContributionService;
+import com.calculator.domain.dto.requests.TacticTCCContributionRequest;
+import com.calculator.domain.dto.responses.TacticTCCContributionResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,16 +12,16 @@ import static com.calculator.application.services.utils.MathUtils.round2;
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
-public class TacticsContributionController {
+public class TacticsTCCContributionController {
 
     @Autowired
-    private TacticsContributionService tacticsContributionService;
+    private TacticsTCCContributionService tacticsContributionService;
 
     @PostMapping("/tactic-contributions")
-    public ResponseEntity<TacticContributionResponse> calculateTacticContributions(
-            @RequestBody TacticContributionRequest tacticContributionRequest) {
+    public ResponseEntity<TacticTCCContributionResponse> calculateTacticContributions(
+            @RequestBody TacticTCCContributionRequest tacticContributionRequest) {
 
-        TacticContributionResponse tacticContributionResponse = new TacticContributionResponse();
+        TacticTCCContributionResponse tacticContributionResponse = new TacticTCCContributionResponse();
 
         int defaultProtoResponseSizePlaceholderInBytes = 0;
         int responseBytes    = tacticContributionRequest.protoResponseSizeEffectiveBytes > 0

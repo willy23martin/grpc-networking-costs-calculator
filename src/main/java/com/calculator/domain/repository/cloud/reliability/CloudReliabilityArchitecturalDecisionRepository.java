@@ -9,9 +9,7 @@ import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.QualityTradeoff;
 import com.calculator.domain.model.quality.TradeoffType;
-import com.calculator.domain.model.quality.security.SecurityQualityTradeoff;
 import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +30,7 @@ public class CloudReliabilityArchitecturalDecisionRepository {
         );
     }
 
-    private ArchitecturalDecision getElasticLoadBalancerALBCloudService() {
+    public ArchitecturalDecision getElasticLoadBalancerALBCloudService() {
         ArchitecturalTactic serverSideLoadBalancing = (ArchitecturalTactic) reliabilityArchitecturalDecisionRepository.getServerSideLoadBalancing();
         List<QualityTradeoff> qualityTradeoffs = new ArrayList<>(1);
         qualityTradeoffs.add(

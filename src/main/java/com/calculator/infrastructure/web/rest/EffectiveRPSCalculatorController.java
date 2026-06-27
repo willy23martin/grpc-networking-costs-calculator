@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import static com.calculator.application.services.mapper.ArchitecturalDecisionsDTOMapper.mapToArchitecturalDecisionsDTO;
 
 @RestController
+@CrossOrigin(origins = "*")
 public class EffectiveRPSCalculatorController {
 
     private final Logger log = Logger.getLogger(EffectiveRPSCalculatorController.class.getName());

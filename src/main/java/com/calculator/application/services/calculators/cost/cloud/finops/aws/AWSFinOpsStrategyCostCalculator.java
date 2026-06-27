@@ -15,8 +15,6 @@ import software.amazon.awssdk.services.pricing.model.ListPriceListsRequest;
 import software.amazon.awssdk.services.pricing.model.ListPriceListsResponse;
 
 import java.io.InputStream;
-import java.net.URI;
-import java.time.Instant;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -233,13 +231,11 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
                     minMonthUsd = Double.parseDouble(minChargeStr.replaceAll("[^0-9.]", ""));
                 }
 
-                // Fallback strategy to check standard OnDemand or historical External wrappers
                 JsonNode terms = root.path("terms").path("OnDemand");
                 if (terms.isMissingNode() || !terms.fieldNames().hasNext()) {
                     terms = root.path("terms").path("External");
                 }
 
-                // FIX: Replaced fields() with fieldNames() to remove deprecation warning completely
                 if (terms.fieldNames().hasNext()) {
                     String firstKey = terms.fieldNames().next();
                     JsonNode offerNode = terms.path(firstKey);

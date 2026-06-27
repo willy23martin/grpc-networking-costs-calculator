@@ -293,7 +293,7 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
       console.warn(r.json());
       return r.ok? r.json():null;
       }).catch(function(){
-      console.warn("ERROR - /api/cost/cloud-infra-total");
+      console.error("ERROR - /api/cost/cloud-infra-total");
       return null;
       }),
     fetch('/api/cost/unit-economics',{method:'POST',

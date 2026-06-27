@@ -1,6 +1,11 @@
 package com.calculator.cost.cloud.alb.aws;
 
 import com.calculator.application.services.calculators.cost.cloud.alb.aws.alb.AWSALBCostCalculator;
+import com.calculator.domain.model.architecture.FinOpsStrategy;
+import com.calculator.domain.model.cost.InfrastructureCost;
+import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
+import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
+import com.calculator.domain.repository.finops.reliability.FinOpsStrategyReliabilityArchitecturalDecisionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,6 +27,9 @@ class AWSALBCostCalculatorTest {
 
     @Mock
     private PricingClient pricingClient;
+
+    @Mock
+    FinOpsStrategyReliabilityArchitecturalDecisionRepository finOpsStrategyReliabilityArchitecturalDecisionRepository;
 
     @InjectMocks
     private AWSALBCostCalculator calculator;
@@ -59,7 +67,7 @@ class AWSALBCostCalculatorTest {
                 "productFamily" : "Load Balancer",
                 "attributes" : {
                   "location" : "US East (N. Virginia)",
-                  "usagetype" : "USE1-LCUUsage",
+                  "usagetype" : "DataProcessing-Bytes",
                   "operation" : "LoadBalancing:Application"
                 }
               },
@@ -68,7 +76,7 @@ class AWSALBCostCalculatorTest {
                   "SKU.TERM" : {
                     "priceDimensions" : {
                       "SKU.TERM.DIM" : {
-                        "unit" : "LCU-Hrs",
+                        "unit" : "GB",
                         "pricePerUnit" : { "USD" : "0.008" }
                       }
                     }
@@ -77,6 +85,27 @@ class AWSALBCostCalculatorTest {
               }
             }
             """;
+
+        when(finOpsStrategyReliabilityArchitecturalDecisionRepository.getFinOpsStrategyForAWSApplicationLoadBalancer())
+                .thenReturn(
+                        FinOpsStrategy.builder()
+                                .id("finops-aws-alb")
+                                .name("FinOpsStrategy for ALB")
+                                .architecturalCharacteristic(
+                                        ArchitecturalCharacteristic.builder()
+                                                .name(ArchitecturalCharacteristics.AFFORDABILITY.name())
+                                                .build()
+                                )
+                                .costFactor(
+                                        new InfrastructureCost(
+                                                """
+                                                ALB has NO Reserved Instances or Savings Plans — only usage reduction cuts cost, \n
+                                                Consider NLB for pure TCP/UDP: NLCU pricing is often cheaper than ALB LCU at scale.
+                                                """
+                                        )
+                                )
+                                .build()
+                );
 
         when(pricingClient.getProducts(any(GetProductsRequest.class)))
                 .thenReturn(GetProductsResponse.builder()

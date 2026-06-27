@@ -3,7 +3,7 @@ package com.calculator.domain.dto.requests;
 import com.calculator.domain.model.architecture.tactics.security.OAuthTokenValidationModes;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TacticContributionRequest {
+public class TacticTCCContributionRequest {
     @JsonProperty
     public int baseRps = 0;
     @JsonProperty

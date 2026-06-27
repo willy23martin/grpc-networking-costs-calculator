@@ -24,7 +24,7 @@ public class ResiliencyPatternsController {
     public ResponseEntity<List<ResiliencyTradeoffDTO>> getTacticResiliencyMappings() {
         log.info("Resiliency Tactics Mapping has been invoked");
         List<ResiliencyTradeoffDTO> reliabilityMappings = resiliencyTradeoffMapperService.getResiliencyTradeoffs();
-        log.info("Resiliency mappings: \n" + reliabilityMappings);
+        log.info("Resiliency mappings: " + reliabilityMappings);
         return ResponseEntity.ok(reliabilityMappings);
     }
 

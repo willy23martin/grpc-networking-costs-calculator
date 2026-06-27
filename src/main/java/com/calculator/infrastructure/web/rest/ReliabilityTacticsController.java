@@ -24,7 +24,7 @@ public class ReliabilityTacticsController {
     public ResponseEntity<List<ReliabilityTradeoffDTO>> getTacticReliabilityMappings() {
         log.info("Reliability Tactics Mapping has been invoked");
         List<ReliabilityTradeoffDTO> reliabilityMappings = reliabilityTradeoffMapperService.getReliabilityTradeoffs();
-        log.info("Reliability Mappings: \n" + reliabilityMappings);
+        log.info("Reliability Mappings: " + reliabilityMappings);
         return ResponseEntity.ok(reliabilityMappings);
     }
 

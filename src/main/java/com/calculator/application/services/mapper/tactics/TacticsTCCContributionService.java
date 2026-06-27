@@ -2,7 +2,7 @@ package com.calculator.application.services.mapper.tactics;
 
 import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
 import com.calculator.application.services.calculators.cost.cloud.networking.aws.AWSDataTransferCostCalculationService;
-import com.calculator.domain.dto.requests.TacticContributionRequest;
+import com.calculator.domain.dto.requests.TacticTCCContributionRequest;
 import com.calculator.domain.dto.responses.TacticContributionItem;
 import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
 import com.calculator.domain.model.architecture.ArchitecturalPattern;
@@ -28,7 +28,7 @@ import static com.calculator.infrastructure.web.rest.TCOCalculatorController.BYT
 import static com.calculator.infrastructure.web.rest.TCOCalculatorController.SECONDS_PER_MONTH;
 
 @Service
-public class TacticsContributionService {
+public class TacticsTCCContributionService {
 
     public static final String RPS_AND_BYTES = "both";
     public static final String RPS = "rps";
@@ -45,7 +45,7 @@ public class TacticsContributionService {
     @Autowired
     NetworkingCostCalculator networkingCostCalculator; // DESIGN PATTERNS: Port whose adapter is AWSDataTransferCostCalculationService class
 
-    public List<TacticContributionItem> mapStructuralInformationalTacticsWithNoCostImpact(TacticContributionRequest tacticContributionRequest) {
+    public List<TacticContributionItem> mapStructuralInformationalTacticsWithNoCostImpact(TacticTCCContributionRequest tacticContributionRequest) {
         List<TacticContributionItem> tacticContributionItems = new ArrayList<>();
         if(tacticContributionRequest.clientSideLoadBalancingEnabled) {
             tacticContributionItems.add(
@@ -99,7 +99,7 @@ public class TacticsContributionService {
         return tacticContributionItems;
     }
 
-    public List<TacticContributionItem> buildRetryContribution(TacticContributionRequest tacticContributionRequest, int responseBytes) {
+    public List<TacticContributionItem> buildRetryContribution(TacticTCCContributionRequest tacticContributionRequest, int responseBytes) {
         List<TacticContributionItem> tacticContributionItems = new ArrayList<>();
         if(tacticContributionRequest.retryEnabled) {
             int retryExtra = (int) Math.round(tacticContributionRequest.baseRps * tacticContributionRequest.retryErrorRatePct / 100.0);
@@ -121,7 +121,7 @@ public class TacticsContributionService {
         return tacticContributionItems;
     }
 
-    public List<TacticContributionItem> buildTlsContribution(TacticContributionRequest tacticContributionRequest, int responseBytes) {
+    public List<TacticContributionItem> buildTlsContribution(TacticTCCContributionRequest tacticContributionRequest, int responseBytes) {
         List<TacticContributionItem> tacticContributionItems = new ArrayList<>();
         if(tacticContributionRequest.tlsEnabled || tacticContributionRequest.mtlsEnabled) {
             int  messagesPerReconnect = tacticContributionRequest.mtlsEnabled ? 5 : 2;
@@ -197,7 +197,7 @@ public class TacticsContributionService {
                 - getNetworkingEgressCost(rps, responseBytes);
     }
 
-    public List<TacticContributionItem> buildOAuthContribution(TacticContributionRequest tacticContributionRequest, int responseBytes) {
+    public List<TacticContributionItem> buildOAuthContribution(TacticTCCContributionRequest tacticContributionRequest, int responseBytes) {
         List<TacticContributionItem> tacticContributionItems = new ArrayList<>();
         if(tacticContributionRequest.oauthEnabled) {
             int  ttl            = tacticContributionRequest.tokenTtlSeconds    > 0 ? tacticContributionRequest.tokenTtlSeconds    : 3600;

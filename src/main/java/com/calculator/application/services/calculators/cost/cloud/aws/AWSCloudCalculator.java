@@ -38,21 +38,29 @@ public abstract class AWSCloudCalculator extends CloudCalculator {
                 return fallback;
             }
 
-            String productJson = resp.priceList().getFirst();
+            String productJson = resp.priceList().getFirst(); // o .get(0) según tu versión de Java
             if (productJson == null || productJson.isBlank()) return fallback;
 
             JsonNode root = mapper.readTree(productJson);
             if (root == null || root.isMissingNode()) return fallback;
 
-            double price = root.path("terms").path("OnDemand").fields().next()
-                    .getValue().path("priceDimensions").fields().next()
-                    .getValue().path("pricePerUnit").path("USD").asDouble(fallback);
+            JsonNode onDemand = root.path("terms").path("OnDemand");
+            if (onDemand.isMissingNode() || onDemand.isEmpty()) return fallback;
+
+            JsonNode termValue = onDemand.elements().next();
+
+            JsonNode priceDimensions = termValue.path("priceDimensions");
+            if (priceDimensions.isMissingNode() || priceDimensions.isEmpty()) return fallback;
+
+            JsonNode dimension = priceDimensions.elements().next();
+
+            double price = dimension.path("pricePerUnit").path("USD").asDouble(fallback);
 
             return price > 0 ? price : fallback;
 
-        } catch (Exception e) {  // catches RuntimeException, IOException, NoSuchElementException, everything
+        } catch (Exception e) {
             log.warning("fetchSimplePrice failed for " + serviceCode + "/" + productFamily + ": " + e.getMessage());
-            return fallback;  // always returns fallback, never propagates
+            return fallback;
         }
     }
 

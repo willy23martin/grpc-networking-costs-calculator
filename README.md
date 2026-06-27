@@ -72,7 +72,7 @@ The service can be parametrized before building it to use a Cloud Service Provid
 ![Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png](src/main/resources/images/Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png)
 
 #### Modify Configuration of Cloud Services based on FinOps practices
-Pending
+// TODO Pending
 
 #### Calculate the new cost (TCO Costs) and Unit Economics:
 ![Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png](src/main/resources/images/Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png)
@@ -124,6 +124,7 @@ Pending
   - Amazon CloudWatch: [aws-cloud-watch-pricing.json](src/main/resources/awspricelistapiexamples/aws-cloud-watch-pricing.json)
   - AWS KMS: [aws-kms-pricing.json](src/main/resources/awspricelistapiexamples/aws-kms-pricing.json)
   - AWS DataTransfer pricing: [aws-datatransfer-pricing.json](src/main/resources/awspricelistapiexamples/awsdatatransferpricingexamples/aws-datatransfer-pricing.json)
+  - AWS Aurora MySQL: [aws-aurora-mysql-pricing.json](src/main/resources/awspricelistapiexamples/aws-aurora-mysql-pricing.json)
 
 - **AWS Price List Bulk API**:
   - PriceList Bulk response: [pricelist-bul-api.json](src/main/resources/awspricelistbulkapiexamples/aws-pricelist-bulk-api.json)

@@ -23,8 +23,11 @@ public class SecurityTacticsController {
     @GetMapping("/api/security/tactic-mappings")
     public ResponseEntity<List<SecurityTradeoffsDTO>> getTacticSecurityMappings() {
         log.info("Security Tactics Mapping has been invoked");
+
         List<SecurityTradeoffsDTO> securityMappings = securityTradeoffMapperService.getSecurityTradeoffs();
-        log.info("Security Mappings: \n" + securityMappings);
+
+        log.info("Security Mappings: " + securityMappings);
+
         return ResponseEntity.ok(securityMappings);
     }
 

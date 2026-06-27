@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class EC2ComputeCostCalculator extends AWSCloudCalculator implements CloudComputeCostCalculator {
+public class EC2ComputeCostCalculator extends AWSCloudCalculator implements CloudComputeCostCalculator { // TODO
 
     private static final Logger log = Logger.getLogger(EC2ComputeCostCalculator.class.getName());
 

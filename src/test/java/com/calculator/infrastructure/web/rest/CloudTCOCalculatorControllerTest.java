@@ -41,7 +41,7 @@ class CloudTCOCalculatorControllerTest {
     private CachingCostCalculator cachingCostCalculator;
 
     @InjectMocks
-    private CloudTCOCalculatorController controller;
+    private CloudServicesTCCCalculatorController controller;
 
     @Test
     void getComputeInstances_returnsList() {

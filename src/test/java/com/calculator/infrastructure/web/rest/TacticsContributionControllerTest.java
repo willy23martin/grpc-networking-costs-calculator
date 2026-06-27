@@ -1,7 +1,7 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.dto.requests.TacticContributionRequest;
-import com.calculator.domain.dto.responses.TacticContributionResponse;
+import com.calculator.domain.dto.requests.TacticTCCContributionRequest;
+import com.calculator.domain.dto.responses.TacticTCCContributionResponse;
 import com.calculator.domain.model.architecture.tactics.security.OAuthTokenValidationModes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_allStructuralAndInfoTactics() throws Exception {
-        TacticContributionRequest req = new TacticContributionRequest();
+        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 100;
         req.protoResponseSizeEffectiveBytes = 500;
         req.clientSideLoadBalancingEnabled = true;
@@ -36,9 +36,9 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp = objectMapper.readValue(
+        TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp);
@@ -49,7 +49,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_retryBranchAndLowCostLabel() throws Exception {
-        TacticContributionRequest req = new TacticContributionRequest();
+        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 1;
         req.protoResponseSizeEffectiveBytes = 10;
         req.retryEnabled = true;
@@ -61,9 +61,9 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp = objectMapper.readValue(
+        TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp);
@@ -73,7 +73,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_tlsAndMtlsBranches() throws Exception {
-        TacticContributionRequest req1 = new TacticContributionRequest();
+        TacticTCCContributionRequest req1 = new TacticTCCContributionRequest();
         req1.baseRps = 5000;
         req1.protoResponseSizeEffectiveBytes = 0;
         req1.tlsEnabled = true;
@@ -86,16 +86,16 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp1 = objectMapper.readValue(
+        TacticTCCContributionResponse resp1 = objectMapper.readValue(
                 result1.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp1);
         assertTrue(resp1.usedPlaceholderBytes);
         assertEquals(1, resp1.contributions.size());
 
-        TacticContributionRequest req2 = new TacticContributionRequest();
+        TacticTCCContributionRequest req2 = new TacticTCCContributionRequest();
         req2.baseRps = 1000;
         req2.mtlsEnabled = true;
         req2.tlsReconnectsPerHour = 0;
@@ -107,9 +107,9 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp2 = objectMapper.readValue(
+        TacticTCCContributionResponse resp2 = objectMapper.readValue(
                 result2.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp2);
@@ -118,7 +118,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_oauthLocalAndRemoteModes() throws Exception {
-        TacticContributionRequest req1 = new TacticContributionRequest();
+        TacticTCCContributionRequest req1 = new TacticTCCContributionRequest();
         req1.baseRps = 1000;
         req1.protoResponseSizeEffectiveBytes = 1000;
         req1.oauthEnabled = true;
@@ -133,15 +133,15 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp1 = objectMapper.readValue(
+        TacticTCCContributionResponse resp1 = objectMapper.readValue(
                 result1.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp1);
         assertEquals(0.0, resp1.contributions.getFirst().estimatedMonthlyCostUsd);
 
-        TacticContributionRequest req2 = new TacticContributionRequest();
+        TacticTCCContributionRequest req2 = new TacticTCCContributionRequest();
         req2.baseRps = 200000;
         req2.protoResponseSizeEffectiveBytes = 2000;
         req2.oauthEnabled = true;
@@ -156,9 +156,9 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp2 = objectMapper.readValue(
+        TacticTCCContributionResponse resp2 = objectMapper.readValue(
                 result2.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp2);
@@ -167,7 +167,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_allEgressPricingTiers() throws Exception {
-        TacticContributionRequest req = new TacticContributionRequest();
+        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 5_000_000;
         req.protoResponseSizeEffectiveBytes = 5_000;
         req.retryEnabled = true;
@@ -179,9 +179,9 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp = objectMapper.readValue(
+        TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp);
@@ -190,7 +190,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_zeroEgressCost() throws Exception {
-        TacticContributionRequest req = new TacticContributionRequest();
+        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 0;
         req.protoResponseSizeEffectiveBytes = -100;
         req.retryEnabled = true;
@@ -201,9 +201,9 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticContributionResponse resp = objectMapper.readValue(
+        TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                TacticContributionResponse.class
+                TacticTCCContributionResponse.class
         );
 
         assertNotNull(resp);

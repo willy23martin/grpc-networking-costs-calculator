@@ -31,7 +31,7 @@ import java.util.List;
  *   UnitEconomicsResponse result = calc.calculateUnitEconomics();
  * </pre>
  */
-public class CostEfficiencyCalculator {
+public class CostEfficiencyCalculator { // TODO
 
     // ── Constants (mirrored from UnitEconomicsController) ───────────────────
     private static final double SECONDS_PER_MONTH = 2_592_000.0;
@@ -195,10 +195,6 @@ public class CostEfficiencyCalculator {
         if (anyInhibits) return AffordabilityImpact.INHIBITS;
         if (anyPromotes) return AffordabilityImpact.PROMOTES;
         return AffordabilityImpact.ORTHOGONAL;
-    }
-
-    public List<ArchitecturalDecision> getArchitecturalDecisions() {
-        return architecturalDecisions;
     }
 
     public enum AffordabilityImpact {

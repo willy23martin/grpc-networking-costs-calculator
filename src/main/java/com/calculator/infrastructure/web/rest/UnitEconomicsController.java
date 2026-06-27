@@ -20,7 +20,7 @@ import static com.calculator.application.services.utils.MathUtils.round2;
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
-public class UnitEconomicsController {
+public class UnitEconomicsController { // TODO
 
     @Autowired
     SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
