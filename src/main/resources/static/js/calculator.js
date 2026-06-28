@@ -801,14 +801,37 @@ function renderDbOptions() {
 
 function recalculateDbCost() {
   if (!_dbData) return;
-  var total = 0; var lines = [];
+  var total = 0;
+  var lines = [];
   var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
+  var snapshotRetention = parseFloat((document.getElementById('snapshot-retention') || { value: '10' }).value) || 10;
+  console.warn("snapshotRetention: " + snapshotRetention);
+  var snapshotRetentionCost = 0;
   var g = function (id) { return document.getElementById(id) || {}; };
-  if (g('tactic-s3-backup').checked) { var c = dbGb * _dbData.s3StandardStoragePerGbUsd; total += c; lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)'); }
-  if (g('tactic-rds-snapshot').checked) lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
-  if (g('tactic-rds-multiaz').checked) lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
-  if (g('tactic-aurora-replica').checked) { var cnt = parseInt(g('aurora-replica-count').value) || 1; var c2 = _dbData.auroraReplicaPerHour * 730 * cnt; total += c2; lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)'); }
-  if (g('tactic-dynamo-global').checked) { var reg = parseInt(g('dynamo-extra-regions').value) || 1; lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)'); }
+  if (g('tactic-s3-backup').checked) {
+    let c = dbGb * _dbData.s3StandardStoragePerGbUsd;
+    total += c;
+    lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)');
+  }
+  if (g('tactic-rds-snapshot').checked) {
+    snapshotRetentionCost = snapshotRetention > 10 ? _dbData.rdsSnapshotStoragePerGbUsd : 0;
+    total += snapshotRetentionCost;
+    lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
+  }
+  if (g('tactic-rds-multiaz').checked) {
+    total += snapshotRetentionCost;
+    lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
+  }
+  if (g('tactic-aurora-replica').checked) {
+    var cnt = parseInt(g('aurora-replica-count').value) || 1;
+    var c2 = _dbData.auroraReplicaPerHour * 730 * cnt;
+    total += c2;
+    lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)');
+  }
+  if (g('tactic-dynamo-global').checked) {
+    var reg = parseInt(g('dynamo-extra-regions').value) || 1;
+    lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)');
+  }
   var res = document.getElementById('dbbackup-result');
   if (!res) return;
   if (!lines.length) { res.style.display = 'none'; return; }

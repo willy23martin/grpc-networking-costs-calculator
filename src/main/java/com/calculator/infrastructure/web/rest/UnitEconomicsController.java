@@ -8,12 +8,15 @@ import com.calculator.domain.repository.cloud.security.CloudSecurityArchitectura
 import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
 import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
 import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
+import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 import static com.calculator.application.services.utils.MathUtils.round2;
 
@@ -21,6 +24,8 @@ import static com.calculator.application.services.utils.MathUtils.round2;
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
 public class UnitEconomicsController { // TODO
+
+    private static final Logger log = Logger.getLogger(UnitEconomicsController.class.getName());
 
     @Autowired
     SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
@@ -59,34 +64,62 @@ public class UnitEconomicsController { // TODO
     }
 
     @PostMapping("/cloud-infra-total")
-    public ResponseEntity<CloudInfraTotalResponse> calculateCloudInfraTotal(
-            @RequestBody CloudInfraTotalRequest req) {
+    public ResponseEntity<?> calculateCloudInfraTotal(@RequestBody CloudInfraTotalRequest req) {
+        try {
+            if (req == null) {
+                return ResponseEntity.badRequest().body("Request body cannot be null");
+            }
 
-        CloudInfraTotalResponse resp = new CloudInfraTotalResponse();
+            log.info("CloudInfraTotalRequest received.");
+            JSONLogger.logAsJSON(log, req);
 
-        double gross = req.albMonthlyCostUsd
-                + req.cacheMonthlyCostUsd
-                + req.databaseMonthlyCostUsd
-                + req.securityMonthlyCostUsd
-                + req.containerMonthlyCostUsd
-                + req.apiGatewayMonthlyCostUsd
-                + req.ec2ReplicaMonthlyCostUsd;
+            if (req.albMonthlyCostUsd < 0 || req.cacheMonthlyCostUsd < 0 ||
+                    req.databaseMonthlyCostUsd < 0 || req.securityMonthlyCostUsd < 0 ||
+                    req.containerMonthlyCostUsd < 0 || req.apiGatewayMonthlyCostUsd < 0 ||
+                    req.ec2ReplicaMonthlyCostUsd < 0 || req.finopsMonthlySavingUsd < 0) {
 
-        double saving = Math.max(0, req.finopsMonthlySavingUsd);
+                return ResponseEntity.badRequest().body("Cost and saving metrics must be non-negative values.");
+            }
 
-        resp.grossCloudInfraCostUsd = round2(gross);
-        resp.finopsSavingUsd        = round2(saving);
-        resp.netCloudInfraCostUsd   = round2(Math.max(0, gross - saving));
+            CloudInfraTotalResponse resp = new CloudInfraTotalResponse();
 
-        if (req.albMonthlyCostUsd        > 0) resp.perServiceBreakdown.put("ALB",           round2(req.albMonthlyCostUsd));
-        if (req.cacheMonthlyCostUsd      > 0) resp.perServiceBreakdown.put("ElastiCache",   round2(req.cacheMonthlyCostUsd));
-        if (req.databaseMonthlyCostUsd   > 0) resp.perServiceBreakdown.put("Database/Backup", round2(req.databaseMonthlyCostUsd));
-        if (req.securityMonthlyCostUsd   > 0) resp.perServiceBreakdown.put("Security",      round2(req.securityMonthlyCostUsd));
-        if (req.containerMonthlyCostUsd  > 0) resp.perServiceBreakdown.put("Container",     round2(req.containerMonthlyCostUsd));
-        if (req.apiGatewayMonthlyCostUsd > 0) resp.perServiceBreakdown.put("API Gateway",   round2(req.apiGatewayMonthlyCostUsd));
-        if (req.ec2ReplicaMonthlyCostUsd > 0) resp.perServiceBreakdown.put("EC2 Replicas",  round2(req.ec2ReplicaMonthlyCostUsd));
+            if (resp.perServiceBreakdown == null) {
+                resp.perServiceBreakdown = new HashMap<>();
+            }
 
-        return ResponseEntity.ok(resp);
+            double gross = req.albMonthlyCostUsd
+                    + req.cacheMonthlyCostUsd
+                    + req.databaseMonthlyCostUsd
+                    + req.securityMonthlyCostUsd
+                    + req.containerMonthlyCostUsd
+                    + req.apiGatewayMonthlyCostUsd
+                    + req.ec2ReplicaMonthlyCostUsd;
+
+            double saving = req.finopsMonthlySavingUsd;
+
+            resp.grossCloudInfraCostUsd = round2(gross);
+            resp.finopsSavingUsd        = round2(saving);
+            resp.netCloudInfraCostUsd   = round2(Math.max(0, gross - saving));
+
+            if (req.albMonthlyCostUsd        > 0) resp.perServiceBreakdown.put("ALB",              round2(req.albMonthlyCostUsd));
+            if (req.cacheMonthlyCostUsd      > 0) resp.perServiceBreakdown.put("ElastiCache",      round2(req.cacheMonthlyCostUsd));
+            if (req.databaseMonthlyCostUsd   > 0) resp.perServiceBreakdown.put("Database/Backup",  round2(req.databaseMonthlyCostUsd));
+            if (req.securityMonthlyCostUsd   > 0) resp.perServiceBreakdown.put("Security",         round2(req.securityMonthlyCostUsd));
+            if (req.containerMonthlyCostUsd  > 0) resp.perServiceBreakdown.put("Container",        round2(req.containerMonthlyCostUsd));
+            if (req.apiGatewayMonthlyCostUsd > 0) resp.perServiceBreakdown.put("API Gateway",      round2(req.apiGatewayMonthlyCostUsd));
+            if (req.ec2ReplicaMonthlyCostUsd > 0) resp.perServiceBreakdown.put("EC2 Replicas",     round2(req.ec2ReplicaMonthlyCostUsd));
+
+            return ResponseEntity.ok(resp);
+
+        } catch (IllegalArgumentException e) {
+            log.warning("Validation error processing cloud infra total: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid request data: " + e.getMessage());
+
+        } catch (Exception e) {
+            log.severe("Unexpected error calculating cloud infrastructure totals: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while processing cloud cost calculations.");
+        }
     }
 
     public static class UnitEconomicsRequest {

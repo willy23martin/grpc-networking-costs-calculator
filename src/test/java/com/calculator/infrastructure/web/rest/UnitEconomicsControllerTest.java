@@ -64,7 +64,7 @@ class UnitEconomicsControllerTest {
         req1.apiGatewayMonthlyCostUsd = 40.0;
         req1.ec2ReplicaMonthlyCostUsd = 120.0;
 
-        ResponseEntity<UnitEconomicsController.CloudInfraTotalResponse> response1 = controller.calculateCloudInfraTotal(req1);
+        ResponseEntity<UnitEconomicsController.CloudInfraTotalResponse> response1 = (ResponseEntity<UnitEconomicsController.CloudInfraTotalResponse>) controller.calculateCloudInfraTotal(req1);
         UnitEconomicsController.CloudInfraTotalResponse resp1 = response1.getBody();
 
         assertNotNull(resp1);

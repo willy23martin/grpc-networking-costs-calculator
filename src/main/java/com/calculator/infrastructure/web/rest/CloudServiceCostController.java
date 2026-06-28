@@ -1,15 +1,19 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
 public class CloudServiceCostController { // TODO
+
+    private static final Logger log = Logger.getLogger(CloudServiceCostController.class.getName());
 
     /* ================================================================
        SHARED RESPONSE — used by all endpoints
@@ -34,6 +38,9 @@ public class CloudServiceCostController { // TODO
     @PostMapping("/alb")
     public ResponseEntity<ServiceCostResponse> calculateAlbCost(
             @RequestBody AlbCostRequest req) {
+
+        log.info("ALBCostRequest: " + req);
+        JSONLogger.logAsJSON(log, req);
 
         ServiceCostResponse resp = new ServiceCostResponse();
         resp.sessionStorageKey = "tco_alb_cost";
