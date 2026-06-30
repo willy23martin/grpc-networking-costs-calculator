@@ -168,17 +168,31 @@ function populateReportSummary() {
    Reads sessionStorage keys written by backend-driven recalculate* fns.
    Guards every key against its DOM checkbox so stale keys are ignored.
    ======================================================================= */
-
-function checkedCost(cbId, key) {
+function computeCloudInfraCost() {
+  function checkedCost(cbId, key) {
     var cb = document.getElementById(cbId);
-    console.warn("computeCloudInfraCost: cbId - " + cbId);
-    console.warn("computeCloudInfraCost: key - " + key);
-    console.warn("computeCloudInfraCost: cb - " + cb);
-    console.warn("computeCloudInfraCost: cb checked - " + cb.checked);
-    if (!cb || !cb.checked) {
-        return 0;
-    }
+    if (!cb || !cb.checked) return 0;
     return parseFloat(sessionStorage.getItem(key) || '0');
+  }
+  var total = 0;
+  total += checkedCost('tactic-alb',   'tco_alb_cost');
+  total += checkedCost('tactic-cache', 'tco_cache_cost');
+  total += checkedCost('tactic-apigw', 'tco_apigw_cost');
+  var dbKeys = ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
+                'tactic-aurora-replica','tactic-dynamo-global'];
+  if (dbKeys.some(function(id){ var cb=document.getElementById(id); return cb&&cb.checked; })) {
+    total += parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
+  }
+  var cefKeys = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'];
+  if (cefKeys.some(function(id){ var cb=document.getElementById(id); return cb&&cb.checked; })) {
+    total += parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
+  }
+  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
+  ].forEach(function(id) { total += checkedCost(id, 'tco_sec_' + id); });
+  var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
+  runningTotalCost = Math.max(0, Math.round((total - saving) * 100) / 100);
+  return runningTotalCost;
 }
 
 /* =======================================================================
@@ -195,50 +209,40 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
 
   var egressCost   = parseFloat(transferCostUsd) || 0;
   var baseRps      = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
-  var numConsumers = parseInt((document.getElementById('numConsumers')||{value:'1'}).value)||1;
-  var consumerType = (document.getElementById('consumerType')||{value:'SERVICES'}).value||'SERVICES';
-  var revenue      = parseFloat((document.getElementById('revenuePerTransaction')||{value:'0'}).value)
+  // numConsumers/consumerType: prefer the live DOM input (Phase 2), but fall back to the
+  // sessionStorage value saved by schedulePhase2Save() — the DOM input may report an
+  // empty value here if Phase 2 hasn't been re-rendered, which previously caused the
+  // ROI/ARPU section to silently default to 1 consumer regardless of what the user set.
+  var numConsumersInput = document.getElementById('numConsumers');
+  var numConsumers = parseInt((numConsumersInput && numConsumersInput.value) || sessionStorage.getItem('svc_consumers') || '1', 10) || 1;
+  var consumerTypeInput = document.getElementById('consumerType');
+  var consumerType = (consumerTypeInput && consumerTypeInput.value) || sessionStorage.getItem('svc_consumer_type') || 'SERVICES';
+  var revenue      = parseFloat((document.getElementById('revenuePerTransaction')||{value:''}).value)
                    || parseFloat(sessionStorage.getItem('svc_revenue_per_tx')||'0') || 0;
   var monthlyReqs  = requestsPerMonthRaw || Math.round((effectiveRps||baseRps)*2592000);
   var finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
 
-  // ── Collect per-service costs from sessionStorage ──────────────────────
-  function checkedCost(cbId, key) {
-    var cb = document.getElementById(cbId);
+  // ── Read costs directly from sessionStorage ─────────────────────────────
+  // sessionStorage is the single source of truth. The recalculate* functions
+  // in Phase 3 write these keys whenever the user checks a service and enters
+  // volume values. We do NOT check DOM checkbox state here because:
+  //   • Phase 4 panels may be collapsed (checkboxes not in DOM)
+  //   • sec-* IDs exist in both static body-cloud HTML and dynamic cloudsec-content;
+  //     getElementById always finds the static (always-unchecked) one first.
+  function ss(key) { return parseFloat(sessionStorage.getItem(key) || '0'); }
 
-    console.warn("checkedCost cbId: " + cbId);
-    console.warn("checkedCost key: " + key);
-
-    if (!cb || !cb.checked) return 0;
-    console.warn("sessionStorage: " + sessionStorage);
-    console.warn("sessionStorage key value: " + sessionStorage.getItem(key));
-
-    return parseFloat(sessionStorage.getItem(key)||'0');
-  }
-
-  var albCost   = checkedCost('tactic-alb',   'tco_alb_cost');
-  var cacheCost = checkedCost('tactic-cache',  'tco_cache_cost');
-  var apiGwCost = checkedCost('tactic-apigw',  'tco_apigw_cost');
-
-  var containerCost = 0;
-  ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'].some(function(id){
-    var cb=document.getElementById(id);
-    if(cb&&cb.checked){containerCost=parseFloat(sessionStorage.getItem('tco_container_cost')||'0');return true;}
-  });
-
-  var dbCost = 0;
-  ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
-   'tactic-aurora-replica','tactic-dynamo-global'].some(function(id){
-    var cb=document.getElementById(id);
-    if(cb&&cb.checked){dbCost=parseFloat(sessionStorage.getItem('tco_db_cost')||'0');return true;}
-  });
+  var albCost       = ss('tco_alb_cost');
+  var cacheCost     = ss('tco_cache_cost');
+  var apiGwCost     = ss('tco_apigw_cost');
+  var containerCost = ss('tco_container_cost');
+  var dbCost        = ss('tco_db_cost');
 
   var secCostByService = {};
   var secCostTotal = 0;
   ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
    'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'].forEach(function(id){
-    var c = checkedCost(id, 'tco_sec_'+id);
-    if(c>0){ secCostByService[id]=c; secCostTotal+=c; }
+    var c = ss('tco_sec_' + id);
+    if (c > 0) { secCostByService[id] = c; secCostTotal += c; }
   });
 
   var ec2Cost = 0;
@@ -269,10 +273,6 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
     ec2ReplicaMonthlyCostUsd: ec2Cost,
     finopsMonthlySavingUsd  : finopsSaving
   };
-
-  // RESTORED & IMPROVED: Logs stringified request payload instead of [object Object]
-  console.warn("Cloud infra total request body: \n" + JSON.stringify(infraReqBody, null, 2));
-
   var ueReqBody = {
     egressTransferCostUsd  : egressCost,
     cloudInfraCostUsd      : netInfra,
@@ -282,72 +282,25 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
     revenuePerUserPerMonth : revenue
   };
 
-  // RESTORED & IMPROVED: Logs stringified request payload
-  console.warn("Unit economics request body: \n" + JSON.stringify(ueReqBody, null, 2));
-
   Promise.all([
-    fetch('/api/cost/cloud-infra-total', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(infraReqBody)
-    })
-    .then(function(r) {
-      console.warn("SUCCESS - /api/cost/cloud-infra-total");
-      if (!r.ok) throw new Error("Infra API error");
-      return r.json();
-    })
-    .catch(function(err) {
-      console.error("ERROR - /api/cost/cloud-infra-total", err);
-      return null;
-    }),
-
-    fetch('/api/cost/unit-economics', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(ueReqBody)
-    })
-    .then(function(r) {
-      // RESTORED: Confirms endpoint hit successfully
-      console.warn("SUCCESS - /api/cost/unit-economics");
-      if (!r.ok) throw new Error("Unit Economics API error");
-      return r.json();
-    })
-    .catch(function(err) {
-      console.error("ERROR - /api/cost/unit-economics", err);
-      return null;
-    })
-  ]).then(function(results) {
+    fetch('/api/cost/cloud-infra-total',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(infraReqBody)})
+      .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}),
+    fetch('/api/cost/unit-economics',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(ueReqBody)})
+      .then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})
+  ]).then(function(results){
     var infraResp = results[0];
     var ueResp    = results[1];
-
     var authTco   = (ueResp && ueResp.totalMonthlyTcoUsd > 0) ? ueResp.totalMonthlyTcoUsd : localTco;
     window._lastComputedTco = authTco;
 
-    console.warn("Infra response: infraResp:", infraResp);
-    console.warn("Unit Economics: ueResp:", ueResp);
-
-    if (infraResp) {
-      _renderTcoBreakdownTable(
-        egressCost,
-        infraResp.perServiceBreakdown["ALB"] || 0,
-        infraResp.perServiceBreakdown["ElastiCache"] || 0,
-        infraResp.perServiceBreakdown["Database/Backup"] || 0,
-        secCostByService,
-        infraResp.perServiceBreakdown["Container"] || 0,
-        infraResp.perServiceBreakdown["API Gateway"] || 0,
-        infraResp.perServiceBreakdown["EC2 Replicas"] || 0,
-        infraResp.finopsSavingUsd,
-        authTco,
-        effectiveRps || baseRps
-      );
-    } else {
-      _renderTcoBreakdownTable(egressCost, albCost, cacheCost, dbCost,
-        secCostByService, containerCost, apiGwCost, ec2Cost,
-        finopsSaving, authTco, effectiveRps || baseRps);
-    }
+    _renderTcoBreakdownTable(egressCost, albCost, cacheCost, dbCost,
+      secCostByService, containerCost, apiGwCost, ec2Cost,
+      finopsSaving, authTco, effectiveRps||baseRps);
 
     _renderUnitEconomicsGrid(unitEconGridElement, ueResp, authTco, egressCost, netInfra,
-      numConsumers, consumerType, effectiveRps || baseRps, monthlyReqs, revenue);
+      numConsumers, consumerType, effectiveRps||baseRps, monthlyReqs, revenue);
   });
 }
 

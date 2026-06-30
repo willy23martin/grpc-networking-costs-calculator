@@ -1,6 +1,6 @@
 // Global Domain Architecture State Storage Maps
-const awsSectionLoadingHistoryState = window._awsLoadedSectionsState ?? {};
-let apiGatewayPricingDatabase = window._apiGatewayPricingData ?? null;
+const awsSectionLoadingHistoryState = window._awsLoadedSectionsState || {};
+let apiGatewayPricingDatabase = window._apiGatewayPricingData || null;
 let applicationLoadBalancerPricingData = null;
 let databaseBackupPricingData = null;
 let cloudSecurityPricingData = null;
@@ -26,7 +26,8 @@ const AWS_SECTION_LOADERS = {
   dbbackup: loadDbBackupSection,
   cloudsec: loadCloudSecSection,
   costopt: loadCostOptSection,
-  caching: loadCachingSection
+  caching: loadCachingSection,
+  apigw: loadApiGwSection
 };
 
 /**
@@ -42,7 +43,7 @@ function toggleCategory(categoryId) {
   const targetOpenState = !isCurrentlyOpen;
 
   contentBody.classList.toggle('open', targetOpenState);
-  headerElement?.classList.toggle('active', targetOpenState);
+  if (headerElement) headerElement.classList.toggle('active', targetOpenState);
 
   // When opening cloudsec, ensure the parent cloud-tactics body is also open.
   // If the user clicks the cloudsec header directly without having opened
@@ -67,7 +68,7 @@ function toggleCategory(categoryId) {
     if (AWS_SECTION_LOADERS[categoryId]) {
       AWS_SECTION_LOADERS[categoryId]();
     } else if (categoryId === 'microservices') {
-      const isApiGatewayChecked = document.getElementById('tactic-apigw')?.checked;
+      const isApiGatewayChecked = (document.getElementById('tactic-apigw') && document.getElementById('tactic-apigw').checked);
       if (isApiGatewayChecked && !apiGatewayPricingDatabase) {
         loadApiGwSection();
       }
@@ -135,7 +136,7 @@ function updateCloudTacticsBadge() {
  */
 function getFormNumericValue(elementId, fallback = 0) {
   const targetElement = document.getElementById(elementId);
-  return parseFloat(targetElement?.value) || fallback;
+  return parseFloat(targetElement ? targetElement.value : undefined) || fallback;
 }
 
 /**
@@ -163,8 +164,8 @@ function toggleRetry(checked) {
 }
 
 function toggleTlsOptions() {
-  const isTlsActive  = Boolean(document.getElementById('tactic-tls')?.checked);
-  const isMtlsActive = Boolean(document.getElementById('tactic-mtls')?.checked);
+  const isTlsActive  = Boolean(document.getElementById('tactic-tls') && document.getElementById('tactic-tls').checked);
+  const isMtlsActive = Boolean(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked);
 
   toggleUiVisibility('tls-params',      isTlsActive);
   toggleUiVisibility('mtls-params',     isMtlsActive);
@@ -207,10 +208,6 @@ function loadAlbSection() {
   return fetchAwsPrice('alb-pricing')
     .then(data => {
       applicationLoadBalancerPricingData = data;
-
-      console.warn("SUCCESS - /alb-pricing:");
-      console.warn(data);
-
       window._albData = data;   /* expose for unit-economics.js */
       const descriptionContainer = document.getElementById('alb-price-desc');
       if (descriptionContainer) {
@@ -220,7 +217,6 @@ function loadAlbSection() {
       toggleUiVisibility('alb-content', true);
     })
     .catch(error => {
-      console.error("ERROR - /alb-pricing: \n" + error);
       const loadingLabel = document.getElementById('alb-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch ALB pricing: ${error.message}`;
     });
@@ -230,16 +226,11 @@ function loadDbBackupSection() {
   fetchAwsPrice('database-backup-pricing')
     .then(data => {
       databaseBackupPricingData = data;
-
-      console.warn("SUCCESS - /database-backup-pricing:");
-      console.warn(data);
-
       window._dbData = data;   /* expose for unit-economics.js */
       toggleUiVisibility('dbbackup-loading', false);
       toggleUiVisibility('dbbackup-content', true);
     })
     .catch(error => {
-      console.error("ERROR - /database-backup-pricing: \n" + error);
       const loadingLabel = document.getElementById('dbbackup-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch DB pricing: ${error.message}`;
     });
@@ -335,9 +326,6 @@ function loadCloudSecSection() {
   // without rebuilding innerHTML (which would wipe checkbox states).
   fetchAwsPrice('security-services')
     .then(function(data) {
-    console.warn("SUCCESS - /security-services:");
-          console.warn(data);
-
       cloudSecurityPricingData = data;
       window._secData          = data;
       // Patch description spans with live prices — leave checkboxes untouched
@@ -359,8 +347,6 @@ function loadCloudSecSection() {
       console.log('[CloudSec] Live AWS pricing applied to descriptions.');
     })
     .catch(function(err) {
-     console.error("ERROR - /security-services: \n" + error);
-
       console.info('[CloudSec] Using fallback pricing (' + err.message + ')');
     });
 
@@ -370,10 +356,6 @@ function loadCloudSecSection() {
 function loadCostOptSection() {
   fetchAwsPrice('cost-optimisation')
     .then(data => {
-
-     console.warn("SUCCESS - /cost-optimisation:");
-              console.warn(data);
-
       cloudCostOptimizationPricingData = data;
       window._coData = data;   /* expose for recalculateCostOpt() in calculator.js */
       const contentContainer = document.getElementById('costopt-content');
@@ -445,7 +427,6 @@ function loadCostOptSection() {
       recalculateCostOpt();
     })
     .catch(error => {
-    console.error("ERROR - /cost-optimisation: \n" +error);
       const loadingLabel = document.getElementById('costopt-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch cost optimisation: ${error.message}`;
     });
@@ -454,8 +435,6 @@ function loadCostOptSection() {
 function loadCachingSection() {
   fetchAwsPrice('caching-pricing')
     .then(data => {
-    console.warn("SUCCESS - /caching-pricing:");
-                  console.warn(data);
       cacheInfrastructurePricingData = data;
       window._cacheData = data;   /* expose for unit-economics.js */
       const contentContainer = document.getElementById('caching-content');
@@ -511,7 +490,6 @@ function loadCachingSection() {
       contentContainer.style.display = 'block';
     })
     .catch(error => {
-    console.error("ERROR - /caching-pricing: \n" + error);
       const loadingLabel = document.getElementById('caching-loading');
       if (loadingLabel) loadingLabel.textContent = `Could not fetch caching pricing: ${error.message}`;
     });
@@ -530,15 +508,10 @@ function loadApiGwSection() {
   fetch('/api/aws/api-gateway-pricing')
     .then(response => response.ok ? response.json() : null)
     .then(data => {
-
-    console.warn("SUCCESS - /api/aws/api-gateway-pricing:");
-    console.warn(data);
-
       apiGatewayPricingDatabase = data || API_GATEWAY_FALLBACK_PRICING;
       renderApiGwContent();
     })
     .catch(() => {
-    console.error("ERROR - /api/aws/api-gateway-pricing:");
       apiGatewayPricingDatabase = API_GATEWAY_FALLBACK_PRICING;
       renderApiGwContent();
     });
@@ -575,9 +548,6 @@ function recalculateApiGw() {
   .then(function(data) {
     if (!data) return;
 
-    console.warn("SUCCESS - /api/cost/api-gateway:");
-        console.warn(data);
-
     var resultContainer = document.getElementById('apigw-result');
     if (resultContainer) {
       var executionSummary = callsPerMonthMillions > 0
@@ -601,7 +571,7 @@ function recalculateApiGw() {
     var currentBaseRps = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
     if (currentBaseRps) updateLiveComparison(currentBaseRps, currentBaseRps);
   })
-  .catch(function(error) { console.error('ERROR recalculateApiGw failed:', error.message); });
+  .catch(function(error) { console.warn('recalculateApiGw failed:', error.message); });
 }
 
 
@@ -651,15 +621,11 @@ function collectTacticContributions(baseRequestsPerSecond, backendResult) {
   .then(function(response) { return response.ok ? response.json() : null; })
   .then(function(data) {
     if (!data) return [];
-
-    console.warn("SUCCESS - /api/cost/tactic-contributions:");
-    console.warn(data);
-
     window._lastTacticContributions = data.contributions;
     return data.contributions;
   })
   .catch(function(err) {
-    console.error('ERROR - /api/cost/tactic-contributions collectTacticContributions backend call failed \n:', err.message);
+    console.warn('collectTacticContributions backend call failed:', err.message);
     return [];
   });
 }

@@ -714,7 +714,7 @@
                             <i class="fas fa-chevron-down tactics-chevron" id="chevron-cloudsec"></i>
                         </div>
                         <div class="tactics-category-body" id="body-cloudsec">
-                            <div id="cloudsec-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;display:none;"><span class="spinner"></span> Fetching security service pricing from AWS…</div>
+                            <div id="cloudsec-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching security service pricing from AWS…</div>
                             <div id="cloudsec-content" style="display:none;"></div>
                             <div id="cloudsec-total" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid var(--green-border);font-size:.88rem;color:var(--green);"></div>
                         </div>
@@ -732,6 +732,47 @@
                             <div id="caching-result" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;font-size:.88rem;color:var(--blue-deep);"></div>
                         </div>
                     </div>
+                    <!-- ══ API GATEWAY ══ -->
+                    <div class="tactics-category" id="cat-apigw">
+                        <div class="tactics-category-header" onclick="toggleCategory('apigw')">
+                            <span class="tactics-category-title"><span>🌐</span> API Gateway <span class="warning-badge badge-warn" style="font-size:.62rem;">Cloud Infra</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-apigw"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-apigw">
+                            <div id="apigw-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching API Gateway pricing from AWS…</div>
+                            <div id="apigw-content" style="display:none;">
+                                <div class="tactic-row" id="row-tactic-apigw">
+                                    <input type="checkbox" class="tactic-check" id="tactic-apigw">
+                                    <div class="tactic-label-group">
+                                        <label class="tactic-label" for="tactic-apigw">
+                                            <i class="fas fa-network-wired" style="margin-right:5px;width:16px;"></i>Amazon API Gateway
+                                            <span class="warning-badge badge-red">+ cost</span>
+                                        </label>
+                                        <span class="tactic-description">Managed API front door for REST/HTTP/WebSocket APIs. Charged per million calls, plus optional caching.</span>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-left:30px;">
+                                    <div class="tactic-input-group">
+                                        <label style="font-size:.78rem;color:var(--ink-light);display:block;margin-bottom:3px;">API type</label>
+                                        <select id="input-apigw-type" onchange="recalculateApiGw()">
+                                            <option value="rest">REST API</option>
+                                            <option value="http">HTTP API</option>
+                                            <option value="websocket">WebSocket API</option>
+                                        </select>
+                                    </div>
+                                    <div class="tactic-input-group">
+                                        <label style="font-size:.78rem;color:var(--ink-light);display:block;margin-bottom:3px;">Calls / month (millions)</label>
+                                        <input type="number" id="input-apigw-calls-per-month" min="0" step="0.1" placeholder="0" oninput="recalculateApiGw()">
+                                    </div>
+                                    <div class="tactic-input-group">
+                                        <label style="font-size:.78rem;color:var(--ink-light);display:block;margin-bottom:3px;">Cache size (GB, optional)</label>
+                                        <input type="number" id="input-apigw-cache" min="0" placeholder="0" oninput="recalculateApiGw()">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="apigw-result" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fdba74;font-size:.88rem;color:#9a3412;"></div>
+                        </div>
+                    </div>
                     <!-- ══ CONTAINERIZED ENVIRONMENT FACTORS ══ -->
                     <div class="tactics-category" id="cat-container">
                         <div class="tactics-category-header" onclick="toggleCategory('container')">
@@ -742,6 +783,7 @@
                         <div class="tactics-category-body" id="body-container">
                             <div class="notice notice-blue" style="margin-bottom:12px;"><i class="fas fa-info-circle"></i>
                                 <div><strong>Containerized workloads add layered cost dimensions</strong> beyond raw compute. Select applicable factors to account for cluster overhead, application patterns, and licensing in your TCO.</div></div>
+
 
                             <div class="tactics-category" id="cat-cluster-assets">
                                 <div class="tactics-category-header" onclick="toggleCategory('cluster-assets')">
