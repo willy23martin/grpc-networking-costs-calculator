@@ -33,19 +33,20 @@ public class AWSDatabaseCostCalculator extends AWSCloudCalculator implements Dat
     }
 
     private void mapS3StandardStorageForBackupsCosts(Map<String, Object> map) {
-        double price = fetchSimplePrice(log, "AmazonS3", "Storage", 0.023); // throws, not caught here
+        double price = fetchSimplePrice(log, "AmazonS3", "Storage", 0.3); // throws, not caught here
         map.put("s3StandardStoragePerGbUsd", price);
-        log.info("S3 Standard Storage For Backups Costs have been mapped");
+        log.info("S3 Standard Storage For Backups Costs have been mapped: \n" + map);
     }
 
     private void mapRDSSnapshotStorageCosts(Map<String, Object> map) {
         double price = fetchSimplePrice(log, "AmazonRDS", "Database Storage", 0.095); // throws, not caught here
         map.put("rdsSnapshotStoragePerGbUsd", price);
+        log.info("rdsSnapshotStoragePerGbUsd: \n" + price);
     }
 
     private static void mapRDSMultiAZSurchargeCosts(Map<String, Object> databaseBackupCosts) {
         databaseBackupCosts.put("rdsMultiAzSurchargeNote","Multi-AZ roughly doubles the RDS instance cost. Select instance above to compute.");
-        log.info("RDS MultiAZ Surcharge Costs have been mapped.");
+        log.info("RDS MultiAZ Surcharge Costs have been mapped: \n" + databaseBackupCosts);
     }
 
     @PostConstruct

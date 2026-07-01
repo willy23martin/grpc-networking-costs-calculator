@@ -227,38 +227,29 @@ function syncCloudServicesForTactic(tacticId, isEnabled) {
 
     function applySync() {
         var anyChanged = false;
+        // For sec-* IDs, prefer dynamic checkbox inside cloudsec-content over the static
+        // hidden one in body-cloud which getElementById finds first and is always unchecked.
+        var _sp = document.getElementById('cloudsec-content');
+        function getCb(id) {
+            if (_sp) { var el = _sp.querySelector('#' + id); if (el) return el; }
+            return document.getElementById(id);
+        }
 
         if (isEnabled) {
-            // Check every cloud service whose deps include this tactic — SILENTLY
             cloudServices.forEach(function(svc) {
                 if (!svc.supportedArchitecturalDecisions.includes(tacticId)) return;
-                var cb = document.getElementById(svc.tacticId);
-                if (cb && !cb.checked) {
-                    cb.checked = true;
-                    anyChanged = true;
-                    console.log('[tactics-mapping] checked', svc.tacticId, 'for', tacticId);
-                }
+                var cb = getCb(svc.tacticId);
+                if (cb && !cb.checked) { cb.checked = true; anyChanged = true; }
             });
         } else {
-            // Uncheck cloud services no longer needed by any active tactic — SILENTLY
             cloudServices.forEach(function(svc) {
                 if (!svc.supportedArchitecturalDecisions.includes(tacticId)) return;
-                var cb = document.getElementById(svc.tacticId);
+                var cb = getCb(svc.tacticId);
                 if (!cb || !cb.checked) return;
-
-                // Keep checked if another active tactic also needs it
                 var stillNeeded = svc.supportedArchitecturalDecisions
                     .filter(function(d) { return d !== tacticId; })
-                    .some(function(d) {
-                        var dep = document.getElementById(d);
-                        return dep && dep.checked;
-                    });
-
-                if (!stillNeeded) {
-                    cb.checked = false;
-                    anyChanged = true;
-                    console.log('[tactics-mapping] unchecked', svc.tacticId, '(', tacticId, 'disabled)');
-                }
+                    .some(function(d) { var dep = getCb(d); return dep && dep.checked; });
+                if (!stillNeeded) { cb.checked = false; anyChanged = true; }
             });
         }
 

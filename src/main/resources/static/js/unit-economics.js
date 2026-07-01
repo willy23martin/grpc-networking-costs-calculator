@@ -161,6 +161,21 @@ function populateReportSummary() {
     + '<div class="tag-list" style="margin-top:6px;">'
     + (activeTactics.length ? activeTactics.map(function (tactic) { return '<span class="tag">' + tactic + '</span>'; }).join('') : '<span style="font-size:.8rem;color:var(--ink-light);">None selected \u2014 base configuration</span>')
     + '</div></div></div>';
+
+  // Re-render the TCO Breakdown + Unit Economics every time Phase 4 is opened,
+  // not just immediately after the proto-upload form submits. Without this call,
+  // cloud service costs (ALB, security services, DB backup, API Gateway, etc.)
+  // that the user selected after the initial calculation would never appear in
+  // the TCO Breakdown table, since populateUnitEconomics was previously only
+  // invoked one time at form-submission. Calling with no arguments makes it
+  // derive egress cost and effective RPS from window/sessionStorage state.
+  populateUnitEconomics();
+}
+
+function checkedCost(checkboxId, storageKey) {
+    var cb = document.getElementById(checkboxId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(storageKey) || '0');
 }
 
 /* =======================================================================
@@ -169,11 +184,6 @@ function populateReportSummary() {
    Guards every key against its DOM checkbox so stale keys are ignored.
    ======================================================================= */
 function computeCloudInfraCost() {
-  function checkedCost(cbId, key) {
-    var cb = document.getElementById(cbId);
-    if (!cb || !cb.checked) return 0;
-    return parseFloat(sessionStorage.getItem(key) || '0');
-  }
   var total = 0;
   total += checkedCost('tactic-alb',   'tco_alb_cost');
   total += checkedCost('tactic-cache', 'tco_cache_cost');
@@ -207,7 +217,22 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var unitEconGridElement = document.getElementById('unitEconGrid');
   if (!unitEconGridElement) return;
 
+  // When called with no transferCostUsd (e.g. from populateReportSummary every time
+  // Phase 4 is opened, not just right after form submission), derive the egress cost
+  // and effective RPS from the values already stashed by the live comparison engine
+  // in Phase 3. This makes the function safely re-callable on every Phase 4 visit so
+  // cloud service costs (ALB, security, DB, API Gateway, etc.) are always reflected,
+  // not just the one time the proto-upload results table happened to be on the page.
+  if (transferCostUsd === undefined || transferCostUsd === null) {
+    transferCostUsd = window._lastEgressCostUsd || 0;
+  }
+  if (effectiveRps === undefined || effectiveRps === null) {
+    effectiveRps = window._lastEffectiveRps
+      || parseInt(sessionStorage.getItem('svc_rps') || '0', 10) || 0;
+  }
+
   var egressCost   = parseFloat(transferCostUsd) || 0;
+  window._lastEgressCostUsd = egressCost;
   var baseRps      = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
   // numConsumers/consumerType: prefer the live DOM input (Phase 2), but fall back to the
   // sessionStorage value saved by schedulePhase2Save() — the DOM input may report an

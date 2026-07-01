@@ -101,7 +101,7 @@ class AWSDatabaseCostCalculatorTest {
 
 
         assertThat(result).isNotNull();
-        assertThat((double) result.get("s3StandardStoragePerGbUsd")).isEqualTo(0.023);
+        assertThat((double) result.get("s3StandardStoragePerGbUsd")).isEqualTo(0.3);
         assertThat((double) result.get("rdsSnapshotStoragePerGbUsd")).isEqualTo(0.095);
         assertThat((double) result.get("auroraReplicaPerHour")).isEqualTo(0.26);
         assertThat((double) result.get("dynamoGlobalTablePerWruUsd")).isEqualTo(0.000975);

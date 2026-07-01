@@ -515,14 +515,17 @@ function buildCloudServiceBreakdownRows() {
     { id: 'sec-cloudtrail', label: 'AWS CloudTrail'       },
     { id: 'sec-acm',        label: 'AWS ACM'              }
   ];
+  var _secPanel = document.getElementById('cloudsec-content');
   secServiceDefs.forEach(function(svc) {
-    var cbEl = document.getElementById(svc.id);
+    // Prefer dynamic checkbox inside cloudsec-content — static hidden one in body-cloud
+    // is always unchecked and comes first in DOM order for getElementById.
+    var cbEl = (_secPanel && _secPanel.querySelector('#' + svc.id))
+               || document.getElementById(svc.id);
     if (!cbEl || !cbEl.checked) return;                          // not checked → skip
     var svcCost = parseFloat(sessionStorage.getItem('tco_sec_' + svc.id) || '0');
     if (svcCost > 0) {                                           // only show when cost is real
       rows += buildCloudRow(svc.label, '$' + svcCost.toFixed(2) + '/mo', svcCost);
     }
-    // cost = 0 → checked but no volume yet → silently omit (no $0.00 row)
   });
 
   // API Gateway — reads sessionStorage written by recalculateApiGw() → /api/cost/api-gateway
@@ -567,7 +570,11 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
     + '</tr>';
 }
 
-
+function checkedCost(checkboxId, storageKey) {
+    var cb = document.getElementById(checkboxId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(storageKey) || '0');
+  }
 
 /* =====================================================================
    Aggregate all cloud service costs from sessionStorage into
@@ -577,11 +584,6 @@ function aggregateCloudInfraCost() {
   // For EVERY cost key, only count the value when the corresponding DOM checkbox
   // is currently checked.  This prevents stale sessionStorage values from any
   // previous session from inflating the cost before the user selects anything.
-  function checkedCost(checkboxId, storageKey) {
-    var cb = document.getElementById(checkboxId);
-    if (!cb || !cb.checked) return 0;
-    return parseFloat(sessionStorage.getItem(storageKey) || '0');
-  }
 
   var total = 0;
   total += checkedCost('tactic-alb',            'tco_alb_cost');
@@ -764,25 +766,28 @@ function recalculateAvailability() {
   res.style.display = 'block';
 }
 
-function renderDbOptions() {
-  var engine = (document.getElementById('input-db-engine') || { value: '' }).value || '';
-  var cont = document.getElementById('db-options');
-  var res = document.getElementById('dbbackup-result');
-  if (!engine || engine === 'none' || !_dbData || !cont) { if (cont) cont.innerHTML = ''; if (res) res.style.display = 'none'; return; }
-  var html = '';
-  function dbCb(id, label, desc, numId, numLabel) {
+function dbCb(id, label, desc, numId, numLabel) {
     return '<div class="tactic-row"><input type="checkbox" class="tactic-check" id="' + id + '">'
       + '<div class="tactic-label-group"><label class="tactic-label" for="' + id + '">' + label + '</label><span class="tactic-description">' + desc + '</span></div>'
       + (numId ? '<div class="tactic-input-group"><input type="number" id="' + numId + '" min="1" placeholder="10"><span class="tactic-unit">' + numLabel + '</span></div>' : '')
       + '</div>';
   }
+
+function renderDbOptions() {
+  console.warn("DB data: " + JSON.stringify(_dbData));
+  var engine = (document.getElementById('input-db-engine') || { value: '' }).value || '';
+  var cont = document.getElementById('db-options');
+  var res = document.getElementById('dbbackup-result');
+  if (!engine || engine === 'none' || !_dbData || !cont) { if (cont) cont.innerHTML = ''; if (res) res.style.display = 'none'; return; }
+  var html = '';
+
   if (engine === 'rds-mysql') {
-    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardPerGbMonth + '/GB-month.', 'db-gb', 'DB size (GB)')
-      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotPerGbMonth + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
+    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardStoragePerGbUsd + '/GB-month.', 'db-gb', 'DB size (GB)')
+      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
       + dbCb('tactic-rds-multiaz', 'RDS Multi-AZ', _dbData.rdsMultiAzSurchargeNote, null, null);
   } else if (engine === 'aurora') {
     html = dbCb('tactic-aurora-replica', 'Aurora Read Replica', '~$' + _dbData.auroraReplicaPerHour + '/hr ($' + (_dbData.auroraReplicaPerHour * 730).toFixed(2) + '/mo) db.r6g.large.', 'aurora-replica-count', 'Replicas')
-      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardPerGbMonth + '/GB-month.', 'db-gb', 'DB size (GB)');
+      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardStoragePerGbUsd + '/GB-month.', 'db-gb', 'DB size (GB)');
   } else if (engine === 'dynamodb') {
     html = dbCb('tactic-dynamo-pitr', 'DynamoDB PITR', 'Free — pay only for backup storage (~$0.20/GB-month).', null, null)
       + dbCb('tactic-dynamo-global', 'DynamoDB Global Tables', _dbData.dynamoGlobalTableNote, 'dynamo-extra-regions', 'Extra regions');
@@ -794,14 +799,43 @@ function renderDbOptions() {
 
 function recalculateDbCost() {
   if (!_dbData) return;
-  var total = 0; var lines = [];
+  var total = 0;
+  var lines = [];
   var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
+  var snapshotRetention = parseFloat((document.getElementById('snapshot-retention') || { value: '10' }).value) || 10;
+  console.warn("snapshotRetention: " + snapshotRetention);
+  var snapshotRetentionCost = 0;
   var g = function (id) { return document.getElementById(id) || {}; };
-  if (g('tactic-s3-backup').checked) { var c = dbGb * _dbData.s3StandardPerGbMonth; total += c; lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)'); }
-  if (g('tactic-rds-snapshot').checked) lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotPerGbMonth + '/GB-mo');
-  if (g('tactic-rds-multiaz').checked) lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
-  if (g('tactic-aurora-replica').checked) { var cnt = parseInt(g('aurora-replica-count').value) || 1; var c2 = _dbData.auroraReplicaPerHour * 730 * cnt; total += c2; lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)'); }
-  if (g('tactic-dynamo-global').checked) { var reg = parseInt(g('dynamo-extra-regions').value) || 1; lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)'); }
+
+  if (g('tactic-s3-backup').checked) {
+      let c = dbGb * _dbData.s3StandardStoragePerGbUsd;
+      total += c;
+      console.warn("Total DB cost: " + total);
+      lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)');
+  }
+  if (g('tactic-rds-snapshot').checked) {
+      snapshotRetentionCost = snapshotRetention > 10 ? _dbData.rdsSnapshotStoragePerGbUsd : 0;
+      total += snapshotRetentionCost;
+      console.warn("Total DB cost: " + total);
+      lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
+  }
+  if (g('tactic-rds-multiaz').checked) {
+      total += snapshotRetentionCost;
+      console.warn("Total DB cost: " + total);
+      lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
+  }
+  if (g('tactic-aurora-replica').checked) {
+      var cnt = parseInt(g('aurora-replica-count').value) || 1;
+      var c2 = _dbData.auroraReplicaPerHour * 730 * cnt;
+      total += c2;
+      console.warn("Total DB cost: " + total);
+      lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)');
+  }
+  if (g('tactic-dynamo-global').checked) {
+      var reg = parseInt(g('dynamo-extra-regions').value) || 1;
+      lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)');
+  }
+
   var res = document.getElementById('dbbackup-result');
   if (!res) return;
   if (!lines.length) { res.style.display = 'none'; return; }
@@ -822,7 +856,13 @@ function recalculateSecCost() {
 
   var rps = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   var rpm = rps * 2592000;
-  var g   = function (id) { return document.getElementById(id) || {}; };
+  // MUST prefer the dynamic checkbox inside cloudsec-content over the static hidden one
+  // in body-cloud which always appears first in DOM order and is never checked by the user.
+  var _sc = document.getElementById('cloudsec-content');
+  var g = function(id) {
+    if (_sc) { var el = _sc.querySelector('#' + id); if (el) return el; }
+    return document.getElementById(id) || {};
+  };
 
   // Always clear every per-service key first so a deselected service can never leave a
   // stale cost in sessionStorage (fixes: deselect not removing row from breakdown table).
