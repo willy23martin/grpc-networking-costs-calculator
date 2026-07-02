@@ -1,0 +1,47 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "Storage",
+      "attributes" : {
+        "volumeType" : "Files",
+        "storageClass" : "Files",
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonS3",
+        "durability" : "99.999999999%",
+        "usagetype" : "USE1-Files-TimedStorage-ByteHrs",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon Simple Storage Service",
+        "operation" : "Storage"
+      },
+      "sku" : "2N3NKSP5AF8HYTS2"
+    },
+    "serviceCode" : "AmazonS3",
+    "terms" : {
+      "OnDemand" : {
+        "2N3NKSP5AF8HYTS2.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "2N3NKSP5AF8HYTS2.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB-Mo",
+              "endRange" : "Inf",
+              "description" : "$0.30 per GB-Mo of Storage in Files ",
+              "appliesTo" : [ ],
+              "rateCode" : "2N3NKSP5AF8HYTS2.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.3000000000"
+              }
+            }
+          },
+          "sku" : "2N3NKSP5AF8HYTS2",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260618210942",
+    "publicationDate" : "2026-06-18T21:09:42Z"
+  } ]
+}

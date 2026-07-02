@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>gRPC MACH Architecture — TCO Costs Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" href="css/styles.css">
+</head>
+<body>
+<!-- ═══════════════ ARCHITECT BANNER ═══════════════ -->
+<div class="arch-banner">
+    <div class="arch-banner-inner">
+        <div class="arch-banner-icon">🏛️</div>
+        <div>
+            <div class="arch-banner-pill"><i class="fas fa-bridge"></i>&nbsp; Architecture × Finance</div>
+            <div class="arch-banner-title">Software Architect &amp; FinOps Engineering Toolkit</div>
+            <div class="arch-banner-subtitle">
+                This tool is designed for <strong>Software Architects acting as FinOps Engineers</strong> — bridging the gap between
+                Information Technology and Finance. Model your gRPC microservice's Total Cost of Ownership (TCO)
+                with precision, translate architectural decisions into financial impact, and communicate infrastructure costs
+                in the language of business.
+            </div>
+            <div style="margin-top:9px;padding:7px 13px;background:rgba(212,160,23,.18);border:1px solid rgba(212,160,23,.4);border-radius:7px;font-size:.74rem;color:#F5ECD7;line-height:1.5;"><i class="fas fa-circle-info" style="margin-right:5px;"></i><strong>Current Support:</strong> gRPC &amp; AWS&nbsp;&bull;&nbsp;<strong>Roadmap:</strong> Azure, GCP &bull; GraphQL &amp; REST &bull; Multi-region pricing &mdash; 2025&#x2013;2026</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════ PAGE SHELL ═══════════════ -->
+<div class="page-shell">
+
+    <div class="main-title">
+        <h1>gRPC MACH Architecture<br>TCO Costs Efficiency Calculator</h1>
+        <div class="subtitle">Point-to-Point Integration Pattern · Protocol Buffer IDL · AWS Egress Pricing</div>
+    </div>
+
+    <!-- Phase progress -->
+    <div class="phase-steps" id="phaseSteps">
+        <div class="step-item">
+            <div class="step-dot active" id="dot-1">1</div>
+            <span class="step-label active" id="label-1">Service Identity</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step-item">
+            <div class="step-dot" id="dot-2">2</div>
+            <span class="step-label" id="label-2">Use Case, Proto &amp; Consumers</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step-item">
+            <div class="step-dot" id="dot-3">3</div>
+            <span class="step-label" id="label-3">Architecture Tactics</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step-item">
+            <div class="step-dot" id="dot-4">4</div>
+            <span class="step-label" id="label-4">TCO Report</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step-item">
+            <div class="step-dot" id="dot-5">5</div>
+            <span class="step-label" id="label-5">Portfolio Summary</span>
+        </div>
+    </div>
+
+    <!-- ═══ PHASE 1 — Service Identity ═══ -->
+    <div class="card phase-card visible" id="phase1">
+        <div class="card-header">
+            <div class="card-header-icon icon-blue"><i class="fas fa-microchip"></i></div>
+            <div class="card-header-text">
+                <h2>Phase 1 — Service Identity</h2>
+                <p>You are modeling a gRPC microservice within your MACH architecture. Start by defining its identity.</p>
+            </div>
+        </div>
+
+        <div class="notice notice-blue">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>gRPC implements the Point-to-Point Integration Pattern</strong> for inter-service communication in
+                MACH architectures. Each service exposes a strongly-typed contract via Protocol Buffers (IDL), enabling
+                direct, low-latency, binary-serialised messaging between bounded contexts. This calculator models the
+                networking TCO of that communication link.
+            </div>
+        </div>
+
+        <div class="p2p-badge">
+            <i class="fas fa-arrows-left-right"></i>
+            <span><strong>Integration Pattern:</strong> Point-to-Point (P2P) · <strong>Protocol:</strong> HTTP/2 + Protocol Buffers · <strong>Serialisation:</strong> Binary (proto3)</span>
+        </div>
+
+        <div style="margin-top:20px;" class="field">
+            <label>Microservice Name</label>
+            <input type="text" id="serviceName" placeholder="e.g. order-management-service">
+            <div class="field-hint">The canonical name of this microservice within your MACH topology (e.g. kebab-case, following your naming convention).</div>
+        </div>
+
+        <div class="field">
+            <label>Service Purpose / Business Capability</label>
+            <textarea id="servicePurpose" placeholder="e.g. Manages the lifecycle of customer orders — creation, retrieval, updates and fulfilment orchestration — within the commerce bounded context."></textarea>
+            <div class="field-hint">Describe what this microservice does in business terms. This will appear in your TCO summary report.</div>
+        </div>
+
+        <div class="field">
+            <label>Base Requests per Second (RPS)</label>
+            <input type="number" id="requestsPerSecond" placeholder="e.g. 1000" min="1" step="1">
+            <div class="field-hint">Peak-load RPS this service handles. This is your baseline for all cost calculations — architecture tactics will adjust this figure incrementally.</div>
+        </div>
+
+        <div class="field">
+            <label>Expected Monthly Revenue per End User (USD) <span style="font-weight:400;text-transform:none;font-size:.79rem;color:var(--ink-light);">for ROI &amp; ARPU</span></label>
+            <input type="number" id="revenuePerTransaction" placeholder="e.g. 9.99" min="0" step="0.01">
+            <div class="field-hint">How much monthly revenue does this service generate per end user? (e.g. $9.99/month subscription, $2.50/month average order value). Total monthly revenue = this value × number of end users entered in Phase 2. Leave blank to skip ROI analysis.</div>
+        </div>
+        <div style="margin-top: 24px; display:flex; gap:12px; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btn-phase1-continue">
+                <i class="fas fa-arrow-right"></i> Continue to Use Case
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══ PHASE 2 — Use Case, Proto & Consumers ═══ -->
+    <div class="card phase-card" id="phase2">
+        <div class="card-header">
+            <div class="card-header-icon icon-gold"><i class="fas fa-diagram-project"></i></div>
+            <div class="card-header-text">
+                <h2>Phase 2 — Use Case, Proto File &amp; Consumers</h2>
+                <p>Select the gRPC communication pattern, upload your .proto contract, and define your consumers.</p>
+            </div>
+        </div>
+
+        <div class="notice notice-blue" style="margin-bottom:16px;">
+            <i class="fas fa-info-circle"></i>
+            <div>
+                <strong>Proto file required before costs can be calculated.</strong> The backend uses your .proto
+                IDL to derive exact serialised request and response byte sizes. Without it, no TCO figures can be computed.
+                Select a use case first — only one can apply to a single service contract.
+            </div>
+        </div>
+
+        <div class="field-label" style="margin-bottom:10px;">Select Business Use Case (BU#) — mutually exclusive</div>
+        <div class="buc-grid" id="bucGrid">
+
+            <label class="buc-card" id="buc-card-1">
+                <input type="radio" name="buc" value="BUC1">
+                <div class="buc-check"><i class="fas fa-check"></i></div>
+                <div class="buc-card-label">BUC1</div>
+                <div class="buc-card-name">Retrieve Order by ID</div>
+                <div class="buc-card-desc">Client sends an order ID; server returns the matching order record. Classic request/response.</div>
+                <span class="buc-card-pattern">Unary RPC</span>
+            </label>
+
+            <label class="buc-card" id="buc-card-2">
+                <input type="radio" name="buc" value="BUC2">
+                <div class="buc-check"><i class="fas fa-check"></i></div>
+                <div class="buc-card-label">BUC2</div>
+                <div class="buc-card-name">Search &amp; Filter Orders</div>
+                <div class="buc-card-desc">Client sends a search criterion; server streams back all matching orders progressively.</div>
+                <span class="buc-card-pattern">Server Streaming RPC</span>
+            </label>
+
+            <label class="buc-card" id="buc-card-3">
+                <input type="radio" name="buc" value="BUC3">
+                <div class="buc-check"><i class="fas fa-check"></i></div>
+                <div class="buc-card-label">BUC3</div>
+                <div class="buc-card-name">Bulk Update Orders</div>
+                <div class="buc-card-desc">Client streams a batch of order updates; server processes them and returns a consolidated result.</div>
+                <span class="buc-card-pattern">Client Streaming RPC</span>
+            </label>
+
+            <label class="buc-card" id="buc-card-4">
+                <input type="radio" name="buc" value="BUC4">
+                <div class="buc-check"><i class="fas fa-check"></i></div>
+                <div class="buc-card-label">BUC4</div>
+                <div class="buc-card-name">Continuous Shipment Consolidation</div>
+                <div class="buc-card-desc">Client continuously streams orders; server groups them into combined shipments by delivery date in real time.</div>
+                <span class="buc-card-pattern">Bi-Directional Streaming RPC</span>
+            </label>
+
+        </div>
+
+        <!-- Custom BUC -->
+        <div class="field" style="margin-top:14px;">
+            <label>Or specify a custom use case name</label>
+            <input type="text" id="customBucName" placeholder="e.g. Real-time Inventory Sync">
+            <div class="field-hint">If none of the predefined patterns match, describe your use case here. Selecting a card above will clear this field.</div>
+        </div>
+
+        <!-- Proto upload — shown only after BUC is selected -->
+        <div id="phase2-proto-section" style="display:none; margin-top:24px;">
+            <div class="section-divider">Proto File Contract</div>
+            <div class="notice notice-gold" style="margin-bottom:14px;">
+                <i class="fas fa-shapes"></i>
+                <div>Upload the <strong>.proto IDL</strong> that defines this service's request and response messages.
+                    The backend will compile it and extract exact serialised byte sizes for cost calculation.</div>
+            </div>
+            <div class="file-upload-zone" id="fileUploadZone2">
+                <input type="file" id="protoFilePhase2" accept=".proto">
+                <div class="file-upload-icon"><i class="fas fa-file-arrow-up"></i></div>
+                <div class="file-upload-text">Drop your .proto file here, or click to browse</div>
+                <div class="file-upload-hint">Accepts .proto (Protocol Buffer IDL)</div>
+            </div>
+            <div class="file-name-display" id="fileNameDisplay2"></div>
+            <div id="proto-autoload-indicator" style="font-size:.78rem;margin-top:5px;font-style:italic;min-height:18px"></div>
+            <div class="notice notice-blue" style="margin-top:10px;font-size:.79rem;"><i class="fas fa-circle-info"></i><div>The <strong>.proto file is pre-loaded automatically</strong> when you select a BUC card above. Spring Boot must be running and must serve files from <code style="font-family:monospace;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px">src/main/resources/protos/</code>. You can still override by uploading your own file.</div></div>
+        </div>
+
+        <!-- Consumers — shown only after BUC is selected -->
+        <div id="phase2-consumers-section" style="display:none; margin-top:8px;">
+            <div class="section-divider">Consumers</div>
+            <div class="field">
+                <label>Number of End Users</label>
+                <input type="number" id="numConsumers" placeholder="e.g. 12000" min="1" step="1">
+                <div class="field-hint">How many end users (customers) consume this service per month. Used for per-user unit economics, ARPU, and ROI calculations.</div>
+                <!-- hidden: always USERS -->
+                <input type="hidden" id="consumerType" value="USERS">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+            <button class="btn btn-ghost" id="btn-phase2-back"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn btn-primary" id="phase2NextBtn" disabled style="opacity:.45;cursor:not-allowed;">
+                <i class="fas fa-arrow-right"></i> Configure Tactics
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══ PHASE 3 — Architecture Tactics ═══ -->
+    <div class="card phase-card" id="phase3">
+        <div class="card-header">
+            <div class="card-header-icon icon-green"><i class="fas fa-sliders"></i></div>
+            <div class="card-header-text">
+                <h2>Phase 3 — Architecture Tactics &amp; Patterns</h2>
+                <p>Select the tactics applied to your service. Costs update live as you configure each option.</p>
+            </div>
+        </div>
+
+        <div class="notice notice-blue" style="margin-bottom:16px;">
+            <i class="fas fa-bolt"></i>
+            <div>Each tactic below adjusts your effective RPS or payload size. Because your .proto has been uploaded,
+                the cost delta panel uses <strong>exact backend-calculated figures</strong> — the backend is called each time
+                you change a tactic. No proto = no cost comparison shown.</div>
+        </div>
+
+        <!-- Reliability -->
+        <div class="tactics-category">
+            <!-- Reliability intro -->
+
+            <!-- ACTIVITY 1 BANNER -->
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#EFF6FF;border:2px solid #2563EB;">
+                <div style="min-width:34px;height:34px;border-radius:50%;background:#1A3A5C;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A1</div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#1A3A5C;margin-bottom:3px"><i class="fas fa-bullseye" style="margin-right:6px"></i><strong>Activity 1:</strong> Choose a Architectural Characteristic</div>
+                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select the primary Architectural Characteristic driving your architecture — Reliability, Resiliency, or Security. This choice determines which tactics and patterns are applicable to your gRPC microservice.</div></div></div>
+
+            <!-- ACTIVITY 2 BANNER -->
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#F0FDF4;border:2px solid #86EFAC;">
+                <div style="min-width:34px;height:34px;border-radius:50%;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A2</div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#166534;margin-bottom:3px"><i class="fas fa-sliders" style="margin-right:6px"></i><strong>Activity 2:</strong> Choose Tactics and Patterns to Promote that Architectural Characteristic</div>
+                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Configure the specific architectural tactics (Timeout, Retry, Circuit Breaker, TLS, mTLS, OAuth 2.0+JWT, SAGA…) that implement the Architectural Characteristic selected in Activity 1. Each tactic adjusts effective RPS or byte overhead.</div></div></div>
+            <div class="notice" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-radius:var(--r);padding:13px 15px;margin-bottom:8px;">
+                <div style="display:flex;gap:9px;align-items:flex-start;">
+                    <i class="fas fa-circle-check" style="color:#2563EB;margin-top:2px;flex-shrink:0;font-size:.9rem;"></i>
+                    <div style="font-size:.80rem;color:var(--ink-medium);line-height:1.55;">
+                        <strong style="color:#1e40af;">Reliability</strong> &mdash; ISO/IEC 25010:2023 §4.2.4: The degree to which a system performs its required functions under stated conditions without failure.
+                        Sub-characteristics: <strong>Availability</strong> (uptime SLA), <strong>Fault Tolerance</strong> (operation despite faults), <strong>Recoverability</strong> (restoration after failure).
+                        <span style="color:var(--ink-light);font-size:.74rem;display:block;margin-top:2px;">Reliability is the operational baseline — a system must be reliable before it can be resilient. Configure these first.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tactics-category-header" onclick="toggleCategory('reliability')">
+                <span class="tactics-category-title"><span>🛡️</span> Reliability Tactics</span>
+                <i class="fas fa-chevron-down tactics-chevron" id="chevron-reliability"></i>
+            </div>
+            <div class="tactics-category-body" id="body-reliability">
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-client-lb" data-category="reliability"
+                           data-info="Client-side load balancing distributes gRPC packets evenly across server instances. It does not change the total RPS your service receives.">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-client-lb">Client-side Load Balancing</label>
+                        <span class="tactic-description">Balances emission of gRPC packets across server replicas.</span>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-server-lb" data-category="reliability"
+                           data-info="Server-side load balancing distributes incoming traffic across backend replicas. It does not change the total RPS generated by clients.">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-server-lb">Server-side Load Balancing</label>
+                        <span class="tactic-description">Balances reception of gRPC packets at the server tier.</span>
+                    </div>
+                </div>
+                <div class="tactics-info-banner" id="info-reliability"><i class="fas fa-info-circle"></i><span id="info-reliability-text"></span></div>
+            </div>
+        </div>
+
+        <!-- Resiliency -->
+        <div class="tactics-category">
+            <!-- Resiliency intro -->
+            <div class="notice" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fb923c;border-radius:var(--r);padding:13px 15px;margin-bottom:8px;">
+                <div style="display:flex;gap:9px;align-items:flex-start;">
+                    <i class="fas fa-shield-halved" style="color:#c2410c;margin-top:2px;flex-shrink:0;font-size:.9rem;"></i>
+                    <div style="font-size:.80rem;color:var(--ink-medium);line-height:1.55;">
+                        <strong style="color:#9a3412;">Resiliency</strong> &mdash; SEI CMU (Firesmith, 2019) / ISO/IEC 25010:2023: <em>&ldquo;A system is resilient to the degree to which it rapidly and effectively protects its critical capabilities from disruption caused by adverse events and conditions.&rdquo;</em>
+                        Four protection functions: <strong>Resistance</strong> (minimise harm), <strong>Recognition</strong> (detect adverse events), <strong>Recovery</strong> (restore desired state), <strong>Adaptation</strong> (tolerate ongoing adversity).
+                        <span style="color:var(--ink-light);font-size:.74rem;display:block;margin-top:2px;">Resilience assumes failures WILL occur. Apply in order: Timeout (Recognition) &rarr; Retry (Recovery) &rarr; Circuit Breaker (Adaptation).</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tactics-category-header" onclick="toggleCategory('resiliency')">
+                <span class="tactics-category-title"><span>🔄</span> Resiliency Patterns</span>
+                <i class="fas fa-chevron-down tactics-chevron" id="chevron-resiliency"></i>
+            </div>
+            <div class="tactics-category-body" id="body-resiliency">
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-timeout" data-category="resiliency"
+                           data-info="A timeout discards a lost packet and frees the client thread. It does not generate additional requests."
+                    >
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-timeout">Timeout</label>
+                        <span class="tactic-description">Discards a lost packet after a threshold — no RPS impact.</span>
+                    </div>
+                    <div class="tactic-input-group">
+                        <input type="number" id="input-timeout" min="0" placeholder="500" disabled>
+                        <span class="tactic-unit">milliseconds</span>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check" id="tactic-retry">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-retry">Retry <span class="warning-badge badge-red">+ RPS</span></label>
+                        <span class="tactic-description">
+              Retries failed requests. <strong style="color:var(--red);">Increases networking costs.</strong>
+              <em style="display:block;margin-top:3px;font-size:.76rem;">Extra RPS = base RPS &times; (error&nbsp;rate&nbsp;% &divide; 100)</em>
+            </span>
+                    </div>
+                    <div class="tactic-input-group" style="flex-direction:column;gap:6px;align-items:flex-start;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <input type="number" id="input-retry-error-pct" min="0" max="100" step="1" placeholder="5" disabled style="width:72px;">
+                            <span class="tactic-unit">% error rate</span>
+                        </div>
+                        <div id="retry-disclaimer" style="display:none;font-size:.7rem;color:var(--ink-light);padding:5px 8px;background:rgba(153,27,27,.07);border-radius:var(--r);border-left:3px solid var(--red);max-width:300px;line-height:1.5;">
+                            &#9432; <strong>Error margin:</strong> This represents the estimated % of requests that fail and are retried. Extra load = <strong id="retry-extra-rps-preview">—</strong>.
+                        </div>
+                    </div>
+                </div>
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-cb" data-category="resiliency"
+                           data-info="The Circuit Breaker stops sending requests when failure thresholds are exceeded, reducing outbound packets. It does not add to your RPS."
+                    >
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-cb">Circuit Breaker</label>
+                        <span class="tactic-description">Opens on failure threshold — protects downstream services, no RPS impact.</span>
+                    </div>
+                </div>
+                <div class="cb-sub-params" id="cb-params">
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-cb-min-calls">Min calls before circuit evaluation</label><span class="tactic-description">Below this threshold the circuit stays CLOSED regardless of failure rate.</span></div>
+                        <div class="tactic-input-group"><input type="number" id="input-cb-min-calls" min="1" placeholder="10"><span class="tactic-unit">calls</span></div>
+                    </div>
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-cb-half-open">Permitted calls in HALF-OPEN</label></div>
+                        <div class="tactic-input-group"><input type="number" id="input-cb-half-open" min="1" placeholder="5"><span class="tactic-unit">calls</span></div>
+                    </div>
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-cb-wait">Wait duration in OPEN state</label></div>
+                        <div class="tactic-input-group"><input type="number" id="input-cb-wait" min="0" placeholder="60000"><span class="tactic-unit">ms</span></div>
+                    </div>
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-cb-failure-rate">Failure rate threshold</label></div>
+                        <div class="tactic-input-group"><input type="number" id="input-cb-failure-rate" min="1" max="100" placeholder="50"><span class="tactic-unit">%</span></div>
+                    </div>
+                </div>
+                <div class="tactics-info-banner" id="info-resiliency"><i class="fas fa-info-circle"></i><span id="info-resiliency-text"></span></div>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="tactics-category">
+            <!-- Security intro -->
+            <div class="notice" style="background:linear-gradient(135deg,#faf5ff,#ede9fe);border:1px solid #a78bfa;border-radius:var(--r);padding:13px 15px;margin-bottom:8px;">
+                <div style="display:flex;gap:9px;align-items:flex-start;">
+                    <i class="fas fa-lock" style="color:#7c3aed;margin-top:2px;flex-shrink:0;font-size:.9rem;"></i>
+                    <div style="font-size:.80rem;color:var(--ink-medium);line-height:1.55;">
+                        <strong style="color:#5b21b6;">Security</strong> &mdash; ISO/IEC 25010:2023 §4.2.6: <em>&ldquo;The degree to which a product protects information so that persons or systems have data access appropriate to their authorisation.&rdquo;</em>
+                        Sub-characteristics: <strong>Confidentiality</strong> (TLS), <strong>Integrity</strong> (signed tokens), <strong>Non-Repudiation</strong> (JWT audit trail), <strong>Accountability</strong> (traceable principals), <strong>Authenticity</strong> (mTLS identity).
+                        <span style="color:var(--ink-light);font-size:.74rem;display:block;margin-top:2px;">Each tactic maps to OWASP Top 10:2021. Apply in layers: TLS &rarr; mTLS &rarr; OAuth 2.0 + JWT. Each layer addresses a distinct attack vector.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tactics-category-header" onclick="toggleCategory('security')">
+                <span class="tactics-category-title"><span>🔒</span> Security Tactics</span>
+                <i class="fas fa-chevron-down tactics-chevron" id="chevron-security"></i>
+            </div>
+
+            <!-- NEW CHANGE-->
+            <div class="tactics-category-body" id="body-security">
+                <div class="security-explainer">
+                    <div class="explainer-title"><i class="fas fa-shield-alt"></i> How security tactics affect TCO</div>
+                    <p>Security impacts costs in two dimensions — <strong>payload size</strong> and <strong>request count</strong>.</p>
+                    <div class="formula">effective RPS = tactics-adjusted RPS + handshake msgs/s + token acq/s + introspection/s</div>
+                    <div class="formula" style="margin-top:6px;">effective message size = proto size + TLS overhead + JWT header overhead</div>
+                </div>
+
+                <div class="tactic-row" style="margin-top:12px;">
+                    <input type="checkbox" class="tactic-check" id="tactic-tls">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-tls">TLS 1.3 (one-way) <span class="warning-badge badge-bytes">+ bytes</span></label>
+                        <span class="tactic-description">Encrypts every gRPC frame via TLS 1.3.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-tls"></div>
+                    </div>
+                </div>
+                <div class="security-sub-params" id="tls-params">
+                    <div class="tactic-row">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="input-tls-reconnects">Reconnects per hour</label>
+                        </div>
+                        <div class="tactic-input-group"><input type="number" id="input-tls-reconnects" min="0" placeholder="1"><span class="tactic-unit">reconnects/hr</span></div>
+                    </div>
+                    <div class="acm-note"><i class="fas fa-check-circle"></i><span><strong>AWS ACM — no additional cost.</strong> Certificates managed &amp; auto-renewed at no charge.</span></div>
+                </div>
+
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check" id="tactic-mtls">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-mtls">mTLS (Mutual TLS) <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span></label>
+                        <span class="tactic-description">Enforces bi-directional cryptographic handshake identity confirmation.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-mtls"></div>
+                    </div>
+                </div>
+                <div class="security-sub-params" id="mtls-params" style="display:none;">
+                    <div class="acm-note"><i class="fas fa-check-circle"></i><span><strong>AWS ACM — no additional cost.</strong> Client &amp; server certificates managed by ACM.</span></div>
+                </div>
+
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check" id="tactic-oauth">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-oauth">OAuth 2.0 + JWT <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-red">+ requests</span></label>
+                        <span class="tactic-description">Attaches structural claims validation signatures to RPC call wrappers.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-oauth"></div>
+                    </div>
+                </div>
+                <div class="security-sub-params" id="oauth-params">
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label">Token validation mode</label></div>
+                        <div class="tactic-input-group"><select id="input-token-validation"><option value="LOCAL">Local (recommended)</option><option value="REMOTE_INTROSPECTION">Remote introspection</option></select></div>
+                    </div>
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-token-ttl">Token TTL</label></div>
+                        <div class="tactic-input-group"><input type="number" id="input-token-ttl" min="60" placeholder="3600"><span class="tactic-unit">seconds</span></div>
+                    </div>
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label" for="input-concurrent-clients">Concurrent clients</label></div>
+                        <div class="tactic-input-group"><input type="number" id="input-concurrent-clients" min="1" placeholder="1"><span class="tactic-unit">clients</span></div>
+                    </div>
+                    <div class="tactic-row">
+                        <div class="tactic-label-group"><label class="tactic-label">Interceptor type</label></div>
+                        <div class="tactic-input-group"><select id="input-interceptor-type"><option value="UNARY">Unary interceptor</option><option value="STREAM">Stream interceptor</option></select></div>
+                    </div>
+                    <div class="live-preview" id="oauth-live-preview"></div>
+                </div>
+
+                <div class="tactic-row">
+                    <input type="checkbox" class="tactic-check no-rps-impact" id="tactic-basic-auth" data-category="security">
+                    <div class="tactic-label-group">
+                        <label class="tactic-label" for="tactic-basic-auth">Basic Authentication <span class="warning-badge badge-bytes">+ bytes</span> <span class="warning-badge badge-warn">⚠ Not recommended</span></label>
+                        <span class="tactic-description">Transmits clear-text credentials inside authorization metadata headings.</span>
+                        <div class="dynamic-controller-metadata-target" id="meta-container-tactic-basic-auth"></div>
+                    </div>
+                </div>
+                <div class="tactics-info-banner" id="info-security"><i class="fas fa-info-circle"></i><span id="info-security-text"></span></div>
+            </div>
+
+
+            <div class="tactics-category-body text-card" id="body-cloud">
+                <div style="padding:10px 0;">
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-guardduty">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-guardduty">AWS GuardDuty</label>
+                            <span class="tactic-description">Intelligent threat detection monitoring network flows.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-guardduty"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-inspector">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-inspector">AWS Inspector</label>
+                            <span class="tactic-description">Automated vulnerability assessment for container images.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-inspector"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-waf">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-waf">AWS WAF</label>
+                            <span class="tactic-description">Web Application Firewall protecting HTTP/2 ingress points.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-waf"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-macie">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-macie">AWS Macie</label>
+                            <span class="tactic-description">Data privacy protection service using pattern-matching algorithms.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-macie"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-cloudwatch">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-cloudwatch">AWS CloudWatch</label>
+                            <span class="tactic-description">Real-time observability monitoring structural system metrics.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-cloudwatch"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-audit">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-audit">AWS CloudTrail</label>
+                            <span class="tactic-description">Immutable tracking recording action histories.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-audit"></div>
+                        </div>
+                    </div>
+                    <div class="tactic-row">
+                        <input type="checkbox" class="cloud-service-check" id="sec-kms">
+                        <div class="tactic-label-group">
+                            <label class="tactic-label" for="sec-kms">AWS KMS</label>
+                            <span class="tactic-description">Hardware security cryptographic module system keys control.</span>
+                            <div class="dynamic-controller-metadata-target" id="meta-container-sec-kms"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- NEW CHANGE-->
+
+        <!-- ══════ CLOUD TACTICS & PATTERNS ══════════════════════════════ -->
+
+        <!-- ACTIVITY 3 BANNER -->
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#FFFBEB;border:2px solid #FCD34D;">
+            <div style="min-width:34px;height:34px;border-radius:50%;background:#92400E;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A3</div>
+            <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#92400E;margin-bottom:3px"><i class="fas fa-cloud" style="margin-right:6px"></i><strong>Activity 3:</strong> Map Cloud Services to Implement Tactics and Patterns</div>
+                <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select the AWS cloud services that realise your chosen tactics: ALB (load balancing), ElastiCache (caching), RDS/Aurora (database DR), WAF/GuardDuty/KMS (security), EKS/Fargate (containerisation), API Gateway (microservices). Live AWS Pricing API data populates each section automatically.</div></div></div>
+        <div class="tactics-category cloud-tactics-group" id="cat-cloud-tactics">
+            <div class="tactics-category-header cloud-tactics-header" onclick="toggleCategory('cloud-tactics')">
+        <span class="tactics-category-title">
+          <span>&#9729;&#65039;</span> Cloud Tactics &amp; Patterns
+          <span class="badge-cloud-count" id="cloud-tactics-badge" style="display:none;"></span>
+        </span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:.72rem;font-weight:500;opacity:.75;font-style:italic;">Scalability &bull; Load Balancing &bull; Availability &bull; Backup &bull; Security &bull; Cost Opt &bull; Caching</span>
+                    <i class="fas fa-chevron-down tactics-chevron" id="chevron-cloud-tactics"></i>
+                </div>
+            </div>
+            <div class="tactics-category-body" id="body-cloud-tactics">
+                <div class="cloud-tactics-inner">
+                    <!-- ══════════ AVAILABILITY SLA ═══════════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-availability">
+                        <div class="tactics-category-header" onclick="toggleCategory('availability')">
+                            <span class="tactics-category-title"><span>📊</span> Availability SLA</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-availability"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-availability">
+                            <div class="notice notice-blue" style="margin-bottom:12px;">
+                                <i class="fas fa-info-circle"></i>
+                                <div><strong>AWS Best Practice — Define availability SLA first.</strong> Your SLA target determines the entire infrastructure pattern: redundancy, database topology, DR/BC strategy, and cost multiplier.</div>
+                            </div>
+                            <div class="tactic-row">
+                                <div class="tactic-label-group">
+                                    <label class="tactic-label">Availability SLA Target</label>
+                                    <span class="tactic-description">Each tier shows the recommended AWS architecture, DR &amp; BC classification, RTO/RPO estimates, and cost multiplier.</span>
+                                </div>
+                                <div class="tactic-input-group" style="min-width:230px;">
+                                    <select id="input-sla" style="width:230px;" onchange="recalculateAvailability()">
+                                        <option value="0">— No SLA target —</option>
+                                        <option value="99">99% — 3.5 days/yr downtime (DR)</option>
+                                        <option value="99.9">99.9% — 8.7 hrs/yr downtime (BC)</option>
+                                        <option value="99.99">99.99% — 52 min/yr downtime (BC+DR)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tactic-row" style="margin-top:6px;">
+                                <input type="checkbox" class="tactic-check" id="tactic-mission-critical" onchange="recalculateAvailability()">
+                                <div class="tactic-label-group">
+                                    <label class="tactic-label" for="tactic-mission-critical" style="color:var(--red);"><i class="fas fa-triangle-exclamation" style="margin-right:5px;"></i>Mission-critical service <span class="warning-badge badge-red">external connectivity options</span></label>
+                                    <span class="tactic-description">Check to reveal Direct Connect / VPC Peering / VPN connectivity disclaimers for external access.</span>
+                                </div>
+                            </div>
+                            <div id="availability-result" style="display:none;margin-top:12px;"></div>
+                        </div>
+                    </div>
+
+
+                    <!-- Scalability & Replica Sizing -->
+                    <div class="tactics-category">
+                        <div class="tactics-category-header" onclick="toggleCategory('scalability')">
+                            <span class="tactics-category-title"><span>⚖️</span> Scalability &amp; Replica Sizing</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-scalability"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-scalability">
+                            <div class="security-explainer" style="display:block;">
+                                <div class="explainer-title"><i class="fas fa-server"></i> Replica count formula</div>
+                                <p><strong>N = max( ⌈R / C_req⌉, ⌈(R×S_req) / C_in⌉, ⌈(R×S_res) / C_out⌉ )</strong></p>
+                                <p style="margin-top:6px;font-size:.78rem;color:var(--ink-light);">R = base RPS &nbsp;·&nbsp; S_req / S_res = proto bytes (backend-derived once uploaded) &nbsp;·&nbsp; C_req / C_in / C_out = per-replica capacity from EC2 instance type.</p>
+                            </div>
+                            <div class="tactic-row" style="margin-top:12px;">
+                                <div class="tactic-label-group"><label class="tactic-label">EC2 Instance Type</label><span class="tactic-description">Sets C_in and C_out from AWS network specs.</span></div>
+                                <div class="tactic-input-group" style="min-width:220px;">
+                                    <select id="input-ec2-instance" style="width:220px;">
+                                        <option value="">&#8212; Select instance &#8212;</option>
+                                        <optgroup label="General Purpose">
+                                            <option value="t3.micro|1000|62500000|62500000">t3.micro (2 vCPU / 1 GiB / 5 Gbps)</option>
+                                            <option value="t3.small|1500|62500000|62500000">t3.small (2 vCPU / 2 GiB / 5 Gbps)</option>
+                                            <option value="t3.medium|2500|62500000|62500000">t3.medium (2 vCPU / 4 GiB / 5 Gbps)</option>
+                                            <option value="m6i.large|5000|156250000|156250000">m6i.large (2 vCPU / 8 GiB / 12.5 Gbps)</option>
+                                            <option value="m6i.xlarge|10000|156250000|156250000">m6i.xlarge (4 vCPU / 16 GiB / 12.5 Gbps)</option>
+                                            <option value="m6i.2xlarge|20000|312500000|312500000">m6i.2xlarge (8 vCPU / 32 GiB / 25 Gbps)</option>
+                                            <option value="m6i.4xlarge|40000|625000000|625000000">m6i.4xlarge (16 vCPU / 64 GiB / 50 Gbps)</option>
+                                        </optgroup>
+                                        <optgroup label="Compute Optimised">
+                                            <option value="c6i.large|8000|156250000|156250000">c6i.large (2 vCPU / 4 GiB / 12.5 Gbps)</option>
+                                            <option value="c6i.xlarge|16000|156250000|156250000">c6i.xlarge (4 vCPU / 8 GiB / 12.5 Gbps)</option>
+                                            <option value="c6i.2xlarge|32000|312500000|312500000">c6i.2xlarge (8 vCPU / 16 GiB / 25 Gbps)</option>
+                                        </optgroup>
+                                        <optgroup label="Memory Optimised">
+                                            <option value="r6i.large|5000|156250000|156250000">r6i.large (2 vCPU / 16 GiB / 12.5 Gbps)</option>
+                                            <option value="r6i.xlarge|10000|156250000|156250000">r6i.xlarge (4 vCPU / 32 GiB / 12.5 Gbps)</option>
+                                        </optgroup>
+                                    </select>
+                                    <span class="tactic-unit">instance type</span>
+                                </div>
+                            </div>
+                            <div class="tactic-row">
+                                <div class="tactic-label-group"><label class="tactic-label" for="input-max-req-per-replica">C_req override (req/s per replica)</label><span class="tactic-description">Override if profiled. Leave blank to use instance default.</span></div>
+                                <div class="tactic-input-group"><input type="number" id="input-max-req-per-replica" min="1" placeholder="from instance"><span class="tactic-unit">req/s</span></div>
+                            </div>
+                            <div id="replica-result" style="display:none;margin-top:14px;padding:16px 18px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#FFFDF5);border:1px solid var(--gold-border);">
+                                <div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;"><i class="fas fa-layer-group" style="margin-right:6px;"></i>Replica Sizing Result</div>
+                                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;" id="replica-grid"></div>
+                                <div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(212,160,23,.3);">
+                                    <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;">Recommended minimum replicas</div>
+                                    <div style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--blue-deep);" id="replica-count-display">—</div>
+                                    <div style="font-size:.74rem;color:var(--ink-light);margin-top:3px;" id="replica-bottleneck">—</div>
+                                </div>
+                                <p style="font-size:.74rem;color:var(--ink-light);margin-top:8px;">S_req/S_res use placeholders (200B/1200B) until .proto uploaded.</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- ══════════ ALB & LOAD BALANCER COSTS ══════════════════════════════ -->
+                    <div class="tactics-category" id="cat-alb">
+                        <div class="tactics-category-header" onclick="toggleCategory('alb')">
+                            <span class="tactics-category-title"><span>⚡</span> ALB &amp; Load Balancer Costs <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-alb"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-alb">
+                            <div class="notice notice-blue" style="margin-bottom:12px;">
+                                <i class="fas fa-info-circle"></i>
+                                <div>If you selected <strong>Client-side or Server-side Load Balancing</strong> above, an Application Load Balancer is likely part of your architecture. ALB costs have two components: a fixed hourly charge per ALB, and a Load Capacity Unit (LCU) charge based on traffic volume.</div>
+                            </div>
+                            <div id="alb-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching ALB pricing from AWS…</div>
+                            <div id="alb-content" style="display:none;">
+                                <div class="tactic-row">
+                                    <input type="checkbox" class="tactic-check" id="tactic-alb">
+                                    <div class="tactic-label-group">
+                                        <label class="tactic-label" for="tactic-alb">Include ALB in TCO estimate <span class="warning-badge badge-red">+ cost</span></label>
+                                        <span class="tactic-description" id="alb-price-desc">Loading…</span>
+                                    </div>
+                                </div>
+                                <div id="alb-params" style="display:none;padding-left:28px;border-left:3px solid var(--gold-border);margin:4px 0 8px;">
+                                    <div class="tactic-row">
+                                        <div class="tactic-label-group"><label class="tactic-label" for="input-alb-count">Number of ALBs</label><span class="tactic-description">Each ALB incurs a fixed monthly charge.</span></div>
+                                        <div class="tactic-input-group"><input type="number" id="input-alb-count" min="1" placeholder="1"><span class="tactic-unit">ALBs</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <div class="tactic-label-group"><label class="tactic-label" for="input-alb-lcu">Estimated LCUs per hour</label><span class="tactic-description">1 LCU = 25 new connections/s OR 3,000 active connections OR 1 GB/hr processed OR 1,000 rule evaluations/s. Use the max of these dimensions.</span></div>
+                                        <div class="tactic-input-group"><input type="number" id="input-alb-lcu" min="0" placeholder="5"><span class="tactic-unit">LCUs/hr</span></div>
+                                    </div>
+                                    <div id="alb-result" class="live-preview visible" style="display:block;margin-top:8px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ DATABASE BACKUP & RECOVERY ═════════════════════════════ -->
+                    <div class="tactics-category" id="cat-dbbackup">
+                        <div class="tactics-category-header" onclick="toggleCategory('dbbackup')">
+                            <span class="tactics-category-title"><span>🗃️</span> Database Backup &amp; Recovery <span class="warning-badge badge-dr" style="font-size:.62rem;">DR</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-dbbackup"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-dbbackup">
+                            <div id="dbbackup-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching DB backup pricing from AWS…</div>
+                            <div id="dbbackup-content" style="display:none;">
+                                <div class="tactic-row">
+                                    <div class="tactic-label-group"><label class="tactic-label">Database engine</label><span class="tactic-description">Select the database that backs this microservice to see relevant backup / DR options.</span></div>
+                                    <div class="tactic-input-group" style="min-width:200px;">
+                                        <select id="input-db-engine" style="width:200px;">
+                                            <option value="">— Select engine —</option>
+                                            <option value="rds-mysql">RDS MySQL / PostgreSQL</option>
+                                            <option value="aurora">Aurora (MySQL / PostgreSQL)</option>
+                                            <option value="dynamodb">DynamoDB</option>
+                                            <option value="none">No persistent database</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="db-options" style="margin-top:8px;"></div>
+                                <div id="dbbackup-result" class="live-preview" style="margin-top:10px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ CLOUD SECURITY SERVICES ════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-cloudsec">
+                        <div class="tactics-category-header" onclick="toggleCategory('cloudsec')">
+                            <span class="tactics-category-title"><span>🛡️</span> Cloud Security Services <span class="warning-badge badge-dr" style="font-size:.62rem;">DR</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-cloudsec"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-cloudsec">
+                            <div id="cloudsec-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching security service pricing from AWS…</div>
+                            <div id="cloudsec-content" style="display:none;"></div>
+                            <div id="cloudsec-total" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid var(--green-border);font-size:.88rem;color:var(--green);"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ HIGH-PERFORMANCE CACHING ════════════════════════════════ -->
+                    <div class="tactics-category" id="cat-caching">
+                        <div class="tactics-category-header" onclick="toggleCategory('caching')">
+                            <span class="tactics-category-title"><span>⚡</span> High-Performance Caching <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-caching"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-caching">
+                            <div id="caching-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching ElastiCache pricing from AWS…</div>
+                            <div id="caching-content" style="display:none;"></div>
+                            <div id="caching-result" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;font-size:.88rem;color:var(--blue-deep);"></div>
+                        </div>
+                    </div>
+                    <!-- ══ API GATEWAY ══ -->
+                    <div class="tactics-category" id="cat-apigw">
+                        <div class="tactics-category-header" onclick="toggleCategory('apigw')">
+                            <span class="tactics-category-title"><span>🌐</span> API Gateway <span class="warning-badge badge-warn" style="font-size:.62rem;">Cloud Infra</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-apigw"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-apigw">
+                            <div id="apigw-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching API Gateway pricing from AWS…</div>
+                            <div id="apigw-content" style="display:none;">
+                                <div class="tactic-row" id="row-tactic-apigw">
+                                    <input type="checkbox" class="tactic-check" id="tactic-apigw">
+                                    <div class="tactic-label-group">
+                                        <label class="tactic-label" for="tactic-apigw">
+                                            <i class="fas fa-network-wired" style="margin-right:5px;width:16px;"></i>Amazon API Gateway
+                                            <span class="warning-badge badge-red">+ cost</span>
+                                        </label>
+                                        <span class="tactic-description">Managed API front door for REST/HTTP/WebSocket APIs. Charged per million calls, plus optional caching.</span>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-left:30px;">
+                                    <div class="tactic-input-group">
+                                        <label style="font-size:.78rem;color:var(--ink-light);display:block;margin-bottom:3px;">API type</label>
+                                        <select id="input-apigw-type" onchange="recalculateApiGw()">
+                                            <option value="rest">REST API</option>
+                                            <option value="http">HTTP API</option>
+                                            <option value="websocket">WebSocket API</option>
+                                        </select>
+                                    </div>
+                                    <div class="tactic-input-group">
+                                        <label style="font-size:.78rem;color:var(--ink-light);display:block;margin-bottom:3px;">Calls / month (millions)</label>
+                                        <input type="number" id="input-apigw-calls-per-month" min="0" step="0.1" placeholder="0" oninput="recalculateApiGw()">
+                                    </div>
+                                    <div class="tactic-input-group">
+                                        <label style="font-size:.78rem;color:var(--ink-light);display:block;margin-bottom:3px;">Cache size (GB, optional)</label>
+                                        <input type="number" id="input-apigw-cache" min="0" placeholder="0" oninput="recalculateApiGw()">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="apigw-result" style="display:none;margin-top:10px;padding:12px 16px;border-radius:var(--r);background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fdba74;font-size:.88rem;color:#9a3412;"></div>
+                        </div>
+                    </div>
+                    <!-- ══ CONTAINERIZED ENVIRONMENT FACTORS ══ -->
+                    <div class="tactics-category" id="cat-container">
+                        <div class="tactics-category-header" onclick="toggleCategory('container')">
+            <span class="tactics-category-title"><span>&#x1F433;</span> Containerized Environment Factors
+            <span class="warning-badge badge-warn" style="font-size:.62rem;margin-left:5px;">Cost Factors</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-container"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-container">
+                            <div class="notice notice-blue" style="margin-bottom:12px;"><i class="fas fa-info-circle"></i>
+                                <div><strong>Containerized workloads add layered cost dimensions</strong> beyond raw compute. Select applicable factors to account for cluster overhead, application patterns, and licensing in your TCO.</div></div>
+
+
+                            <div class="tactics-category" id="cat-cluster-assets">
+                                <div class="tactics-category-header" onclick="toggleCategory('cluster-assets')">
+                                    <span class="tactics-category-title"><span>&#x1F5A5;&#xFE0F;</span> Cluster Architecture &mdash; Cluster Asset Costs <span class="warning-badge badge-bc" style="font-size:.62rem;margin-left:4px;">BC</span></span>
+                                    <i class="fas fa-chevron-down tactics-chevron" id="chevron-cluster-assets"></i>
+                                </div>
+                                <div class="tactics-category-body" id="body-cluster-assets">
+                                    <div class="notice notice-gold" style="margin-bottom:10px;"><i class="fas fa-coins"></i><div><strong>Direct cost assets</strong> &mdash; billable units that map to AWS charges or sizing decisions that directly affect cost.</div></div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-pods" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-pods">Pods</label>
+                                            <span class="tactic-description">Smallest deployable unit. Sizing pod requests/limits prevents over-provisioning. Mis-sized pods are the top source of container cost inefficiency.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-pods" min="0" step="1" placeholder="20" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">pods</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-clusters" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-clusters">Clusters</label>
+                                            <span class="tactic-description">Each EKS cluster: fixed ~$0.10/hr (~$73/mo) control plane. Consolidate clusters to amortise this cost floor.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-clusters" min="0" step="1" placeholder="1" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">clusters</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-namespaces" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-namespaces">Namespaces</label>
+                                            <span class="tactic-description">Logical isolation within a cluster. Namespace resource quotas enforce cost guardrails and prevent runaway consumption.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-namespaces" min="0" step="1" placeholder="3" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">namespaces</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-k8sservices" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-k8sservices">Services (K8s)</label>
+                                            <span class="tactic-description">LoadBalancer-type Services provision one ALB per service by default. Consolidate via Ingress objects to avoid unintended ELB charges.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-k8s-services" min="0" step="1" placeholder="5" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">services</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-spot" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <!-- ACTIVITY 5 BANNER -->
+                                        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#F0FDF4;border:2px solid #86EFAC;">
+                                            <div style="min-width:34px;height:34px;border-radius:50%;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A5</div>
+                                            <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#166534;margin-bottom:3px"><i class="fas fa-tags" style="margin-right:6px"></i><strong>Activity 5:</strong> Define Cost Optimisation Strategies — Rate / Utilisation</div>
+                                                <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select Reserved Instance (RI) or Compute Savings Plan (SP) commitment strategies. Live rates are fetched from the AWS Price List Bulk API for your chosen instance type. Choose the strategy that best balances commitment term against flexibility.</div></div></div>
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-spot">Spot Instances <span class="warning-badge badge-warn" style="font-size:.62rem;">Non-prod</span></label>
+                                            <span class="tactic-description">Up to 90% savings vs on-demand. Ideal for dev/test/staging. Requires interruption-tolerant workloads.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><select id="input-spot-pct" onchange="recalculateContainerCost()" style="width:155px;"><option value="0">&mdash; None &mdash;</option><option value="50">~50% saving</option><option value="70">~70% saving</option><option value="90">~90% saving</option></select><span class="tactic-unit">vs on-demand</span></div>
+                                    </div>
+                                    <!-- RI/SP discounts moved to FinOps Cost Optimisation section below -->
+                                    <div class="notice notice-gold" style="margin:6px 0 10px;"><i class="fas fa-tags"></i>
+                                        <div style="font-size:.78rem;">Reserved Instances &amp; Savings Plans apply to this cluster's EC2/Fargate compute costs. Configure them in the <strong>FinOps Cloud Cost Optimisation</strong> accordion below — enter the cluster's on-demand spend as your baseline.</div></div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-req-cpu" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-req-cpu">Responsible CPU Limits per Container</label>
+                                            <span class="tactic-description">Prevents CPU throttling and node over-subscription. Proper limits improve bin-packing efficiency and reduce required node count.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-cpu-limit" min="0" step="100" placeholder="500 m" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">millicores</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-req-ram" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-req-ram">Responsible RAM Limits per Container</label>
+                                            <span class="tactic-description">Prevents OOMKill and memory hoarding. Right-sizing memory reduces required node count and direct cost.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-ram-limit" min="0" step="64" placeholder="256 MiB" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">MiB</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-req-io" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-req-io">Responsible I/O Limits per Container</label>
+                                            <span class="tactic-description">Disk and network I/O limits prevent EBS IOPS overage charges and latency spikes for all pods on the node.</span>
+                                        </div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-req-vol" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-req-vol">Responsible Volumes Limits per Container</label>
+                                            <span class="tactic-description">AWS charges for provisioned EBS capacity, not used capacity. Right-size PVCs to actual data needs to avoid waste.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-vol-limit" min="0" step="1" placeholder="20 GiB" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">GiB/container</span></div>
+                                    </div>
+                                    <div id="container-assets-result" style="display:none;margin-top:10px;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tactics-category" id="cat-cluster-overhead">
+                                <div class="tactics-category-header" onclick="toggleCategory('cluster-overhead')">
+                                    <span class="tactics-category-title"><span>&#x2699;&#xFE0F;</span> Cluster Architecture &mdash; Cluster Overhead Costs <span class="warning-badge badge-dr" style="font-size:.62rem;margin-left:4px;">DR</span></span>
+                                    <i class="fas fa-chevron-down tactics-chevron" id="chevron-cluster-overhead"></i>
+                                </div>
+                                <div class="tactics-category-body" id="body-cluster-overhead">
+                                    <div class="notice notice-red" style="margin-bottom:10px;"><i class="fas fa-triangle-exclamation"></i><div><strong>Hidden overhead costs</strong> &mdash; often omitted but represent 20&ndash;40% of total cluster spend. Always include these in TCO.</div></div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-control-plane" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-control-plane">Control Planes (EKS)</label>
+                                            <span class="tactic-description">AWS charges ~$0.10/hr (~$73/mo) per EKS cluster regardless of workload size. For small workloads this can dominate TCO.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-control-planes" min="0" step="1" placeholder="1" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">control planes</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-scheduler" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-scheduler">Scheduler</label>
+                                            <span class="tactic-description">Managed in EKS. Custom schedulers (Volcano, Yunikorn) run as pods consuming node CPU/RAM &mdash; document their resource footprint.</span>
+                                        </div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-api-server" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-api-server">API Server</label>
+                                            <span class="tactic-description">Managed in EKS. High API call rates (CI/CD, frequent deployments) cause throttling. Design for API call efficiency.</span>
+                                        </div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-controller-mgr" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-controller-mgr">Controller Manager</label>
+                                            <span class="tactic-description">Custom controllers (operators) run as pods. Document all operators deployed to account for their CPU/RAM footprint.</span>
+                                        </div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-cluster-waf" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-cluster-waf">WAF (Cluster-level)</label>
+                                            <span class="tactic-description">$5/mo per WebACL + $1/mo per rule + $0.60/million req. Essential for internet-exposed container workloads (DR/security).</span>
+                                        </div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-cluster-lb" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-cluster-lb">Load Balancers (Cluster)</label>
+                                            <span class="tactic-description">Each LoadBalancer-type Service creates an ALB (~$16.43/mo). Consolidate via Ingress objects: one ALB, multiple path rules.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-cluster-lbs" min="0" step="1" placeholder="2" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">load balancers</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-host-storage" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-host-storage">Host OS Storage</label>
+                                            <span class="tactic-description">EBS root volumes on each EC2 node (20&ndash;100 GB typical). Scales with cluster size and is often overlooked in TCO.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-host-storage-gb" min="0" step="10" placeholder="30 GB/node" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">GB/node</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-cluster-backup" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-cluster-backup">Cluster Backup Storage (Velero / AWS Backup)</label>
+                                            <span class="tactic-description">S3 backup for PVs at $0.023/GB-mo. Essential for stateful workloads DR. EBS snapshot charges also apply.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-cluster-backup-gb" min="0" step="10" placeholder="50" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">GB backup</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-host-license" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-host-license">Host OS License</label>
+                                            <span class="tactic-description">Amazon Linux free. Windows Server or RHEL add $0.046&ndash;$0.12/hr per node &mdash; compounds significantly for large clusters.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><select id="input-host-os" onchange="recalculateContainerCost()" style="width:155px;"><option value="0">Amazon Linux (free)</option><option value="0.046">Windows Server (~$0.046/hr)</option><option value="0.12">RHEL (~$0.12/hr)</option></select><span class="tactic-unit">$/hr/node</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-workload-license" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-workload-license">Container Workload License Fees</label>
+                                            <span class="tactic-description">Commercial software fees not included in AWS pricing (Oracle DB, IBM MQ, TIBCO). Must be explicitly captured in TCO.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-workload-license-cost" min="0" step="10" placeholder="$/mo" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">$/month</span></div>
+                                    </div>
+                                    <div id="container-overhead-result" style="display:none;margin-top:10px;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tactics-category" id="cat-container-arch">
+                                <div class="tactics-category-header" onclick="toggleCategory('container-arch')">
+                                    <span class="tactics-category-title"><span>&#x1F3D7;&#xFE0F;</span> Container Architecture </span>
+                                    <i class="fas fa-chevron-down tactics-chevron" id="chevron-container-arch"></i>
+                                </div>
+                                <div class="tactics-category-body" id="body-container-arch">
+                                    <div class="notice notice-blue" style="margin-bottom:10px;"><i class="fas fa-info-circle"></i><div><strong>Architectural classification</strong> &mdash; document the container architecture type for TCO reporting and correct cost model selection.</div></div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-categorization" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-categorization">Categorization</label>
+                                            <span class="tactic-description">Stateless, stateful, or batch determines which cost model applies (Fargate per-second vs EC2 node vs Spot).</span>
+                                        </div>
+                                        <div class="tactic-input-group"><select id="input-container-category" onchange="recalculateContainerCost()" style="width:155px;"><option value="">&mdash; Select &mdash;</option><option value="stateless">Stateless</option><option value="stateful">Stateful</option><option value="batch">Batch</option><option value="event-driven">Event-driven</option></select></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-arch-type" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-arch-type">Architecture</label>
+                                            <span class="tactic-description">Service mesh adds sidecar proxies consuming ~50&ndash;200 MB RAM, 10&ndash;100m CPU per pod. Account for this in node sizing.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><select id="input-arch-type" onchange="recalculateContainerCost()" style="width:155px;"><option value="">&mdash; Select &mdash;</option><option value="microservices">Microservices</option><option value="monolith">Monolith-in-container</option><option value="service-mesh">Service Mesh (Istio/Linkerd)</option><option value="serverless">Serverless (Fargate)</option></select></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-underlying-resources" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-underlying-resources">Underlying Resources</label>
+                                            <span class="tactic-description">Graviton (ARM) offers 20&ndash;40% better price/performance. Fargate eliminates node management but charges per vCPU-sec/GB-sec.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><select id="input-underlying-resource" onchange="recalculateContainerCost()" style="width:155px;"><option value="">&mdash; Select &mdash;</option><option value="ec2-x86">EC2 (x86)</option><option value="ec2-graviton">EC2 Graviton (20&ndash;40% cheaper)</option><option value="fargate">Fargate (serverless)</option><option value="fargate-spot">Fargate Spot (up to 70% off)</option><option value="gpu">GPU instances</option></select></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-orchestration" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-orchestration">Orchestration Type</label>
+                                            <span class="tactic-description">EKS: $0.10/hr control plane. ECS: no control plane fee. For simple workloads ECS reduces overhead cost.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><select id="input-orchestration" onchange="recalculateContainerCost()" style="width:155px;"><option value="">&mdash; Select &mdash;</option><option value="eks">Amazon EKS ($0.10/hr control plane)</option><option value="ecs">Amazon ECS (no control plane fee)</option><option value="ecs-fargate">ECS on Fargate</option></select></div>
+                                    </div>
+                                    <div id="container-arch-result" style="display:none;margin-top:10px;"></div>
+                                </div>
+                            </div>
+
+                            <div class="tactics-category" id="cat-app-design">
+                                <div class="tactics-category-header" onclick="toggleCategory('app-design')">
+                                    <span class="tactics-category-title"><span>&#x1F4E6;</span> Application Design and Build </span>
+                                    <i class="fas fa-chevron-down tactics-chevron" id="chevron-app-design"></i>
+                                </div>
+                                <div class="tactics-category-body" id="body-app-design">
+                                    <div class="notice notice-green" style="margin-bottom:10px;"><i class="fas fa-code-branch"></i><div><strong>Application-level patterns</strong> &mdash; Kubernetes workload types with distinct cost and availability characteristics. Select all that apply.</div></div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-deployments" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-deployments">Deployments</label>
+                                            <span class="tactic-description">Rolling updates cause temporary 2&times; pod count. Surge settings should account for short-term node capacity spikes during CI/CD.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-deployments" min="0" step="1" placeholder="2" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">deployments</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-replicasets" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-replicasets">ReplicaSets</label>
+                                            <span class="tactic-description">Each replica consumes CPU/RAM. Replica count directly drives node count and cost. Document HPA rules alongside replica counts.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-replicasets" min="0" step="1" placeholder="3" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">replicas</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-statefulsets" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-statefulsets">StatefulSets</label>
+                                            <span class="tactic-description">Each replica creates its own PVC. 3 replicas &times; 50 GB = 150 GB provisioned EBS at $0.10/GB-mo = $15/mo storage overhead.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-statefulsets" min="0" step="1" placeholder="1" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">replicas</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-daemonsets" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-daemonsets">DaemonSets</label>
+                                            <span class="tactic-description">Runs on every node. A 100m CPU / 64 MiB DaemonSet across 20 nodes permanently reserves 2 vCPU + 1.25 GiB cluster-wide.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-daemonsets" min="0" step="1" placeholder="2" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">DaemonSets</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-cronjobs" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-cronjobs">CronJobs</label>
+                                            <span class="tactic-description">On Fargate: billed per-second. On EC2: may trigger scale-out events. Schedule off-peak and use Spot to minimise burst cost.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-cronjobs" min="0" step="1" placeholder="3" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">CronJobs</span></div>
+                                    </div>
+                                    <div class="tactic-row" id="row-cronjob-duration" style="display:none;">
+                                        <div style="width:28px;"></div>
+                                        <div class="tactic-label-group"><label class="tactic-label" for="input-cronjob-duration-min">Avg. CronJob duration</label><span class="tactic-description">Average execution duration &mdash; affects Fargate per-second billing.</span></div>
+                                        <div class="tactic-input-group"><input type="number" id="input-cronjob-duration-min" min="0" step="1" placeholder="15 min" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">minutes</span></div>
+                                    </div>
+                                    <div class="tactic-row" id="row-cronjob-freq" style="display:none;">
+                                        <div style="width:28px;"></div>
+                                        <div class="tactic-label-group"><label class="tactic-label" for="input-cronjob-freq">CronJob executions per day</label><span class="tactic-description">How many times each job runs per day (monthly projection).</span></div>
+                                        <div class="tactic-input-group"><input type="number" id="input-cronjob-freq" min="0" step="1" placeholder="4" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">runs/day</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-sidecar" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-sidecar">Sidecar Pattern</label>
+                                            <span class="tactic-description">Each sidecar adds CPU/RAM per pod. Envoy in a service mesh is a sidecar. 200m CPU / 128 MiB &times; 50 pods = 10 vCPU + 6.25 GiB extra footprint.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-sidecars" min="0" step="1" placeholder="1" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">sidecars/pod</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-init-containers" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-init-containers">Init Containers</label>
+                                            <span class="tactic-description">On Fargate: billed for entire run duration. Long init containers (large artefact downloads) add Fargate compute cost per pod restart.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-init-duration" min="0" step="5" placeholder="30 sec" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">avg seconds</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-adapter" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-adapter">Adapter Pattern</label>
+                                            <span class="tactic-description">Normalises container output (log/metrics format). Cost scales with throughput volume. Measure sidecar CPU utilisation for high-throughput services.</span>
+                                        </div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-ambassador-retry" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-ambassador-retry">Ambassador Pattern &mdash; Retries</label>
+                                            <span class="tactic-description">Sidecar proxy handles retries, amplifying RPS. Combine with Retry tactic error rate above to understand compounded egress cost.</span>
+                                        </div>
+                                        <div class="tactic-input-group"><input type="number" id="input-ambassador-retry-pct" min="0" step="1" placeholder="% retried" oninput="recalculateContainerCost()" style="width:90px;"><span class="tactic-unit">% retry rate</span></div>
+                                    </div>
+                                    <div class="tactic-row">
+                                        <input type="checkbox" class="tactic-check" id="cef-ambassador-tls" onchange="updateCloudTacticsBadge();recalculateContainerCost();">
+                                        <div class="tactic-label-group">
+                                            <label class="tactic-label" for="cef-ambassador-tls">Ambassador Pattern &mdash; TLS</label>
+                                            <span class="tactic-description">TLS termination in a sidecar requires CPU for cryptographic operations. High RPS requires larger CPU limits or more replicas &mdash; both increase cost.</span>
+                                        </div>
+                                    </div>
+                                    <div id="container-app-result" style="display:none;margin-top:10px;"></div>
+                                </div>
+                            </div>
+                            <div id="container-overall-result" style="display:none;margin-top:14px;padding:14px 18px;border-radius:var(--r);background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #7dd3fc;font-size:.88rem;color:#0c4a6e;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ COST OPTIMISATION ══════════════════════════════════════ -->
+
+                    <!-- ACTIVITY 5 BANNER -->
+                    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#F0FDF4;border:2px solid #86EFAC;">
+                        <div style="min-width:34px;height:34px;border-radius:50%;background:#166534;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A5</div>
+                        <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#166534;margin-bottom:3px"><i class="fas fa-tags" style="margin-right:6px"></i><strong>Activity 5:</strong> Define Cost Optimisation Strategies — Rate / Utilisation</div>
+                            <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Select Reserved Instance (RI) or Compute Savings Plan (SP) commitment strategies. Live rates are fetched from the AWS Price List Bulk API for your chosen instance type. Choose the strategy that best balances commitment term against flexibility.</div></div></div>
+                    <div class="tactics-category" id="cat-costopt">
+                        <div class="tactics-category-header" onclick="toggleCategory('costopt')">
+                            <span class="tactics-category-title"><span>💰</span> FinOps Cost Optimisation <span class="warning-badge badge-bc" style="font-size:.62rem;">BC</span></span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-costopt"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-costopt">
+                            <div id="costopt-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching cost optimisation data from AWS…</div>
+
+                            <!-- ACTIVITY 6 BANNER -->
+                            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#FAF5FF;border:2px solid #A78BFA;">
+                                <div style="min-width:34px;height:34px;border-radius:50%;background:#7C3AED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A6</div>
+                                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#7C3AED;margin-bottom:3px"><i class="fas fa-pen-to-square" style="margin-right:6px"></i><strong>Activity 6:</strong> Modify Cloud Service Configuration Aligned with Optimisation Strategies</div>
+                                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Adjust replica count, instance type, Spot percentage, or node count to align with your commitment strategy. The live cost delta recalculates automatically — compare on-demand vs reserved/spot before committing.</div></div></div>
+                            <div id="costopt-content" style="display:none;"></div>
+                            <div id="costopt-result" style="display:none;margin-top:10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ══════════ FINOPS ARCHITECTURE NOTES ═══════════════════════════════ -->
+                    <div class="tactics-category" id="cat-finops-notes">
+                        <div class="tactics-category-header" onclick="toggleCategory('finops-notes')">
+                            <span class="tactics-category-title"><span>📐</span> FinOps Architecture Notes &amp; Disclaimers</span>
+                            <i class="fas fa-chevron-down tactics-chevron" id="chevron-finops-notes"></i>
+                        </div>
+                        <div class="tactics-category-body" id="body-finops-notes">
+                            <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0;">
+                                <div class="notice notice-gold"><i class="fas fa-network-wired"></i><div>
+                                    <strong>1 &mdash; IP Address Planning (CIDR Sizing)</strong><br>
+                                    <span style="font-size:.82rem;">The more redundancy you build into AWS (Multi-AZ, replicas, NAT Gateways, ENIs), the more private IP addresses are consumed. Plan your VPC CIDR block generously (e.g. /16 = 65,536 IPs) and <strong>leave enough address space within each subnet CIDR for auto-scaling headroom</strong>. A /24 subnet provides only 251 usable IPs &mdash; this can be exhausted quickly in a multi-tier, auto-scaled architecture.</span>
+                                </div></div>
+                                <div class="notice notice-blue"><i class="fas fa-layer-group"></i><div>
+                                    <strong>2 &mdash; Multi-Tier Architecture in AWS Terms</strong><br>
+                                    <span style="font-size:.82rem;">If you separate your MACH Architecture components (frontend, API gateway, gRPC services, databases) into <strong>different subnets</strong>, AWS classifies this as a <strong>multi-tier architecture</strong>. Each tier should reside in dedicated subnets with its own Security Groups and NACLs. This is the AWS recommended pattern for defence in depth and least-privilege network access.</span>
+                                </div></div>
+                                <div class="notice notice-green"><i class="fas fa-sitemap"></i><div>
+                                    <strong>3 &mdash; Connectivity Architecture</strong><br>
+                                    <span style="font-size:.82rem;">When using multiple AWS services in separate subnets, consider: <strong>VPC Endpoints</strong> (PrivateLink) to access AWS services privately without internet routing; <strong>Transit Gateway</strong> for connecting multiple VPCs; <strong>VPC Flow Logs</strong> for network traffic monitoring. Each component in a separate subnet requires route table entries to communicate.</span>
+                                </div></div>
+                                <div class="notice notice-red" id="finops-mission-critical-note" style="display:none;"><i class="fas fa-satellite-dish"></i><div>
+                                    <strong>4 &mdash; Mission-Critical External Connectivity Options</strong><br>
+                                    <span style="font-size:.82rem;">Since this service is marked as <strong>mission-critical</strong>, evaluate these AWS external connectivity options:<br>
+                    &bull; <strong>AWS Direct Connect</strong> &mdash; dedicated private fibre to AWS (1&ndash;100 Gbps). Eliminates internet variability. Best for latency-sensitive gRPC.<br>
+                    &bull; <strong>VPC Peering</strong> &mdash; private routing between VPCs (same or cross-account/region). No NAT, no internet gateway.<br>
+                    &bull; <strong>AWS Site-to-Site VPN</strong> &mdash; encrypted IPSec over internet. Lower cost than Direct Connect.<br>
+                    <em>Evaluate based on latency, bandwidth, budget, and compliance requirements.</em></span>
+                                </div></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Live RPS summary -->
+        <div class="rps-summary-bar" id="rps-impact-summary">
+            <div>Estimated effective RPS: <span class="rps-total" id="rps-adjusted-display">—</span></div>
+            <div class="rps-breakdown-text" id="rps-breakdown-text"></div>
+        </div>
+
+        <!-- Live comparison vs base -->
+        <div class="comparison-block" id="tactics-comparison-block">
+            <div class="comparison-title">
+                <i class="fas fa-scale-balanced"></i> Live Cost Delta vs Base RPS
+                <span class="spinner cmp-spinner" style="display:none; margin-left:8px;"></span>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="comparison-col base">
+                    <div class="comparison-col-label">Base Cost (no tactics)</div>
+                    <div class="comparison-col-value" id="cmp-base-cost">—</div>
+                    <div style="font-size:.72rem;color:var(--ink-light);margin-top:3px;" id="cmp-base-rps">—</div>
+                </div>
+                <div class="comparison-col tactics">
+                    <div class="comparison-col-label">With Current Tactics</div>
+                    <div class="comparison-col-value" id="cmp-tactics-cost">—</div>
+                    <div style="font-size:.72rem;color:var(--ink-light);margin-top:3px;" id="cmp-tactics-rps">—</div>
+                </div>
+            </div>
+
+            <!-- Per-tactic itemised breakdown -->
+            <div class="tbd-section">
+                <div class="tbd-section-label">
+                    <i class="fas fa-list-check"></i> Total Cost of Change (TCC) contribution per selected tactic
+                </div>
+                <div id="cmp-tactic-breakdown" style="display:none;"></div>
+            </div>
+
+            <div class="comparison-delta" id="cmp-delta-row">
+                <span>Total monthly cost increase from tactics</span>
+                <span class="delta-mono" id="cmp-delta-val">—</span>
+                <div id="cmp-delta-breakdown" style="font-size:.72rem;color:var(--ink-light);margin-top:3px;font-family:monospace;"></div>
+            </div>
+            <div style="font-size:.74rem;color:var(--ink-light);margin-top:6px;" id="cmp-source-note">
+                * Estimated using proto payload size placeholder (200 B req / 1,200 B resp).
+                Upload your .proto for exact backend-calculated figures.
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:20px;">
+
+            <!-- ACTIVITY 4 BANNER -->
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#DBEAFE;border:2px solid #2563EB;">
+                <div style="min-width:34px;height:34px;border-radius:50%;background:#1A3A5C;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A4</div>
+                <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#1A3A5C;margin-bottom:3px"><i class="fas fa-calculator" style="margin-right:6px"></i><strong>Activity 4:</strong> Calculate the Base TCO Costs</div>
+                    <div style="font-size:.76rem;color:#3D4451;line-height:1.5">Submit your .proto IDL to the backend. Spring Boot compiles the proto, derives exact serialised request/response byte sizes, applies tactic overhead (TLS, JWT), computes AWS egress cost against all cloud infrastructure selected above, and generates the full Phase 4 TCO report.</div></div></div>
+            <button class="btn btn-ghost" id="btn-phase3-back"><i class="fas fa-arrow-left"></i> Back</button>
+            <button class="btn btn-primary" id="phase3CalcBtn">
+                <i class="fas fa-calculator"></i> Calculate TCO
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div class="loading-bar-wrapper" id="loadingBar" style="margin-top:16px;">
+    <div class="loading-bar-label"><span class="spinner"></span> Uploading and calculating, please wait…</div>
+    <div class="loading-bar-track"><div class="loading-bar-fill"></div></div>
+</div>
+
+<!-- Hidden form that submits to backend — input populated from phase 2 file picker -->
+<form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data" style="display:none;">
+    <input type="file" id="protoFile" name="protoFile" accept=".proto">
+</form>
+
+<!-- Server messages (Thymeleaf) -->
+<div id="serverUploadMessage" th:if="${uploadMessage != null}" style="display:none; margin-top:16px;"
+     th:class="'message ' + ${uploadMessage.contains('successfully') ? 'msg-success' : 'msg-error'}">
+    <i class="fas msg-icon" th:classappend="${uploadMessage.contains('successfully') ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+    <p th:text="${uploadMessage}"></p>
+</div>
+
+<!-- ═══ PHASE 4 — TCO Results (was Phase 5) ═══ -->
+
+
+<!-- ACTIVITY 7 BANNER -->
+<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;margin:16px 0 8px;border-radius:10px;background:#FEF2F2;border:2px solid #FCA5A5;">
+    <div style="min-width:34px;height:34px;border-radius:50%;background:#991B1B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:800;flex-shrink:0">A7</div>
+    <div><div style="font-family:'DM Serif Display',serif;font-size:.95rem;color:#991B1B;margin-bottom:3px"><i class="fas fa-chart-bar" style="margin-right:6px"></i><strong>Activity 7:</strong> Calculate the TCO Cost Considering Optimisation Strategies</div>
+        <div style="font-size:.76rem;color:#3D4451;line-height:1.5">The Phase 4 report reflects the full optimised TCO: networking egress + cloud infrastructure − FinOps RI/SP savings. Unit economics, ARPU, ROI, break-even users, and the stakeholder PDF report are all generated here.</div></div></div>
+<div id="serverResultsSection" th:if="${error != null || requestSize != null}" class="card results-section hidden">
+    <div class="card-header">
+        <div class="card-header-icon icon-gold"><i class="fas fa-chart-bar"></i></div>
+        <div class="card-header-text">
+            <h2>Phase 4 — TCO Networking Costs Report</h2>
+            <p>Full cost breakdown including architecture tactics, unit economics, and stakeholder summary.</p>
+        </div>
+    </div>
+
+    <!-- Error -->
+    <div th:if="${error != null}" class="message msg-error" style="margin-top:0;">
+        <i class="fas fa-exclamation-circle msg-icon"></i>
+        <p th:text="${error}"></p>
+    </div>
+
+    <!-- Results body -->
+    <div th:if="${requestSize != null}">
+
+        <!-- Service identity summary — populated by JS from phase 1 inputs -->
+        <div id="reportServiceSummary" style="margin-bottom:20px;"></div>
+
+        <!-- Tactics summary section -->
+        <div class="tactics-summary-section" th:if="${hasTactics}">
+            <div class="tactics-summary-title"><i class="fas fa-layer-group"></i> Applied Architecture Tactics &amp; Patterns</div>
+            <div th:if="${not #lists.isEmpty(infoTactics)}">
+                <div class="tactics-group-label">ℹ️ Informational — No RPS Impact</div>
+                <table class="tactics-summary-table">
+                    <thead><tr><th>Tactic</th><th>Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
+                    <tbody>
+                    <tr th:each="tactic : ${infoTactics}">
+                        <td class="tactic-name-cell" th:text="${tactic['name']}"></td>
+                        <td class="tactic-value-cell" th:text="${tactic['value']}"></td>
+                        <td class="tactic-desc-cell"  th:text="${tactic['description']}"></td>
+                        <td class="tactic-impact-cell"><span class="no-impact-badge">None</span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:if="${not #lists.isEmpty(rpsTactics)}">
+                <div class="tactics-group-label">⚠️ RPS-Impacting — Increases Networking Costs</div>
+                <table class="tactics-summary-table">
+                    <thead><tr><th>Tactic</th><th>Value</th><th>Description</th><th class="col-impact">RPS Impact</th></tr></thead>
+                    <tbody>
+                    <tr th:each="tactic : ${rpsTactics}">
+                        <td class="tactic-name-cell"   th:text="${tactic['name']}"></td>
+                        <td class="tactic-value-cell"  th:text="${tactic['value']}"></td>
+                        <td class="tactic-desc-cell"   th:text="${tactic['description']}"></td>
+                        <td class="tactic-impact-cell" th:text="${tactic['rpsImpact']}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="rps-adjustment-banner" th:if="${rpsWasAdjusted}">
+                <i class="fas fa-chart-line banner-icon"></i>
+                <div>
+                    <div class="banner-title">RPS Adjusted by Active Tactics</div>
+                    <div class="banner-values">
+                        <div class="rps-val"><span class="rps-val-label">Base RPS</span><span class="rps-val-number" th:text="${baseRps}"></span></div>
+                        <div class="rps-val"><span class="rps-val-label">Effective RPS</span><span class="rps-val-number increased" th:text="${effectiveRps}"></span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-overhead-banner" th:if="${securityByteOverheadApplied}">
+                <i class="fas fa-lock banner-icon"></i>
+                <div>
+                    <div class="banner-title">Security Byte Overhead Applied to Message Sizes</div>
+                    <div class="overhead-grid">
+                        <div class="overhead-item" th:if="${tlsOverheadBytes > 0}">
+                            <span class="overhead-item-label">TLS overhead / message</span>
+                            <span class="overhead-item-value" th:text="${tlsOverheadBytes} + ' bytes (typical)'"></span>
+                            <span class="overhead-item-range" th:text="${tlsOverheadRange}"></span>
+                        </div>
+                        <div class="overhead-item" th:if="${jwtOverheadBytes > 0}">
+                            <span class="overhead-item-label">JWT overhead / request</span>
+                            <span class="overhead-item-value" th:text="${jwtOverheadBytes} + ' bytes (typical)'"></span>
+                            <span class="overhead-item-range" th:text="${jwtOverheadRange}"></span>
+                        </div>
+                        <div class="overhead-item">
+                            <span class="overhead-item-label">Effective request size</span>
+                            <span class="overhead-item-value" th:text="${requestSizeEffective} + ' bytes'"></span>
+                        </div>
+                        <div class="overhead-item">
+                            <span class="overhead-item-label">Effective response size</span>
+                            <span class="overhead-item-value" th:text="${responseSizeEffective} + ' bytes'"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main costs table -->
+        <table class="results-table">
+            <thead><tr>
+                <th>Message Type</th>
+                <th>Proto size (bytes)</th>
+                <th>Effective size (bytes)</th>
+                <th>Requests / month</th>
+                <th>Throughput (GB/month)</th>
+                <th>Transfer Cost (USD/month)</th>
+            </tr></thead>
+            <tbody>
+            <tr>
+                <td>Request</td>
+                <td th:text="${requestSize}"></td>
+                <td th:text="${requestSizeEffective}"></td>
+                <td th:text="${requestsPerMonth}"></td>
+                <td th:text="${requestGbPerMonth} + ' GB'"></td>
+                <td>—</td>
+            </tr>
+            <tr>
+                <td>Response</td>
+                <td th:text="${responseSize}"></td>
+                <td th:text="${responseSizeEffective}"></td>
+                <td th:text="${requestsPerMonth}"></td>
+                <td th:text="${responseGbPerMonth} + ' GB'"></td>
+                <td th:text="'$ ' + ${dataTransferCostUsd}"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div id="p4-timeline-summary" style="display:none;margin-top:16px;margin-bottom:4px;"></div>
+        <!-- Cloud TCO Breakdown (populated by JS) -->
+        <div id="cloudTcoBreakdown" style="margin-top:20px;"></div>
+
+        <div class="unit-econ-section" id="reportUnitEcon">
+            <div class="unit-econ-title"><i class="fas fa-coins"></i> Unit Economics</div>
+            <div class="unit-econ-grid" id="unitEconGrid">
+            </div>
+        </div>
+
+        <div id="p4-tagging-strategy" style="margin-top:24px;padding:20px 24px;border-radius:var(--r-lg);
+             background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;">
+            <div style="font-family:'DM Serif Display',serif;font-size:1.05rem;color:#166534;
+               margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-tags"></i> FinOps Tagging &amp; Labelling Strategy
+                <span style="font-size:.7rem;font-weight:600;background:#166534;color:#fff;
+                  padding:2px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.06em">
+              FinOps Best Practice
+            </span>
+            </div>
+            <div style="font-size:.82rem;color:#3D4451;margin-bottom:14px;line-height:1.6;
+               padding:10px 14px;background:rgba(255,255,255,.6);border-radius:var(--r);
+               border:1px solid rgba(134,239,172,.5);">
+                <i class="fas fa-circle-info" style="color:#166534;margin-right:6px"></i>
+                Tagging and labelling cloud resources is the foundation of cost visibility in FinOps.
+                Without consistent tags, cost allocation across teams, services, and environments
+                is impossible. The following strategy is derived from the
+                <strong>FinOps Foundation Tagging Best Practices</strong> and
+                <strong>AWS Cost Allocation Tags</strong> guidance, applied to the cloud services
+                selected for this microservice.
+            </div>
+
+            <!-- Mandatory Tags -->
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+               color:#166534;margin-bottom:8px;">
+                <i class="fas fa-star" style="margin-right:5px"></i>Mandatory Tags (apply to ALL selected resources)
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:16px">
+                <thead>
+                <tr style="background:#166534;color:#fff">
+                    <th style="padding:8px 12px;text-align:left">Tag Key</th>
+                    <th style="padding:8px 12px;text-align:left">Example Value</th>
+                    <th style="padding:8px 12px;text-align:left">Purpose</th>
+                    <th style="padding:8px 12px;text-align:left">FinOps Dimension</th>
+                </tr>
+                </thead>
+                <tbody id="tagging-mandatory-rows">
+                <!-- Populated by JS -->
+                </tbody>
+            </table>
+
+            <!-- Service-specific Tags -->
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+               color:#166534;margin-bottom:8px;">
+                <i class="fas fa-microchip" style="margin-right:5px"></i>Service-Specific Tags (for this microservice)
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:16px">
+                <thead>
+                <tr style="background:#166534;color:#fff">
+                    <th style="padding:8px 12px;text-align:left">Tag Key</th>
+                    <th style="padding:8px 12px;text-align:left">Suggested Value</th>
+                    <th style="padding:8px 12px;text-align:left">Purpose</th>
+                </tr>
+                </thead>
+                <tbody id="tagging-service-rows">
+                <!-- Populated by JS -->
+                </tbody>
+            </table>
+
+            <!-- Selected cloud services tagging guidance -->
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+               color:#166534;margin-bottom:8px;">
+                <i class="fas fa-cloud" style="margin-right:5px"></i>Selected Cloud Services — Tagging Checklist
+            </div>
+            <div id="tagging-cloud-checklist" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+                <!-- Populated by JS -->
+            </div>
+
+            <div style="font-size:.75rem;color:#4B5563;line-height:1.6;padding:10px 14px;
+               background:rgba(255,255,255,.6);border-radius:var(--r);border:1px solid rgba(134,239,172,.4)">
+                <i class="fas fa-triangle-exclamation" style="color:#92400E;margin-right:5px"></i>
+                <strong>Governance note:</strong>
+                Tags are only effective when enforced via
+                <strong>AWS Tag Policies</strong> (AWS Organizations) and monitored through
+                <strong>AWS Cost Explorer Tag Coverage</strong> reports.
+                Untagged resources should trigger automated alerts via
+                <strong>AWS Config Rules</strong> (e.g. <code style="font-family:monospace;
+            background:rgba(0,0,0,.06);padding:1px 4px;border-radius:3px">required-tags</code>).
+                Discuss tagging governance with your FinOps and Cloud Centre of Excellence (CCoE) team.
+            </div>
+        </div>
+
+        <div id="p4-finops-notes" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--rule);">
+            <div style="font-family:'DM Serif Display',serif;font-size:1rem;color:var(--blue-deep);margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-drafting-compass"></i> FinOps Architecture Notes &amp; Disclaimers
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div class="notice notice-gold"><i class="fas fa-network-wired"></i><div>
+                    <strong>1 &mdash; IP Address Planning (CIDR Sizing)</strong><br>
+                    <span style="font-size:.82rem;">The more redundancy you build into AWS (Multi-AZ, replicas, NAT Gateways, ENIs), the more private IP addresses are consumed. Plan your VPC CIDR block generously (e.g. /16 = 65,536 IPs) and <strong>leave enough address space within each subnet CIDR for auto-scaling headroom</strong>. A /24 subnet provides only 251 usable IPs &mdash; exhausted quickly in a multi-tier, auto-scaled architecture.</span>
+                </div></div>
+                <div class="notice notice-blue"><i class="fas fa-layer-group"></i><div>
+                    <strong>2 &mdash; Multi-Tier Architecture in AWS Terms</strong><br>
+                    <span style="font-size:.82rem;">Separating MACH components (frontend, API gateway, gRPC services, databases) into <strong>different subnets</strong> makes this a <strong>multi-tier architecture</strong> in AWS terms. Each tier needs dedicated subnets with its own Security Groups and NACLs.</span>
+                </div></div>
+                <div class="notice notice-green"><i class="fas fa-sitemap"></i><div>
+                    <strong>3 &mdash; Intra-VPC Connectivity</strong><br>
+                    <span style="font-size:.82rem;">Use <strong>VPC Endpoints</strong> (PrivateLink) to access AWS services without internet routing; <strong>Transit Gateway</strong> for cross-VPC connectivity; <strong>VPC Flow Logs</strong> for visibility. Each component in a separate subnet requires explicit route table entries.</span>
+                </div></div>
+                <div class="notice notice-red" id="p4-mission-critical-note" style="display:none;"><i class="fas fa-satellite-dish"></i><div>
+                    <strong>4 &mdash; Mission-Critical External Connectivity Options</strong><br>
+                    <span style="font-size:.82rem;">Since this service is marked mission-critical, evaluate:<br>
+            &bull; <strong>AWS Direct Connect</strong> &mdash; dedicated private fibre (1&ndash;100 Gbps).<br>
+            &bull; <strong>VPC Peering</strong> &mdash; private routing between VPCs, no NAT or internet gateway.<br>
+            &bull; <strong>AWS Site-to-Site VPN</strong> &mdash; encrypted IPSec over internet, lower cost than Direct Connect.</span>
+                </div></div>
+            </div>
+        </div>
+
+        <p style="font-size:.76rem;color:var(--ink-light);margin-top:14px;line-height:1.6;">
+            * Outbound (response) data transfer cost uses AWS standard internet egress tiered pricing for US East (N. Virginia):
+            first 10 TB at $0.09/GB, next 40 TB at $0.085/GB, next 100 TB at $0.07/GB, beyond 150 TB at $0.05/GB.
+            Inbound (request) traffic is free. Effective sizes include TLS (RFC 8446) and JWT (RFC 7519) overhead where applicable.
+            <a href="https://calculator.aws/#/createCalculator/ec2-enhancement" target="_blank" rel="noopener noreferrer"
+               style="color:var(--blue-mid);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold-border);">
+                AWS Pricing Calculator ↗
+            </a>
+        </p>
+        <div class="phase4-actions">
+            <button class="btn btn-primary" onclick="downloadTcoPdf()">
+                <i class="fas fa-file-pdf"></i> Save Report as PDF
+            </button>
+            <button class="btn btn-gold" onclick="saveServiceToPortfolio()">
+                <i class="fas fa-folder-plus"></i> Add to Portfolio
+            </button>
+            <button class="btn btn-ghost" onclick="startNewService(true)">
+                <i class="fas fa-plus-circle"></i> Model Another Service
+            </button>
+            <button class="btn btn-ghost" style="margin-left:auto;border-color:var(--blue-mid);color:var(--blue-mid);" onclick="goToPhase(5)">
+                <i class="fas fa-chart-pie"></i> View Portfolio (Phase 5)
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══ PHASE 5 — Portfolio Summary ═══ -->
+<div class="card phase-card" id="phase5">
+    <div class="card-header">
+        <div class="card-header-icon icon-gold"><i class="fas fa-chart-pie"></i></div>
+        <div class="card-header-text">
+            <h2>Phase 5 — Architecture Portfolio Summary</h2>
+            <p>Final phase: aggregated TCO across all modelled microservices. Download the PDF to share with stakeholders.</p>
+        </div>
+    </div>
+    <div class="notice notice-blue" style="margin-bottom:16px;"><i class="fas fa-info-circle"></i>
+        <div>Each service you calculate and add to the portfolio appears here with its description, Business Use Case, and total monthly TCO. Use <strong>Add to Portfolio</strong> in Phase 4. Data is stored in your browser’s <strong>local storage</strong> — no server required, survives page reload.</div>
+    </div>
+    <div id="p5-portfolio-list">
+        <div class="p5-empty"><i class="fas fa-inbox" style="font-size:2rem;margin-bottom:10px;display:block;color:var(--ink-light);"></i>No services added yet.<br><span style="margin-top:6px;display:inline-block;">Complete Phase 4 for a service and click <strong>Add to Portfolio</strong>.</span></div>
+    </div>
+    <div id="p5-totals" style="display:none;margin-top:20px;padding:18px 22px;border-radius:var(--r);
+         background:linear-gradient(135deg,var(--blue-deep),#0F2540);color:#fff;">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:#F5ECD7;margin-bottom:12px;">
+            <i class="fas fa-sigma" style="margin-right:8px;"></i>Portfolio Totals
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;" id="p5-totals-grid"></div>
+    </div>
+    <div id="p5-unit-economics" style="display:none;"></div>
+    <div id="p5-print-table" style="display:none;"></div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
+        <button class="btn btn-primary" onclick="downloadPortfolioPdf()">
+            <i class="fas fa-file-pdf"></i> Download Portfolio PDF
+        </button>
+        <button class="btn btn-gold" onclick="startNewService()">
+            <i class="fas fa-plus-circle"></i> Add Another Service
+        </button>
+        <button class="btn btn-ghost" style="margin-left:auto;border-color:var(--red-border);color:var(--red);" onclick="clearPortfolio()">
+            <i class="fas fa-trash"></i> Clear Portfolio
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════ FOOTER WARNING ═══════════════ -->
+<div class="footer-warning">
+    <div class="footer-warning-inner">
+        <div class="footer-warning-title">
+            <i class="fas fa-triangle-exclamation" style="color:var(--gold);"></i>
+            Important: Validate This TCO Report Before Acting On It
+        </div>
+        <div class="footer-warning-body">
+            This tool provides an <strong>architectural estimate</strong> of networking TCO based on the parameters you have modelled.
+            It is a starting point for financial planning — not a final procurement decision. Before presenting, approving, or budgeting
+            based on these figures, you should present, validate, and discuss this report with all relevant stakeholders.
+        </div>
+        <div class="stakeholder-pills">
+            <span class="stakeholder-pill"><i class="fas fa-gears"></i> Engineering Teams</span>
+            <span class="stakeholder-pill"><i class="fas fa-leaf"></i> FinOps Practitioners</span>
+            <span class="stakeholder-pill"><i class="fas fa-handshake"></i> Procurement</span>
+            <span class="stakeholder-pill"><i class="fas fa-briefcase"></i> Business Leaders</span>
+            <span class="stakeholder-pill"><i class="fas fa-building-columns"></i> Finance</span>
+        </div>
+    </div>
+</div>
+
+<!-- JS Scripts -->
+<script th:src="@{/js/initializer-tactics-mapping.js}" src="/js/initializer-tactics-mapping.js"></script>
+<script th:src="@{/js/tactics-patterns.js}" src="/js/tactics-patterns.js"></script>
+<script th:src="@{/js/calculator.js}" src="/js/calculator.js"></script>
+<script th:src="@{/js/session-management.js}" src="/js/session-management.js"></script>
+<script th:src="@{/js/phase-navigation.js}" src="/js/phase-navigation.js"></script>
+<script th:src="@{/js/buc-automatic-protofile-load.js}" src="/js/buc-automatic-protofile-load.js"></script>
+<script th:src="@{/js/mach-architecture-portfolio.js}" src="/js/mach-architecture-portfolio.js"></script>
+<script th:src="@{/js/unit-economics.js}" src="/js/unit-economics.js"></script>
+<script th:src="@{/js/finops-tagging.js}" src="/js/finops-tagging.js"></script>
+</body>
+</html>
