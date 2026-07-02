@@ -7,7 +7,18 @@ var baseRpsForComparison = 0;
 var _saveTimer = null;
 var _compDebounce = null;
 var _awsLoaded = {};
-var _albData = null, _dbData = null, _secData = null, _coData = null, _cacheData = null;
+// These are kept in sync with window.* at the start of each recalculate* call.
+// tactics-patterns.js writes to window._secData / window._albData etc. after
+// each AWS pricing fetch; the local vars here were previously never updated.
+var _albData   = null, _dbData    = null, _secData  = null,
+    _coData    = null, _cacheData = null;
+function _syncPricingData() {
+  if (window._albData)   _albData   = window._albData;
+  if (window._dbData)    _dbData    = window._dbData;
+  if (window._secData)   _secData   = window._secData;
+  if (window._coData)    _coData    = window._coData;
+  if (window._cacheData) _cacheData = window._cacheData;
+}
 
 /* AWS egress tiers — parallel arrays, safe for Thymeleaf templates */
 var TIER_GB = [10240, 40960, 102400];
@@ -570,11 +581,7 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
     + '</tr>';
 }
 
-function checkedCost(checkboxId, storageKey) {
-    var cb = document.getElementById(checkboxId);
-    if (!cb || !cb.checked) return 0;
-    return parseFloat(sessionStorage.getItem(storageKey) || '0');
-  }
+
 
 /* =====================================================================
    Aggregate all cloud service costs from sessionStorage into
@@ -584,6 +591,11 @@ function aggregateCloudInfraCost() {
   // For EVERY cost key, only count the value when the corresponding DOM checkbox
   // is currently checked.  This prevents stale sessionStorage values from any
   // previous session from inflating the cost before the user selects anything.
+  function checkedCost(checkboxId, storageKey) {
+    var cb = document.getElementById(checkboxId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(storageKey) || '0');
+  }
 
   var total = 0;
   total += checkedCost('tactic-alb',            'tco_alb_cost');
@@ -617,6 +629,47 @@ function aggregateCloudInfraCost() {
   var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
   window._lastCloudInfraCost = Math.max(0, Math.round((total - saving) * 100) / 100);
   return window._lastCloudInfraCost;
+}
+
+// ── TCO Snapshot ──────────────────────────────────────────────────────────
+// Write all current cloud service costs into one sessionStorage key so Phase 4
+// can read them reliably regardless of which panels are open or which DOM
+// checkboxes are currently in the document. Called after every recalculate*.
+function writeTcoSnapshot() {
+  var _sp = document.getElementById('cloudsec-content');
+  function dynCb(id) {
+    if (_sp) { var el = _sp.querySelector('#' + id); if (el) return el; }
+    return document.getElementById(id);
+  }
+  function secCost(id) {
+    var cb = dynCb(id);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem('tco_sec_' + id) || '0');
+  }
+  function plainCost(cbId, key) {
+    var cb = document.getElementById(cbId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(key) || '0');
+  }
+  var dbIds = ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
+               'tactic-aurora-replica','tactic-dynamo-global','tactic-dynamo-pitr'];
+  var cefIds = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'];
+  var snap = {
+    alb       : plainCost('tactic-alb',   'tco_alb_cost'),
+    cache     : plainCost('tactic-cache',  'tco_cache_cost'),
+    apigw     : plainCost('tactic-apigw',  'tco_apigw_cost'),
+    container : cefIds.some(function(id){var cb=document.getElementById(id);return cb&&cb.checked;})
+                  ? parseFloat(sessionStorage.getItem('tco_container_cost')||'0') : 0,
+    db        : dbIds.some(function(id){var cb=document.getElementById(id);return cb&&cb.checked;})
+                  ? parseFloat(sessionStorage.getItem('tco_db_cost')||'0') : 0,
+    finops    : parseFloat(sessionStorage.getItem('tco_finops_saving')||'0'),
+    sec       : {}
+  };
+  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'].forEach(function(id){
+    var c = secCost(id); if (c > 0) snap.sec[id] = c;
+  });
+  sessionStorage.setItem('tco_snapshot', JSON.stringify(snap));
 }
 
 function renderComparisonEstimate(baseRps, effectiveRps) {
@@ -665,6 +718,7 @@ function renderComparisonEstimateWithBytes(baseRps, effectiveRps) {
 }
 
 function recalculateAlb() {
+  _syncPricingData();
   var checked = !!(document.getElementById('tactic-alb') && document.getElementById('tactic-alb').checked);
   var params = document.getElementById('alb-params');
   if (params) params.style.display = checked ? 'block' : 'none';
@@ -684,6 +738,7 @@ function recalculateAlb() {
   if (res) res.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>' + count + ' ALB(s): $' + fixedM.toFixed(2) + '/mo fixed' + (lcu > 0 ? ' + $' + lcuM.toFixed(2) + '/mo LCUs = <span style="color:var(--red);">$' + (fixedM + lcuM).toFixed(2) + '/mo</span>' : '') + '</strong>';
   sessionStorage.setItem('tco_alb_cost', (fixedM + lcuM).toFixed(4));
   sessionStorage.setItem('tco_alb_label', count + ' ALB' + (count > 1 ? 's' : ''));
+  writeTcoSnapshot();
 
   /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
@@ -766,24 +821,21 @@ function recalculateAvailability() {
   res.style.display = 'block';
 }
 
-function dbCb(id, label, desc, numId, numLabel) {
-    return '<div class="tactic-row"><input type="checkbox" class="tactic-check" id="' + id + '">'
-      + '<div class="tactic-label-group"><label class="tactic-label" for="' + id + '">' + label + '</label><span class="tactic-description">' + desc + '</span></div>'
-      + (numId ? '<div class="tactic-input-group"><input type="number" id="' + numId + '" min="1" placeholder="10"><span class="tactic-unit">' + numLabel + '</span></div>' : '')
-      + '</div>';
-  }
-
 function renderDbOptions() {
-  console.warn("DB data: " + JSON.stringify(_dbData));
   var engine = (document.getElementById('input-db-engine') || { value: '' }).value || '';
   var cont = document.getElementById('db-options');
   var res = document.getElementById('dbbackup-result');
   if (!engine || engine === 'none' || !_dbData || !cont) { if (cont) cont.innerHTML = ''; if (res) res.style.display = 'none'; return; }
   var html = '';
-
+  function dbCb(id, label, desc, numId, numLabel) {
+    return '<div class="tactic-row"><input type="checkbox" class="tactic-check" id="' + id + '">'
+      + '<div class="tactic-label-group"><label class="tactic-label" for="' + id + '">' + label + '</label><span class="tactic-description">' + desc + '</span></div>'
+      + (numId ? '<div class="tactic-input-group"><input type="number" id="' + numId + '" min="1" placeholder="10"><span class="tactic-unit">' + numLabel + '</span></div>' : '')
+      + '</div>';
+  }
   if (engine === 'rds-mysql') {
     html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardStoragePerGbUsd + '/GB-month.', 'db-gb', 'DB size (GB)')
-      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
+      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' +  _dbData.rdsSnapshotStoragePerGbUsd + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
       + dbCb('tactic-rds-multiaz', 'RDS Multi-AZ', _dbData.rdsMultiAzSurchargeNote, null, null);
   } else if (engine === 'aurora') {
     html = dbCb('tactic-aurora-replica', 'Aurora Read Replica', '~$' + _dbData.auroraReplicaPerHour + '/hr ($' + (_dbData.auroraReplicaPerHour * 730).toFixed(2) + '/mo) db.r6g.large.', 'aurora-replica-count', 'Replicas')
@@ -798,53 +850,57 @@ function renderDbOptions() {
 }
 
 function recalculateDbCost() {
+  _syncPricingData();
+
   if (!_dbData) return;
-  var total = 0;
-  var lines = [];
-  var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
-  var snapshotRetention = parseFloat((document.getElementById('snapshot-retention') || { value: '10' }).value) || 10;
-  console.warn("snapshotRetention: " + snapshotRetention);
-  var snapshotRetentionCost = 0;
-  var g = function (id) { return document.getElementById(id) || {}; };
+    var total = 0;
+    var lines = [];
+    var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
+    var snapshotRetention = parseFloat((document.getElementById('snapshot-retention') || { value: '10' }).value) || 10;
+    console.warn("snapshotRetention: " + snapshotRetention);
+    var snapshotRetentionCost = 0;
+    var g = function (id) { return document.getElementById(id) || {}; };
 
-  if (g('tactic-s3-backup').checked) {
-      let c = dbGb * _dbData.s3StandardStoragePerGbUsd;
-      total += c;
-      console.warn("Total DB cost: " + total);
-      lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)');
-  }
-  if (g('tactic-rds-snapshot').checked) {
-      snapshotRetentionCost = snapshotRetention > 10 ? _dbData.rdsSnapshotStoragePerGbUsd : 0;
-      total += snapshotRetentionCost;
-      console.warn("Total DB cost: " + total);
-      lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
-  }
-  if (g('tactic-rds-multiaz').checked) {
-      total += snapshotRetentionCost;
-      console.warn("Total DB cost: " + total);
-      lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
-  }
-  if (g('tactic-aurora-replica').checked) {
-      var cnt = parseInt(g('aurora-replica-count').value) || 1;
-      var c2 = _dbData.auroraReplicaPerHour * 730 * cnt;
-      total += c2;
-      console.warn("Total DB cost: " + total);
-      lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)');
-  }
-  if (g('tactic-dynamo-global').checked) {
-      var reg = parseInt(g('dynamo-extra-regions').value) || 1;
-      lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)');
-  }
+    if (g('tactic-s3-backup').checked) {
+        let c = dbGb * _dbData.s3StandardStoragePerGbUsd;
+        total += c;
+        console.warn("Total DB cost: " + total);
+        lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)');
+    }
+    if (g('tactic-rds-snapshot').checked) {
+        snapshotRetentionCost = snapshotRetention > 10 ? _dbData.rdsSnapshotStoragePerGbUsd : 0;
+        total += snapshotRetentionCost;
+        console.warn("Total DB cost: " + total);
+        lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
+    }
+    if (g('tactic-rds-multiaz').checked) {
+        total += snapshotRetentionCost;
+        console.warn("Total DB cost: " + total);
+        lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
+    }
+    if (g('tactic-aurora-replica').checked) {
+        var cnt = parseInt(g('aurora-replica-count').value) || 1;
+        var c2 = _dbData.auroraReplicaPerHour * 730 * cnt;
+        total += c2;
+        console.warn("Total DB cost: " + total);
+        lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)');
+    }
+    if (g('tactic-dynamo-global').checked) {
+        var reg = parseInt(g('dynamo-extra-regions').value) || 1;
+        lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)');
+    }
 
-  var res = document.getElementById('dbbackup-result');
-  if (!res) return;
-  if (!lines.length) { res.style.display = 'none'; return; }
-  res.style.display = 'block';
-  res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
-    + lines.map(function (l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 ' + l + '</div>'; }).join('')
-    + (total > 0 ? '<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $' + total.toFixed(2) + '/mo</div>' : '');
-  if (total > 0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
-  else sessionStorage.removeItem('tco_db_cost');
+    var res = document.getElementById('dbbackup-result');
+    if (!res) return;
+    if (!lines.length) { res.style.display = 'none'; return; }
+    res.style.display = 'block';
+    res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
+      + lines.map(function (l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 ' + l + '</div>'; }).join('')
+      + (total > 0 ? '<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $' + total.toFixed(2) + '/mo</div>' : '');
+    if (total > 0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
+    else sessionStorage.removeItem('tco_db_cost');
+
+  writeTcoSnapshot();
 
   /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
@@ -852,6 +908,7 @@ function recalculateDbCost() {
 }
 
 function recalculateSecCost() {
+  _syncPricingData();
   if (!_secData) return;
 
   var rps = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
@@ -946,6 +1003,7 @@ function recalculateSecCost() {
         }).join('');
     if (total > 0) sessionStorage.setItem('tco_sec_cost', total.toFixed(4));
     else           sessionStorage.removeItem('tco_sec_cost');
+    writeTcoSnapshot();
   }
 
   /* Refresh live comparison */
@@ -954,6 +1012,7 @@ function recalculateSecCost() {
 }
 
 function recalculateCostOpt() {
+  _syncPricingData();
   if (!_coData) return;
   var spend = parseFloat((document.getElementById('input-ec2-monthly-spend') || { value: '0' }).value) || 0;
   var res = document.getElementById('costopt-result');
@@ -1053,6 +1112,7 @@ function recalculateCostOpt() {
 }
 
 function recalculateCaching() {
+  _syncPricingData();
   var checked = !!(document.getElementById('tactic-cache') && document.getElementById('tactic-cache').checked);
   var params = document.getElementById('cache-params');
   if (params) params.style.display = checked ? 'block' : 'none';
@@ -1074,6 +1134,7 @@ function recalculateCaching() {
   if (inner) { inner.style.display = 'block'; inner.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>' + nodes + ' x cache.' + node + ' (' + engine + '): $' + prHr.toFixed(4) + '/hr x ' + nodes + ' x 730 hr = <span style="color:var(--red);">$' + prMo.toFixed(2) + '/mo</span></strong>'; }
   if (outer) { outer.style.display = 'block'; outer.innerHTML = '<i class="fas fa-bolt" style="margin-right:6px;"></i><strong>ElastiCache ' + engine + ': $' + prMo.toFixed(2) + '/mo</strong><br><span style="font-size:.76rem;color:var(--ink-light);">Reserved 1-yr: ~$' + (prMo * 0.45).toFixed(2) + '/mo (55% saving) | 3-yr: ~$' + (prMo * 0.30).toFixed(2) + '/mo (70% saving)</span>'; }
   sessionStorage.setItem('tco_cache_cost', prMo.toFixed(4));
+  writeTcoSnapshot();
   sessionStorage.setItem('tco_cache_label', nodes + 'x cache.' + node + ' (' + engine + ')');
 
   /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */

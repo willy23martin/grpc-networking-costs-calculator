@@ -172,18 +172,17 @@ function populateReportSummary() {
   populateUnitEconomics();
 }
 
-function checkedCost(checkboxId, storageKey) {
-    var cb = document.getElementById(checkboxId);
-    if (!cb || !cb.checked) return 0;
-    return parseFloat(sessionStorage.getItem(storageKey) || '0');
-}
-
 /* =======================================================================
    computeCloudInfraCost  — local fallback only
    Reads sessionStorage keys written by backend-driven recalculate* fns.
    Guards every key against its DOM checkbox so stale keys are ignored.
    ======================================================================= */
 function computeCloudInfraCost() {
+  function checkedCost(cbId, key) {
+    var cb = document.getElementById(cbId);
+    if (!cb || !cb.checked) return 0;
+    return parseFloat(sessionStorage.getItem(key) || '0');
+  }
   var total = 0;
   total += checkedCost('tactic-alb',   'tco_alb_cost');
   total += checkedCost('tactic-cache', 'tco_cache_cost');
@@ -247,28 +246,23 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var monthlyReqs  = requestsPerMonthRaw || Math.round((effectiveRps||baseRps)*2592000);
   var finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
 
-  // ── Read costs directly from sessionStorage ─────────────────────────────
-  // sessionStorage is the single source of truth. The recalculate* functions
-  // in Phase 3 write these keys whenever the user checks a service and enters
-  // volume values. We do NOT check DOM checkbox state here because:
-  //   • Phase 4 panels may be collapsed (checkboxes not in DOM)
-  //   • sec-* IDs exist in both static body-cloud HTML and dynamic cloudsec-content;
-  //     getElementById always finds the static (always-unchecked) one first.
-  function ss(key) { return parseFloat(sessionStorage.getItem(key) || '0'); }
+  // ── Read costs from the tco_snapshot written by writeTcoSnapshot() ───────
+  // writeTcoSnapshot() is called in calculator.js after every recalculate*
+  // function and stores a complete JSON blob so Phase 4 always sees the latest
+  // values regardless of DOM state, panel visibility, or checkbox scope issues.
+  var _snap = {};
+  try { _snap = JSON.parse(sessionStorage.getItem('tco_snapshot') || '{}'); } catch(e) {}
 
-  var albCost       = ss('tco_alb_cost');
-  var cacheCost     = ss('tco_cache_cost');
-  var apiGwCost     = ss('tco_apigw_cost');
-  var containerCost = ss('tco_container_cost');
-  var dbCost        = ss('tco_db_cost');
+  var albCost       = parseFloat(_snap.alb)       || 0;
+  var cacheCost     = parseFloat(_snap.cache)      || 0;
+  var apiGwCost     = parseFloat(_snap.apigw)      || 0;
+  var containerCost = parseFloat(_snap.container)  || 0;
+  var dbCost        = parseFloat(_snap.db)         || 0;
 
-  var secCostByService = {};
-  var secCostTotal = 0;
-  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
-   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'].forEach(function(id){
-    var c = ss('tco_sec_' + id);
-    if (c > 0) { secCostByService[id] = c; secCostTotal += c; }
-  });
+  var secCostByService = _snap.sec || {};
+  var secCostTotal = Object.keys(secCostByService).reduce(function(s, k) {
+    return s + (parseFloat(secCostByService[k]) || 0);
+  }, 0);
 
   var ec2Cost = 0;
   var ec2Sel = document.getElementById('input-ec2-instance');
