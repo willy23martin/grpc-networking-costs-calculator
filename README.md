@@ -75,9 +75,17 @@ The service can be parametrized before building it to use a Cloud Service Provid
 // TODO Pending
 
 #### Calculate the new cost (TCO Costs) and Unit Economics:
-![Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png](src/main/resources/images/Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png)
+[Last TCO Breakdown cost report phase 4 with Unit economics and a copy of TCC report of phase 3.pdf](src/main/resources/images/Last%20TCO%20Breakdown%20cost%20report%20phase%204%20with%20Unit%20economics%20and%20a%20copy%20of%20TCC%20report%20of%20phase%203.pdf)
+
+![img.png](img.png)
+
+#### Unit Economics and cost-efficiency
+![img_1.png](img_1.png)
 
 ### Discernment with FinOps Personas and Engineering Teams:
+
+![img_2.png](img_2.png)
+
 ![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
 ## MVC Controllers
