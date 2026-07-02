@@ -1,6 +1,5 @@
 package com.calculator.domain.dto;
 
-import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
@@ -13,7 +12,6 @@ public record ArchitecturalDecisionsDTO(
         TimeoutPattern timeoutTactic,
         RetryPattern retryTactic,
         CircuitBreakerPattern circuitBreakerTactic,
-        SAGAPattern sagaPattern,
         SecurityTactics securityTactics
 ) {
     public static ArchitecturalDecisionsDTO empty() {
@@ -23,7 +21,6 @@ public record ArchitecturalDecisionsDTO(
                 TimeoutPattern.empty(),
                 RetryPattern.empty(),
                 CircuitBreakerPattern.empty(),
-                SAGAPattern.empty(),
                 SecurityTactics.empty()
         );
     }

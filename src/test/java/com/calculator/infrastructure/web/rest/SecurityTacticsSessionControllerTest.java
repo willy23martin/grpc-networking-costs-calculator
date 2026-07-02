@@ -9,8 +9,6 @@ import com.calculator.domain.dto.tactics.security.oauth.jwt.JWTTactic;
 import com.calculator.domain.dto.tactics.security.tls.TLSTactic;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,11 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-public class SecurityTacticsSessionControllerTest {
-
-    private final MockMvc mockMvc;
+public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Autowired
     SecurityTacticsSessionControllerTest(MockMvc mockMvc) {
@@ -209,12 +203,6 @@ public class SecurityTacticsSessionControllerTest {
                 "circuitBreakerHalfOpen": 0,
                 "circuitBreakerWaitMilliseconds": 0,
                 "circuitBreakerFailureRate": 0
-              },
-              "sagaPattern": {
-                "microservicesSAGAPattern": false,
-                "sagaCompensatableTransactions": 0,
-                "sagaRetriableTransactions": 0,
-                "sagaPivotTransactions": 0
               }
             }
             """;

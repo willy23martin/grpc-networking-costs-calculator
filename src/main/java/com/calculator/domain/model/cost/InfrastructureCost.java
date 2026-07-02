@@ -1,13 +1,12 @@
 package com.calculator.domain.model.cost;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 
 @EqualsAndHashCode(callSuper = true)
-@Data
 @ToString
-@Builder
+@Getter
 public final class InfrastructureCost extends CostFactor {
+    public InfrastructureCost(String costImpactNotes) {
+        super(costImpactNotes);
+    }
 }

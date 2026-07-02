@@ -1,23 +1,17 @@
 workspace {
 
     model {
-        architect = person "Software Architect" "Valuates the cost-efficiency of gRPC-based MACH architectures, analyzing trade-offs across resiliency, reliability, and security."
+        softwarearchitect = person "Software Architect" "Valuates the cost-efficiency of gRPC-based MACH architectures, analyzing trade-offs across resiliency, reliability, and security."
 
-        calculator = softwareSystem "Cost-Efficiency Calculator" "Evaluates and simulates TCO/ROI impact of gRPC serialization footprints, tactics (TLS, JWT), and architectural resiliency patterns." {
+        calculator = softwareSystem "gRPC-based TCO Cost-Efficiency Calculator" "System that calculates the TCC and TCO of a gRPC-based microservice, its reliability, security, and resiliency tactics and patterns" {
 
-            # The UI engine container
-            thymeleafUi = container "Thymeleaf Web UI" "Server-side HTML/JS views. Presents trade-off matrix visualizations and cost-breakdown graphs." "Thymeleaf Template Engine"
-
-            # The core execution runtime (This will render as a Hexagon)
-            monolithApp = container "Spring Boot Application" "Executes the evaluation domain engines, protocol compilations, and cost mapping loops, as well as TCC and TCO calculation." "Java / Spring Boot" "HexagonalCore"
+            monolithApp = container "Calculator Service" "Executes the evaluation domain engines, protocol compilations, and cost mapping loops, as well as TCC and TCO calculation." "Java / Spring Boot" "HexagonalCore"
         }
 
-        aws = softwareSystem "Amazon Web Services (AWS)" "Provides cloud pricing data and APIs." "Existing System"
+        aws = softwareSystem "Amazon Web Services (AWS)" "Provides cloud pricing data, commitment discounts, savings plans, and APIs for AWS services." "Existing System"
 
-        # Structural routing paths
-        architect -> thymeleafUi "Submits IDL files and request TCC and TCO calculations." "Browser / HTTPS"
-        thymeleafUi -> monolithApp "Forwards interaction states and multipart uploads to" "Internal Spring Calls"
-        monolithApp -> aws "Pulls service pricing, and service rates and usage discount frames from" "HTTPS"
+        softwarearchitect -> monolithApp "Specifies a gRPC-based microservice, and evaluates its cost-efficiency trade-offs using" "Browser / HTTPS"
+        monolithApp -> aws "Retrieves live pricing data, and rate and usage discounts from" "HTTPS"
     }
 
     views {

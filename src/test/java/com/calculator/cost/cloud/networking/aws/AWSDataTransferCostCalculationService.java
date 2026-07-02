@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
+import static com.calculator.application.services.calculators.cost.cloud.networking.aws.AWSDataTransferCostCalculationService.AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -36,26 +37,26 @@ class AWSDataTransferCostCalculationServiceTest {
 
     @Test
     void calculateDataTransferCost_SpansMultipleTiers_WhenUsageExceedsFirstTier() {
-        double expected = (10_240.0 * 0.09) + (1.0 * 0.085);
+        double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09) + 0.085;
 
         assertThat(service.calculateDataTransferCost(10_241.0)).isCloseTo(expected, within(0.01));
     }
 
     @Test
     void calculateDataTransferCost_SpansAllFourTiers_WhenUsageIsVeryLarge() {
-        double expected = (10_240.0 * 0.09)
-                + (40_960.0 * 0.085)
-                + (102_400.0 * 0.07)
-                + (1.0 * 0.05);
+        double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09)
+                + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[1] * 0.085)
+                + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[2] * 0.07)
+                + 0.05;
 
         assertThat(service.calculateDataTransferCost(153_601.0)).isCloseTo(expected, within(0.01));
     }
 
     @Test
     void calculateDataTransferCost_UsesLastRate_WhenUsageExceedsFinalTierThreshold() {
-        double expected = (10_240.0 * 0.09)
-                + (40_960.0 * 0.085)
-                + (102_400.0 * 0.07)
+        double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09)
+                + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[1] * 0.085)
+                + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[2] * 0.07)
                 + (100.0 * 0.05);
 
         assertThat(service.calculateDataTransferCost(153_700.0)).isCloseTo(expected, within(0.01));

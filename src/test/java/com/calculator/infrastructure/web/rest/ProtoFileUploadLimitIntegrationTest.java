@@ -1,7 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
-import com.calculator.domain.dto.tactics.microservices.SAGAPattern;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
@@ -17,7 +16,7 @@ import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import static com.calculator.infrastructure.web.rest.TCOCalculatorControllerTest.VALID_PROTO_CONTENT;
+import static com.calculator.shared.ProtocolBuffersUtilsTest.VALID_PROTO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -37,7 +36,6 @@ class ProtoFileUploadLimitIntegrationTest {
                 new TimeoutPattern(true,  300),
                 new RetryPattern(true,  3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
 
@@ -59,7 +57,6 @@ class ProtoFileUploadLimitIntegrationTest {
                 new TimeoutPattern(true, 300),
                 new RetryPattern(true, 3),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         HttpHeaders jsonHeaders = new HttpHeaders();
@@ -92,7 +89,6 @@ class ProtoFileUploadLimitIntegrationTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().requestsPerSecond()).isZero();
         assertThat(response.getBody().reliabilityTactics().reliabilityClientSideLoadBalancerTactic()).isFalse();
-        assertThat(response.getBody().sagaPattern().microservicesSAGAPattern()).isFalse();
     }
 
     @Test
@@ -103,7 +99,6 @@ class ProtoFileUploadLimitIntegrationTest {
                 new TimeoutPattern(false, 0),
                 new RetryPattern(false, 0),
                 new CircuitBreakerPattern(false, 0, 0, 0, 0),
-                new SAGAPattern(false, 0, 0, 0),
                 SecurityTactics.empty()
         );
         HttpHeaders headers = new HttpHeaders();

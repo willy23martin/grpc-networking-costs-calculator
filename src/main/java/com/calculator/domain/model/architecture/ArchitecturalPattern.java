@@ -5,7 +5,6 @@ import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
 import lombok.*;
 
 import java.util.List;
-import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
@@ -19,11 +18,13 @@ public final class ArchitecturalPattern extends ArchitecturalDecision {
 
     @Builder // DESIGN PATTERN: BUILDER
     public ArchitecturalPattern(
+            String id,
             String name,
             List<ArchitecturalTactic> architecturalTactics,
             ArchitecturalCharacteristic architecturalCharacteristic,
-            Map<String, CostFactor> costFactors) {
-        super(architecturalCharacteristic, costFactors);
+            CostFactor costFactor
+    ) {
+        super(id, architecturalCharacteristic, costFactor);
         this.name = name;
         this.architecturalTactics = architecturalTactics;
     }

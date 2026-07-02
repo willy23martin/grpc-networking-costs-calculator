@@ -7,9 +7,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/session/tactics")
+@CrossOrigin(origins = "*")
 public class TacticsSessionController {
 
-    static final String SESSION_KEY = "architecturalDecisions";
+    public static final String SESSION_KEY = "architecturalDecisions";
 
     @PostMapping
     public ResponseEntity<Void> saveTactics(

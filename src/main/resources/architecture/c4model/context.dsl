@@ -1,15 +1,13 @@
 workspace {
 
     model {
-        # Actor updated with your exact thesis objective
-        architect = person "Software Architect" "Valuates the cost-efficiency of gRPC-based MACH architectures, analyzing trade-offs across resiliency, reliability, and security."
+        softwarearchitect = person "Software Architect" "Person who evaluates the cost-efficiency of a gRPC-based MACH architecture, by analyzing trade-offs across resiliency, reliability, and security"
 
-        # System scope updated to reflect trade-off calculation core
-        calculator = softwareSystem "Cost-Efficiency Calculator" "Evaluates and simulates TCO/ROI impact of gRPC serialization footprints, tactics (TLS, JWT), and architectural resiliency patterns."
+        calculator = softwareSystem "gRPC-based TCO Cost-Efficiency Calculator" "System that calculates the TCC and TCO of a gRPC-based microservice, its reliability, security, and resiliency tactics and patterns"
 
-        aws = softwareSystem "Amazon Web Services (AWS)" "Provides cloud pricing data and APIs (EC2, ALB, ElastiCache, Compute Savings Plans)." "Existing System"
+        aws = softwareSystem "Amazon Web Services (AWS)" "Provides cloud pricing data, commitment discounts, savings plans, and APIs for AWS services." "Existing System"
 
-        architect -> calculator "Interacts with to model MACH systems and evaluate cost-efficiency trade-offs"
+        softwarearchitect -> calculator "Specifies a gRPC-based microservice, and evaluates its cost-efficiency trade-offs using"
         calculator -> aws "Retrieves live pricing data, and rate and usage discounts from" "HTTPS"
     }
 

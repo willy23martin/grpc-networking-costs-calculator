@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URLClassLoader;
+import java.util.logging.Logger;
 
 import static com.calculator.shared.ProtocolBuffersUtils.populateFieldsForMaxSize;
 
@@ -16,9 +17,11 @@ public class ProtocolBufferMessageSizeCalculationService {
     @Value("${protofile.max.repeated.items}")
     int globalMaxRepeatedItems;
 
+    private static final java.util.logging.Logger log = Logger.getLogger(ProtocolBufferMessageSizeCalculationService.class.getName());
+
     public MessageSizeCalculationResult getMessageSize(URLClassLoader classLoader, String fullClassNameForRequestMessage) throws Exception {
         Class<?> messageClass = classLoader.loadClass(fullClassNameForRequestMessage);
-        System.out.println("Request Class loaded: " + messageClass.getName());
+        log.info("Request Class loaded: " + messageClass.getName());
 
         Descriptors.Descriptor requestDescriptor = (Descriptors.Descriptor) messageClass.getMethod("getDescriptor").invoke(null);
         DynamicMessage.Builder requestBuilder = DynamicMessage.newBuilder(requestDescriptor);

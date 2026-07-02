@@ -1,0 +1,54 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "Database Storage",
+      "attributes" : {
+        "volumeType" : "Provisioned IOPS-IO2",
+        "engineCode" : "27",
+        "usagetype" : "RDS:PIOPS-Storage-IO2",
+        "locationType" : "AWS Region",
+        "maxVolumeSize" : "64 TB",
+        "databaseEngine" : "Db2",
+        "storageMedia" : "SSD",
+        "databaseEdition" : "Community",
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonRDS",
+        "licenseModel" : "Bring your own license",
+        "volumeName" : "io2",
+        "deploymentOption" : "Single-AZ",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon Relational Database Service",
+        "operation" : "CreateDBInstance:0027",
+        "minVolumeSize" : "100 GB"
+      },
+      "sku" : "22WU5ACEXZRBHSMV"
+    },
+    "serviceCode" : "AmazonRDS",
+    "terms" : {
+      "OnDemand" : {
+        "22WU5ACEXZRBHSMV.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "22WU5ACEXZRBHSMV.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB-Mo",
+              "endRange" : "Inf",
+              "description" : "USD 0.125 per GB-Month of provisioned io2 storage for Single-AZ deployments running Db2 CE (BYOL)",
+              "appliesTo" : [ ],
+              "rateCode" : "22WU5ACEXZRBHSMV.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.1250000000"
+              }
+            }
+          },
+          "sku" : "22WU5ACEXZRBHSMV",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260619203921",
+    "publicationDate" : "2026-06-19T20:39:21Z"
+  } ]
+}

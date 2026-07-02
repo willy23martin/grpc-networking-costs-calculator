@@ -1,0 +1,48 @@
+"terms" : {
+    "savingsPlan" : [ {
+      "sku" : "2MHX3QZPD4ABTS29",
+      "description" : "3 year Partial Upfront Compute Savings Plan",
+      "effectiveDate" : "2026-06-30T17:11:40Z",
+      "leaseContractLength" : {
+        "duration" : 3,
+        "unit" : "year"
+      },
+      "rates" : [ {
+        "discountedSku" : "2223RRAP6Z3VBN3N",
+        "discountedUsageType" : "BoxUsage:c5d.2xlarge",
+        "discountedOperation" : "RunInstances:0210",
+        "discountedServiceCode" : "AmazonEC2",
+        "rateCode" : "2MHX3QZPD4ABTS29.2223RRAP6Z3VBN3N",
+        "unit" : "Hrs",
+        "discountedRate" : {
+          "price" : "0.422",
+          "currency" : "USD"
+        },
+        "discountedRegionCode" : "us-east-1",
+        "discountedInstanceType" : "c5d.2xlarge"
+      }]
+    },
+    {
+      "sku" : "BB7BKBSC6NZW7P5B",
+      "description" : "1 year No Upfront Compute Savings Plan",
+      "effectiveDate" : "2026-06-30T15:39:33Z",
+      "leaseContractLength" : {
+        "duration" : 1,
+        "unit" : "year"
+      },
+      "rates" : [ {
+        "discountedSku" : "2223RRAP6Z3VBN3N",
+        "discountedUsageType" : "BoxUsage:c5d.2xlarge",
+        "discountedOperation" : "RunInstances:0210",
+        "discountedServiceCode" : "AmazonEC2",
+        "rateCode" : "BB7BKBSC6NZW7P5B.2223RRAP6Z3VBN3N",
+        "unit" : "Hrs",
+        "discountedRate" : {
+          "price" : "0.529",
+          "currency" : "USD"
+        },
+        "discountedRegionCode" : "us-east-1",
+        "discountedInstanceType" : "c5d.2xlarge"
+      }]
+    }]
+}

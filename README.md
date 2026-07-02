@@ -11,7 +11,7 @@ This service calculates the TCO costs for a gRPC-based Microservices MACH Archit
 
 
 ## Protocol Buffer files:
-You can find the **Protocol Buffers files** in the [protos](src/main/resources/protos) folder, each of which is related to either [basicBusinessUseCases](src/main/resources/protos/basicBusinessUseCases) or [complexBusinessUseCases](src/main/resources/protos/complexBusinessUseCases) with **transaction, retry and rollback mechanisms**
+You can find the **Protocol Buffers files** in the [protos](src/main/resources/static/protos) folder, each of which is related to the [Business Use Cases](src/main/resources/static/protos/)
 in the context of an **E-Commerce microservice**:
 1. **BUC1**: **gRPC Unary pattern**: Retrieve orders by using an order ID from client to server.
 2. **BUC2**: **gRPC Server Streaming pattern**: The business needs to retrieve all possible orders that match a search criterion (term or filter).
@@ -33,8 +33,7 @@ The service can be parametrized before building it to use a Cloud Service Provid
 * Define a global max repeated items in protofile like the maximum amount of messages property name: *protofile.max.repeated.items*.
 * An **AWS account** with an **IAM user** with **permissions for consuming the AWS Pricing API** is needed.
 * **Reliability tactics**: Client-side and server-side load balancing.
-* **Resiliency tactics and patters**: Timeout, Retry and Circuit breaker. 
-* **Microservices patterns**: SAGA Pattern.
+* **Resiliency tactics and patters**: Timeout, Retry and Circuit breaker.
 * **Security tactics**: TLS Certificate and OAuth2.0 + JWT Token. 
 * **Software Design Patterns that have been implemented**: **Composed Method** and **Builder**. Check for `// DESIGN PATTERN` comments.
 * **NOTE**:Some tests might be skipped as those are operating system dependent.
@@ -72,14 +71,81 @@ The service can be parametrized before building it to use a Cloud Service Provid
 #### Define costs optimization strategies (FinOps practices)}
 ![Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png](src/main/resources/images/Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png)
 
-#### Modify Configuration of Cloud Services based on FinOps practices
-Pending
-
 #### Calculate the new cost (TCO Costs) and Unit Economics:
-![Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png](src/main/resources/images/Toolkit-Phase3TCOCostCalculationAndUnitEconomicsBody.png)
+[Last TCO Breakdown cost report phase 4 with Unit economics and a copy of TCC report of phase 3.pdf](src/main/resources/images/Last%20TCO%20Breakdown%20cost%20report%20phase%204%20with%20Unit%20economics%20and%20a%20copy%20of%20TCC%20report%20of%20phase%203.pdf)
+
+![img.png](src/main/resources/images/TCO breakdown costs.png)
+
+#### Unit Economics and cost-efficiency
+![img_1.png](src/main/resources/images/Unit Economics cost efficiency report.png)
 
 ### Discernment with FinOps Personas and Engineering Teams:
+
+![img_2.png](src/main/resources/images/FinOps Tagging and labeling strategies.png)
+
 ![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
+
+## MVC Controllers
+
+| Controller Class Name | Request Method & Endpoint Path | Replaces JS function / Description |
+|---|---|---|
+| `TCOCalculatorController` | `POST /` | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
+| `ContainerizedEnvironmentCostController` | `GET /api/aws/ec2-instances` | Fetches live compute node on-demand/fallback definitions |
+| `CloudTCOCalculatorController` | `GET /api/aws/alb-pricing` | Provides base structural load balancer tier schemas |
+| `CloudTCOCalculatorController` | `GET /api/aws/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
+| `CloudTCOCalculatorController` | `GET /api/aws/security-services` | `recalculateSecCost()` (Native AWS protection parameters) |
+| `CloudTCOCalculatorController` | `GET /api/aws/cost-optimisation` | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
+| `CloudTCOCalculatorController` | `GET /api/aws/caching-pricing` | `recalculateCaching()` (Cache tier sizing matrices) |
+| `EffectiveRPSCalculatorController` | `POST /api/tco/effective-rps` | `recalculateRps()` (Network overhead scaling limits evaluation) |
+| `FinOpsDiscountController` | `POST /api/finops/container-discounts` | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
+| `PortfolioROIController` | `POST /api/portfolio/roi` | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
+| `UnitEconomicsController` | `POST /api/cost/unit-economics` | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
+| `ReliabilityTacticsController` | `GET /api/reliability/tactic-mappings` | Lists qualitative score matrices for streaming protocols |
+| `ResiliencyPatternsController` | `GET /api/resiliency/tactic-mappings` | Lists resiliency structural tradeoff profiles |
+| `SecurityTacticsController` | `GET /api/security/tactic-mappings` | Lists channel security tactic constraints profiles |
+| `TacticsContributionController` | `POST /api/cost/tactic-contributions` | Quantifies individual egress additions induced by architectural design decisions |
+| `TacticsSessionController` | `POST /api/session/tactics` | Saves active architectural decisions into context state |
+| `TacticsSessionController` | `GET /api/session/tactics` | Retrieves current architectural choices from session buffer |
+| `TacticsSessionController` | `DELETE /api/session/tactics` | Purges tracked tactical options from the contextual storage |
+
+## AWS APIs for pricing - JSON responses:
+
+- **Terminology**:
+  - **SKU (Stock Keeping Unit)** is a unique, system-generated alphanumeric code that identifies a specific cloud resource, in a specific region, under a precise pricing model.
+    - An SKU is not generic. A single AWS service (like Amazon GuardDuty) has hundreds of different SKUs because AWS generates a unique code for every variable, including:The Service: (e.g., Amazon GuardDuty vs. Amazon Macie)The Region: (e.g., US East (N. Virginia) vs. Europe (Frankfurt))The Specific Feature/Operation: (e.g., GuardDuty analyzing VPC Flow Logs vs. GuardDuty analyzing CloudTrail Logs).
+- **Note**: in the AWSFinOpsStrategyCostCalculator class, the **t3.medium** has been used as a **BENCHMARK_INSTANCE_TYPE** as it is considered **the general purpose instance**:
+  - [Instance types t3.medium EC2](https://aws.amazon.com/ec2/instance-types/t3/)
+  - [EC2 Latest instance types](https://docs.aws.amazon.com/ec2/latest/instancetypes/gp.html)
+
+- **AWS Price List Query API**: 
+  - ELB / ALB pricing: [alb-pricing.json](src/main/resources/awspricelistapiexamples/aws-alb-pricing.json)
+  - RDS database pricing: [RDS-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-rds-database-pricing.json)
+  - FinOps CostOptimization Reserved Instances response: [ReservedInstances-finops-strategies-pricing.json](src/main/resources/awspricelistapiexamples/aws-reserved-instances-finops-strategies-pricing.json)
+  - S3 database pricing: [S3-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-s3-database-pricing.json)
+  - Amazon GuardDuty: [amazon-guard-duty-pricing.json](src/main/resources/awspricelistapiexamples/amazon-guard-duty-pricing.json)
+  - Amazon Inspector: [amazon-inspector.json](src/main/resources/awspricelistapiexamples/amazon-inspector.json)
+  - Amazon Web Application Firewall:
+    - Per rule pricing: [aws-waf-rule-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-rule-pricing.json)
+    - Per billion requests pricing: [aws-waf-requests-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-requests-pricing.json)
+  - Amazon Macie: [aws-macie-macie.json](src/main/resources/awspricelistapiexamples/aws-macie-macie.json)
+  - Amazon CloudWatch: [aws-cloud-watch-pricing.json](src/main/resources/awspricelistapiexamples/aws-cloud-watch-pricing.json)
+  - AWS KMS: [aws-kms-pricing.json](src/main/resources/awspricelistapiexamples/aws-kms-pricing.json)
+  - AWS DataTransfer pricing: [aws-datatransfer-pricing.json](src/main/resources/awspricelistapiexamples/awsdatatransferpricingexamples/aws-datatransfer-pricing.json)
+  - AWS Aurora MySQL: [aws-aurora-mysql-pricing.json](src/main/resources/awspricelistapiexamples/aws-aurora-mysql-pricing.json)
+
+- **AWS Price List Bulk API**:
+  - PriceList Bulk response: [pricelist-bul-api.json](src/main/resources/awspricelistbulkapiexamples/aws-pricelist-bulk-api.json)
+  - FinOps strategies pricing: [finops-strategies-pricing.json](src/main/resources/awspricelistbulkapiexamples/aws-finops-strategies-pricing.json)
+  - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/main/resources/awspricelistbulkapiexamples/aws-computesavingsplans-jsonpricingfile-response.json)
+
+## Design principle
+
+- Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/aws/*`) to each endpoint.
+- Backend returns **computed results** only — costs, breakdowns, labels.
+- No business logic in JS. JS = form collection + API call + render.
+
+## Retry formula (preserved)
+`tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
 
 
 # References:
@@ -95,22 +161,21 @@ Pending
 10. [Richardson, C. (2019). Microservices Patterns. MANNING.](https://learning.oreilly.com/library/view/microservices-patterns/9781617294549/).
 11. [Design Patterns: Elements of Reusable Object-Oriented Software](https://a.co/d/b77puMG).
 12. [Refactoring to Patterns](https://a.co/d/0faJEZSx).
-13. [Java Persistence with Spring Data and Hibernate](https://a.co/d/04ZENVQy).
-14. [gRPC: Up and Running: Building Cloud Native Applications with Go and Java for Docker and Kubernetes](https://a.co/d/0cr8VGEU).
-15. [gRPC Microservices in Go](https://a.co/d/00mpZLip).
-16. [Mach Architecture: Microservices, API-first, Cloud-native, and Headless principles](https://a.co/d/0aqCTQKt).
-17. [Cloud FinOps, 2nd Edition: Collaborative, Real-Time Cloud Value Decision Making](https://a.co/d/0f8kkjcU).
-18. [Migrating to AWS: A Manager's Guide: How to Foster Agility, Reduce Costs, and Bring a Competitive Edge to Your Business](https://a.co/d/0bCjXIW5).
-19. [Building Microservices, 2nd Edition](https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/).
-20. [Monolith to Microservices](https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/).
-21. [Communication Patterns](https://www.oreilly.com/library/view/communication-patterns/9781098140533/).
-22. [UML for Java Programmers](https://www.oreilly.com/library/view/uml-for-javatm/0131428489/).
-23. [AWS FinOps Simplified](https://www.oreilly.com/library/view/aws-finops-simplified/9781803247236/).
-24. [Engineering Resilient Systems on AWS](https://www.oreilly.com/library/view/engineering-resilient-systems/9781098162412/).
-25. [Building Resilient Architectures on AWS](https://www.oreilly.com/library/view/building-resilient-architectures/9781835887103/).
-26. [System Design on AWS](https://www.oreilly.com/library/view/system-design-on/9781098146887/).
-27. [Efficient Cloud FinOps](https://www.oreilly.com/library/view/efficient-cloud-finops/9781805122579/).
-28. [AWS Certified Solutions Architect](https://www.oreilly.com/library/view/aws-certified-solutions/9781119982623/).
+13. [gRPC: Up and Running: Building Cloud Native Applications with Go and Java for Docker and Kubernetes](https://a.co/d/0cr8VGEU).
+14. [gRPC Microservices in Go](https://a.co/d/00mpZLip).
+15. [Mach Architecture: Microservices, API-first, Cloud-native, and Headless principles](https://a.co/d/0aqCTQKt).
+16. [Cloud FinOps, 2nd Edition: Collaborative, Real-Time Cloud Value Decision Making](https://a.co/d/0f8kkjcU).
+17. [Migrating to AWS: A Manager's Guide: How to Foster Agility, Reduce Costs, and Bring a Competitive Edge to Your Business](https://a.co/d/0bCjXIW5).
+18. [Building Microservices, 2nd Edition](https://www.oreilly.com/library/view/building-microservices-2nd/9781492034018/).
+19. [Monolith to Microservices](https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/).
+20. [Communication Patterns](https://www.oreilly.com/library/view/communication-patterns/9781098140533/).
+21. [UML for Java Programmers](https://www.oreilly.com/library/view/uml-for-javatm/0131428489/).
+22. [AWS FinOps Simplified](https://www.oreilly.com/library/view/aws-finops-simplified/9781803247236/).
+23. [Engineering Resilient Systems on AWS](https://www.oreilly.com/library/view/engineering-resilient-systems/9781098162412/).
+24. [Building Resilient Architectures on AWS](https://www.oreilly.com/library/view/building-resilient-architectures/9781835887103/).
+25. [System Design on AWS](https://www.oreilly.com/library/view/system-design-on/9781098146887/).
+26. [Efficient Cloud FinOps](https://www.oreilly.com/library/view/efficient-cloud-finops/9781805122579/).
+27. [AWS Certified Solutions Architect](https://www.oreilly.com/library/view/aws-certified-solutions/9781119982623/).
 
 ## Credits
 [CREDITS.md](CREDITS.md)

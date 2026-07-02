@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package com.ecommerce.order.update;
+
+option java_package = "com.ecommerce.order.grpc.update";
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+enum OrderStatus {
+  ORDER_STATUS_UNKNOWN = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_PROCESSING = 2;
+  ORDER_STATUS_SHIPPED = 3;
+  ORDER_STATUS_DELIVERED = 4;
+  ORDER_STATUS_CANCELLED = 5;
+}
+
+message OrderUpdatePayload {
+  string order_id = 1;
+  OrderStatus updated_status = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  string tracking_number = 4;
+}
+
+message UpdateSummaryResponse {
+  int32 total_orders_processed = 1;
+  bool success = 2;
+  string message = 3;
+  google.protobuf.Timestamp execution_completed_at = 4;
+}
+
+service OrderUpdateService {
+  rpc BatchUpdateOrders (stream OrderUpdatePayload) returns (UpdateSummaryResponse);
+}

@@ -43,8 +43,8 @@ class EC2ComputeCostCalculatorTest {
         List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
 
         assertEquals(18, result.size());
-        assertEquals("t3.micro", result.get(0).get("instanceType"));
-        assertEquals(62500000L, result.get(0).get("networkBytesPerSec"));  // 0.5Gbps math
+        assertEquals("t3.micro", result.getFirst().get("instanceType"));
+        assertEquals(62500000L, result.getFirst().get("networkBytesPerSec"));  // 0.5Gbps math
         verify(pricingMock, times(18)).getProducts((GetProductsRequest) any());  // Full loop coverage
     }
 
@@ -77,14 +77,14 @@ class EC2ComputeCostCalculatorTest {
 
         List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
 
-        assertEquals(0.5, result.get(0).get("networkGbps"));              // for t3 family
+        assertEquals(0.5, result.getFirst().get("networkGbps"));              // for t3 family
         assertEquals(12.5, findEntry(result, "m6i.large").get("networkGbps"));
         assertEquals(25.0, findEntry(result, "m6i.4xlarge").get("networkGbps"));
         assertEquals(3125000000L, findEntry(result, "m6i.4xlarge").get("networkBytesPerSec"));
     }
 
     private void injectMocks(EC2ComputeCostCalculator calc) throws Exception {
-        Field pricingField = AWSCloudCalculator.class.getDeclaredField("pricing");
+        Field pricingField = AWSCloudCalculator.class.getDeclaredField("pricingClient");
         pricingField.setAccessible(true);
         pricingField.set(calc, pricingMock);
 

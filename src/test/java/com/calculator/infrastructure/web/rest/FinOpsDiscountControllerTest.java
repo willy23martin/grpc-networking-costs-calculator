@@ -6,10 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.PricingClientBuilder;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
@@ -19,20 +16,15 @@ import java.util.List;
 
 import static com.calculator.application.services.utils.MathUtils.round2;
 import static com.calculator.application.services.utils.MathUtils.round4;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class FinOpsDiscountControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
+class FinOpsDiscountControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -47,7 +39,6 @@ class FinOpsDiscountControllerTest {
             when(mockBuilder.region(any())).thenReturn(mockBuilder);
             when(mockBuilder.build()).thenReturn(mockClient);
 
-            // This specific JSON structure is required to satisfy all iterators in extractUsdPrice
             String validJson = "{"
                     + "\"terms\": {"
                     + "  \"OnDemand\": { \"key1\": { \"priceDimensions\": { \"dim1\": { \"pricePerUnit\": { \"USD\": \"0.20\" } } } } },"
@@ -58,16 +49,10 @@ class FinOpsDiscountControllerTest {
             GetProductsResponse resp = GetProductsResponse.builder().priceList(List.of(validJson)).build();
             when(mockClient.getProducts(any(GetProductsRequest.class))).thenReturn(resp);
 
-            FinOpsDiscountController.DiscountRequest req = new FinOpsDiscountController.DiscountRequest();
-            req.ec2InstanceType = "m6i.large";
-            req.riStandard1yr = true;
-
-            mockMvc.perform(post("/api/finops/discount")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+            mockMvc.perform(get("/api/finops/ri-prices/m6i.large"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.source", containsString("live")))
-                    .andExpect(jsonPath("$.ec2OnDemandPricePerHour", is(0.2)));
+                    .andExpect(jsonPath("$.source", containsString("Live")))
+                    .andExpect(jsonPath("$.onDemandPerHourUsd", is(0.2)));
         }
     }
 
@@ -81,12 +66,9 @@ class FinOpsDiscountControllerTest {
             when(mockBuilder.region(any())).thenReturn(mockBuilder);
             when(mockBuilder.build()).thenReturn(mockClient);
 
-            // Scenario A: Missing Price Dimensions (Hits !dimIter.hasNext() branch)
             String noDims = "{\"terms\":{\"OnDemand\":{\"k\":{\"priceDimensions\":{}}}}}";
-            // Scenario B: Missing Terms (Hits !termIter.hasNext() branch)
-            String noTerms = "{\"terms\":{\"OnDemand\":{}}}";
 
-            GetProductsResponse resp = GetProductsResponse.builder().priceList(List.of(noDims, noTerms)).build();
+            GetProductsResponse resp = GetProductsResponse.builder().priceList(List.of(noDims)).build();
             when(mockClient.getProducts(any(GetProductsRequest.class))).thenReturn(resp);
 
             mockMvc.perform(get("/api/finops/ri-prices/t3.medium"))
@@ -96,22 +78,21 @@ class FinOpsDiscountControllerTest {
     }
 
     @Test
-    @DisplayName("Coverage: Fargate & Savings Plan Logic")
-    void testFargateAndSavingsPlans() throws Exception {
+    @DisplayName("Coverage: Discount Matrix Calculations")
+    void testDiscountCalculationPath() throws Exception {
         FinOpsDiscountController.DiscountRequest req = new FinOpsDiscountController.DiscountRequest();
-        req.fargateActivePods = 5;
-        req.fargateVcpuPerPod = 2.0;
-        req.fargateGbPerPod = 4.0;
-        req.savingsPlan1yr = true;
-        req.savingsPlan3yr = true;
-        req.eksMonthlyFixed = 73.0;
+        req.currentMonthlyContainerCostUsd = 1000.0;
+        req.riStandard1yr = true;
+        req.riStandard3yr = true;
 
         mockMvc.perform(post("/api/finops/discount")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fargateOnDemandCostMonthly", greaterThan(0.0)))
-                .andExpect(jsonPath("$.options", hasSize(2)));
+                .andExpect(jsonPath("$.bestStrategy", is("Standard RI 3-Yr")))
+                .andExpect(jsonPath("$.maxDiscountPct", is(57.0)))
+                .andExpect(jsonPath("$.calculatedMonthlySavingUsd", is(570.0)))
+                .andExpect(jsonPath("$.netMonthlyContainerCostUsd", is(430.0)));
     }
 
     @Test
@@ -126,14 +107,11 @@ class FinOpsDiscountControllerTest {
         }
     }
 
-    /**
-     * TEST 5: STRATEGY EMPTY BRANCH
-     * Covers: Stream .max() .orElse(null) branch.
-     */
     @Test
     @DisplayName("Coverage: No Strategy Selected")
     void testEmptyOptions() throws Exception {
         FinOpsDiscountController.DiscountRequest req = new FinOpsDiscountController.DiscountRequest();
+        req.currentMonthlyContainerCostUsd = 500.0;
         req.riStandard1yr = false;
         req.riStandard3yr = false;
         req.riConvertible1yr = false;
@@ -144,7 +122,9 @@ class FinOpsDiscountControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bestStrategy", nullValue()));
+                .andExpect(jsonPath("$.bestStrategy", nullValue()))
+                .andExpect(jsonPath("$.maxDiscountPct", is(0.0)))
+                .andExpect(jsonPath("$.netMonthlyContainerCostUsd", is(500.0)));
     }
 
     @Test

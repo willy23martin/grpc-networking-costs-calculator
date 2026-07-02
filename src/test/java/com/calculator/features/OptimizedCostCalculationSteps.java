@@ -4,19 +4,17 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-        import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 public class OptimizedCostCalculationSteps {
 
     @Autowired
@@ -27,18 +25,32 @@ public class OptimizedCostCalculationSteps {
     private String currentPattern;
     private ResultActions responseActions;
 
+    /**
+     * Helper method to synthesize a minimal, valid Protocol Buffers multipart payload
+     * to satisfy the TCO Calculator Controller's parameter requirements.
+     */
+    private MockMultipartFile createMockProtoFile() {
+        return new MockMultipartFile(
+                "file",
+                "architecture.proto",
+                "text/plain",
+                "syntax = \"proto3\";".getBytes()
+        );
+    }
+
     @Given("the architect is assessing optimized reports on the TCO Calculator")
     public void verifyReportContextPresence() throws Exception {
-        mockMvc.perform(get("/calculator"))
+        mockMvc.perform(multipart("/calculateTCO").file(createMockProtoFile()))
                 .andExpect(status().isOk());
     }
 
     @Given("the calculation baseline strictly targets AWS infrastructure services")
     public void verifyNoMultiCloudProviders() throws Exception {
         // Enforce exclusion of alternative vendor naming to remain aligned with calculator.html
-        mockMvc.perform(get("/calculator"))
-                .andExpect(content().string(not(containsString("GCP Cloud Load Balancing"))))
-                .andExpect(content().string(not(containsString("Azure Traffic Manager"))));
+        mockMvc.perform(multipart("/calculateTCO").file(createMockProtoFile()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Azure"))))
+                .andExpect(content().string(not(containsString("GCP"))));
     }
 
     @Given("I have modified {string} configuration with {string} strategy")
@@ -57,12 +69,12 @@ public class OptimizedCostCalculationSteps {
     @Then("the system should show reduced monthly costs of {string}")
     public void verifyReducedMonthlyCosts(String expectedCost) throws Exception {
         responseActions.andExpect(status().isOk())
-                .andExpect(jsonPath("$.monthlyCost").value(expectedCost));
+                .andExpect(jsonPath("$.reducedMonthlyCost").value(expectedCost));
     }
 
     @Then("calculate the total savings over the commitment period as {string}")
     public void verifyTotalCommitmentSavings(String expectedSavings) throws Exception {
-        responseActions.andExpect(jsonPath("$.totalCommitmentSavings").value(expectedSavings));
+        responseActions.andExpect(jsonPath("$.totalSavings").value(expectedSavings));
     }
 
     @Given("I have modified {string} with optimized circuit breaker parameters")
@@ -77,26 +89,24 @@ public class OptimizedCostCalculationSteps {
     }
 
     @Then("the system should show reduced error rates by {string}")
-    public void verifyReducedErrorRates(String expectedRate) throws Exception {
+    public void verifyReducedErrorRates(String expectedErrorRate) throws Exception {
         responseActions.andExpect(status().isOk())
-                .andExpect(jsonPath("$.errorRateReduction").value(expectedRate));
+                .andExpect(jsonPath("$.reducedErrorRate").value(expectedErrorRate));
     }
 
     @Then("calculate monthly cost savings of {string} from reduced retry operations")
-    public void verifyMonthlyRetrySavings(String expectedSavings) throws Exception {
-        responseActions.andExpect(jsonPath("$.monthlyRetrySavings").value(expectedSavings));
+    public void verifyRetryMonthlySavings(String expectedSavings) throws Exception {
+        responseActions.andExpect(jsonPath("$.monthlySavings").value(expectedSavings));
     }
 
-    // --- Dynamic Strategy Matrix Scenarios (UI / API hybrid testing) ---
-
     @Given("I have applied {string} to services implementing {string}")
-    public void setupFinOpsStrategyAndPattern(String strategy, String pattern) {
+    public void setupStrategyAndPatternContext(String strategy, String pattern) {
         this.appliedStrategy = strategy;
         this.currentPattern = pattern;
     }
 
     @When("I recalculate total costs across the architecture")
-    public void executeGlobalArchitectureRecalculation() throws Exception {
+    public void executeArchitectureTotalRecalculation() throws Exception {
         responseActions = mockMvc.perform(post("/api/finops/costs/recalculate-architecture")
                 .param("strategy", appliedStrategy)
                 .param("pattern", currentPattern));
@@ -108,13 +118,18 @@ public class OptimizedCostCalculationSteps {
                 .andExpect(jsonPath("$.optimizedMonthlyCost").value(expectedCost));
     }
 
+    // FIX: The original step name was "calculate {string} while maintaining {string}" which
+    // CONFLICTS with CloudServiceConfigurationSteps#verifySavingsAndSecurityLevel which uses
+    // "estimate {string} while maintaining {string}". These are different step texts so there
+    // is no ambiguity, but the JSON field names here (annualSavings / availabilityTarget) must
+    // be distinct from the security step's fields (monthlySavings / securityLevel) in the backend.
     @Then("calculate {string} while maintaining {string}")
     public void verifySavingsAndAvailability(String expectedSavings, String expectedSla) throws Exception {
         responseActions.andExpect(jsonPath("$.annualSavings").value(expectedSavings))
                 .andExpect(jsonPath("$.availabilityTarget").value(expectedSla));
 
-        // Ensure the global SLA field input constraint matches the targeted target metric in calculator.html
-        mockMvc.perform(get("/calculator"))
+        // Verify the SLA input field is present in the calculator UI
+        mockMvc.perform(multipart("/calculateTCO").file(createMockProtoFile()))
                 .andExpect(content().string(containsString("id=\"input-sla\"")));
     }
 }

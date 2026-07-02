@@ -1,0 +1,835 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0011",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS vCPU Monitored - CreateDBInstance:0011"
+      },
+      "sku" : "2BPTVN8P7CM9UX7H"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "2BPTVN8P7CM9UX7H.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "2BPTVN8P7CM9UX7H.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$1 per vCPU / month analyzed in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "2BPTVN8P7CM9UX7H.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "1.0000000000"
+              }
+            }
+          },
+          "sku" : "2BPTVN8P7CM9UX7H",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSACULimitlessMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0016",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS ACU Limitless Monitored - CreateDBInstance:0016"
+      },
+      "sku" : "2XBMPSJCF25PZJKV"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "2XBMPSJCF25PZJKV.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "2XBMPSJCF25PZJKV.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "ACU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.25 per ACU-Month for RDS ACU Limitless Monitored in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "2XBMPSJCF25PZJKV.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            }
+          },
+          "sku" : "2XBMPSJCF25PZJKV",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSACULimitlessMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0021",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS ACU Limitless Monitored - CreateDBInstance:0021"
+      },
+      "sku" : "2XWRXT2KBKTGMZSC"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "2XWRXT2KBKTGMZSC.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "2XWRXT2KBKTGMZSC.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "ACU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.25 per ACU-Month for RDS ACU Limitless Monitored in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "2XWRXT2KBKTGMZSC.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            }
+          },
+          "sku" : "2XWRXT2KBKTGMZSC",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSACUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0002",
+        "group" : "Security Services - Amazon GuardDuty Free RDS ACU Monitored - CreateDBInstance:0002"
+      },
+      "sku" : "3AKEDAQC4YJN2XXW"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "3AKEDAQC4YJN2XXW.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "3AKEDAQC4YJN2XXW.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "ACU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per ACU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "3AKEDAQC4YJN2XXW.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "3AKEDAQC4YJN2XXW",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeEventsAnalyzed",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "",
+        "group" : "Security Services - Amazon GuardDuty Free CloudTrail Events Processed"
+      },
+      "sku" : "3QAAAXW46RDD3V64"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "3QAAAXW46RDD3V64.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "3QAAAXW46RDD3V64.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Events",
+              "endRange" : "Inf",
+              "description" : "$0.00 per CloudTrail events analyzed (free trial) US East (N.Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "3QAAAXW46RDD3V64.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "3QAAAXW46RDD3V64",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0019",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS vCPU Monitored - CreateDBInstance:0019"
+      },
+      "sku" : "3RQ79GT5K8HQUFN5"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "3RQ79GT5K8HQUFN5.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "3RQ79GT5K8HQUFN5.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$1 per vCPU / month analyzed in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "3RQ79GT5K8HQUFN5.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "1.0000000000"
+              }
+            }
+          },
+          "sku" : "3RQ79GT5K8HQUFN5",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0016",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS vCPU Monitored - CreateDBInstance:0016"
+      },
+      "sku" : "3SH3P52F9FASEHAA"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "3SH3P52F9FASEHAA.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "3SH3P52F9FASEHAA.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$1 per vCPU / month analyzed in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "3SH3P52F9FASEHAA.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "1.0000000000"
+              }
+            }
+          },
+          "sku" : "3SH3P52F9FASEHAA",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSACUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0021",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS ACU Monitored - CreateDBInstance:0021"
+      },
+      "sku" : "44VQU5F3JGBTMP6P"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "44VQU5F3JGBTMP6P.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "44VQU5F3JGBTMP6P.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "ACU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.25 per ACU / month analyzed in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "44VQU5F3JGBTMP6P.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.2500000000"
+              }
+            }
+          },
+          "sku" : "44VQU5F3JGBTMP6P",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeKubernetesAuditLogsAnalyzed",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "",
+        "group" : "Security Services - Amazon GuardDuty Free Kubernetes Audit Logs Events Processed"
+      },
+      "sku" : "47X86VEEYE88FJUN"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "47X86VEEYE88FJUN.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "47X86VEEYE88FJUN.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "Events",
+              "endRange" : "Inf",
+              "description" : "$0.0 per Kubernetes Audit Log Analyzed (free trial) in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "47X86VEEYE88FJUN.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "47X86VEEYE88FJUN",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0006",
+        "group" : "Security Services - Amazon GuardDuty Free RDS vCPU Monitored - CreateDBInstance:0006"
+      },
+      "sku" : "4CFSE5KYC6VSTS45"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "4CFSE5KYC6VSTS45.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4CFSE5KYC6VSTS45.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per vCPU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "4CFSE5KYC6VSTS45.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "4CFSE5KYC6VSTS45",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeMalwareProtectionEBSDataScanned",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "",
+        "group" : "Security Services - Amazon GuardDuty Free Malware Protection EBS Data Scanned"
+      },
+      "sku" : "4GZ2WSWMPXBTMDZB"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "4GZ2WSWMPXBTMDZB.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4GZ2WSWMPXBTMDZB.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.0 per GB for FreeMalwareProtectionEBSDataScanned in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "4GZ2WSWMPXBTMDZB.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "4GZ2WSWMPXBTMDZB",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance",
+        "group" : "Security Services - Amazon GuardDuty Free RDS vCPU Monitored - CreateDBInstance"
+      },
+      "sku" : "4HDJWEYA32APVXHW"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "4HDJWEYA32APVXHW.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4HDJWEYA32APVXHW.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per vCPU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "4HDJWEYA32APVXHW.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "4HDJWEYA32APVXHW",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSACUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0006",
+        "group" : "Security Services - Amazon GuardDuty Free RDS ACU Monitored - CreateDBInstance:0006"
+      },
+      "sku" : "4M58XPUZ77R5SNY3"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "4M58XPUZ77R5SNY3.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4M58XPUZ77R5SNY3.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "ACU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per ACU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "4M58XPUZ77R5SNY3.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "4M58XPUZ77R5SNY3",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0010",
+        "group" : "Security Services - Amazon GuardDuty Free RDS vCPU Monitored - CreateDBInstance:0010"
+      },
+      "sku" : "4RAQN65QGX6R3SXF"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "4RAQN65QGX6R3SXF.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4RAQN65QGX6R3SXF.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per vCPU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "4RAQN65QGX6R3SXF.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "4RAQN65QGX6R3SXF",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0012",
+        "group" : "Security Services - Amazon GuardDuty Free RDS vCPU Monitored - CreateDBInstance:0012"
+      },
+      "sku" : "4UBAWEYTVQNWQXV7"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "4UBAWEYTVQNWQXV7.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "4UBAWEYTVQNWQXV7.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per vCPU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "4UBAWEYTVQNWQXV7.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "4UBAWEYTVQNWQXV7",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0008",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS vCPU Monitored - CreateDBInstance:0008"
+      },
+      "sku" : "57FYF4Q42YBMXK8B"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "57FYF4Q42YBMXK8B.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "57FYF4Q42YBMXK8B.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$1 per vCPU / month analyzed in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "57FYF4Q42YBMXK8B.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "1.0000000000"
+              }
+            }
+          },
+          "sku" : "57FYF4Q42YBMXK8B",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-PaidRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0015",
+        "group" : "Security Services - Amazon GuardDuty Paid RDS vCPU Monitored - CreateDBInstance:0015"
+      },
+      "sku" : "5WEV62VK9GFZHAZK"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "5WEV62VK9GFZHAZK.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "5WEV62VK9GFZHAZK.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$1 per vCPU / month analyzed in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "5WEV62VK9GFZHAZK.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "1.0000000000"
+              }
+            }
+          },
+          "sku" : "5WEV62VK9GFZHAZK",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSvCPUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0021",
+        "group" : "Security Services - Amazon GuardDuty Free RDS vCPU Monitored - CreateDBInstance:0021"
+      },
+      "sku" : "5XW2NN5GH5TNRTGK"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "5XW2NN5GH5TNRTGK.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "5XW2NN5GH5TNRTGK.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "vCPU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per vCPU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "5XW2NN5GH5TNRTGK.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "5XW2NN5GH5TNRTGK",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-MalwareProtectionS3DataScanned",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "",
+        "group" : "Security Services - Amazon GuardDuty Malware Protection S3 Data Scanned"
+      },
+      "sku" : "67K3RUGE6GR924SC"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "67K3RUGE6GR924SC.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "67K3RUGE6GR924SC.JRTCKXETXF.8EEUB22XNJ" : {
+              "unit" : "GB",
+              "endRange" : "1",
+              "description" : "$0.00 per GB - for the first 1GB for Malware Protection S3 Data Scanned in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "67K3RUGE6GR924SC.JRTCKXETXF.8EEUB22XNJ",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            },
+            "67K3RUGE6GR924SC.JRTCKXETXF.JTU8TKNAMW" : {
+              "unit" : "GB",
+              "endRange" : "Inf",
+              "description" : "$0.09 per GB - for above 1GB for Malware Protection S3 Data Scanned in US East (N. Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "67K3RUGE6GR924SC.JRTCKXETXF.JTU8TKNAMW",
+              "beginRange" : "1",
+              "pricePerUnit" : {
+                "USD" : "0.0900000000"
+              }
+            }
+          },
+          "sku" : "67K3RUGE6GR924SC",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  }, {
+    "product" : {
+      "productFamily" : "GuardDuty",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonGuardDuty",
+        "usagetype" : "USE1-FreeRDSACUMonitored",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon GuardDuty",
+        "operation" : "CreateDBInstance:0008",
+        "group" : "Security Services - Amazon GuardDuty Free RDS ACU Monitored - CreateDBInstance:0008"
+      },
+      "sku" : "6ZEXAXKEA6Z9D5QN"
+    },
+    "serviceCode" : "AmazonGuardDuty",
+    "terms" : {
+      "OnDemand" : {
+        "6ZEXAXKEA6Z9D5QN.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "6ZEXAXKEA6Z9D5QN.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "ACU-Months",
+              "endRange" : "Inf",
+              "description" : "$0.00 per ACU / month analyzed (free trial) in US East (N. Virginia) region",
+              "appliesTo" : [ ],
+              "rateCode" : "6ZEXAXKEA6Z9D5QN.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0000000000"
+              }
+            }
+          },
+          "sku" : "6ZEXAXKEA6Z9D5QN",
+          "effectiveDate" : "2026-01-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260120230311",
+    "publicationDate" : "2026-01-20T23:03:11Z"
+  } ]
+}
