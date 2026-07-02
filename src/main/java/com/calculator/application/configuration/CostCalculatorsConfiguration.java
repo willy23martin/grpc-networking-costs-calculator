@@ -87,4 +87,5 @@ public class CostCalculatorsConfiguration {
         CachingCostCalculator cachingCostCalculator = new ElastiCacheCostCalculator();
         return cachingCostCalculator;
     }
+
 }

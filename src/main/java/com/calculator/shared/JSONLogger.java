@@ -1,6 +1,5 @@
 package com.calculator.shared;
 
-import com.calculator.infrastructure.web.rest.CloudServiceCostController;
 import com.calculator.infrastructure.web.rest.UnitEconomicsController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -122,34 +121,6 @@ public class JSONLogger {
         } catch (Exception e) {
             log.warning("Failed to format Cloud Infra Request as beautiful JSON, printing raw format. " + e);
             log.info("Cloud Infra Request raw fallback: \n" + req);
-        }
-    }
-
-    public static void logAsJSON(Logger log, CloudServiceCostController.AlbCostRequest req) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode rootNode = mapper.createObjectNode();
-
-            // Map standard incoming parameters
-            rootNode.put("albCount", req.albCount);
-            rootNode.put("lcuPerHour", req.lcuPerHour);
-            rootNode.put("fixedPerMonthUsd", req.fixedPerMonthUsd);
-            rootNode.put("lcuPerHourUsd", req.lcuPerHourUsd);
-
-            // Calculate context metrics for easier debugging in the log stream
-            double fixedTotal = req.albCount * req.fixedPerMonthUsd;
-            double variableTotal = req.albCount * (req.lcuPerHour * 730 * req.lcuPerHourUsd); // 730 hours/month average
-
-            rootNode.put("calculatedFixedMonthlyCostUsd", fixedTotal);
-            rootNode.put("calculatedVariableMonthlyCostUsd", variableTotal);
-            rootNode.put("calculatedTotalMonthlyCostUsd", fixedTotal + variableTotal);
-
-            String prettyJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootNode);
-            log.info("AWS Application Load Balancer Request Metrics: \n" + prettyJson);
-
-        } catch (Exception e) {
-            log.warning("Failed to format ALB Request as beautiful JSON, printing raw format. " + e);
-            log.info("AWS ALB Request raw fallback: \n" + req);
         }
     }
 }

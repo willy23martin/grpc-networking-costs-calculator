@@ -93,7 +93,6 @@ The service can be parametrized before building it to use a Cloud Service Provid
 | Controller Class Name | Request Method & Endpoint Path | Replaces JS function / Description |
 |---|---|---|
 | `TCOCalculatorController` | `POST /` | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
-| `CloudServiceCostController` | `POST /api/cost/alb` | `recalculateAlb()` |
 | `ContainerizedEnvironmentCostController` | `GET /api/aws/ec2-instances` | Fetches live compute node on-demand/fallback definitions |
 | `CloudTCOCalculatorController` | `GET /api/aws/alb-pricing` | Provides base structural load balancer tier schemas |
 | `CloudTCOCalculatorController` | `GET /api/aws/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
