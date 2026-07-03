@@ -189,11 +189,9 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
 
                                                 if (is1yr) {
                                                     compute1yr = extractedPrice;
-                                                    // TODO NOT PTINTING
                                                     log.info("End value of compute1yr (us-east-1): " + compute1yr);
                                                 } else {
                                                     compute3yr = extractedPrice;
-                                                    // TODO NOT PRINTING
                                                     log.info("End value of compute3yr (us-east-1): " + compute3yr);
                                                 }
                                                 break; // Break loop for rates once the us-east-1 match is resolved
@@ -219,7 +217,6 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
         targetMap.put("savingsPlanNote", "Savings Plans apply automatically to the highest compute usage. Master data dynamically parsed from Bulk URL: " + pricingFileUrl);
     }
 
-    // TODO - Simulated as not available for now
     private void fetchAndMapTrustedAdvisorSupportCosts(Map<String, Object> targetMap) {
         double minMonthUsd = 100.0;
         double pctMonthlyUsage = 10.0;
