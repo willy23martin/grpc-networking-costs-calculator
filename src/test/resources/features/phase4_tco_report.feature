@@ -12,7 +12,6 @@ Feature: TCO Report Generation and Detailed Breakdown
     Given a BUC has been selected and a proto file is loaded
     When the architect clicks Calculate TCO in Phase 3
     Then the tool calls POST api-session-tactics and POST calculateTCO
-    And the system parses the Spring Boot Thymeleaf HTML response to extract the cost model parameters
     And the interface automatically navigates to Phase 4 to render the full report
 
   @UI @TCO @ReportRendering

@@ -132,13 +132,14 @@ The service can be parametrized before building it to use a Cloud Service Provid
   - AWS KMS: [aws-kms-pricing.json](src/main/resources/awspricelistapiexamples/aws-kms-pricing.json)
   - AWS DataTransfer pricing: [aws-datatransfer-pricing.json](src/main/resources/awspricelistapiexamples/awsdatatransferpricingexamples/aws-datatransfer-pricing.json)
   - AWS Aurora MySQL: [aws-aurora-mysql-pricing.json](src/main/resources/awspricelistapiexamples/aws-aurora-mysql-pricing.json)
+  - AWS EKS: [aws-eks-pricing.json](src/main/resources/awspricelistapiexamples/aws-eks-pricing.json)
 
 - **AWS Price List Bulk API**:
   - PriceList Bulk response: [pricelist-bul-api.json](src/main/resources/awspricelistbulkapiexamples/aws-pricelist-bulk-api.json)
   - FinOps strategies pricing: [finops-strategies-pricing.json](src/main/resources/awspricelistbulkapiexamples/aws-finops-strategies-pricing.json)
   - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/main/resources/awspricelistbulkapiexamples/aws-computesavingsplans-jsonpricingfile-response.json)
 
-## Design principle
+## Design principles
 
 - Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/aws/*`) to each endpoint.
 - Backend returns **computed results** only — costs, breakdowns, labels.

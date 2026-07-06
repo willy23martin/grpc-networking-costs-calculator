@@ -1,0 +1,45 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "Compute",
+      "attributes" : {
+        "tiertype" : "HAStandard",
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonEKS",
+        "usagetype" : "USE1-AmazonEKS-Local-Outposts-Hours:perCluster",
+        "locationType" : "AWS Outposts",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon Elastic Container Service for Kubernetes",
+        "operation" : "CreateOperation"
+      },
+      "sku" : "7NQQU9V5HATFSKTV"
+    },
+    "serviceCode" : "AmazonEKS",
+    "terms" : {
+      "OnDemand" : {
+        "7NQQU9V5HATFSKTV.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "7NQQU9V5HATFSKTV.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "hours",
+              "endRange" : "Inf",
+              "description" : "Amazon EKS local cluster usage on AWS Outposts",
+              "appliesTo" : [ ],
+              "rateCode" : "7NQQU9V5HATFSKTV.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.1000000000"
+              }
+            }
+          },
+          "sku" : "7NQQU9V5HATFSKTV",
+          "effectiveDate" : "2026-06-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260626185237",
+    "publicationDate" : "2026-06-26T18:52:37Z"
+  } ]
+}

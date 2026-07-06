@@ -116,13 +116,29 @@ function renderCloudServicesChecklist(checklistContainer) {
 function compileActiveCloudInfrastructurePayload() {
   const activeServicesList = [];
 
-  // Clean predicate wrapper checking checkbox states safely
-  const isTacticChecked = (elementId) => {
-    const checkboxElement = document.getElementById(elementId);
-    return checkboxElement ? checkboxElement.checked : false;
-  };
+  // Use tco_snapshot (written by writeTcoSnapshot in calculator.js after every
+  // recalculate* call) instead of DOM checkbox state. The snapshot is always
+  // current and avoids the duplicate-ID problem where getElementById finds the
+  // static hidden checkbox in body-cloud instead of the dynamic one.
+  let _snap = {};
+  try { _snap = JSON.parse(sessionStorage.getItem('tco_snapshot') || '{}'); } catch(e) {}
+  const _secSnap = _snap.sec || {};
 
-  if (isTacticChecked('tactic-alb')) {
+  // A service is "active" if it has a cost > 0 in the snapshot, OR if the
+  // sessionStorage key exists (written by recalculate* functions).
+  const hasSnapCost = (key) => parseFloat(_snap[key] || 0) > 0;
+  const hasSecCost  = (...ids) => ids.some(id => parseFloat(_secSnap[id] || 0) > 0);
+  const hasDbKey    = () => parseFloat(sessionStorage.getItem('tco_db_cost') || 0) > 0;
+
+  // Fallback: also check DOM for cases where snapshot not yet written
+  const domChecked  = (id) => {
+    const sc = document.getElementById('cloudsec-content');
+    const el = (sc && sc.querySelector('#' + id)) || document.getElementById(id);
+    return !!(el && el.checked);
+  };
+  const isTacticChecked = (id) => domChecked(id);
+
+  if (hasSnapCost('alb') || isTacticChecked('tactic-alb')) {
     activeServicesList.push({
       serviceName: 'Application Load Balancer (ALB)',
       tags: ['Application', 'Environment', 'Team', 'CostCentre', 'ServiceName'],
@@ -130,7 +146,7 @@ function compileActiveCloudInfrastructurePayload() {
     });
   }
 
-  if (isTacticChecked('tactic-cache')) {
+  if (hasSnapCost('cache') || isTacticChecked('tactic-cache')) {
     activeServicesList.push({
       serviceName: 'Amazon ElastiCache',
       tags: ['Application', 'Environment', 'Team', 'ServiceName', 'DataClassification'],
@@ -138,10 +154,7 @@ function compileActiveCloudInfrastructurePayload() {
     });
   }
 
-  const isRdsOrAuroraEnabled = isTacticChecked('tactic-s3-backup') ||
-                               isTacticChecked('tactic-aurora-replica') ||
-                               isTacticChecked('tactic-rds-snapshot') ||
-                               isTacticChecked('tactic-rds-multiaz');
+  const isRdsOrAuroraEnabled = hasDbKey() || isTacticChecked('tactic-s3-backup') || isTacticChecked('tactic-aurora-replica') || isTacticChecked('tactic-rds-snapshot') || isTacticChecked('tactic-rds-multiaz');
   if (isRdsOrAuroraEnabled) {
     activeServicesList.push({
       serviceName: 'Amazon RDS / Aurora',
@@ -150,13 +163,9 @@ function compileActiveCloudInfrastructurePayload() {
     });
   }
 
-  const isSecuritySuiteEnabled = isTacticChecked('sec-guardduty') ||
-                                isTacticChecked('sec-inspector') ||
-                                isTacticChecked('sec-waf') ||
-                                isTacticChecked('sec-kms') ||
-                                isTacticChecked('sec-macie') ||
-                                isTacticChecked('sec-cloudwatch') ||
-                                isTacticChecked('sec-audit');
+  const isSecuritySuiteEnabled = hasSecCost('sec-guardduty','sec-inspector','sec-waf','sec-kms','sec-macie','sec-cloudwatch','sec-audit') ||
+                                isTacticChecked('sec-guardduty') || isTacticChecked('sec-inspector') ||
+                                isTacticChecked('sec-waf') || isTacticChecked('sec-kms');
   if (isSecuritySuiteEnabled) {
     activeServicesList.push({
       serviceName: 'Security Services (GuardDuty / WAF / KMS / Macie / CloudWatch)',
@@ -165,7 +174,7 @@ function compileActiveCloudInfrastructurePayload() {
     });
   }
 
-  if (isTacticChecked('cef-clusters') || isTacticChecked('cef-control-plane')) {
+  if (hasSnapCost('container') || isTacticChecked('cef-clusters') || isTacticChecked('cef-control-plane') || isTacticChecked('cef-cluster-lb') || isTacticChecked('cef-host-storage')) {
     activeServicesList.push({
       serviceName: 'Amazon EKS Cluster',
       tags: ['Application', 'Environment', 'Team', 'CostCentre', 'ManagedBy'],
@@ -173,7 +182,7 @@ function compileActiveCloudInfrastructurePayload() {
     });
   }
 
-  if (isTacticChecked('tactic-apigw')) {
+  if (hasSnapCost('apigw') || isTacticChecked('tactic-apigw')) {
     activeServicesList.push({
       serviceName: 'Amazon API Gateway',
       tags: ['Application', 'Environment', 'Team', 'BusinessUseCase', 'gRPCPattern'],
@@ -187,6 +196,15 @@ function compileActiveCloudInfrastructurePayload() {
       serviceName: 'Amazon EC2 (Compute Replicas)',
       tags: ['Application', 'Environment', 'Team', 'CostCentre', 'ServiceName', 'BaseRPS'],
       allocationNote: 'Tag every instance AND its EBS volumes. Use Launch Templates to enforce tags at launch time. Spot instances: add tag propagation in the Spot Fleet config.'
+    });
+  }
+
+  // FinOps: show when any saving plan or RI discount is active
+  if (hasSnapCost('finops')) {
+    activeServicesList.push({
+      serviceName: 'FinOps — Reserved Instances / Savings Plans',
+      tags: ['Environment', 'Team', 'CostCentre', 'FinOpsReviewed'],
+      allocationNote: 'Tag all Reserved Instances and Savings Plans with CostCentre and Team. Use AWS Cost Explorer RI utilisation reports to verify tag coverage.'
     });
   }
 

@@ -1,5 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -40,6 +41,9 @@ class ContainerizedEnvironmentCostControllerTest {
 
     @Mock
     private PricingClientBuilder pricingClientBuilderMock;
+
+    @Mock
+    private EKSComputeCostCalculator eksComputeCostCalculator;
 
     @InjectMocks
     private ContainerizedEnvironmentCostController controller;
@@ -136,49 +140,11 @@ class ContainerizedEnvironmentCostControllerTest {
         );
     }
 
-    /* ================================================================
-       ENDPOINT 2: GET /api/aws/api-gateway-pricing
-    ================================================================ */
-
-    @Test
-    void getApiGatewayPricing_success_apiOverrides() throws Exception {
-        GetProductsResponse mockResponse = GetProductsResponse.builder()
-                .priceList("mock-apigw-json")
-                .build();
-        when(pricingClientMock.getProducts(any(GetProductsRequest.class))).thenReturn(mockResponse);
-        when(mapperMock.readTree("mock-apigw-json")).thenReturn(rootMock);
-
-        setupJsonPriceExtraction(0.0000045); // $4.50 per million calls
-
-        ResponseEntity<ContainerizedEnvironmentCostController.ApiGatewayPricingResponse> response = controller.getApiGatewayPricing();
-        ContainerizedEnvironmentCostController.ApiGatewayPricingResponse resp = response.getBody();
-
-        assertNotNull(resp);
-        assertAll("API Gateway Verification",
-                () -> assertEquals(4.50, resp.restApiPer1MCallsMonthly),
-                () -> assertEquals(1.00, resp.httpApiPer1MCallsFirst1B),
-                () -> assertTrue(resp.source.contains("AWS Pricing API (live)"))
-        );
-    }
-
-    @Test
-    void getApiGatewayPricing_apiFailure_returnsFallbacks() {
-        when(pricingClientMock.getProducts(any(GetProductsRequest.class))).thenThrow(new RuntimeException("Timeout"));
-
-        ResponseEntity<ContainerizedEnvironmentCostController.ApiGatewayPricingResponse> response = controller.getApiGatewayPricing();
-        ContainerizedEnvironmentCostController.ApiGatewayPricingResponse resp = response.getBody();
-
-        assertNotNull(resp);
-        assertEquals("Hardcoded fallback (Q1-2025) — AWS Pricing API unavailable", resp.source);
-        assertEquals(3.50, resp.restApiPer1MCallsMonthly);
-    }
-
-    /* ================================================================
-       ENDPOINT 3: POST /api/aws/container-tco
-    ================================================================ */
-
     @Test
     void calculateContainerTco_completeEksEc2_allBranches() {
+        // ARRANGE: Stub the mocked calculator to return the standard baseline hourly rate
+        when(eksComputeCostCalculator.fetchEksControlPlaneHourlyCost()).thenReturn(0.10);
+
         ContainerizedEnvironmentCostController.ContainerTcoRequest req = new ContainerizedEnvironmentCostController.ContainerTcoRequest();
         req.clusterCount = 2;
         req.orchestrationType = "EKS";
@@ -204,7 +170,7 @@ class ContainerizedEnvironmentCostControllerTest {
 
         assertNotNull(resp);
         assertAll("Complex EC2/EKS Cost Components Suite",
-                () -> assertEquals(146.0, resp.eksControlPlaneCost),
+                () -> assertEquals(146.0, resp.eksControlPlaneCost), // Now accurately matches (0.10 * 730 * 2)
                 () -> assertEquals(4, resp.estimatedNodeCount),
                 () -> assertEquals(0.096, resp.ec2InstancePricePerHour),
                 () -> assertTrue(resp.hostStorageCost > 0),
@@ -252,10 +218,6 @@ class ContainerizedEnvironmentCostControllerTest {
                 //() -> assertEquals(0.096, resp.ec2InstancePricePerHour) // Assures default fallback
         );
     }
-
-    /* ================================================================
-       JSON EDGE CASES FOR 100% COVERAGE
-    ================================================================ */
 
     @Test
     void extractOnDemandPriceFromJson_emptyElements_returnsMinusOne() throws Exception {

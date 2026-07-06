@@ -341,9 +341,4 @@ public class AWSFinOpsStrategyCostCalculator extends AWSCloudCalculator implemen
         targetMap.put("convertibleRi3yrSavingsPct", (int) convertible3yr);
         targetMap.put("riNote", "Reserved Instances (RIs) suit predictable, constant workloads like servers that must stay active around the clock.");
     }
-
-    @PostConstruct
-    private void init(){
-        calculateFinOpsStrategiesCosts();
-    }
 }

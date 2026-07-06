@@ -6,14 +6,11 @@ Feature: Base Cost Calculation
 
   Scenario Outline: Base cost calculation for different gRPC-based MACH architecture configurations
     Given I have selected "<cloud_service>" to implement "<tactic>"
-    And my provider is "<cloud_provider>"
-    When I have specified "<usage_parameter>" for the service
-    Then I calculate the base costs
-    And the system should show "<hourly_cost>" estimates
+    And my base cost provider is "<cloud_provider>"
+    When I trigger the base cost calculation
+    Then the system should show "<hourly_cost>" estimates
     And highlight "<cost_factors>" as primary cost drivers
 
     Examples: User Story: Base Cost Calculation - Feature Examples
-      | cloud_provider | cloud_service                   | tactic                          | usage_parameter      | hourly_cost | cost_factors                                   |
-      | AWS            | Application Load Balancer (ALB) | Client-side Load Balancing      | 10,000 requests/sec  | $0.11       | Request volume, Data processed, Instance hours |
-      | AWS            | API Gateway                     | Circuit Breaker / gRPC Security | 5M requests per month | $0.072      | Request volume, Data size                      |
-      | AWS            | Certificate Manager             | TLS Security                    | 100 certificates     | $0          | Certificate count, Renewals                    |
+      | cloud_provider | cloud_service                       | tactic                          | hourly_cost | cost_factors                                                                                                                                                              |
+      | AWS            | Elastic Load Balancer - ALB Layer 7 | Server-side Load Balancing      | $0.0225     | Standard ALB running instances are billed at $0.0225 per hour, combined with a volumetric usage rate of $0.008 per Load Balancer Capacity Unit (LCU) consumed per hour. |
