@@ -851,12 +851,12 @@ function renderDbOptions() {
       + '</div>';
   }
   if (engine === 'rds-mysql') {
-    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardPerGbMonth + '/GB-month.', 'db-gb', 'DB size (GB)')
-      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotPerGbMonth + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
+    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardStoragePerGbUsd  + '/GB-month.', 'db-gb', 'DB size (GB)')
+      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotStoragePerGbUsd  + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
       + dbCb('tactic-rds-multiaz', 'RDS Multi-AZ', _dbData.rdsMultiAzSurchargeNote, null, null);
   } else if (engine === 'aurora') {
     html = dbCb('tactic-aurora-replica', 'Aurora Read Replica', '~$' + _dbData.auroraReplicaPerHour + '/hr ($' + (_dbData.auroraReplicaPerHour * 730).toFixed(2) + '/mo) db.r6g.large.', 'aurora-replica-count', 'Replicas')
-      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardPerGbMonth + '/GB-month.', 'db-gb', 'DB size (GB)');
+      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardStoragePerGbUsd  + '/GB-month.', 'db-gb', 'DB size (GB)');
   } else if (engine === 'dynamodb') {
     html = dbCb('tactic-dynamo-pitr', 'DynamoDB PITR', 'Free — pay only for backup storage (~$0.20/GB-month).', null, null)
       + dbCb('tactic-dynamo-global', 'DynamoDB Global Tables', _dbData.dynamoGlobalTableNote, 'dynamo-extra-regions', 'Extra regions');
@@ -868,30 +868,62 @@ function renderDbOptions() {
 
 function recalculateDbCost() {
   _syncPricingData();
+
   if (!_dbData) return;
-  var total = 0; var lines = [];
-  var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
-  var g = function (id) { return document.getElementById(id) || {}; };
-  if (g('tactic-s3-backup').checked) { var c = dbGb * _dbData.s3StandardPerGbMonth; total += c; lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)'); }
-  if (g('tactic-rds-snapshot').checked) lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotPerGbMonth + '/GB-mo');
-  if (g('tactic-rds-multiaz').checked) lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
-  if (g('tactic-aurora-replica').checked) { var cnt = parseInt(g('aurora-replica-count').value) || 1; var c2 = _dbData.auroraReplicaPerHour * 730 * cnt; total += c2; lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)'); }
-  if (g('tactic-dynamo-global').checked) { var reg = parseInt(g('dynamo-extra-regions').value) || 1; lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)'); }
-  var res = document.getElementById('dbbackup-result');
-  if (!res) return;
-  if (!lines.length) { res.style.display = 'none'; return; }
-  res.style.display = 'block';
-  res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
-    + lines.map(function (l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 ' + l + '</div>'; }).join('')
-    + (total > 0 ? '<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $' + total.toFixed(2) + '/mo</div>' : '');
-  if (total > 0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
-  else sessionStorage.removeItem('tco_db_cost');
+    var total = 0;
+    var lines = [];
+    var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
+    var snapshotRetention = parseFloat((document.getElementById('snapshot-retention') || { value: '10' }).value) || 10;
+    console.warn("snapshotRetention: " + snapshotRetention);
+    var snapshotRetentionCost = 0;
+    var g = function (id) { return document.getElementById(id) || {}; };
+
+    if (g('tactic-s3-backup').checked) {
+        let c = dbGb * _dbData.s3StandardStoragePerGbUsd;
+        total += c;
+        console.warn("Total DB cost: " + total);
+        lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)');
+    }
+    if (g('tactic-rds-snapshot').checked) {
+        snapshotRetentionCost = snapshotRetention > 10 ? _dbData.rdsSnapshotStoragePerGbUsd : 0;
+        total += snapshotRetentionCost;
+        console.warn("Total DB cost: " + total);
+        lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
+    }
+    if (g('tactic-rds-multiaz').checked) {
+        total += snapshotRetentionCost;
+        console.warn("Total DB cost: " + total);
+        lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
+    }
+    if (g('tactic-aurora-replica').checked) {
+        var cnt = parseInt(g('aurora-replica-count').value) || 1;
+        var c2 = _dbData.auroraReplicaPerHour * 730 * cnt;
+        total += c2;
+        console.warn("Total DB cost: " + total);
+        lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)');
+    }
+    if (g('tactic-dynamo-global').checked) {
+        var reg = parseInt(g('dynamo-extra-regions').value) || 1;
+        lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)');
+    }
+
+    var res = document.getElementById('dbbackup-result');
+    if (!res) return;
+    if (!lines.length) { res.style.display = 'none'; return; }
+    res.style.display = 'block';
+    res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
+      + lines.map(function (l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 ' + l + '</div>'; }).join('')
+      + (total > 0 ? '<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $' + total.toFixed(2) + '/mo</div>' : '');
+    if (total > 0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
+    else sessionStorage.removeItem('tco_db_cost');
+
   writeTcoSnapshot();
 
   /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
+
 
 function recalculateSecCost() {
   _syncPricingData();
