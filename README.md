@@ -83,6 +83,8 @@ The service can be parametrized before building it to use a Cloud Service Provid
 
 ![img_2.png](src/main/resources/images/FinOps Tagging and labeling strategies.png)
 
+![cloud services tagging and labelling.png](src/main/resources/images/cloud%20services%20tagging%20and%20labelling.png)
+
 ![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
 ## MVC Controllers
