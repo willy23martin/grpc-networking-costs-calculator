@@ -1,6 +1,3 @@
-/* =====================================================================
-       STATE  — all at global scope so HTML onclick handlers can reach them
-    ===================================================================== */
 var currentPhase = 1;
 var selectedBUC = null;
 var baseRpsForComparison = 0;
@@ -27,9 +24,6 @@ var TIER_TAIL = 0.05;
 var PLACEHOLDER_REQ_BYTES = 200;
 var PLACEHOLDER_RESP_BYTES = 1200;
 
-/* =====================================================================
-   REPLICA SIZING
-===================================================================== */
 function recalculateReplicas() {
   var _cReqEl = document.getElementById('input-max-req-per-replica');
   var _bRpsV = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
@@ -74,6 +68,23 @@ function recalculateReplicas() {
   if (ci) ci.textContent = N + ' replica' + (N !== 1 ? 's' : '');
   if (bi) bi.textContent = 'Bottleneck: ' + btl;
   if (ri) ri.style.display = 'block';
+
+  // Write EC2 replica cost to sessionStorage so Phase 3 and Phase 4 pick it up
+  var sel2 = document.getElementById('input-ec2-instance');
+  if (sel2 && sel2.value && N > 0) {
+    var parts = sel2.value.split('|');
+    var pricePerHr = parseFloat(parts[4]) || 0;  // instanceType|cReq|cIn|cOut|price format
+    if (pricePerHr <= 0 && window._ec2PriceMap) pricePerHr = window._ec2PriceMap[parts[0]] || 0;
+    if (pricePerHr > 0) {
+      var ec2MoCost = Math.round(pricePerHr * 730 * N * 100) / 100;
+      sessionStorage.setItem('tco_ec2_cost', ec2MoCost.toFixed(4));
+      var ec2El = document.getElementById('ec2-replica-cost-display');
+      if (ec2El) ec2El.textContent = 'EC2 cost: ' + N + ' × $' + (pricePerHr * 730).toFixed(2) + '/mo = $' + ec2MoCost.toFixed(2) + '/mo';
+      writeTcoSnapshot();
+      var bRps = parseInt((document.getElementById('requestsPerSecond') || {value:'0'}).value) || 0;
+      if (bRps) updateLiveComparison(bRps, _getEffectiveRps());
+    }
+  }
 }
 
 /* =====================================================================
@@ -93,18 +104,6 @@ function calcMonthlyCost(rps, respBytes) {
   return { gbPerMonth: gbPerMonth, cost: cost };
 }
 
-/* =====================================================================
-   RPS CALCULATION + LIVE COMPARISON
-===================================================================== */
-
-/**
- * Returns the effective RPS that was last computed by the backend
- * /api/tco/effective-rps endpoint (accounts for ALL active RPS tactics:
- * retry, TLS handshake, OAuth token-acq, etc.).
- * Falls back to a local retry-only estimate if the backend hasn't
- * responded yet — but only retry is approximated inline; all other
- * tactic RPS adjustments require the backend call.
- */
 function _getEffectiveRps() {
   var base = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (!base) return 0;
@@ -559,15 +558,22 @@ function buildCloudServiceBreakdownRows() {
   var containerCost     = parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
   var orchestrationType = (document.getElementById('input-orchestration') || { value: 'EKS' }).value || 'EKS';
   if (containerCost > 0) rows += buildCloudRow('Containerized Cluster (' + orchestrationType.toUpperCase() + ')', '$' + containerCost.toFixed(2) + '/mo · cluster + storage + licenses', containerCost);
+  // EC2 Compute Replicas — written by recalculateReplicas()
+  var ec2ReplicaCost = parseFloat(sessionStorage.getItem('tco_ec2_cost') || '0');
+  if (ec2ReplicaCost > 0) rows += buildCloudRow('EC2 Compute Replicas', '$' + ec2ReplicaCost.toFixed(2) + '/mo', ec2ReplicaCost);
 
-  // FinOps saving (negative row)
-  var finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
-  if (finopsSaving > 0) {
+  // FinOps saving — single row, reads strategy + % from sessionStorage
+  var _fSaving   = parseFloat(sessionStorage.getItem('tco_finops_saving')   || '0');
+  var _fSpend    = parseFloat(sessionStorage.getItem('tco_finops_spend')     || '0');
+  var _fStrategy = sessionStorage.getItem('tco_finops_strategy') || 'RI / Savings Plan';
+  var _fPct      = parseFloat(sessionStorage.getItem('tco_finops_pct')       || '0');
+  if (_fSaving > 0) {
+    var _fPctStr = _fPct > 0 ? ' (' + _fPct.toFixed(1) + '% discount)' : '';
     rows += '<tr style="background:var(--green-bg);">'
-      + '<td class="tbd-name" style="color:var(--green);">FinOps RI/SP Saving'
-      + '<div class="tbd-detail">Reserved Instance / Savings Plan discount applied via /api/cost/finops-discount</div></td>'
-      + '<td class="tbd-badges"><span class="tbd-badge" style="background:rgba(22,101,52,.1);color:var(--green);">saving</span></td>'
-      + '<td class="tbd-cost" style="color:var(--green);font-weight:700;">-$' + finopsSaving.toFixed(2) + '/mo</td></tr>';
+      + '<td class="tbd-name" style="color:var(--green);">' + _fStrategy + _fPctStr
+      + '<div class="tbd-detail">Applied to $' + _fSpend.toFixed(2) + '/mo compute spend via /api/finops/ri-prices</div></td>'
+      + '<td class="tbd-badges"><span class="tbd-badge" style="background:rgba(22,101,52,.1);color:var(--green);">FinOps saving</span></td>'
+      + '<td class="tbd-cost" style="color:var(--green);font-weight:700;">-$' + _fSaving.toFixed(2) + '/mo</td></tr>';
   }
 
   return rows;
@@ -654,15 +660,19 @@ function writeTcoSnapshot() {
   var dbIds = ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
                'tactic-aurora-replica','tactic-dynamo-global','tactic-dynamo-pitr'];
   var cefIds = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'];
+  // Pure sessionStorage reads — keys only exist when the user configured
+  // the service in Phase 3. No DOM checkbox gating needed.
+  function ss2(k) { return parseFloat(sessionStorage.getItem(k)||'0'); }
   var snap = {
-    alb       : plainCost('tactic-alb',   'tco_alb_cost'),
-    cache     : plainCost('tactic-cache',  'tco_cache_cost'),
-    apigw     : plainCost('tactic-apigw',  'tco_apigw_cost'),
-    container : cefIds.some(function(id){var cb=document.getElementById(id);return cb&&cb.checked;})
-                  ? parseFloat(sessionStorage.getItem('tco_container_cost')||'0') : 0,
-    db        : dbIds.some(function(id){var cb=document.getElementById(id);return cb&&cb.checked;})
-                  ? parseFloat(sessionStorage.getItem('tco_db_cost')||'0') : 0,
-    finops    : parseFloat(sessionStorage.getItem('tco_finops_saving')||'0'),
+    alb       : ss2('tco_alb_cost'),
+    cache     : ss2('tco_cache_cost'),
+    apigw     : ss2('tco_apigw_cost'),
+    container : ss2('tco_container_cost'),
+    db        : ss2('tco_db_cost'),
+    ec2       : ss2('tco_ec2_cost'),
+    finops    : ss2('tco_finops_saving'),
+    finopsPct      : parseFloat(sessionStorage.getItem('tco_finops_pct') || '0'),
+    finopsStrategy : sessionStorage.getItem('tco_finops_strategy') || '',
     sec       : {}
   };
   ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
@@ -739,6 +749,13 @@ function recalculateAlb() {
   sessionStorage.setItem('tco_alb_cost', (fixedM + lcuM).toFixed(4));
   sessionStorage.setItem('tco_alb_label', count + ' ALB' + (count > 1 ? 's' : ''));
   writeTcoSnapshot();
+  var _albNotesEl = document.getElementById('alb-finops-notes');
+  if (_albNotesEl) {
+    if (_albData && _albData.finopsNotes) {
+      _albNotesEl.style.display = 'block';
+      _albNotesEl.innerHTML = '<i class="fas fa-lightbulb" style="margin-right:5px;color:var(--gold);"></i><strong>FinOps:</strong> ' + _albData.finopsNotes;
+    } else { _albNotesEl.style.display = 'none'; }
+  }
 
   /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
@@ -834,12 +851,12 @@ function renderDbOptions() {
       + '</div>';
   }
   if (engine === 'rds-mysql') {
-    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardStoragePerGbUsd + '/GB-month.', 'db-gb', 'DB size (GB)')
-      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' +  _dbData.rdsSnapshotStoragePerGbUsd + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
+    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardStoragePerGbUsd  + '/GB-month.', 'db-gb', 'DB size (GB)')
+      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotStoragePerGbUsd  + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
       + dbCb('tactic-rds-multiaz', 'RDS Multi-AZ', _dbData.rdsMultiAzSurchargeNote, null, null);
   } else if (engine === 'aurora') {
     html = dbCb('tactic-aurora-replica', 'Aurora Read Replica', '~$' + _dbData.auroraReplicaPerHour + '/hr ($' + (_dbData.auroraReplicaPerHour * 730).toFixed(2) + '/mo) db.r6g.large.', 'aurora-replica-count', 'Replicas')
-      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardStoragePerGbUsd + '/GB-month.', 'db-gb', 'DB size (GB)');
+      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardStoragePerGbUsd  + '/GB-month.', 'db-gb', 'DB size (GB)');
   } else if (engine === 'dynamodb') {
     html = dbCb('tactic-dynamo-pitr', 'DynamoDB PITR', 'Free — pay only for backup storage (~$0.20/GB-month).', null, null)
       + dbCb('tactic-dynamo-global', 'DynamoDB Global Tables', _dbData.dynamoGlobalTableNote, 'dynamo-extra-regions', 'Extra regions');
@@ -906,6 +923,7 @@ function recalculateDbCost() {
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
+
 
 function recalculateSecCost() {
   _syncPricingData();
@@ -1014,7 +1032,16 @@ function recalculateSecCost() {
 function recalculateCostOpt() {
   _syncPricingData();
   if (!_coData) return;
-  var spend = parseFloat((document.getElementById('input-ec2-monthly-spend') || { value: '0' }).value) || 0;
+  var _spendEl = document.getElementById('input-ec2-monthly-spend');
+  var spend = parseFloat((_spendEl || { value: '0' }).value) || 0;
+  // Auto-compute spend from EC2 replica + container costs when no manual value entered
+  if (!spend) {
+    spend = parseFloat(sessionStorage.getItem('tco_ec2_cost') || '0')
+           + parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
+    if (spend > 0 && _spendEl && !_spendEl.value) {
+      _spendEl.value = spend.toFixed(2);
+    }
+  }
   var res = document.getElementById('costopt-result');
   if (!res) return;
   if (!spend) { res.style.display = 'none'; return; }
@@ -1063,12 +1090,20 @@ function recalculateCostOpt() {
   /* Save FinOps saving to sessionStorage so TCO table can reflect it */
   /* Convention: tco_finops_saving = positive number = monthly saving to subtract */
   if (best > 0) {
-    sessionStorage.setItem('tco_finops_saving', best.toFixed(4));
-    sessionStorage.setItem('tco_finops_spend', spend.toFixed(4));
+    var _bestRow = _fpRows.length > 0 ? _fpRows.reduce(function(a,b){return (spend*a.p/100)>(spend*b.p/100)?a:b;}) : null;
+    sessionStorage.setItem('tco_finops_saving',   best.toFixed(4));
+    sessionStorage.setItem('tco_finops_spend',    spend.toFixed(4));
+    if (_bestRow) {
+      sessionStorage.setItem('tco_finops_strategy', _bestRow.s);
+      sessionStorage.setItem('tco_finops_pct',      _bestRow.p.toFixed(1));
+    }
   } else {
     sessionStorage.removeItem('tco_finops_saving');
     sessionStorage.removeItem('tco_finops_spend');
+    sessionStorage.removeItem('tco_finops_strategy');
+    sessionStorage.removeItem('tco_finops_pct');
   }
+  writeTcoSnapshot();
   res.innerHTML = '<div style="padding:14px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#fffdf5);border:1px solid var(--gold-border);">'
     + '<div style="font-family:\'DM Serif Display\',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;"><i class="fas fa-coins" style="margin-right:6px;"></i>Cost Optimisation Summary</div>'
     + lines.map(function (l) { return '<div style="font-size:.82rem;margin-top:6px;color:var(--ink-medium);">\u2022 ' + l + '</div>'; }).join('')
@@ -1096,6 +1131,7 @@ function recalculateCostOpt() {
         if (newBest2 > 0) {
           sessionStorage.setItem('tco_finops_saving', newBest2.toFixed(4));
           sessionStorage.setItem('tco_finops_spend', spend.toFixed(4));
+          writeTcoSnapshot();
           if (_bRco) updateLiveComparison(_bRco, _getEffectiveRps());
         }
         /* Append live price note */
@@ -1204,6 +1240,7 @@ function recalculateContainerCost() {
       ovEl.style.display = 'block';
       ovEl.innerHTML = '<i class="fas fa-layer-group" style="margin-right:6px;"></i><strong>Containerized Environment Factors \u2014 Est. Monthly Cost: <span style="color:var(--red);">$' + oT.toFixed(2) + '/mo</span></strong><div style="font-size:.74rem;color:var(--ink-light);margin-top:4px;">Cluster assets + app design. Qualitative selections inform architecture decisions.</div>';
       sessionStorage.setItem('tco_container_cost', oT.toFixed(4));
+      if (typeof writeTcoSnapshot === 'function') writeTcoSnapshot();
     } else {
       ovEl.style.display = 'none'; sessionStorage.removeItem('tco_container_cost');
     }

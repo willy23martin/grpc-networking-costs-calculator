@@ -1,12 +1,14 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.application.services.calculators.cost.cloud.alb.aws.alb.AWSALBCostCalculator;
+import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
 import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.regions.Region;
@@ -21,19 +23,13 @@ import java.util.logging.Logger;
 @RestController
 @RequestMapping("/api/aws")
 @CrossOrigin(origins = "*")
-public class ContainerizedEnvironmentCostController { // TODO
+public class ContainerizedEnvironmentCostController {
 
     private static final java.util.logging.Logger log = Logger.getLogger(ContainerizedEnvironmentCostController.class.getName());
     private final ObjectMapper mapper = new ObjectMapper();
 
-    /* ================================================================
-       HARDCODED FALLBACKS (updated Q1-2025)
-       Used when AWS Pricing API is unavailable or returns no data.
-    ================================================================ */
-
-    // EKS control plane: flat rate per cluster per hour
-    private static final double EKS_CONTROL_PLANE_PER_HOUR     = 0.10;
-    private static final double EKS_CONTROL_PLANE_PER_MONTH    = 0.10 * 730;   // $73.00/mo
+    @Autowired
+    private EKSComputeCostCalculator eksComputeCostCalculator;
 
     // Fargate compute: per vCPU-hour and per GB-hour
     private static final double FARGATE_VCPU_PER_HOUR           = 0.04048;
@@ -95,8 +91,8 @@ public class ContainerizedEnvironmentCostController { // TODO
        RESPONSE DTOs (unchanged)
     ================================================================ */
     public static class ContainerPricingResponse {
-        @JsonProperty public double eksControlPlanePerMonth       = EKS_CONTROL_PLANE_PER_MONTH;
-        @JsonProperty public double eksControlPlanePerHour        = EKS_CONTROL_PLANE_PER_HOUR;
+        @JsonProperty public double eksControlPlanePerMonth       = 73;
+        @JsonProperty public double eksControlPlanePerHour        = 0.10;
         @JsonProperty public double fargateVcpuPerHour            = FARGATE_VCPU_PER_HOUR;
         @JsonProperty public double fargateGbPerHour              = FARGATE_GB_PER_HOUR;
         @JsonProperty public double fargateSpotVcpuPerHour        = FARGATE_SPOT_VCPU_PER_HOUR;
@@ -192,9 +188,8 @@ public class ContainerizedEnvironmentCostController { // TODO
     public ResponseEntity<ContainerPricingResponse> getContainerPricing() {
         ContainerPricingResponse resp = new ContainerPricingResponse();
 
-        // ✅ Explicitly initialize ALL @JsonProperty fields with fallback values
-        resp.eksControlPlanePerMonth       = EKS_CONTROL_PLANE_PER_MONTH;
-        resp.eksControlPlanePerHour        = EKS_CONTROL_PLANE_PER_HOUR;
+        resp.eksControlPlanePerMonth       = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost() * 730;
+        resp.eksControlPlanePerHour        = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
         resp.fargateVcpuPerHour            = FARGATE_VCPU_PER_HOUR;
         resp.fargateGbPerHour              = FARGATE_GB_PER_HOUR;
         resp.fargateSpotVcpuPerHour        = FARGATE_SPOT_VCPU_PER_HOUR;
@@ -239,46 +234,6 @@ public class ContainerizedEnvironmentCostController { // TODO
     }
 
     /* ================================================================
-       ENDPOINT 2: GET /api/aws/api-gateway-pricing
-    ================================================================ */
-    @GetMapping("/api-gateway-pricing")
-    public ResponseEntity<ApiGatewayPricingResponse> getApiGatewayPricing() {
-        ApiGatewayPricingResponse resp = new ApiGatewayPricingResponse();
-
-        // Initialize ALL fields with fallback values
-        resp.restApiPer1MCallsMonthly      = APIGW_REST_PER_1M_CALLS;
-        resp.httpApiPer1MCallsFirst1B      = APIGW_HTTP_PER_1M_CALLS_FIRST1B;
-        resp.httpApiPer1MCallsOver1B       = APIGW_HTTP_PER_1M_CALLS_OVER1B;
-        resp.wsApiPer1MConnections         = APIGW_WS_PER_1M_CONNECTIONS;
-        resp.wsApiPer1MMessages            = APIGW_WS_PER_1M_MESSAGES;
-        resp.cacheHalfGbPerHour            = APIGW_CACHE_05GB_PER_HOUR;
-        resp.cache1GbPerHour               = APIGW_CACHE_1GB_PER_HOUR;
-        resp.cache1_6GbPerHour             = APIGW_CACHE_1_6GB_PER_HOUR;
-        resp.cache6_1GbPerHour             = APIGW_CACHE_6_1GB_PER_HOUR;
-
-        resp.source = NOTE_SOURCE;
-        resp.note   = "API Gateway pricing for REST, HTTP, and WebSocket APIs in us-east-1. "
-                + "REST API: $3.50/million calls. HTTP API: $1.00/million (first 1B), $0.90 thereafter. "
-                + "WebSocket: $0.25/million connection-minutes + $1.00/million messages. "
-                + "Optional caching from $0.020/hr (0.5 GB) to $0.200/hr (6.1 GB).";
-
-        // Try to get live API Gateway prices (only overrides available fields)
-        try {
-            Map<String, Double> livePrices = fetchApiGatewayPrices();
-            if (livePrices.containsKey("rest-per-1m"))
-                resp.restApiPer1MCallsMonthly  = livePrices.get("rest-per-1m");
-            if (livePrices.containsKey("http-per-1m-first"))
-                resp.httpApiPer1MCallsFirst1B  = livePrices.get("http-per-1m-first");
-            resp.source = "AWS Pricing API (live)";
-        } catch (Exception e) {
-            log.warning("Could not fetch API Gateway prices: " + e.getMessage());
-            resp.source = "Hardcoded fallback (Q1-2025) — AWS Pricing API unavailable";
-        }
-
-        return ResponseEntity.ok(resp);
-    }
-
-    /* ================================================================
        ENDPOINT 3: POST /api/aws/container-tco [unchanged business logic]
     ================================================================ */
 
@@ -292,10 +247,10 @@ public class ContainerizedEnvironmentCostController { // TODO
 
         // ── 1. EKS Control Plane ──────────────────────────────────
         if ("eks".equalsIgnoreCase(req.orchestrationType)) {
-            resp.eksControlPlaneCost = EKS_CONTROL_PLANE_PER_MONTH * req.clusterCount;
+            resp.eksControlPlaneCost = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost()*730 * req.clusterCount;
             resp.lineItems.put("EKS Control Plane",
                     String.format("%d cluster(s) × $%.2f/mo = $%.2f/mo",
-                            req.clusterCount, EKS_CONTROL_PLANE_PER_MONTH, resp.eksControlPlaneCost));
+                            req.clusterCount, eksComputeCostCalculator.fetchEksControlPlaneHourlyCost() * 730, resp.eksControlPlaneCost));
             total += resp.eksControlPlaneCost;
         }
 
@@ -473,6 +428,7 @@ public class ContainerizedEnvironmentCostController { // TODO
                     GetProductsResponse result = pricingClient.getProducts(req);
                     log.info("GetProductsResponse" + result);
                     JSONLogger.logAsJSON(log, result);
+
                     if (!result.priceList().isEmpty()) {
                         String priceJson = result.priceList().getFirst();
                         JsonNode root = mapper.readTree(priceJson);

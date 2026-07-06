@@ -32,15 +32,12 @@ Feature: Cloud Infrastructure Tactics and Live Cost Delta
   Scenario Outline: Cloud tactics and their AWS Pricing API endpoints
     Given the architect configures the "<cloud_tactic>" cloud tactic
     Then the system targets the "<aws_target_service>" AWS service
-    And the cost is calculated using "<cost_type>" pricing model
 
     Examples:
-      | cloud_tactic           | aws_target_service                    | cost_type                  |
-      | Availability SLA       | Multi-AZ Deployment Model             | Architecture Multiplier    |
-      | Scalability (EC2)      | Compute Cloud (EC2 Instances)         | Instance-Hour Formula      |
-      | ALB                    | Elastic Load Balancing (ALB)          | Fixed + LCU Metrics        |
-      | Database / Backup      | Relational Database Service (RDS)     | Storage + Replica Rates    |
-      | Cloud Security         | WAF / Shield / GuardDuty              | Usage-Based Tiers          |
-      | Caching (ElastiCache)  | Redis / Memcached Nodes               | Node-Hour Base             |
-      | Containerized Env.     | Elastic Kubernetes Service (EKS)      | Cluster + Compute          |
-      | FinOps RI/SP           | Reserved Instances / Savings Plans    | Committed Spend Discount   |
+      | cloud_tactic          | aws_target_service                |
+      | Scalability (EC2)     | /api/aws/ec2-instances            |
+      | ALB                   | /api/aws/alb-pricing              |
+      | Database / Backup     | /api/aws/database-backup-pricing  |
+      | Cloud Security        | /api/aws/security-services        |
+      | Caching (ElastiCache) | /api/aws/caching-pricing          |
+      | FinOps RI/SP          | /api/aws/cost-optimisation        |

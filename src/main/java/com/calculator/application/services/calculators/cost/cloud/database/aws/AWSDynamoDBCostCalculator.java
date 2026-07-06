@@ -34,7 +34,6 @@ public class AWSDynamoDBCostCalculator extends AWSCloudCalculator implements Dat
         log.info("Dynamo DB Global Tables Replicated Write Costs have been mapped dynamically.");
     }
 
-    // TODO - simulated for now as it is not returning expected JSON response
     private double fetchDynamoDBGlobalTableWriteReplicationUnitsPrice() {
         try {
             GetProductsRequest req = GetProductsRequest.builder()

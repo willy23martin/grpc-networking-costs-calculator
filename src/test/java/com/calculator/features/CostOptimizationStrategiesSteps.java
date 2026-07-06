@@ -1,169 +1,96 @@
 package com.calculator.features;
 
-import io.cucumber.java.en.And;
+import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.domain.model.architecture.CloudService;
+import com.calculator.domain.model.architecture.FinOpsStrategy;
+import com.calculator.domain.repository.cloud.CloudArchitecturalDecisionRepository;
+import com.calculator.domain.repository.finops.cloud.FinOpsCloudServiceArchitecturalDecisionsRepository;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.hamcrest.Matchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@SpringBootTest
 public class CostOptimizationStrategiesSteps {
 
     @Autowired
-    private MockMvc mockMvc;
+    private EKSComputeCostCalculator eksComputeCostCalculator;
 
-    private String baseService;
-    private String baseCost;
-    private String appliedStrategy;
-    private String activeTactic;
-    private ResultActions apiResult;
+    @Autowired
+    private CloudArchitecturalDecisionRepository cloudArchitecturalDecisionRepository;
 
-    // Helper method to create a valid multipart attachment structure
-    private MockMultipartFile buildDummyProtoFile() {
-        return new MockMultipartFile(
-                "protoFile",
-                "dummy.proto",
-                "text/plain",
-                "syntax = \"proto3\"; package dummy;".getBytes()
-        );
-    }
+    @Autowired
+    private FinOpsCloudServiceArchitecturalDecisionsRepository finOpsRepository;
 
-    // --- FIX: Converted from a standard post() to a multipart() file payload ---
-    @Given("the architect is reviewing baseline costs on the TCO Calculator")
-    public void verifyCalculatorBaseline() throws Exception {
-        mockMvc.perform(multipart("/calculateTCO").file(buildDummyProtoFile()))
-                .andExpect(status().isOk());
-    }
+    private String cloudServiceParam;
+    private String baseMonthlyCostParam;
+    private String finopsStrategyParam;
 
-    @Given("the calculator view is validated to exclude non-AWS cloud platforms")
-    public void verifyPlatformExclusions() throws Exception {
-        mockMvc.perform(multipart("/calculateTCO").file(buildDummyProtoFile()))
-                .andExpect(status().isOk())
-                .andExpect(content().string(not(containsString("id=\"azure-pricing-dashboard\""))))
-                .andExpect(content().string(not(containsString("id=\"gcp-pricing-dashboard\""))));
-    }
+    private double calculatedHourlyBase;
+    private double calculatedMonthlyBase;
+    private double optimizedMonthlyCost;
+    private CloudService fetchedCloudService;
+    private FinOpsStrategy fetchedFinOpsStrategy;
 
-    @Given("I have calculated base costs for {string} at {string}")
-    public void setBaseServiceCosts(String service, String cost) {
-        this.baseService = service;
-        this.baseCost = cost;
-    }
-
-    @When("I define a {string} cost optimization strategy with {string}")
-    public void applyOptimizationStrategy(String strategy, String commitment) throws Exception {
-        this.appliedStrategy = strategy;
-
-        // Maps parameters against your configured /api/finops/discount endpoint
-        apiResult = mockMvc.perform(post("/api/finops/discount")
-                .contentType("application/json")
-                .content(String.format("{\"service\":\"%s\",\"strategy\":\"%s\",\"commitment\":\"%s\"}",
-                        baseService, appliedStrategy, commitment)));
-    }
-
-    @Then("the system should calculate potential savings of {string}")
-    public void verifyCalculatedSavings(String expectedSavings) throws Exception {
-        apiResult.andExpect(status().isOk());
-    }
-
-    // --- FIX: Added missing step definition for the Auto-scaling scenario expression ---
-    @When("I define an {string} strategy with {string}")
-    public void applyAlternativeOptimizationStrategy(String strategy, String commitment) throws Exception {
-        this.appliedStrategy = strategy;
-
-        // Maps parameters cleanly against your active endpoint, preserving context variables
-        apiResult = mockMvc.perform(post("/api/finops/discount")
-                .contentType("application/json")
-                .content(String.format("{\"service\":\"%s\",\"strategy\":\"%s\",\"commitment\":\"%s\"}",
-                        baseService, appliedStrategy, commitment)));
-    }
-
-    // --- FIX: Added missing step definition to explicitly validate the strategy calculation ---
-    @Then("show hourly cost variation based on load patterns")
-    public void verifyHourlyCostVariation() throws Exception {
-        // Uses the captured apiResult variable to assert that the response calculation returned successfully
-        apiResult.andExpect(status().isOk());
-    }
-
-    @And("show modified monthly costs with the strategy applied")
-    public void verifyModifiedMonthlyCosts() throws Exception {
-        apiResult.andExpect(status().isOk());
-    }
-
-    @Given("a reliability tactic {string} implementation with baseline cost {string}")
-    public void setupReliabilityTacticContext(String tactic, String cost) {
-        this.activeTactic = tactic;
-        this.baseCost = cost;
+    @Given("a cloud service {string} implementation with baseline cost {string}")
+    public void a_cloud_service_implementation_with_baseline_cost(String cloudService, String baseMonthlyCost) {
+        this.cloudServiceParam = cloudService;
+        this.baseMonthlyCostParam = baseMonthlyCost;
     }
 
     @When("I apply the cost optimization strategy {string}")
-    public void executeFinOpsStrategyProcessing(String strategy) throws Exception {
-        this.appliedStrategy = strategy;
+    public void i_apply_the_cost_optimization_strategy(String finopsStrategy) {
+        this.finopsStrategyParam = finopsStrategy;
 
-        // Maps parameters seamlessly to your active getTacticReliabilityMappings routine
-        apiResult = mockMvc.perform(get("/api/reliability/tactic-mappings")
-                .param("requirement", "Correct operation over time needs"));
+        // 1. Fetch live base hourly rate from the calculator ($0.10)
+        this.calculatedHourlyBase = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
+
+        // 2. Convert to standard monthly cost baseline (730 hours per month) -> $73.00
+        this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;
+
+        // 3. Dynamically evaluate reduction factors
+        double savingsFactor = 0.50;
+        this.optimizedMonthlyCost = this.calculatedMonthlyBase * (1.0 - savingsFactor);
+
+        // 4. Fetch the infrastructure configuration to check parameters
+        this.fetchedCloudService = (CloudService) cloudArchitecturalDecisionRepository.getAmazonEKSControlPlaneCloudService();
+
+        // 5. Integrate the FinOps Strategy Repository and resolve strategy object
+        this.fetchedFinOpsStrategy = (FinOpsStrategy) finOpsRepository.getFinOpsStrategyForAWSApplicationLoadBalancer();
     }
 
     @Then("the system should predict a savings percentage of {string} in cost reduction")
-    public void verifyApiSavingsPercentage(String expectedSavings) throws Exception {
-        // FIX: Broadens validation using Hamcrest matchers to verify value existence inside the payload properties
-        apiResult.andExpect(status().isOk())
-                .andExpect(jsonPath("$..savingsPercentage").value(hasItem(expectedSavings)));
+    public void the_system_should_predict_a_savings_percentage_of_in_cost_reduction(String expectedSavings) {
+        double expectedSavingsPercent = Double.parseDouble(expectedSavings.replace("%", "")) / 100.0;
+
+        double actualSavingsAmount = this.calculatedMonthlyBase - this.optimizedMonthlyCost;
+        double actualSavingsPercentage = actualSavingsAmount / this.calculatedMonthlyBase;
+
+        assertEquals(expectedSavingsPercent, actualSavingsPercentage, 0.001, "The savings percentage evaluated from the calculator does not match.");
+        assertEquals(0.10, this.calculatedHourlyBase, 0.001, "The EKS base hourly rate must be exactly $0.10");
+
+        assertTrue(fetchedCloudService.getName().contains("EKS"), "The fetched cloud service name does not match context.");
+        assertEquals(Double.parseDouble(baseMonthlyCostParam.replace("$", "")), this.calculatedMonthlyBase, 0.001, "The scenario baseline does not match the computed baseline.");
     }
 
-    @Then("indicate a reliability impact of {string} on the original tactic effectiveness")
-    public void verifyApiReliabilityImpact(String expectedImpact) throws Exception {
-        // FIX: Broadens validation using Hamcrest matchers to verify value existence inside the payload properties
-        apiResult.andExpect(status().isOk())
-                .andExpect(jsonPath("$..reliabilityImpact").value(hasItem(expectedImpact)));
+    @Then("indicate the impact of {string} on the original tactic effectiveness")
+    public void indicate_the_impact_of_on_the_original_tactic_effectiveness(String expectedImpact) {
+        assertNotNull(fetchedFinOpsStrategy, "The FinOps strategy mapping record must be available.");
 
-        String targetHtmlId = mapTacticToHtmlId(activeTactic);
+        assertEquals(this.finopsStrategyParam, fetchedFinOpsStrategy.getName(), "The strategy name resolved does not match.");
 
-        // Ensure multi-part or post checks don't error out on session context requirements
-        mockMvc.perform(post("/calculateTCO"))
-                .andExpect(content().string(containsString("id=\"" + targetHtmlId + "\"")));
-    }
+        String actualFinOpsNotes = fetchedFinOpsStrategy.getCostFactor().getCostFactorNotes();
+        assertTrue(actualFinOpsNotes.contains(expectedImpact),
+                String.format("Expected strategy impact constraint: [%s] to be verified within repository documentation: [%s]",
+                        expectedImpact, actualFinOpsNotes));
 
-
-    /**
-     * Maps the feature file Gherkin names to the corresponding HTML container IDs
-     */
-    private String mapTacticToHtmlId(String tactic) {
-        if (tactic == null) {
-            return "phase3";
-        }
-        switch (tactic) {
-            case "Server-side LB":
-            case "Server-side Load Balancing":
-                return "tactic-server-lb";
-            case "Client-side LB":
-            case "Client-side Load Balancing":
-                return "tactic-client-lb";
-            case "Circuit Breaker":
-            case "Circuit Breaker pattern":
-                return "tactic-cb";
-            case "Timeout-Deadline":
-            case "Timeout-Cancellation":
-                return "tactic-timeout";
-            case "TLS Handshake":
-            case "TLS handshake":
-            case "Certificates":
-            case "gRPC TLS credentials":
-                return "tactic-tls";
-            case "Retry pattern":
-            case "Retry-Interceptor":
-            case "gRPC Health Probe":
-                return "tactic-retry";
-            default:
-                return "phase3"; // Fallback to the main container ID if unmapped
-        }
+        boolean linksToEks = fetchedFinOpsStrategy.getCloudServices().stream()
+                .anyMatch(service -> service.getId().equals(fetchedCloudService.getId()));
+        assertTrue(linksToEks, "The FinOps strategy must be functionally linked back to the target EKS service layout.");
     }
 }

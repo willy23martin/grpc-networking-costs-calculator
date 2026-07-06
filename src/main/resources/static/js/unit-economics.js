@@ -1,16 +1,3 @@
-/* =======================================================================
-   unit-economics.js
-   Phase 4 — TCO Breakdown + Unit Economics + ROI
-
-   All cost computations use two existing backend endpoints:
-     POST /api/cost/cloud-infra-total  (UnitEconomicsController)
-     POST /api/cost/unit-economics     (UnitEconomicsController)
-
-   Security service costs are read from per-service sessionStorage keys
-   (written by recalculateSecCost() which uses /api/aws/security-services
-   pricing data) — one row per service, only when selected and cost > 0.
-   ======================================================================= */
-
 var runningTotalCost = 0;
 var hoursInMonth = 730;
 var billingMonthsInYear = 12;
@@ -244,7 +231,6 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var revenue      = parseFloat((document.getElementById('revenuePerTransaction')||{value:''}).value)
                    || parseFloat(sessionStorage.getItem('svc_revenue_per_tx')||'0') || 0;
   var monthlyReqs  = requestsPerMonthRaw || Math.round((effectiveRps||baseRps)*2592000);
-  var finopsSaving = parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
 
   // ── Read costs from the tco_snapshot written by writeTcoSnapshot() ───────
   // writeTcoSnapshot() is called in calculator.js after every recalculate*
@@ -258,24 +244,18 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var apiGwCost     = parseFloat(_snap.apigw)      || 0;
   var containerCost = parseFloat(_snap.container)  || 0;
   var dbCost        = parseFloat(_snap.db)         || 0;
+  var ec2Cost       = parseFloat(_snap.ec2)        || 0;
+  // Use snapshot value if available, fall back to direct sessionStorage read
+  var finopsSaving  = parseFloat(_snap.finops)     || parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+  var finopsPct      = parseFloat(_snap.finopsPct) || parseFloat(sessionStorage.getItem('tco_finops_pct')||'0');
+  var finopsStrategy = (_snap.finopsStrategy)      || sessionStorage.getItem('tco_finops_strategy') || 'RI / Savings Plan';
 
   var secCostByService = _snap.sec || {};
   var secCostTotal = Object.keys(secCostByService).reduce(function(s, k) {
     return s + (parseFloat(secCostByService[k]) || 0);
   }, 0);
 
-  var ec2Cost = 0;
-  var ec2Sel = document.getElementById('input-ec2-instance');
-  var replicaDisp = document.getElementById('replica-count-display');
-  if(ec2Sel && ec2Sel.value){
-    var instName = ec2Sel.value.split('|')[0];
-    var replicas = replicaDisp ? parseInt(replicaDisp.textContent)||0 : 0;
-    if(replicas > 0){
-      var priceMap = window._ec2PriceMap || {};
-      var pricePerHr = priceMap[instName] || 0.096;
-      ec2Cost = pricePerHr * 730 * replicas;
-    }
-  }
+  // ec2Cost now read from tco_snapshot (set by recalculateReplicas via writeTcoSnapshot)
 
   var grossInfra = albCost+cacheCost+apiGwCost+containerCost+dbCost+secCostTotal+ec2Cost;
   var netInfra   = Math.max(0, grossInfra - finopsSaving);
@@ -373,8 +353,25 @@ function _renderTcoBreakdownTable(
   if (containerCost > 0) addRow('Containerized Cluster (EKS)', 'Cloud Infra', 'badge-warn', containerCost, '$'+containerCost.toFixed(2)+'/mo');
   if (apiGwCost > 0)     addRow('API Gateway', 'Cloud Infra', 'badge-warn', apiGwCost, '$'+apiGwCost.toFixed(2)+'/mo · /api/aws/api-gateway-pricing');
   if (ec2Cost > 0)       addRow('EC2 Compute Replicas', 'Cloud Infra', 'badge-warn', ec2Cost, '$'+ec2Cost.toFixed(2)+'/mo');
-  if (finopsSaving > 0)  addRow('FinOps Optimisation (RI / Savings Plan)', 'Cost Reduction', 'badge-bc',
+  if (finopsSaving > 0)  addRow((finopsStrategy || 'FinOps Optimisation') + (finopsPct > 0 ? ' (' + finopsPct.toFixed(1) + '% off)' : ''), 'Cost Reduction', 'badge-bc',
     -finopsSaving, 'Discount applied to compute spend · /api/finops/ri-prices', true);
+
+  // ROI Impact % = how much each row moves the ROI needle numerically.
+  // For cost rows: roi% = -(row_cost / authTco * 100) — spending this reduces margin.
+  // For saving rows: roi% = +(saving / authTco * 100) — saving this improves margin.
+  // Revenue used to compute ROI: if not available, we express impact vs TCO only.
+  var _revMonth = parseFloat(sessionStorage.getItem('svc_revenue_per_tx')||'0')
+                * (parseInt(sessionStorage.getItem('svc_consumers')||'1')||1);
+
+  function roiImpactPct(rowCost, isSaving, isInfo) {
+    if (isInfo) return null;
+    if (authTco <= 0) return null;
+    // Express as % change in ROI = delta_profit / TCO * 100
+    // Saving reduces TCO → profit up → positive ROI impact
+    // Cost increases TCO → profit down → negative ROI impact
+    var impactOnProfit = isSaving ? Math.abs(rowCost) : -Math.abs(rowCost);
+    return (impactOnProfit / authTco * 100);
+  }
 
   var rowsHtml = rows.map(function(c){
     var pct = (sumPositive>0&&c.cost>0&&!c.isSaving&&!c.isInfo)
@@ -387,18 +384,27 @@ function _renderTcoBreakdownTable(
         ? '<span style="color:var(--green);font-size:.73rem;font-style:italic;">$0 (free)</span>'
         : '<span style="font-family:monospace;color:var(--blue-deep);">$'+c.cost.toFixed(2)+'</span>';
     var detailHtml = c.detail ? '<div style="font-size:.72rem;color:var(--ink-light);margin-top:2px;">'+c.detail+'</div>' : '';
+    var roiPct = roiImpactPct(c.cost, c.isSaving, c.isInfo);
+    var roiCell;
+    if (roiPct === null) {
+      roiCell = '<span style="font-size:.7rem;color:var(--ink-light);">—</span>';
+    } else if (roiPct >= 0) {
+      roiCell = '<span style="color:var(--green);font-size:.82rem;font-weight:700;font-family:monospace;">+'+roiPct.toFixed(1)+'%</span>';
+    } else {
+      roiCell = '<span style="color:var(--red);font-size:.82rem;font-weight:700;font-family:monospace;">'+roiPct.toFixed(1)+'%</span>';
+    }
     return '<tr style="border-bottom:1px solid var(--rule);">'
       +'<td style="padding:8px 12px;font-weight:600;">'+c.label+detailHtml+'</td>'
       +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge '+c.badge+'">'+c.cat+'</span></td>'
       +'<td style="padding:8px 12px;text-align:right;">'+costCell+'</td>'
-      +'<td style="padding:8px 12px;text-align:right;">'+pct+'</td></tr>';
+      +'<td style="padding:8px 12px;text-align:right;">'+pct+'</td>'
+      +'<td style="padding:8px 12px;text-align:right;">'+roiCell+'</td></tr>';
   }).join('');
-
   rowsHtml += '<tr style="background:var(--blue-deep);color:#fff;font-weight:700;">'
     +'<td style="padding:9px 12px;" colspan="2">Total Cost of Ownership (TCO)</td>'
     +'<td style="padding:9px 12px;text-align:right;font-family:monospace;">$'+authTco.toFixed(2)+'/mo</td>'
-    +'<td style="padding:9px 12px;text-align:right;">100.0%</td></tr>';
-
+    +'<td style="padding:9px 12px;text-align:right;">100.0%</td>'
+    +'<td style="padding:9px 12px;text-align:right;font-size:.74rem;">ROI Impact %</td></tr>';
   container.innerHTML =
     '<div style="font-family:\'DM Serif Display\',serif;font-size:1rem;color:var(--blue-deep);margin-bottom:10px;display:flex;align-items:center;gap:8px;">'
     +'<i class="fas fa-table"></i> Total Cost of Ownership (TCO) Breakdown</div>'
@@ -408,10 +414,11 @@ function _renderTcoBreakdownTable(
     +'<th style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--rule);">Category</th>'
     +'<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">Monthly Cost</th>'
     +'<th style="padding:7px 12px;text-align:right;border-bottom:1px solid var(--rule);">% of TCO</th>'
+    +'<th style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--rule);">ROI Impact</th>'
     +'</tr></thead><tbody>'+rowsHtml+'</tbody></table>'
     +'<p style="font-size:.73rem;color:var(--ink-light);margin-top:6px;">'
-    +'* Costs computed via AWS Pricing API backend. Security costs: one row per selected service when volume entered. '
-    +'DR = Disaster Recovery | BC = Business Continuity.</p>';
+    +'&#9650; Promotes ROI = positive efficiency factor. &#9660; Inhibits ROI = margin cost (hover for tip). '
+    +'Costs via AWS Pricing API. DR = Disaster Recovery | BC = Business Continuity.</p>';
 }
 
 /* =======================================================================

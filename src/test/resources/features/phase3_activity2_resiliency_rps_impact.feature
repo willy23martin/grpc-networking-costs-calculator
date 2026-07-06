@@ -7,12 +7,10 @@ Feature: Resiliency Pattern Configuration and RPS Impact
   Background:
     Given the architect is on the TCO Networking Costs Calculator interface
 
-  @UI @Retry @RPS
-  Scenario: Retry pattern increases effective RPS
-    Given the base RPS is 1000 req/s
-    When I enable the Retry tactic with a 5% error rate
+  Scenario: Retry pattern increases effective network load and calculates correct TCO
+    When the architect calculates the cost efficiency with a base RPS of 1000 and a retry error rate of 5%
     Then the effective RPS increases by 50 req/s to 1050 req/s
-    And the live cost delta panel shows the additional egress cost
+    And the response DTO fields confirm that the RPS was adjusted
 
   @UI @CircuitBreaker @RPS
   Scenario: Circuit Breaker has no RPS impact
