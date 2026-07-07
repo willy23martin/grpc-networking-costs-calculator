@@ -20,7 +20,7 @@ public class EffectiveRPSCalculatorController {
     private final Logger log = Logger.getLogger(EffectiveRPSCalculatorController.class.getName());
 
     @Autowired
-    RequestPerSecondCostCalculatorService requestPerSecondCostCalculatorService;
+    private RequestPerSecondCostCalculatorService requestPerSecondCostCalculatorService;
 
     @PostMapping("/api/tco/effective-rps")
     public ResponseEntity<EffectiveRequestPerSecondResponse> calculateEffectiveRps(

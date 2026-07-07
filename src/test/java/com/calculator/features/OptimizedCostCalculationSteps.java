@@ -1,6 +1,6 @@
 package com.calculator.features;
 
-import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.infrastructure.cloud.adapters.aws.containers.AWSContainersCostCalculatorAdapter;
 import com.calculator.domain.model.architecture.CloudService;
 import com.calculator.domain.model.architecture.FinOpsStrategy;
 import com.calculator.domain.repository.cloud.CloudArchitecturalDecisionRepository;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class OptimizedCostCalculationSteps {
 
     @Autowired
-    private EKSComputeCostCalculator eksComputeCostCalculator;
+    private AWSContainersCostCalculatorAdapter eksComputeCostCalculator;
 
     @Autowired
     private CloudArchitecturalDecisionRepository cloudArchitecturalDecisionRepository;
@@ -46,7 +46,7 @@ public class OptimizedCostCalculationSteps {
 
     @When("I recalculate total costs across the architecture")
     public void i_recalculate_total_costs_across_the_architecture() {
-        this.calculatedHourlyBase = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
+        this.calculatedHourlyBase = eksComputeCostCalculator.fetchContainersHourlyCost();
 
         this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;
 

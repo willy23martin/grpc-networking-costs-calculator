@@ -110,6 +110,25 @@ The service can be parametrized before building it to use a Cloud Service Provid
 | `TacticsSessionController` | `GET /api/session/tactics` | Retrieves current architectural choices from session buffer |
 | `TacticsSessionController` | `DELETE /api/session/tactics` | Purges tracked tactical options from the contextual storage |
 
+## Ports & Adapters (Hexagonal Architecture)
+
+This application leverages the Hexagonal Architecture pattern to decouple core business logic from cloud infrastructure providers. The table below outlines how the core domain ports map to specific AWS infrastructure adapters and their external pricing API interactions.
+
+| Core Domain Port (`com.calculator.application.services.calculators.cost.cloud.ports.*`) | Infrastructure Adapter (`com.calculator.infrastructure.cloud.adapters.aws.*`) | External API Dependent / Client |
+| :--- | :--- | :--- |
+| `NetworkingCostCalculatorPort` | `AWSDataTransferCostCalculationServiceAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `CloudComputeCostCalculatorPort` | `AWSComputeCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `ALBCostCalculatorPort` | `AWSALBCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) & Local DB Repository |
+| `DatabaseCostCalculatorPort` | `AWSDatabaseCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `SecurityCostCalculatorPort` | `AWSSecurityCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) & `AWSSecurityWAFCostCalculator` |
+| `FinOpsStrategyCostCalculatorPort` | `AWSFinOpsStrategyCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `CachingCostCalculatorPort` | `AWSCachingCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `ContainerizedCostCalculatorPort` | `AWSContainersCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+
+### Key Infrastructure Notes
+* **AWS Pricing API Constraint**: The `PricingClient` bean is explicitly pinned to the `Region.US_EAST_1` endpoint, as it serves as the global endpoint for AWS Price List Service API queries.
+* **Timeout Policies**: Inter-adapter calls to the AWS Pricing API are guarded with a strict timeout policy of a **4-second** attempt limit and a maximum **10-second** total call duration.
+
 ## AWS APIs for pricing - JSON responses:
 
 - **Terminology**:

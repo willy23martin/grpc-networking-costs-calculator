@@ -1,13 +1,10 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.cloud.alb.aws.alb.AWSALBCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.application.services.calculators.cost.cloud.ports.ContainerizedCostCalculatorPort;
 import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +26,7 @@ public class ContainerizedEnvironmentCostController {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
-    private EKSComputeCostCalculator eksComputeCostCalculator;
+    private ContainerizedCostCalculatorPort containerizedCostCalculatorPort;
 
     // Fargate compute: per vCPU-hour and per GB-hour
     private static final double FARGATE_VCPU_PER_HOUR           = 0.04048;
@@ -188,8 +185,8 @@ public class ContainerizedEnvironmentCostController {
     public ResponseEntity<ContainerPricingResponse> getContainerPricing() {
         ContainerPricingResponse resp = new ContainerPricingResponse();
 
-        resp.eksControlPlanePerMonth       = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost() * 730;
-        resp.eksControlPlanePerHour        = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
+        resp.eksControlPlanePerMonth       = containerizedCostCalculatorPort.fetchContainersHourlyCost() * 730;
+        resp.eksControlPlanePerHour        = containerizedCostCalculatorPort.fetchContainersHourlyCost();
         resp.fargateVcpuPerHour            = FARGATE_VCPU_PER_HOUR;
         resp.fargateGbPerHour              = FARGATE_GB_PER_HOUR;
         resp.fargateSpotVcpuPerHour        = FARGATE_SPOT_VCPU_PER_HOUR;
@@ -247,10 +244,10 @@ public class ContainerizedEnvironmentCostController {
 
         // ── 1. EKS Control Plane ──────────────────────────────────
         if ("eks".equalsIgnoreCase(req.orchestrationType)) {
-            resp.eksControlPlaneCost = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost()*730 * req.clusterCount;
+            resp.eksControlPlaneCost = containerizedCostCalculatorPort.fetchContainersHourlyCost()*730 * req.clusterCount;
             resp.lineItems.put("EKS Control Plane",
                     String.format("%d cluster(s) × $%.2f/mo = $%.2f/mo",
-                            req.clusterCount, eksComputeCostCalculator.fetchEksControlPlaneHourlyCost() * 730, resp.eksControlPlaneCost));
+                            req.clusterCount, containerizedCostCalculatorPort.fetchContainersHourlyCost() * 730, resp.eksControlPlaneCost));
             total += resp.eksControlPlaneCost;
         }
 

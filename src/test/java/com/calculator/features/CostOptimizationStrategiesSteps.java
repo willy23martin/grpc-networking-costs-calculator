@@ -1,6 +1,6 @@
 package com.calculator.features;
 
-import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.infrastructure.cloud.adapters.aws.containers.AWSContainersCostCalculatorAdapter;
 import com.calculator.domain.model.architecture.CloudService;
 import com.calculator.domain.model.architecture.FinOpsStrategy;
 import com.calculator.domain.repository.cloud.CloudArchitecturalDecisionRepository;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CostOptimizationStrategiesSteps {
 
     @Autowired
-    private EKSComputeCostCalculator eksComputeCostCalculator;
+    private AWSContainersCostCalculatorAdapter eksComputeCostCalculator;
 
     @Autowired
     private CloudArchitecturalDecisionRepository cloudArchitecturalDecisionRepository;
@@ -48,7 +48,7 @@ public class CostOptimizationStrategiesSteps {
         this.finopsStrategyParam = finopsStrategy;
 
         // 1. Fetch live base hourly rate from the calculator ($0.10)
-        this.calculatedHourlyBase = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
+        this.calculatedHourlyBase = eksComputeCostCalculator.fetchContainersHourlyCost();
 
         // 2. Convert to standard monthly cost baseline (730 hours per month) -> $73.00
         this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;

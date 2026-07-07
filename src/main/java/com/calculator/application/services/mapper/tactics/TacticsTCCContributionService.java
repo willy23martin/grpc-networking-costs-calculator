@@ -1,7 +1,6 @@
 package com.calculator.application.services.mapper.tactics;
 
-import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.networking.aws.AWSDataTransferCostCalculationService;
+import com.calculator.application.services.calculators.cost.cloud.ports.NetworkingCostCalculatorPort;
 import com.calculator.domain.dto.requests.TacticTCCContributionRequest;
 import com.calculator.domain.dto.responses.TacticContributionItem;
 import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.calculator.application.services.calculators.cost.cloud.networking.aws.AWSDataTransferCostCalculationService.AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB;
 import static com.calculator.application.services.utils.MathUtils.round2;
 import static com.calculator.infrastructure.web.rest.TCOCalculatorController.BYTES_PER_GB;
 import static com.calculator.infrastructure.web.rest.TCOCalculatorController.SECONDS_PER_MONTH;
@@ -43,7 +41,7 @@ public class TacticsTCCContributionService {
     private SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
 
     @Autowired
-    NetworkingCostCalculator networkingCostCalculator; // DESIGN PATTERNS: Port whose adapter is AWSDataTransferCostCalculationService class
+    NetworkingCostCalculatorPort networkingCostCalculator; // DESIGN PATTERNS: Port whose adapter is AWSDataTransferCostCalculationService class
 
     public List<TacticContributionItem> mapStructuralInformationalTacticsWithNoCostImpact(TacticTCCContributionRequest tacticContributionRequest) {
         List<TacticContributionItem> tacticContributionItems = new ArrayList<>();
@@ -162,7 +160,7 @@ public class TacticsTCCContributionService {
 
     private double getNetworkingEgressCost(int rps, int responseBytes) {
 
-        List<Double> dataTransferRates = ((AWSDataTransferCostCalculationService) networkingCostCalculator).getDataTransferRates();
+        List<Double> dataTransferRates = networkingCostCalculator.getDataTransferRates();
 
         double gbPerMonth = (double) rps * SECONDS_PER_MONTH * responseBytes / BYTES_PER_GB;
         double cost = 0;
@@ -170,17 +168,17 @@ public class TacticsTCCContributionService {
 
         if (remaining <= 0) return 0;
 
-        double tier1Used = Math.min(remaining, AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0]);
+        double tier1Used = Math.min(remaining, networkingCostCalculator.getStandardThresholdLimits()[0]);
         cost += tier1Used * dataTransferRates.getFirst();
         remaining -= tier1Used;
 
         if (remaining > 0) {
-            double tier2Used = Math.min(remaining, AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[1]);
+            double tier2Used = Math.min(remaining, networkingCostCalculator.getStandardThresholdLimits()[1]);
             cost += tier2Used * dataTransferRates.get(1);
             remaining -= tier2Used;
         }
         if (remaining > 0) {
-            double tier3Used = Math.min(remaining, AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[2]);
+            double tier3Used = Math.min(remaining, networkingCostCalculator.getStandardThresholdLimits()[2]);
             cost += tier3Used * dataTransferRates.get(2);
             remaining -= tier3Used;
         }

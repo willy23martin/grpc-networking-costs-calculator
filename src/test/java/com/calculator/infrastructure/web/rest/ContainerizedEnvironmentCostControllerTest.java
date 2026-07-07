@@ -1,9 +1,8 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.infrastructure.cloud.adapters.aws.containers.AWSContainersCostCalculatorAdapter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import software.amazon.awssdk.services.pricing.PricingClient;
@@ -20,7 +18,6 @@ import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
 import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,7 +40,7 @@ class ContainerizedEnvironmentCostControllerTest {
     private PricingClientBuilder pricingClientBuilderMock;
 
     @Mock
-    private EKSComputeCostCalculator eksComputeCostCalculator;
+    private AWSContainersCostCalculatorAdapter eksComputeCostCalculator;
 
     @InjectMocks
     private ContainerizedEnvironmentCostController controller;
@@ -143,7 +140,7 @@ class ContainerizedEnvironmentCostControllerTest {
     @Test
     void calculateContainerTco_completeEksEc2_allBranches() {
         // ARRANGE: Stub the mocked calculator to return the standard baseline hourly rate
-        when(eksComputeCostCalculator.fetchEksControlPlaneHourlyCost()).thenReturn(0.10);
+        when(eksComputeCostCalculator.fetchContainersHourlyCost()).thenReturn(0.10);
 
         ContainerizedEnvironmentCostController.ContainerTcoRequest req = new ContainerizedEnvironmentCostController.ContainerTcoRequest();
         req.clusterCount = 2;

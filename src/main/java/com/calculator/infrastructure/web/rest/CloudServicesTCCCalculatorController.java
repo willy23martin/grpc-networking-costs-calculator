@@ -1,11 +1,11 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.cloud.alb.ALBCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.caching.CachingCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.compute.CloudComputeCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.database.DatabaseCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.finops.FinOpsStrategyCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.security.SecurityCostCalculator;
+import com.calculator.application.services.calculators.cost.cloud.ports.ALBCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.CachingCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.CloudComputeCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.DatabaseCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.FinOpsStrategyCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.SecurityCostCalculatorPort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,22 +20,22 @@ public class CloudServicesTCCCalculatorController {
     private static final Logger log = Logger.getLogger(CloudServicesTCCCalculatorController.class.getName());
 
     @Autowired
-    CloudComputeCostCalculator cloudComputeCostCalculator; // Amazon EC2 for example
+    CloudComputeCostCalculatorPort cloudComputeCostCalculator; // Amazon EC2 for example
 
     @Autowired
-    ALBCostCalculator albCostCalculator;
+    ALBCostCalculatorPort albCostCalculator;
 
     @Autowired
-    DatabaseCostCalculator databaseCostCalculator;
+    DatabaseCostCalculatorPort databaseCostCalculator;
 
     @Autowired
-    SecurityCostCalculator securityCostCalculator;
+    SecurityCostCalculatorPort securityCostCalculator;
 
     @Autowired
-    FinOpsStrategyCostCalculator finOpsStrategyCostCalculator;
+    FinOpsStrategyCostCalculatorPort finOpsStrategyCostCalculator;
 
     @Autowired
-    CachingCostCalculator cachingCostCalculator;
+    CachingCostCalculatorPort cachingCostCalculator;
 
     @GetMapping("/ec2-instances")
     public List<Map<String, Object>> getComputeInstances() {

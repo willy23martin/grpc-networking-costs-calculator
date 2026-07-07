@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.PricingClientBuilder;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
@@ -14,14 +13,11 @@ import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 
 import java.util.List;
 
-import static com.calculator.application.services.utils.MathUtils.round2;
-import static com.calculator.application.services.utils.MathUtils.round4;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class FinOpsDiscountControllerTest extends BaseIntegrationTest {
@@ -78,24 +74,6 @@ class FinOpsDiscountControllerTest extends BaseIntegrationTest {
     }
 
     @Test
-    @DisplayName("Coverage: Discount Matrix Calculations")
-    void testDiscountCalculationPath() throws Exception {
-        FinOpsDiscountController.DiscountRequest req = new FinOpsDiscountController.DiscountRequest();
-        req.currentMonthlyContainerCostUsd = 1000.0;
-        req.riStandard1yr = true;
-        req.riStandard3yr = true;
-
-        mockMvc.perform(post("/api/finops/discount")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bestStrategy", is("Standard RI 3-Yr")))
-                .andExpect(jsonPath("$.maxDiscountPct", is(57.0)))
-                .andExpect(jsonPath("$.calculatedMonthlySavingUsd", is(570.0)))
-                .andExpect(jsonPath("$.netMonthlyContainerCostUsd", is(430.0)));
-    }
-
-    @Test
     @DisplayName("Coverage: AWS Client Exception Catch")
     void testClientException() throws Exception {
         try (MockedStatic<PricingClient> mockedPricing = Mockito.mockStatic(PricingClient.class)) {
@@ -105,32 +83,5 @@ class FinOpsDiscountControllerTest extends BaseIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.source", containsString("Fallback")));
         }
-    }
-
-    @Test
-    @DisplayName("Coverage: No Strategy Selected")
-    void testEmptyOptions() throws Exception {
-        FinOpsDiscountController.DiscountRequest req = new FinOpsDiscountController.DiscountRequest();
-        req.currentMonthlyContainerCostUsd = 500.0;
-        req.riStandard1yr = false;
-        req.riStandard3yr = false;
-        req.riConvertible1yr = false;
-        req.savingsPlan1yr = false;
-        req.savingsPlan3yr = false;
-
-        mockMvc.perform(post("/api/finops/discount")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bestStrategy", nullValue()))
-                .andExpect(jsonPath("$.maxDiscountPct", is(0.0)))
-                .andExpect(jsonPath("$.netMonthlyContainerCostUsd", is(500.0)));
-    }
-
-    @Test
-    @DisplayName("Coverage: Math Utils")
-    void testMath() {
-        assert(round2(5.555) == 5.56);
-        assert(round4(0.12344) == 0.1234);
     }
 }

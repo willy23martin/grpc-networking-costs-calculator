@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
+import com.calculator.application.services.calculators.cost.cloud.ports.NetworkingCostCalculatorPort;
 import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
 import com.calculator.application.services.compilators.CompilationService;
 import com.calculator.application.services.populator.TacticsPopulatorService;
@@ -57,7 +57,7 @@ public class TCOCalculatorController implements ErrorController {
             """;
 
     @Autowired
-    NetworkingCostCalculator networkingCostCalculator;
+    NetworkingCostCalculatorPort networkingCostCalculator;
 
     @Autowired
     ProtocolBufferService protocolBufferService;
