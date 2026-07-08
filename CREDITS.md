@@ -17,7 +17,7 @@ This document outlines the collaborative engineering, architectural design, and 
 - **Architectural Specification**: Defined and designed the strict Hexagonal (Ports & Adapters) architectural layout isolating the core calculation domain from web infrastructure and cloud dependencies.
 - **Domain Modeling**: Developed the conceptual domain engine assessing trade-offs across resiliency, reliability, and security metrics against gRPC wire serialization footprints.
 - **System Design Validation**: Directed the continuous structural refinement of the core Spring Boot monolithic application container, orchestrating the "Configuration as Data" paradigm to leverage dynamic properties file integration.
-- **Component Decomposition**: Mapped out responsibilities and interaction data-flows across all primary REST controllers (`TCOCalculatorController`, `CloudTCOCalculatorController`, `FinOpsDiscountController`, `TacticsSessionController`, and `PortfolioROIController`).
+- **Component Decomposition**: Mapped out responsibilities and interaction data-flows across all primary REST controllers (`TCOCalculatorController`, `CloudTCOCalculatorController`, `FinOpsDiscountController`, `TacticsSessionController`, and `PortfolioUnitEconomicsController`).
 
 ---
 

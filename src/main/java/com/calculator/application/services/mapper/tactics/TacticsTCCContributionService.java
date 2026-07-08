@@ -3,7 +3,7 @@ package com.calculator.application.services.mapper.tactics;
 import com.calculator.application.services.calculators.cost.cloud.ports.NetworkingCostCalculatorPort;
 import com.calculator.domain.dto.requests.TacticTCCContributionRequest;
 import com.calculator.domain.dto.responses.TacticContributionItem;
-import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
+import com.calculator.domain.model.architecture.tactics.security.TLSOverhead;
 import com.calculator.domain.model.architecture.ArchitecturalPattern;
 import com.calculator.domain.model.architecture.ArchitecturalTactic;
 import com.calculator.domain.model.architecture.tactics.security.JWTOverhead;
@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.calculator.application.services.utils.MathUtils.round2;
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.SECONDS_PER_MONTH;
 import static com.calculator.infrastructure.web.rest.TCOCalculatorController.BYTES_PER_GB;
-import static com.calculator.infrastructure.web.rest.TCOCalculatorController.SECONDS_PER_MONTH;
 
 @Service
 public class TacticsTCCContributionService {

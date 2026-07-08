@@ -138,7 +138,7 @@ public class AWSSecurityCostCalculatorAdapter extends AWSCloudCalculatorAdapter 
     }
 
     @PostConstruct
-    public void init(){
+    private void init(){
         calculateSecurityCosts();
     }
 }

@@ -42,7 +42,7 @@ public class ArchitecturalDecisionsDTOMapper {
                         interceptorType
                 ),
                 new BasicAuthenticationPattern(
-                        false // TODO verify how to extract it
+                        false
                 )
         );
 

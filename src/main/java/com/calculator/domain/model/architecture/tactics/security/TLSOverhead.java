@@ -1,4 +1,4 @@
-package com.calculator.domain.dto.tactics.security.tls;
+package com.calculator.domain.model.architecture.tactics.security;
 
 public enum TLSOverhead {
 

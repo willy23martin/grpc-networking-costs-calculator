@@ -1,6 +1,6 @@
 package com.calculator.domain.repository.security;
 
-import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
+import com.calculator.domain.model.architecture.tactics.security.TLSOverhead;
 import com.calculator.domain.model.architecture.*;
 import com.calculator.domain.model.architecture.tactics.security.JWTOverhead;
 import com.calculator.domain.model.cost.NetworkingCost;

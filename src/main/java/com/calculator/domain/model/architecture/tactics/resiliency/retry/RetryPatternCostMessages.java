@@ -1,4 +1,4 @@
-package com.calculator.domain.dto.tactics.resiliency.retry;
+package com.calculator.domain.model.architecture.tactics.resiliency.retry;
 
 public enum RetryPatternCostMessages {
 

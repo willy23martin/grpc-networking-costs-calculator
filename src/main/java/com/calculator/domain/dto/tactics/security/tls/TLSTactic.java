@@ -1,9 +1,10 @@
 package com.calculator.domain.dto.tactics.security.tls;
 
+import com.calculator.domain.model.architecture.tactics.security.TLSOverhead;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import static com.calculator.domain.dto.tactics.security.tls.TLSOverhead.MTLS_HANDSHAKE_MESSAGES;
-import static com.calculator.domain.dto.tactics.security.tls.TLSOverhead.TLS_HANDSHAKE_MESSAGES;
+import static com.calculator.domain.model.architecture.tactics.security.TLSOverhead.MTLS_HANDSHAKE_MESSAGES;
+import static com.calculator.domain.model.architecture.tactics.security.TLSOverhead.TLS_HANDSHAKE_MESSAGES;
 
 public record TLSTactic(
         @JsonProperty("tlsEnabled")

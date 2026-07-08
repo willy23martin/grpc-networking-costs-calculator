@@ -16,12 +16,12 @@ import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
 import static com.calculator.application.services.utils.MathUtils.round2;
 
 public class AWSALBCostCalculatorAdapter extends AWSCloudCalculatorAdapter implements ALBCostCalculatorPort {
 
     private static final Logger log = Logger.getLogger(AWSALBCostCalculatorAdapter.class.getName());
-    public static final int HOURS_IN_A_MONTH = 730;
 
     @Value("${aws.pricing.alb.fixed.charged.per.hour}")
     private double albFixedChargePerHour;
@@ -115,8 +115,8 @@ public class AWSALBCostCalculatorAdapter extends AWSCloudCalculatorAdapter imple
 
             albCostMap.put("fixedPerHourUsd",  resolvedFixed);
             albCostMap.put("lcuPerHourUsd",    resolvedLcu);
-            albCostMap.put("fixedPerMonthUsd", round2(resolvedFixed * HOURS_IN_A_MONTH));
-            albCostMap.put("lcuPerMonthBase",  round2(resolvedLcu   * HOURS_IN_A_MONTH));
+            albCostMap.put("fixedPerMonthUsd", round2(resolvedFixed * HOURS_PER_MONTH));
+            albCostMap.put("lcuPerMonthBase",  round2(resolvedLcu   * HOURS_PER_MONTH));
             albCostMap.put("lcuPricingTiers",  lcuTiers.isEmpty()
                     ? List.of(Map.of("note", "no tiers returned"))
                     : lcuTiers);
@@ -141,7 +141,7 @@ public class AWSALBCostCalculatorAdapter extends AWSCloudCalculatorAdapter imple
 
     private GetProductsRequest buildRequest() {
         return GetProductsRequest.builder()
-                .serviceCode("AmazonEC2") // FIX: AWS catalog groups ELB under AmazonEC2
+                .serviceCode("AmazonEC2")
                 .filters(
                         Filter.builder()
                                 .type(FilterType.TERM_MATCH)
@@ -161,7 +161,7 @@ public class AWSALBCostCalculatorAdapter extends AWSCloudCalculatorAdapter imple
 
     private List<String> buildFinopsNotes(double fixedPerHour, double lcuPerHour) {
         List<String> notes = new ArrayList<>();
-        notes.add(String.format("Fixed: $%.4f/hr (~$%.2f/mo) — unavoidable while ALB exists", fixedPerHour, fixedPerHour * HOURS_IN_A_MONTH));
+        notes.add(String.format("Fixed: $%.4f/hr (~$%.2f/mo) — unavoidable while ALB exists", fixedPerHour, fixedPerHour * HOURS_PER_MONTH));
         notes.add(String.format("LCU: $%.4f/LCU/hr — reduce via HTTP keep-alive, fewer listener rules, target consolidation", lcuPerHour));
 
         var strategy = finOpsStrategyReliabilityArchitecturalDecisionRepository.getFinOpsStrategyForAWSApplicationLoadBalancer();

@@ -89,26 +89,26 @@ The service can be parametrized before building it to use a Cloud Service Provid
 
 ## MVC Controllers
 
-| Controller Class Name | Request Method & Endpoint Path | Replaces JS function / Description |
-|---|---|---|
-| `TCOCalculatorController` | `POST /` | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
+| Controller Class Name                    | Request Method & Endpoint Path | Replaces JS function / Description |
+|------------------------------------------|---|---|
+| `TCOCalculatorController`                | `POST /` | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
 | `ContainerizedEnvironmentCostController` | `GET /api/aws/ec2-instances` | Fetches live compute node on-demand/fallback definitions |
-| `CloudTCOCalculatorController` | `GET /api/aws/alb-pricing` | Provides base structural load balancer tier schemas |
-| `CloudTCOCalculatorController` | `GET /api/aws/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
-| `CloudTCOCalculatorController` | `GET /api/aws/security-services` | `recalculateSecCost()` (Native AWS protection parameters) |
-| `CloudTCOCalculatorController` | `GET /api/aws/cost-optimisation` | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
-| `CloudTCOCalculatorController` | `GET /api/aws/caching-pricing` | `recalculateCaching()` (Cache tier sizing matrices) |
-| `EffectiveRPSCalculatorController` | `POST /api/tco/effective-rps` | `recalculateRps()` (Network overhead scaling limits evaluation) |
-| `FinOpsDiscountController` | `POST /api/finops/container-discounts` | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
-| `PortfolioROIController` | `POST /api/portfolio/roi` | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
-| `UnitEconomicsController` | `POST /api/cost/unit-economics` | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
-| `ReliabilityTacticsController` | `GET /api/reliability/tactic-mappings` | Lists qualitative score matrices for streaming protocols |
-| `ResiliencyPatternsController` | `GET /api/resiliency/tactic-mappings` | Lists resiliency structural tradeoff profiles |
-| `SecurityTacticsController` | `GET /api/security/tactic-mappings` | Lists channel security tactic constraints profiles |
-| `TacticsContributionController` | `POST /api/cost/tactic-contributions` | Quantifies individual egress additions induced by architectural design decisions |
-| `TacticsSessionController` | `POST /api/session/tactics` | Saves active architectural decisions into context state |
-| `TacticsSessionController` | `GET /api/session/tactics` | Retrieves current architectural choices from session buffer |
-| `TacticsSessionController` | `DELETE /api/session/tactics` | Purges tracked tactical options from the contextual storage |
+| `CloudTCOCalculatorController`           | `GET /api/aws/alb-pricing` | Provides base structural load balancer tier schemas |
+| `CloudTCOCalculatorController`           | `GET /api/aws/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
+| `CloudTCOCalculatorController`           | `GET /api/aws/security-services` | `recalculateSecCost()` (Native AWS protection parameters) |
+| `CloudTCOCalculatorController`           | `GET /api/aws/cost-optimisation` | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
+| `CloudTCOCalculatorController`           | `GET /api/aws/caching-pricing` | `recalculateCaching()` (Cache tier sizing matrices) |
+| `EffectiveRPSCalculatorController`       | `POST /api/tco/effective-rps` | `recalculateRps()` (Network overhead scaling limits evaluation) |
+| `FinOpsDiscountController`               | `POST /api/finops/container-discounts` | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
+| `PortfolioUnitEconomicsController`       | `POST /api/portfolio/roi` | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
+| `UnitEconomicsController`                | `POST /api/cost/unit-economics` | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
+| `ReliabilityTacticsController`           | `GET /api/reliability/tactic-mappings` | Lists qualitative score matrices for streaming protocols |
+| `ResiliencyPatternsController`           | `GET /api/resiliency/tactic-mappings` | Lists resiliency structural tradeoff profiles |
+| `SecurityTacticsController`              | `GET /api/security/tactic-mappings` | Lists channel security tactic constraints profiles |
+| `TacticsContributionController`          | `POST /api/cost/tactic-contributions` | Quantifies individual egress additions induced by architectural design decisions |
+| `TacticsSessionController`               | `POST /api/session/tactics` | Saves active architectural decisions into context state |
+| `TacticsSessionController`               | `GET /api/session/tactics` | Retrieves current architectural choices from session buffer |
+| `TacticsSessionController`               | `DELETE /api/session/tactics` | Purges tracked tactical options from the contextual storage |
 
 ## Ports & Adapters (Hexagonal Architecture)
 
@@ -169,6 +169,19 @@ This application leverages the Hexagonal Architecture pattern to decouple core b
 ## Retry formula (preserved)
 `tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
 
+
+## Additional screnshots of TCC, TCO and UnitEconomics reports:
+![Phase 3 report example.png](src/main/resources/images/example/Phase%203%20report%20example.png)
+
+![Phase 4 report example.png](src/main/resources/images/example/Phase%204%20report%20example.png)
+
+![Phase 4 report example - Unit economics.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20Unit%20economics.png)
+
+![Phase 4 report example - FinOps Tagging and Labelling.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling.png)
+
+![Phase 4 report example - FinOps Tagging and Labelling Cloud Services.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling%20Cloud%20Services.png)
+
+![Phase 4 report example - Portfolio with FinOps savings.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20Portfolio%20with%20FinOps%20savings.png)
 
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).

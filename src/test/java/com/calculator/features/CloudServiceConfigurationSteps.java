@@ -11,6 +11,7 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,7 +50,7 @@ public class CloudServiceConfigurationSteps extends BaseIntegrationTest {
         this.calculatedHourlyBase = eksComputeCostCalculator.fetchContainersHourlyCost();
 
         // 2. Convert control plane rate to a baseline monthly run cost (730 continuous hours) -> $73.00
-        this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;
+        this.calculatedMonthlyBase = this.calculatedHourlyBase * HOURS_PER_MONTH;
 
         // 3. Extract target optimization rate from string parameter context ("50%")
         double savingsFactor = 0.50;

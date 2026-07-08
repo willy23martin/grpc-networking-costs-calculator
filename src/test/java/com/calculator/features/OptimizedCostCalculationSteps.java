@@ -11,6 +11,7 @@ import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,7 +49,7 @@ public class OptimizedCostCalculationSteps {
     public void i_recalculate_total_costs_across_the_architecture() {
         this.calculatedHourlyBase = eksComputeCostCalculator.fetchContainersHourlyCost();
 
-        this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;
+        this.calculatedMonthlyBase = this.calculatedHourlyBase * HOURS_PER_MONTH;
 
         double savingsFactor = 0.50;
         this.calculatedMonthlySavings = this.calculatedMonthlyBase * savingsFactor;

@@ -20,13 +20,14 @@ import software.amazon.awssdk.services.pricing.model.FilterType;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
 import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
+
 public class AWSComputeCostCalculatorAdapter extends AWSCloudCalculatorAdapter implements CloudComputeCostCalculatorPort {
 
     private static final Logger log = Logger.getLogger(AWSComputeCostCalculatorAdapter.class.getName());
 
     public static final int GIGA_BITS = 1_000_000_000;
     public static final int BITS_PER_BYTE = 8;
-    public static final int HOURS_PER_MONTH = 730;
 
     //Regex extractor safely translating string values ("12.5 Gbps", "Up to 5 Gbps") into structured doubles.
     public static final String REGEX = "(\\d+(?:\\.\\d+)?)";

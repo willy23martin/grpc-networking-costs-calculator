@@ -73,7 +73,6 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
 
             if (listResponse.hasPriceLists() && !listResponse.priceLists().isEmpty()) {
 
-                // FIX: Instead of .getFirst(), find the explicit partition for us-east-1
                 software.amazon.awssdk.services.pricing.model.PriceList targetPriceList = listResponse.priceLists().stream()
                         .filter(pl -> "us-east-1".equalsIgnoreCase(pl.regionCode()))
                         .findFirst()

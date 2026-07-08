@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
-import static com.calculator.domain.dto.tactics.resiliency.retry.RetryPatternCostMessages.RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE;
+import static com.calculator.domain.model.architecture.tactics.resiliency.retry.RetryPatternCostMessages.RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE;
 import static com.calculator.infrastructure.web.rest.TCOCalculatorController.DISPLAY_LOCALE;
 
 @Service
