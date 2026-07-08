@@ -133,6 +133,73 @@ This application leverages the Hexagonal Architecture pattern to decouple core b
 ## Retry formula (preserved)
 `tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
 
+## 🏛️ Unit Economics & Financial Projection Formulas
+
+The system evaluates the financial viability and architectural cost-efficiency of gRPC microservices by correlating infrastructure and networking Total Cost of Ownership (TCO) against business performance metrics.
+
+### 1. Total Cost of Ownership (TCO)
+The monthly operational cost combines baseline data transmission contracts, tactical overhead (e.g., retries, hedging), and active cloud infrastructure resources minus any applied FinOps cloud savings.
+
+$$TCO = \text{Base Networking Cost} + \Delta\text{Tactical Network Cost} + \text{Gross Infra Cost} - \text{FinOps Discount}$$
+
+Where:
+* **Base Networking Cost:** Monthly egress expenditure derived strictly from baseline `.proto` message payloads executed at baseline RPS.
+* **$\Delta$ Tactical Network Cost:** Amplified egress overhead caused by resilience patterns (e.g., traffic retry multipliers).
+* **Gross Infra Cost:** Sum total of active AWS resource layers:
+  $$\text{Gross Infra} = \text{ALB} + \text{ElastiCache} + \text{API Gateway} + \text{Containers} + \text{EC2 Replicas} + \sum\text{CloudSecurityServices}$$
+
+---
+
+### 2. Business Workload Projections
+To convert raw technical metrics into business dimensions, the system calculates execution frequency over standard operational time horizons.
+
+#### Monthly Transaction Volume
+Calculates the total business request interactions processed over a standardized 30-day operational window ($2,592,000\text{ seconds}$).
+
+$$\text{Monthly Transactions} = \text{Base RPS} \times 2,592,000$$
+
+#### Generated Monthly Revenue
+Converts operational transactions directly into financial gross output based on transaction yield.
+
+$$\text{Monthly Revenue} = \text{Monthly Transactions} \times \text{Expected Revenue per Transaction}$$
+
+---
+
+### 3. Financial Optimization & Efficiency Ratios
+
+#### Infrastructure Efficiency Ratio
+Quantifies the business revenue leverage obtained for every \$1.00 USD invested in the underlying cloud infrastructure footprint.
+
+$$\text{Infrastructure Efficiency Ratio} = \frac{\text{Generated Monthly Revenue}}{TCO}$$
+
+#### Break-Even Transaction Volume
+Determines the strict technical floor of monthly transaction interactions required to fully offset the service's operational TCO.
+
+$$\text{Break-Even Transactions} = \frac{TCO}{\text{Expected Revenue per Transaction}}$$
+
+#### Break-Even Active Users
+Determines the required active user base necessary to achieve financial equilibrium, assuming a standardized distribution of user transaction frequencies.
+
+$$\text{Break-Even Users} = \max\left(0, \left\lceil \frac{\text{Break-Even Transactions}}{\text{Monthly Transactions per User}} \right\rceil\right)$$
+
+---
+
+### 4. Return on Investment (ROI) Metrics
+
+#### Baseline ROI (Without FinOps Optimization)
+Measures the net profitability percentage of the architecture relying purely on on-demand infrastructure costs before any strategic commitment discounts are evaluated.
+
+$$ROI_{\text{Baseline}} = \left( \frac{\text{Generated Monthly Revenue} - \text{Gross TCO}_{\text{On-Demand}}}{\text{Gross TCO}_{\text{On-Demand}}} \right) \times 100$$
+
+#### FinOps-Adjusted ROI
+Calculates the optimized financial efficiency of the architecture once cloud spend optimization tactics (e.g., Compute Savings Plans, EC2 Reserved Instances) have shifted the cost curve down.
+
+$$ROI_{\text{FinOps}} = \left( \frac{\text{Generated Monthly Revenue} - TCO_{\text{Optimized}}}{TCO_{\text{Optimized}}} \right) \times 100$$
+
+#### ROI Net Improvement Delta
+Isolates the exact financial margin percentage recovered purely through active FinOps interventions.
+
+$$\Delta ROI = ROI_{\text{FinOps}} - ROI_{\text{Baseline}}$$
 
 ## How to run it?
 1. Execute ``mvn clean install -e`` from your terminal in order to generate the gRPCTCONetworkingCostCalculator **jar file**.
