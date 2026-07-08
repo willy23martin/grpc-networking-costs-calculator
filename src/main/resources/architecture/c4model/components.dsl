@@ -22,7 +22,7 @@ workspace {
                 unitEconomicsController = component "Unit Economics Controller" "Computes structural unit costs and macro application affordability metrics." "Spring RestController"
 
                 // ==========================================
-                // LAYER 3: APPLICATION CORE PORTS (CENTER LINE)
+                // LAYER 3: APPLICATION CORE PORTS & SERVICES (CENTER LINE)
                 // ==========================================
                 cloudComputeCostPort = component "Cloud Compute Cost Calculator Port" "Interface for computing instance-level compute baseline infrastructure costs." "Java Interface (Port)"
                 albCostPort = component "ALB Cost Calculator Port" "Interface for computing Application Load Balancer entry-point overhead." "Java Interface (Port)"
@@ -31,8 +31,11 @@ workspace {
                 containerizedCostPort = component "Containerized Cost Calculator Port" "Interface for cluster control planes and serverless task models." "Java Interface (Port)"
                 networkingCostPort = component "Networking Cost Calculator Port" "Interface for computing network egress data transfer variables." "Java Interface (Port)"
 
+                // Added CostEfficiencyCalculator Service
+                costEfficiencyCalculator = component "Cost Efficiency Calculator" "Computes structural unit costs, TCO totals, and monthly ROI margins." "Spring Service"
+
                 // ==========================================
-                // LAYER 4: SECONDARY ADAPTERS (MIDDLE RIGHT)
+                // LAYER 4: SECONDARY ADAPTERS & DOMAIN ENTITIES (MIDDLE RIGHT)
                 // ==========================================
                 ec2ComputeAdapter = component "AWS Compute Cost Calculator Adapter" "Fetches and models Amazon EC2 instance prices via Cloud Client." "Java Class (Adapter)"
                 awsAlbAdapter = component "AWS ALB Cost Calculator Adapter" "Calculates AWS Application Load Balancer matrix calculations." "Java Class (Adapter)"
@@ -40,6 +43,9 @@ workspace {
                 awsFinopsStrategyAdapter = component "AWS FinOps Strategy Cost Calculator Adapter" "Calculates standard optimization saving options." "Java Class (Adapter)"
                 eksContainersAdapter = component "AWS Containers Cost Calculator Adapter" "Fetches resource allocation schemas for orchestrators." "Java Class (Adapter)"
                 awsDataTransferAdapter = component "AWS Data Transfer Cost Calculator Adapter" "Calculates inter-zone and public internet transfer data rates." "Java Class (Adapter)"
+
+                // Added Architectural Decision domain abstraction
+                architecturalDecision = component "Architectural Decision" "Domain entity model encapsulating quality characteristics and affordability impacts." "Java Sealed Class"
             }
         }
 
@@ -60,7 +66,7 @@ workspace {
         thymeleafUi -> finopsDiscountController "Applies cost optimization strategies through"
         thymeleafUi -> unitEconomicsController "Evaluates business viability constraints via"
 
-        // Controllers to Ports (Pushes Ports right of Controllers)
+        // Controllers to Ports & Services (Pushes Core right of Controllers)
         cloudServicesTccController -> cloudComputeCostPort "Drives"
         cloudServicesTccController -> albCostPort "Drives"
         cloudServicesTccController -> databaseCostPort "Drives"
@@ -68,6 +74,12 @@ workspace {
         tcoController -> networkingCostPort "Drives"
         containerizedCostController -> containerizedCostPort "Drives"
         finopsDiscountController -> finopsStrategyCostPort "Drives"
+
+        // Relationship between Controller and newly added Service
+        unitEconomicsController -> costEfficiencyCalculator "Delegates unit costs and ROI calculation to"
+
+        // Service to Domain relationships
+        costEfficiencyCalculator -> architecturalDecision "Evaluates tradeoffs and constraints defined in"
 
         // Ports to Adapters (Pushes Adapters to the RIGHT of the matching Ports)
         cloudComputeCostPort -> ec2ComputeAdapter "Bound to implementation"

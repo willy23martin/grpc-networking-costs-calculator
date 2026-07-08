@@ -5,10 +5,10 @@ workspace {
 
         calculator = softwareSystem "gRPC-based TCO Cost-Efficiency Calculator" "System that calculates the TCC and TCO of a gRPC-based microservice, its reliability, security, and resiliency tactics and patterns"
 
-        aws = softwareSystem "Amazon Web Services (AWS)" "Provides cloud pricing data, commitment discounts, savings plans, and APIs for AWS services." "Existing System"
+        cloudProvider = softwareSystem "Cloud Provider" "Provides cloud pricing data, commitment discounts, savings plans, and service catalog APIs." "Existing System"
 
         softwarearchitect -> calculator "Specifies a gRPC-based microservice, and evaluates its cost-efficiency trade-offs using"
-        calculator -> aws "Retrieves live pricing data, and rate and usage discounts from" "HTTPS"
+        calculator -> cloudProvider "Retrieves live pricing data, and rate and usage discounts from" "HTTPS"
     }
 
     views {
