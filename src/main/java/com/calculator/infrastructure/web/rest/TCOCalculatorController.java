@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.cloud.networking.NetworkingCostCalculator;
+import com.calculator.application.services.calculators.cost.cloud.ports.NetworkingCostCalculatorPort;
 import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
 import com.calculator.application.services.compilators.CompilationService;
 import com.calculator.application.services.populator.TacticsPopulatorService;
@@ -14,7 +14,7 @@ import com.calculator.domain.dto.results.JavaCompilationResult;
 import com.calculator.domain.dto.results.MessageSizeCalculationResult;
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
-import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
+import com.calculator.domain.model.architecture.tactics.security.TLSOverhead;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.SECONDS_PER_MONTH;
 import static com.calculator.domain.model.architecture.tactics.security.JWTOverhead.*;
 import static com.calculator.infrastructure.web.rest.TacticsSessionController.SESSION_KEY;
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.initializeProtoFileFullyQualifiedProperties;
@@ -45,9 +46,8 @@ import static com.calculator.shared.ProtocolBufferParsedFileUtils.isValid;
 @Controller
 public class TCOCalculatorController implements ErrorController {
 
-    public static final double SECONDS_PER_MONTH = 2_592_000.0;
-    public static final double BYTES_PER_GB      = 1_073_741_824.0;
-    public static final Locale DISPLAY_LOCALE    = Locale.forLanguageTag("en-US");
+    public static final double BYTES_PER_GB = 1_073_741_824.0;
+    public static final Locale DISPLAY_LOCALE = Locale.forLanguageTag("en-US");
 
     private static final String NO_TACTICS_CONFIGURATION_FOUND_MESSAGE =
             """
@@ -57,7 +57,7 @@ public class TCOCalculatorController implements ErrorController {
             """;
 
     @Autowired
-    NetworkingCostCalculator networkingCostCalculator;
+    NetworkingCostCalculatorPort networkingCostCalculator;
 
     @Autowired
     ProtocolBufferService protocolBufferService;

@@ -3,7 +3,7 @@ package com.calculator.application.services.populator.security;
 import com.calculator.application.services.calculators.rps.security.jwt.RPSJWTCostCalculator;
 import com.calculator.application.services.mapper.tactics.TacticsMapperService;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
-import com.calculator.domain.dto.tactics.security.tls.TLSOverhead;
+import com.calculator.domain.model.architecture.tactics.security.TLSOverhead;
 import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -296,21 +296,17 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
 
     _renderTcoBreakdownTable(egressCost, albCost, cacheCost, dbCost,
       secCostByService, containerCost, apiGwCost, ec2Cost,
-      finopsSaving, authTco, effectiveRps||baseRps);
+      finopsSaving, finopsStrategy, finopsPct, authTco, effectiveRps||baseRps);
 
     _renderUnitEconomicsGrid(unitEconGridElement, ueResp, authTco, egressCost, netInfra,
       numConsumers, consumerType, effectiveRps||baseRps, monthlyReqs, revenue);
   });
 }
 
-/* =======================================================================
-   _renderTcoBreakdownTable — Phase 4 TCO cost breakdown table
-   One row per cost component. Security services: one row per service.
-   ======================================================================= */
 function _renderTcoBreakdownTable(
   egressCost, albCost, cacheCost, dbCost,
   secCostByService, containerCost, apiGwCost, ec2Cost,
-  finopsSaving, authTco, effectiveRps
+  finopsSaving, finopsStrategy, finopsPct, authTco, effectiveRps
 ) {
   var container = document.getElementById('cloudTcoBreakdown');
   if (!container) return;

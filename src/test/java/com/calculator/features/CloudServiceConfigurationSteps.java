@@ -1,6 +1,6 @@
 package com.calculator.features;
 
-import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.infrastructure.cloud.adapters.aws.containers.AWSContainersCostCalculatorAdapter;
 import com.calculator.domain.model.architecture.CloudService;
 import com.calculator.domain.model.architecture.FinOpsStrategy;
 import com.calculator.domain.repository.cloud.CloudArchitecturalDecisionRepository;
@@ -10,8 +10,8 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CloudServiceConfigurationSteps extends BaseIntegrationTest {
 
     @Autowired
-    private EKSComputeCostCalculator eksComputeCostCalculator;
+    private AWSContainersCostCalculatorAdapter eksComputeCostCalculator;
 
     @Autowired
     private CloudArchitecturalDecisionRepository cloudArchitecturalDecisionRepository;
@@ -47,10 +47,10 @@ public class CloudServiceConfigurationSteps extends BaseIntegrationTest {
         this.finopsStrategyParam = finopsStrategy; // e.g., "Spot instance with 50%"
 
         // 1. Fetch live base hourly control plane rate from your API implementation ($0.10)
-        this.calculatedHourlyBase = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
+        this.calculatedHourlyBase = eksComputeCostCalculator.fetchContainersHourlyCost();
 
         // 2. Convert control plane rate to a baseline monthly run cost (730 continuous hours) -> $73.00
-        this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;
+        this.calculatedMonthlyBase = this.calculatedHourlyBase * HOURS_PER_MONTH;
 
         // 3. Extract target optimization rate from string parameter context ("50%")
         double savingsFactor = 0.50;

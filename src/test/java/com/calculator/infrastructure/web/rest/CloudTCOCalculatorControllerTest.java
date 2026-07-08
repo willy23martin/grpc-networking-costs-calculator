@@ -1,11 +1,11 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.application.services.calculators.cost.cloud.alb.ALBCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.caching.CachingCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.compute.CloudComputeCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.database.DatabaseCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.finops.FinOpsStrategyCostCalculator;
-import com.calculator.application.services.calculators.cost.cloud.security.SecurityCostCalculator;
+import com.calculator.application.services.calculators.cost.cloud.ports.ALBCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.CachingCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.CloudComputeCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.DatabaseCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.FinOpsStrategyCostCalculatorPort;
+import com.calculator.application.services.calculators.cost.cloud.ports.SecurityCostCalculatorPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,22 +23,22 @@ import static org.mockito.Mockito.when;
 class CloudTCOCalculatorControllerTest {
 
     @Mock
-    private CloudComputeCostCalculator cloudComputeCostCalculator;
+    private CloudComputeCostCalculatorPort cloudComputeCostCalculator;
 
     @Mock
-    private ALBCostCalculator albCostCalculator;
+    private ALBCostCalculatorPort albCostCalculator;
 
     @Mock
-    private DatabaseCostCalculator databaseCostCalculator;
+    private DatabaseCostCalculatorPort databaseCostCalculator;
 
     @Mock
-    private SecurityCostCalculator securityCostCalculator;
+    private SecurityCostCalculatorPort securityCostCalculator;
 
     @Mock
-    private FinOpsStrategyCostCalculator finOpsStrategyCostCalculator;
+    private FinOpsStrategyCostCalculatorPort finOpsStrategyCostCalculator;
 
     @Mock
-    private CachingCostCalculator cachingCostCalculator;
+    private CachingCostCalculatorPort cachingCostCalculator;
 
     @InjectMocks
     private CloudServicesTCCCalculatorController controller;

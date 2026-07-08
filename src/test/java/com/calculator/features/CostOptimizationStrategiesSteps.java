@@ -1,6 +1,6 @@
 package com.calculator.features;
 
-import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.infrastructure.cloud.adapters.aws.containers.AWSContainersCostCalculatorAdapter;
 import com.calculator.domain.model.architecture.CloudService;
 import com.calculator.domain.model.architecture.FinOpsStrategy;
 import com.calculator.domain.repository.cloud.CloudArchitecturalDecisionRepository;
@@ -11,6 +11,7 @@ import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CostOptimizationStrategiesSteps {
 
     @Autowired
-    private EKSComputeCostCalculator eksComputeCostCalculator;
+    private AWSContainersCostCalculatorAdapter eksComputeCostCalculator;
 
     @Autowired
     private CloudArchitecturalDecisionRepository cloudArchitecturalDecisionRepository;
@@ -48,10 +49,10 @@ public class CostOptimizationStrategiesSteps {
         this.finopsStrategyParam = finopsStrategy;
 
         // 1. Fetch live base hourly rate from the calculator ($0.10)
-        this.calculatedHourlyBase = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
+        this.calculatedHourlyBase = eksComputeCostCalculator.fetchContainersHourlyCost();
 
         // 2. Convert to standard monthly cost baseline (730 hours per month) -> $73.00
-        this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;
+        this.calculatedMonthlyBase = this.calculatedHourlyBase * HOURS_PER_MONTH;
 
         // 3. Dynamically evaluate reduction factors
         double savingsFactor = 0.50;

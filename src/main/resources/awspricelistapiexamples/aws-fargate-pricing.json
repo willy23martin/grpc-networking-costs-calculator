@@ -1,0 +1,46 @@
+{
+  "formatVersion" : "aws_v1",
+  "priceList" : [ {
+    "product" : {
+      "productFamily" : "Compute",
+      "attributes" : {
+        "regionCode" : "us-east-1",
+        "servicecode" : "AmazonECS",
+        "tenancy" : "Shared",
+        "usagetype" : "USE1-Fargate-GB-Hours",
+        "locationType" : "AWS Region",
+        "location" : "US East (N. Virginia)",
+        "servicename" : "Amazon Elastic Container Service",
+        "memorytype" : "perGB",
+        "operation" : ""
+      },
+      "sku" : "PBZNQUSEXZUC34C9"
+    },
+    "serviceCode" : "AmazonECS",
+    "terms" : {
+      "OnDemand" : {
+        "PBZNQUSEXZUC34C9.JRTCKXETXF" : {
+          "priceDimensions" : {
+            "PBZNQUSEXZUC34C9.JRTCKXETXF.6YS6EN2CT7" : {
+              "unit" : "hours",
+              "endRange" : "Inf",
+              "description" : "AWS Fargate - Memory  - US East (N.Virginia)",
+              "appliesTo" : [ ],
+              "rateCode" : "PBZNQUSEXZUC34C9.JRTCKXETXF.6YS6EN2CT7",
+              "beginRange" : "0",
+              "pricePerUnit" : {
+                "USD" : "0.0044450000"
+              }
+            }
+          },
+          "sku" : "PBZNQUSEXZUC34C9",
+          "effectiveDate" : "2026-07-01T00:00:00Z",
+          "offerTermCode" : "JRTCKXETXF",
+          "termAttributes" : { }
+        }
+      }
+    },
+    "version" : "20260707160651",
+    "publicationDate" : "2026-07-07T16:06:51Z"
+  } ]
+}

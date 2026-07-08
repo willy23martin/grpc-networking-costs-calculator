@@ -172,10 +172,6 @@ function toggleTlsOptions() {
   toggleUiVisibility('tls-byte-badge',  isTlsActive,  'inline-flex');
   toggleUiVisibility('mtls-byte-badge', isMtlsActive, 'inline-flex');
 
-  // FIX 3a — auto-select (or deselect) cloud services driven by backend mapping
-  // supportedArchitecturalDecisions from CloudSecurityArchitecturalDecisionRepository:
-  //   tactic-tls  → sec-inspector, sec-waf, sec-cloudwatch, sec-audit, sec-kms, sec-acm
-  //   tactic-mtls → sec-inspector, sec-waf, sec-cloudwatch, sec-audit, sec-kms, sec-acm
   if (typeof window.syncCloudServicesForTactic === 'function') {
     window.syncCloudServicesForTactic('tactic-tls',  isTlsActive);
     window.syncCloudServicesForTactic('tactic-mtls', isMtlsActive);
@@ -189,9 +185,6 @@ function toggleOAuthParams(show) {
   toggleUiVisibility('oauth-params',   show);
   toggleUiVisibility('jwt-byte-badge', show, 'inline-flex');
 
-  // FIX 3a — auto-select (or deselect) cloud services driven by backend mapping
-  // supportedArchitecturalDecisions from CloudSecurityArchitecturalDecisionRepository:
-  //   tactic-oauth → sec-guardduty, sec-cloudtrail, sec-macie, sec-cloudwatch, sec-audit
   if (typeof window.syncCloudServicesForTactic === 'function') {
     window.syncCloudServicesForTactic('tactic-oauth', show);
   }

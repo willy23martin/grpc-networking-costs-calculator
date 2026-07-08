@@ -1,6 +1,6 @@
 package com.calculator.shared;
 
-import com.calculator.infrastructure.web.rest.UnitEconomicsController;
+import com.calculator.domain.dto.requests.CloudInfrastructureTotalCostRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -90,7 +90,7 @@ public class JSONLogger {
         }
     }
 
-    public static void logAsJSON(Logger log, UnitEconomicsController.CloudInfraTotalRequest req) {
+    public static void logAsJSON(Logger log, CloudInfrastructureTotalCostRequest req) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode rootNode = mapper.createObjectNode();
@@ -123,4 +123,5 @@ public class JSONLogger {
             log.info("Cloud Infra Request raw fallback: \n" + req);
         }
     }
+
 }

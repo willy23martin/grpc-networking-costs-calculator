@@ -39,6 +39,101 @@ The service can be parametrized before building it to use a Cloud Service Provid
 * **NOTE**:Some tests might be skipped as those are operating system dependent.
 * **Application Profiles**: Only **aws** is enabled.
 
+
+## Software Architecture - C4 Model
+
+### Context:
+![SystemContext.png](src/main/resources/architecture/c4model/SystemContext.png)
+
+### Containers:
+![ContainerView.png](src/main/resources/architecture/c4model/ContainerView.png)
+
+### Components:
+![ComponentView.png](src/main/resources/architecture/c4model/ComponentView.png)
+
+### MVC Controllers
+
+| Controller Class Name                    | Request Method & Endpoint Path | Replaces JS function / Description |
+|------------------------------------------|---|---|
+| `TCOCalculatorController`                | `POST /` | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
+| `ContainerizedEnvironmentCostController` | `GET /api/aws/ec2-instances` | Fetches live compute node on-demand/fallback definitions |
+| `CloudTCOCalculatorController`           | `GET /api/aws/alb-pricing` | Provides base structural load balancer tier schemas |
+| `CloudTCOCalculatorController`           | `GET /api/aws/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
+| `CloudTCOCalculatorController`           | `GET /api/aws/security-services` | `recalculateSecCost()` (Native AWS protection parameters) |
+| `CloudTCOCalculatorController`           | `GET /api/aws/cost-optimisation` | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
+| `CloudTCOCalculatorController`           | `GET /api/aws/caching-pricing` | `recalculateCaching()` (Cache tier sizing matrices) |
+| `EffectiveRPSCalculatorController`       | `POST /api/tco/effective-rps` | `recalculateRps()` (Network overhead scaling limits evaluation) |
+| `FinOpsDiscountController`               | `POST /api/finops/container-discounts` | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
+| `PortfolioUnitEconomicsController`       | `POST /api/portfolio/roi` | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
+| `UnitEconomicsController`                | `POST /api/cost/unit-economics` | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
+| `ReliabilityTacticsController`           | `GET /api/reliability/tactic-mappings` | Lists qualitative score matrices for streaming protocols |
+| `ResiliencyPatternsController`           | `GET /api/resiliency/tactic-mappings` | Lists resiliency structural tradeoff profiles |
+| `SecurityTacticsController`              | `GET /api/security/tactic-mappings` | Lists channel security tactic constraints profiles |
+| `TacticsContributionController`          | `POST /api/cost/tactic-contributions` | Quantifies individual egress additions induced by architectural design decisions |
+| `TacticsSessionController`               | `POST /api/session/tactics` | Saves active architectural decisions into context state |
+| `TacticsSessionController`               | `GET /api/session/tactics` | Retrieves current architectural choices from session buffer |
+| `TacticsSessionController`               | `DELETE /api/session/tactics` | Purges tracked tactical options from the contextual storage |
+
+### Ports & Adapters (Hexagonal Architecture)
+
+This application leverages the Hexagonal Architecture pattern to decouple core business logic from cloud infrastructure providers. The table below outlines how the core domain ports map to specific AWS infrastructure adapters and their external pricing API interactions.
+
+| Core Domain Port (`com.calculator.application.services.calculators.cost.cloud.ports.*`) | Infrastructure Adapter (`com.calculator.infrastructure.cloud.adapters.aws.*`) | External API Dependent / Client |
+| :--- | :--- | :--- |
+| `NetworkingCostCalculatorPort` | `AWSDataTransferCostCalculationServiceAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `CloudComputeCostCalculatorPort` | `AWSComputeCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `ALBCostCalculatorPort` | `AWSALBCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) & Local DB Repository |
+| `DatabaseCostCalculatorPort` | `AWSDatabaseCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `SecurityCostCalculatorPort` | `AWSSecurityCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) & `AWSSecurityWAFCostCalculator` |
+| `FinOpsStrategyCostCalculatorPort` | `AWSFinOpsStrategyCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `CachingCostCalculatorPort` | `AWSCachingCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+| `ContainerizedCostCalculatorPort` | `AWSContainersCostCalculatorAdapter` | `PricingClient` (AWS Pricing API via `us-east-1`) |
+
+### Key Infrastructure Notes
+* **AWS Pricing API Constraint**: The `PricingClient` bean is explicitly pinned to the `Region.US_EAST_1` endpoint, as it serves as the global endpoint for AWS Price List Service API queries.
+* **Timeout Policies**: Inter-adapter calls to the AWS Pricing API are guarded with a strict timeout policy of a **4-second** attempt limit and a maximum **10-second** total call duration.
+
+## AWS APIs for pricing - JSON responses:
+
+- **Terminology**:
+    - **SKU (Stock Keeping Unit)** is a unique, system-generated alphanumeric code that identifies a specific cloud resource, in a specific region, under a precise pricing model.
+        - An SKU is not generic. A single AWS service (like Amazon GuardDuty) has hundreds of different SKUs because AWS generates a unique code for every variable, including:The Service: (e.g., Amazon GuardDuty vs. Amazon Macie)The Region: (e.g., US East (N. Virginia) vs. Europe (Frankfurt))The Specific Feature/Operation: (e.g., GuardDuty analyzing VPC Flow Logs vs. GuardDuty analyzing CloudTrail Logs).
+- **Note**: in the AWSFinOpsStrategyCostCalculator class, the **t3.medium** has been used as a **BENCHMARK_INSTANCE_TYPE** as it is considered **the general purpose instance**:
+    - [Instance types t3.medium EC2](https://aws.amazon.com/ec2/instance-types/t3/)
+    - [EC2 Latest instance types](https://docs.aws.amazon.com/ec2/latest/instancetypes/gp.html)
+
+- **AWS Price List Query API**:
+    - ELB / ALB pricing: [alb-pricing.json](src/main/resources/awspricelistapiexamples/aws-alb-pricing.json)
+    - RDS database pricing: [RDS-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-rds-database-pricing.json)
+    - FinOps CostOptimization Reserved Instances response: [ReservedInstances-finops-strategies-pricing.json](src/main/resources/awspricelistapiexamples/aws-reserved-instances-finops-strategies-pricing.json)
+    - S3 database pricing: [S3-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-s3-database-pricing.json)
+    - Amazon GuardDuty: [amazon-guard-duty-pricing.json](src/main/resources/awspricelistapiexamples/amazon-guard-duty-pricing.json)
+    - Amazon Inspector: [amazon-inspector.json](src/main/resources/awspricelistapiexamples/amazon-inspector.json)
+    - Amazon Web Application Firewall:
+        - Per rule pricing: [aws-waf-rule-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-rule-pricing.json)
+        - Per billion requests pricing: [aws-waf-requests-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-requests-pricing.json)
+    - Amazon Macie: [aws-macie-macie.json](src/main/resources/awspricelistapiexamples/aws-macie-macie.json)
+    - Amazon CloudWatch: [aws-cloud-watch-pricing.json](src/main/resources/awspricelistapiexamples/aws-cloud-watch-pricing.json)
+    - AWS KMS: [aws-kms-pricing.json](src/main/resources/awspricelistapiexamples/aws-kms-pricing.json)
+    - AWS DataTransfer pricing: [aws-datatransfer-pricing.json](src/main/resources/awspricelistapiexamples/awsdatatransferpricingexamples/aws-datatransfer-pricing.json)
+    - AWS Aurora MySQL: [aws-aurora-mysql-pricing.json](src/main/resources/awspricelistapiexamples/aws-aurora-mysql-pricing.json)
+    - AWS EKS: [aws-eks-pricing.json](src/main/resources/awspricelistapiexamples/aws-eks-pricing.json)
+
+- **AWS Price List Bulk API**:
+    - PriceList Bulk response: [pricelist-bul-api.json](src/main/resources/awspricelistbulkapiexamples/aws-pricelist-bulk-api.json)
+    - FinOps strategies pricing: [finops-strategies-pricing.json](src/main/resources/awspricelistbulkapiexamples/aws-finops-strategies-pricing.json)
+    - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/main/resources/awspricelistbulkapiexamples/aws-computesavingsplans-jsonpricingfile-response.json)
+
+## Design principles
+
+- Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/aws/*`) to each endpoint.
+- Backend returns **computed results** only — costs, breakdowns, labels.
+- No business logic in JS. JS = form collection + API call + render.
+
+## Retry formula (preserved)
+`tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
+
+
 ## How to run it?
 1. Execute ``mvn clean install -e`` from your terminal in order to generate the gRPCTCONetworkingCostCalculator **jar file**.
 2. Execute ``aws login`` in your terminal. That will redirect you to your AWS logged account to get the **AWS SDK authenticated**.
@@ -83,71 +178,22 @@ The service can be parametrized before building it to use a Cloud Service Provid
 
 ![img_2.png](src/main/resources/images/FinOps Tagging and labeling strategies.png)
 
+![cloud services tagging and labelling.png](src/main/resources/images/cloud%20services%20tagging%20and%20labelling.png)
+
 ![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
 
-## MVC Controllers
+## Additional screnshots of TCC, TCO and UnitEconomics reports:
+![Phase 3 report example.png](src/main/resources/images/example/Phase%203%20report%20example.png)
 
-| Controller Class Name | Request Method & Endpoint Path | Replaces JS function / Description |
-|---|---|---|
-| `TCOCalculatorController` | `POST /` | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
-| `ContainerizedEnvironmentCostController` | `GET /api/aws/ec2-instances` | Fetches live compute node on-demand/fallback definitions |
-| `CloudTCOCalculatorController` | `GET /api/aws/alb-pricing` | Provides base structural load balancer tier schemas |
-| `CloudTCOCalculatorController` | `GET /api/aws/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
-| `CloudTCOCalculatorController` | `GET /api/aws/security-services` | `recalculateSecCost()` (Native AWS protection parameters) |
-| `CloudTCOCalculatorController` | `GET /api/aws/cost-optimisation` | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
-| `CloudTCOCalculatorController` | `GET /api/aws/caching-pricing` | `recalculateCaching()` (Cache tier sizing matrices) |
-| `EffectiveRPSCalculatorController` | `POST /api/tco/effective-rps` | `recalculateRps()` (Network overhead scaling limits evaluation) |
-| `FinOpsDiscountController` | `POST /api/finops/container-discounts` | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
-| `PortfolioROIController` | `POST /api/portfolio/roi` | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
-| `UnitEconomicsController` | `POST /api/cost/unit-economics` | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
-| `ReliabilityTacticsController` | `GET /api/reliability/tactic-mappings` | Lists qualitative score matrices for streaming protocols |
-| `ResiliencyPatternsController` | `GET /api/resiliency/tactic-mappings` | Lists resiliency structural tradeoff profiles |
-| `SecurityTacticsController` | `GET /api/security/tactic-mappings` | Lists channel security tactic constraints profiles |
-| `TacticsContributionController` | `POST /api/cost/tactic-contributions` | Quantifies individual egress additions induced by architectural design decisions |
-| `TacticsSessionController` | `POST /api/session/tactics` | Saves active architectural decisions into context state |
-| `TacticsSessionController` | `GET /api/session/tactics` | Retrieves current architectural choices from session buffer |
-| `TacticsSessionController` | `DELETE /api/session/tactics` | Purges tracked tactical options from the contextual storage |
+![Phase 4 report example.png](src/main/resources/images/example/Phase%204%20report%20example.png)
 
-## AWS APIs for pricing - JSON responses:
+![Phase 4 report example - Unit economics.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20Unit%20economics.png)
 
-- **Terminology**:
-  - **SKU (Stock Keeping Unit)** is a unique, system-generated alphanumeric code that identifies a specific cloud resource, in a specific region, under a precise pricing model.
-    - An SKU is not generic. A single AWS service (like Amazon GuardDuty) has hundreds of different SKUs because AWS generates a unique code for every variable, including:The Service: (e.g., Amazon GuardDuty vs. Amazon Macie)The Region: (e.g., US East (N. Virginia) vs. Europe (Frankfurt))The Specific Feature/Operation: (e.g., GuardDuty analyzing VPC Flow Logs vs. GuardDuty analyzing CloudTrail Logs).
-- **Note**: in the AWSFinOpsStrategyCostCalculator class, the **t3.medium** has been used as a **BENCHMARK_INSTANCE_TYPE** as it is considered **the general purpose instance**:
-  - [Instance types t3.medium EC2](https://aws.amazon.com/ec2/instance-types/t3/)
-  - [EC2 Latest instance types](https://docs.aws.amazon.com/ec2/latest/instancetypes/gp.html)
+![Phase 4 report example - FinOps Tagging and Labelling.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling.png)
 
-- **AWS Price List Query API**: 
-  - ELB / ALB pricing: [alb-pricing.json](src/main/resources/awspricelistapiexamples/aws-alb-pricing.json)
-  - RDS database pricing: [RDS-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-rds-database-pricing.json)
-  - FinOps CostOptimization Reserved Instances response: [ReservedInstances-finops-strategies-pricing.json](src/main/resources/awspricelistapiexamples/aws-reserved-instances-finops-strategies-pricing.json)
-  - S3 database pricing: [S3-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-s3-database-pricing.json)
-  - Amazon GuardDuty: [amazon-guard-duty-pricing.json](src/main/resources/awspricelistapiexamples/amazon-guard-duty-pricing.json)
-  - Amazon Inspector: [amazon-inspector.json](src/main/resources/awspricelistapiexamples/amazon-inspector.json)
-  - Amazon Web Application Firewall:
-    - Per rule pricing: [aws-waf-rule-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-rule-pricing.json)
-    - Per billion requests pricing: [aws-waf-requests-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-requests-pricing.json)
-  - Amazon Macie: [aws-macie-macie.json](src/main/resources/awspricelistapiexamples/aws-macie-macie.json)
-  - Amazon CloudWatch: [aws-cloud-watch-pricing.json](src/main/resources/awspricelistapiexamples/aws-cloud-watch-pricing.json)
-  - AWS KMS: [aws-kms-pricing.json](src/main/resources/awspricelistapiexamples/aws-kms-pricing.json)
-  - AWS DataTransfer pricing: [aws-datatransfer-pricing.json](src/main/resources/awspricelistapiexamples/awsdatatransferpricingexamples/aws-datatransfer-pricing.json)
-  - AWS Aurora MySQL: [aws-aurora-mysql-pricing.json](src/main/resources/awspricelistapiexamples/aws-aurora-mysql-pricing.json)
-  - AWS EKS: [aws-eks-pricing.json](src/main/resources/awspricelistapiexamples/aws-eks-pricing.json)
+![Phase 4 report example - FinOps Tagging and Labelling Cloud Services.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling%20Cloud%20Services.png)
 
-- **AWS Price List Bulk API**:
-  - PriceList Bulk response: [pricelist-bul-api.json](src/main/resources/awspricelistbulkapiexamples/aws-pricelist-bulk-api.json)
-  - FinOps strategies pricing: [finops-strategies-pricing.json](src/main/resources/awspricelistbulkapiexamples/aws-finops-strategies-pricing.json)
-  - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/main/resources/awspricelistbulkapiexamples/aws-computesavingsplans-jsonpricingfile-response.json)
-
-## Design principles
-
-- Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/aws/*`) to each endpoint.
-- Backend returns **computed results** only — costs, breakdowns, labels.
-- No business logic in JS. JS = form collection + API call + render.
-
-## Retry formula (preserved)
-`tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
-
+![Phase 4 report example - Portfolio with FinOps savings.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20Portfolio%20with%20FinOps%20savings.png)
 
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).

@@ -1,6 +1,6 @@
 package com.calculator.features;
 
-import com.calculator.application.services.calculators.cost.cloud.compute.aws.eks.EKSComputeCostCalculator;
+import com.calculator.infrastructure.cloud.adapters.aws.containers.AWSContainersCostCalculatorAdapter;
 import com.calculator.domain.model.architecture.CloudService;
 import com.calculator.domain.model.architecture.FinOpsStrategy;
 import com.calculator.domain.repository.cloud.CloudArchitecturalDecisionRepository;
@@ -11,6 +11,7 @@ import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class OptimizedCostCalculationSteps {
 
     @Autowired
-    private EKSComputeCostCalculator eksComputeCostCalculator;
+    private AWSContainersCostCalculatorAdapter eksComputeCostCalculator;
 
     @Autowired
     private CloudArchitecturalDecisionRepository cloudArchitecturalDecisionRepository;
@@ -46,9 +47,9 @@ public class OptimizedCostCalculationSteps {
 
     @When("I recalculate total costs across the architecture")
     public void i_recalculate_total_costs_across_the_architecture() {
-        this.calculatedHourlyBase = eksComputeCostCalculator.fetchEksControlPlaneHourlyCost();
+        this.calculatedHourlyBase = eksComputeCostCalculator.fetchContainersHourlyCost();
 
-        this.calculatedMonthlyBase = this.calculatedHourlyBase * 730;
+        this.calculatedMonthlyBase = this.calculatedHourlyBase * HOURS_PER_MONTH;
 
         double savingsFactor = 0.50;
         this.calculatedMonthlySavings = this.calculatedMonthlyBase * savingsFactor;
