@@ -20,7 +20,7 @@ public class ProtocolBufferMessageSizeCalculationService {
     private static final java.util.logging.Logger log = Logger.getLogger(ProtocolBufferMessageSizeCalculationService.class.getName());
 
     public MessageSizeCalculationResult getMessageSize(URLClassLoader classLoader, String fullClassNameForRequestMessage) throws Exception {
-        Class<?> messageClass = classLoader.loadClass(fullClassNameForRequestMessage);
+        Class<?> messageClass = classLoader.loadClass(fullClassNameForRequestMessage); // Reflection
         log.info("Request Class loaded: " + messageClass.getName());
 
         Descriptors.Descriptor requestDescriptor = (Descriptors.Descriptor) messageClass.getMethod("getDescriptor").invoke(null);

@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class MapCloudServicesToImplementTheChosenTacticsSteps extends BaseIntegrationTest {
+public class Activity3MapCloudServicesToImplementTheChosenTacticsSteps extends BaseIntegrationTest {
 
     private String architecturalCharacteristic;
     private String patternOrTactic;

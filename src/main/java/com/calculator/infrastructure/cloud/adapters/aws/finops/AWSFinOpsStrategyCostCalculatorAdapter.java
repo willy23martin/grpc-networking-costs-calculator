@@ -53,7 +53,6 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
     }
 
     private void fetchAndMapSavingsPlansBulkMetadata(Map<String, Object> targetMap) {
-        // Initializing both compute variables to 0.0 to ensure calculations are completely data-driven
         double compute1yr = 31;
         double compute3yr = 50;
         log.info("Initializing compute1yr: " + compute1yr);
@@ -279,8 +278,10 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
     }
 
     private void fetchAndMapRICosts(Map<String, Object> targetMap) {
-        double standard1yr = 36.0; double standard3yr = 57.0;
-        double convertible1yr = 28.0; double convertible3yr = 47.0;
+        double standard1yr = 36.0;
+        double standard3yr = 57.0;
+        double convertible1yr = 28.0;
+        double convertible3yr = 47.0;
 
         try {
             GetProductsRequest riRequest = GetProductsRequest.builder()

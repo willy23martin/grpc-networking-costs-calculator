@@ -22,7 +22,8 @@ public class FinOpsStrategyReliabilityArchitecturalDecisionRepository {
     private CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository;
 
     public ArchitecturalDecision getFinOpsStrategyForAWSApplicationLoadBalancer() {
-        CloudService awsALB = (CloudService) cloudReliabilityArchitecturalDecisionRepository.getElasticLoadBalancerALBCloudService();
+        CloudService awsALB =
+                (CloudService) cloudReliabilityArchitecturalDecisionRepository.getElasticLoadBalancerALBCloudService();
 
         List<QualityTradeoff> qualityTradeoffs = new ArrayList<>(1);
         qualityTradeoffs.add(

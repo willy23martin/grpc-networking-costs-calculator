@@ -1,10 +1,10 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.dto.requests.CloudInfrastructureTotalCostRequest;
-import com.calculator.domain.dto.requests.UnitEconomicsRequest;
+import com.calculator.domain.dto.requests.TCOUnitEconomicsRequest;
 import com.calculator.domain.dto.responses.CloudInfraTotalCostResponse;
 import com.calculator.application.services.calculators.CostEfficiencyCalculator;
-import com.calculator.domain.dto.responses.UnitEconomicsResponse;
+import com.calculator.domain.dto.responses.TCOUnitEconomicsResponse;
 import com.calculator.shared.JSONLogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,18 +19,18 @@ import static com.calculator.application.services.utils.MathUtils.round2;
 @RestController
 @RequestMapping("/api/cost")
 @CrossOrigin(origins = "*")
-public class UnitEconomicsController {
+public class TCOUnitEconomicsController {
 
-    private static final Logger log = Logger.getLogger(UnitEconomicsController.class.getName());
+    private static final Logger log = Logger.getLogger(TCOUnitEconomicsController.class.getName());
 
     @Autowired
     private CostEfficiencyCalculator costEfficiencyCalculator;
 
     @PostMapping("/unit-economics")
-    public ResponseEntity<UnitEconomicsResponse> calculateUnitEconomics(
-            @RequestBody UnitEconomicsRequest unitEconomicsRequest) {
+    public ResponseEntity<TCOUnitEconomicsResponse> calculateUnitEconomics(
+            @RequestBody TCOUnitEconomicsRequest unitEconomicsRequest) {
 
-        UnitEconomicsResponse unitEconomicsResponse = costEfficiencyCalculator.calculateUnitEconomics(unitEconomicsRequest);
+        TCOUnitEconomicsResponse unitEconomicsResponse = costEfficiencyCalculator.calculateUnitEconomics(unitEconomicsRequest);
         unitEconomicsResponse.affordabilityImpact = costEfficiencyCalculator.summariseAffordabilityImpact().name();
 
         return ResponseEntity.ok(unitEconomicsResponse);

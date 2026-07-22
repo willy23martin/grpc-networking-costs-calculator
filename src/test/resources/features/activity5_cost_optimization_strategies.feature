@@ -6,11 +6,11 @@ Feature: Cost Optimization Strategy Definition
 
   @UI @API @TradeOffs
   Scenario Outline: FinOps strategy impact on cloud services implementation
-    Given a cloud service "<cloud_service>" implementation with baseline cost "<base_monthly_cost>"
+    Given a cloud service "<cloud_service>" and a "<cloud_instance>" implementation with baseline cost "<base_monthly_cost>"
     When I apply the cost optimization strategy "<finops_strategy>"
     Then the system should predict a savings percentage of "<savings_percentage>" in cost reduction
     And indicate the impact of "<impact>" on the original tactic effectiveness
 
     Examples: User Story: Cost Optimization Strategy Definition - Feature Examples
-      | cloud_service | base_monthly_cost | finops_strategy | savings_percentage | impact                                    |
-      | AWS EKS       | $73               | Spot Instances  | 50%                | Requires interruption-tolerant workloads. |
+      | cloud_service | cloud_instance | base_monthly_cost | finops_strategy           | savings_percentage | impact                                                                                                             |
+      | AWS EC2       | t3.medium      | $30.37            | Reserved Instance 1 year  | 36%                | Reserved Instances (RIs) suit predictable, constant workloads like servers that must stay active around the clock. |

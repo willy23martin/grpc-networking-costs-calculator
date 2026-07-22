@@ -1,3 +1,16 @@
+/* =======================================================================
+   unit-economics.js
+   Phase 4 — TCO Breakdown + Unit Economics + ROI
+
+   All cost computations use two existing backend endpoints:
+     POST /api/cost/cloud-infra-total  (UnitEconomicsController)
+     POST /api/cost/unit-economics     (UnitEconomicsController)
+
+   Security service costs are read from per-service sessionStorage keys
+   (written by recalculateSecCost() which uses /api/aws/security-services
+   pricing data) — one row per service, only when selected and cost > 0.
+   ======================================================================= */
+
 var runningTotalCost = 0;
 var hoursInMonth = 730;
 var billingMonthsInYear = 12;
@@ -210,7 +223,10 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   // cloud service costs (ALB, security, DB, API Gateway, etc.) are always reflected,
   // not just the one time the proto-upload results table happened to be on the page.
   if (transferCostUsd === undefined || transferCostUsd === null) {
-    transferCostUsd = window._lastEgressCostUsd || 0;
+    // Use the egress cost stored by Phase 3's renderComparisonFromBackend
+    // so Phase 4 always shows the same base networking cost as Phase 3
+    transferCostUsd = parseFloat(sessionStorage.getItem('tco_phase3_egress')||'0')
+                   || window._lastEgressCostUsd || 0;
   }
   if (effectiveRps === undefined || effectiveRps === null) {
     effectiveRps = window._lastEffectiveRps
@@ -246,7 +262,11 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var dbCost        = parseFloat(_snap.db)         || 0;
   var ec2Cost       = parseFloat(_snap.ec2)        || 0;
   // Use snapshot value if available, fall back to direct sessionStorage read
-  var finopsSaving  = parseFloat(_snap.finops)     || parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+  var finopsSaving   = parseFloat(_snap.finops)        || parseFloat(sessionStorage.getItem('tco_finops_saving')||'0');
+  var finopsPct      = parseFloat(_snap.finopsPct)     || parseFloat(sessionStorage.getItem('tco_finops_pct')||'0');
+  var finopsStrategy = (_snap.finopsStrategy || sessionStorage.getItem('tco_finops_strategy') || 'RI / Savings Plan');
+  var spotSaving     = parseFloat(_snap.spot)          || parseFloat(sessionStorage.getItem('tco_spot_saving')||'0');
+  var spotPct        = parseFloat(_snap.spotPct)       || parseFloat(sessionStorage.getItem('tco_spot_pct')||'0');
   var finopsPct      = parseFloat(_snap.finopsPct) || parseFloat(sessionStorage.getItem('tco_finops_pct')||'0');
   var finopsStrategy = (_snap.finopsStrategy)      || sessionStorage.getItem('tco_finops_strategy') || 'RI / Savings Plan';
 
@@ -257,8 +277,9 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
 
   // ec2Cost now read from tco_snapshot (set by recalculateReplicas via writeTcoSnapshot)
 
-  var grossInfra = albCost+cacheCost+apiGwCost+containerCost+dbCost+secCostTotal+ec2Cost;
-  var netInfra   = Math.max(0, grossInfra - finopsSaving);
+  var grossInfra   = albCost+cacheCost+apiGwCost+containerCost+dbCost+secCostTotal+ec2Cost;
+  var totalSavings = finopsSaving + spotSaving;
+  var netInfra     = Math.max(0, grossInfra - totalSavings);
   var localTco   = Math.round((egressCost + netInfra)*100)/100;
 
   // ── POST to existing backend endpoints ─────────────────────────────────
@@ -291,22 +312,32 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   ]).then(function(results){
     var infraResp = results[0];
     var ueResp    = results[1];
-    var authTco   = (ueResp && ueResp.totalMonthlyTcoUsd > 0) ? ueResp.totalMonthlyTcoUsd : localTco;
+    // Prefer Phase 3 stored total for consistency; fall back to backend then local
+    // authTco = sum of all cost components — compute directly rather than
+    // trusting tco_phase3_total which only contains the networking portion.
+    // localTco = egressCost + netInfra is always the correct full total.
+    var authTco   = localTco > 0 ? localTco
+                  : (ueResp && ueResp.totalMonthlyTcoUsd > 0) ? ueResp.totalMonthlyTcoUsd
+                  : parseFloat(sessionStorage.getItem('tco_phase3_total')||'0');
     window._lastComputedTco = authTco;
 
     _renderTcoBreakdownTable(egressCost, albCost, cacheCost, dbCost,
       secCostByService, containerCost, apiGwCost, ec2Cost,
-      finopsSaving, finopsStrategy, finopsPct, authTco, effectiveRps||baseRps);
+      finopsSaving, finopsPct, finopsStrategy, spotSaving, spotPct, authTco, effectiveRps||baseRps);
 
     _renderUnitEconomicsGrid(unitEconGridElement, ueResp, authTco, egressCost, netInfra,
       numConsumers, consumerType, effectiveRps||baseRps, monthlyReqs, revenue);
   });
 }
 
+/* =======================================================================
+   _renderTcoBreakdownTable — Phase 4 TCO cost breakdown table
+   One row per cost component. Security services: one row per service.
+   ======================================================================= */
 function _renderTcoBreakdownTable(
   egressCost, albCost, cacheCost, dbCost,
   secCostByService, containerCost, apiGwCost, ec2Cost,
-  finopsSaving, finopsStrategy, finopsPct, authTco, effectiveRps
+  finopsSaving, finopsPct, finopsStrategy, spotSaving, spotPct, authTco, effectiveRps
 ) {
   var container = document.getElementById('cloudTcoBreakdown');
   if (!container) return;
@@ -319,20 +350,40 @@ function _renderTcoBreakdownTable(
     if (!isSaving && !isInfo && cost > 0) sumPositive += cost;
   }
 
+  // Show tactic networking overhead (TLS/retry byte cost) separately from base egress
+  var _tacticOverhead = parseFloat(sessionStorage.getItem('tco_tactic_overhead')||'0');
+  var _baseEgress = parseFloat(sessionStorage.getItem('tco_phase3_base_egress')||'0') || egressCost;
+  // egressCost = full networking cost including all tactic effects (retry RPS, TLS bytes etc)
+  // This matches the Transfer Cost shown in the proto analysis table above
+  var _effRpsLabel = (effectiveRps || baseRps || 0);
   addRow('AWS Egress (Response Transfer)', 'Networking', 'badge-bytes', egressCost,
-    effectiveRps + ' eff. RPS · AWS data-out tiers');
+    _effRpsLabel + ' eff. RPS · AWS data-out tiers');
 
   var isTls  = !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked);
   var isMtls = !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked);
   var isOauth= !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked);
+  // Tactic overhead already included in egressCost — show breakdown sub-detail only
+  if (_tacticOverhead > 0.01 && _baseEgress > 0) {
+    // isInfo=true excludes from TCO sum (already counted in egress row above)
+    // Pass 0 as cost so it shows as informational, not $0 from isInfo path
+    rows.push({
+      label: '\u2514 Tactic overhead: Retry extra RPS + TLS/JWT bytes',
+      cat: 'Networking', badge: 'badge-bytes', cost: 0,
+      detail: 'Base egress (no tactics): $' + _baseEgress.toFixed(2) + '/mo + $' + _tacticOverhead.toFixed(2)
+        + '/mo (retry RPS increase + TLS frame bytes + JWT headers) = $' + egressCost.toFixed(2) + '/mo total',
+      isSaving: false, isInfo: true, infoLabel: '+$' + _tacticOverhead.toFixed(2) + '/mo'
+    });
+    sumPositive += 0; // not added to sum
+  }
+
   if (isTls||isMtls) addRow((isMtls?'mTLS':'TLS')+' frame overhead (RFC 8446)',
     'Security','badge-dr', 0, 'Included in egress above — no additional charge', false, true);
   if (isOauth) addRow('JWT header overhead (RFC 7519 — request-side)',
     'Security','badge-dr', 0, 'AWS inbound data transfer is free', false, true);
 
-  if (albCost > 0)       addRow('Application Load Balancer (ALB)', 'Cloud Infra', 'badge-warn', albCost, '$'+albCost.toFixed(2)+'/mo · /api/aws/alb-pricing');
-  if (cacheCost > 0)     addRow('Amazon ElastiCache', 'Cloud Infra', 'badge-warn', cacheCost, '$'+cacheCost.toFixed(2)+'/mo · /api/aws/caching-pricing');
-  if (dbCost > 0)        addRow('Database / Backup / DR', 'Cloud Infra', 'badge-warn', dbCost, '$'+dbCost.toFixed(2)+'/mo · /api/aws/database-backup-pricing');
+  if (albCost > 0)       addRow('Application Load Balancer (ALB)', 'Cloud Infra', 'badge-warn', albCost, '$'+albCost.toFixed(2)+'/mo · /api/cloud/alb-pricing');
+  if (cacheCost > 0)     addRow('Amazon ElastiCache', 'Cloud Infra', 'badge-warn', cacheCost, '$'+cacheCost.toFixed(2)+'/mo · /api/cloud/caching-pricing');
+  if (dbCost > 0)        addRow('Database / Backup / DR', 'Cloud Infra', 'badge-warn', dbCost, '$'+dbCost.toFixed(2)+'/mo · /api/cloud/database-backup-pricing');
 
   var secLabels = {
     'sec-guardduty':'Amazon GuardDuty', 'sec-inspector':'Amazon Inspector',
@@ -343,12 +394,14 @@ function _renderTcoBreakdownTable(
   Object.keys(secCostByService).forEach(function(id){
     var c = secCostByService[id];
     if (c > 0) addRow(secLabels[id]||id, 'Security', 'badge-dr', c,
-      '$'+c.toFixed(2)+'/mo · /api/aws/security-services');
+      '$'+c.toFixed(2)+'/mo · /api/cloud/security-services');
   });
 
   if (containerCost > 0) addRow('Containerized Cluster (EKS)', 'Cloud Infra', 'badge-warn', containerCost, '$'+containerCost.toFixed(2)+'/mo');
-  if (apiGwCost > 0)     addRow('API Gateway', 'Cloud Infra', 'badge-warn', apiGwCost, '$'+apiGwCost.toFixed(2)+'/mo · /api/aws/api-gateway-pricing');
+  if (apiGwCost > 0)     addRow('API Gateway', 'Cloud Infra', 'badge-warn', apiGwCost, '$'+apiGwCost.toFixed(2)+'/mo · /api/cloud/api-gateway-pricing');
   if (ec2Cost > 0)       addRow('EC2 Compute Replicas', 'Cloud Infra', 'badge-warn', ec2Cost, '$'+ec2Cost.toFixed(2)+'/mo');
+  if (spotSaving > 0)    addRow('EC2 Spot Instances (~' + (spotPct||0) + '% discount)', 'Cost Reduction', 'badge-bc',
+    -spotSaving, 'AWS EC2 Spot Advisor — up to 90% vs on-demand · aws.amazon.com/ec2/spot/instance-advisor', true);
   if (finopsSaving > 0)  addRow((finopsStrategy || 'FinOps Optimisation') + (finopsPct > 0 ? ' (' + finopsPct.toFixed(1) + '% off)' : ''), 'Cost Reduction', 'badge-bc',
     -finopsSaving, 'Discount applied to compute spend · /api/finops/ri-prices', true);
 
@@ -378,7 +431,7 @@ function _renderTcoBreakdownTable(
       ? '<span style="font-family:monospace;color:var(--green);font-weight:700;">-$'+Math.abs(c.cost).toFixed(2)+' saved</span>'
       : c.isInfo
         ? '<span style="color:var(--green);font-size:.73rem;font-style:italic;">$0 (free)</span>'
-        : '<span style="font-family:monospace;color:var(--blue-deep);">$'+c.cost.toFixed(2)+'</span>';
+        : (infoCostCell || '<span style="font-family:monospace;color:var(--blue-deep);">$'+c.cost.toFixed(2)+'</span>');
     var detailHtml = c.detail ? '<div style="font-size:.72rem;color:var(--ink-light);margin-top:2px;">'+c.detail+'</div>' : '';
     var roiPct = roiImpactPct(c.cost, c.isSaving, c.isInfo);
     var roiCell;
@@ -389,6 +442,10 @@ function _renderTcoBreakdownTable(
     } else {
       roiCell = '<span style="color:var(--red);font-size:.82rem;font-weight:700;font-family:monospace;">'+roiPct.toFixed(1)+'%</span>';
     }
+    // Custom info label for sub-rows (e.g. tactic overhead breakdown)
+    var infoCostCell = c.infoLabel
+      ? '<span style="font-size:.78rem;color:var(--amber);font-weight:600;">'+c.infoLabel+'</span>'
+      : null;
     return '<tr style="border-bottom:1px solid var(--rule);">'
       +'<td style="padding:8px 12px;font-weight:600;">'+c.label+detailHtml+'</td>'
       +'<td style="padding:8px 12px;text-align:center;"><span class="warning-badge '+c.badge+'">'+c.cat+'</span></td>'

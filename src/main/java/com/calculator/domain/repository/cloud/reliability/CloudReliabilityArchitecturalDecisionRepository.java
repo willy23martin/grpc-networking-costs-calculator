@@ -31,7 +31,8 @@ public class CloudReliabilityArchitecturalDecisionRepository {
     }
 
     public ArchitecturalDecision getElasticLoadBalancerALBCloudService() {
-        ArchitecturalTactic serverSideLoadBalancing = (ArchitecturalTactic) reliabilityArchitecturalDecisionRepository.getServerSideLoadBalancing();
+        ArchitecturalTactic serverSideLoadBalancing =
+                (ArchitecturalTactic) reliabilityArchitecturalDecisionRepository.getServerSideLoadBalancing();
         List<QualityTradeoff> qualityTradeoffs = new ArrayList<>(1);
         qualityTradeoffs.add(
                 new QualityTradeoff(
@@ -49,7 +50,6 @@ public class CloudReliabilityArchitecturalDecisionRepository {
                         TradeoffType.INHIBITS
                 )
         );
-
         return CloudService.builder()
                 .cloudProvider(CloudProvider.AWS)
                 .id("tactic-alb")

@@ -1,3 +1,6 @@
+/* =====================================================================
+       STATE  — all at global scope so HTML onclick handlers can reach them
+    ===================================================================== */
 var currentPhase = 1;
 var selectedBUC = null;
 var baseRpsForComparison = 0;
@@ -24,6 +27,9 @@ var TIER_TAIL = 0.05;
 var PLACEHOLDER_REQ_BYTES = 200;
 var PLACEHOLDER_RESP_BYTES = 1200;
 
+/* =====================================================================
+   REPLICA SIZING
+===================================================================== */
 function recalculateReplicas() {
   var _cReqEl = document.getElementById('input-max-req-per-replica');
   var _bRpsV = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
@@ -39,17 +45,32 @@ function recalculateReplicas() {
   var sel = document.getElementById('input-ec2-instance');
   var ov = parseInt((document.getElementById('input-max-req-per-replica') || { value: '' }).value) || 0;
   if (!sel || !sel.value) { if (ri) ri.style.display = 'none'; return; }
-  var p = sel.value.split('|');
-  var cReq = ov > 0 ? ov : parseInt(p[1]);
-  var cIn = parseInt(p[2]);
-  var cOut = parseInt(p[3]);
-  var R = parseInt((document.getElementById('requestsPerSecond') || { value: '' }).value) || 0;
-  var sReq = window._lastProtoReqBytes || PLACEHOLDER_REQ_BYTES;
+  // Declare ALL variables before use
+  var p    = sel.value.split('|');
+  var instType = p[0];
+  var R    = parseInt((document.getElementById('requestsPerSecond') || { value: '' }).value) || 0;
+  var sReq = window._lastProtoReqBytes  || PLACEHOLDER_REQ_BYTES;
   var sRes = window._lastProtoRespBytes || PLACEHOLDER_RESP_BYTES;
+  // C_req: per-replica request capacity derived from instance network bandwidth / proto size
+  // C_req: per-replica request capacity derived from instance network bandwidth / proto size
+  var _ec2Entry = window._ec2InstanceMap && window._ec2InstanceMap[instType];
+  var _netBytesPerSec = _ec2Entry ? (_ec2Entry.networkBytesPerSec || 0) : 0;
+  if (!_netBytesPerSec) {
+    var _fbGbps = instType.startsWith('t3.')        ? 5     : 12.5;
+    _netBytesPerSec = Math.floor(_fbGbps * 1e9 / 8);
+  }
+  // C_in / C_out = network bandwidth per replica (bytes/sec) — NOT bandwidth/size
+  // nIn  = ceil(R × S_req / C_in)  = ceil(ingress bytes/sec needed / bandwidth)
+  // nOut = ceil(R × S_res / C_out) = ceil(egress  bytes/sec needed / bandwidth)
+  // C_req = user-set req/s capacity override; default = networkBytesPerSec / S_res
+  var cIn  = _netBytesPerSec || 625000000;  // bytes/sec network bandwidth per replica
+  var cOut = _netBytesPerSec || 625000000;
+  var _derivedCReq = sRes > 0 && cOut > 0 ? Math.floor(cOut / sRes) : 0;
+  var cReq = ov > 0 ? ov : (_derivedCReq > 0 ? _derivedCReq : parseInt(p[1]) || 100);
   if (!R || !cReq) { if (ri) ri.style.display = 'none'; return; }
   var nReq = Math.ceil(R / cReq);
-  var nIn = Math.ceil((R * sReq) / cIn);
-  var nOut = Math.ceil((R * sRes) / cOut);
+  var nIn  = sReq > 0 ? Math.ceil((R * sReq) / cIn)  : 1;
+  var nOut = sRes > 0 ? Math.ceil((R * sRes) / cOut) : 1;
   var N = Math.max(nReq, nIn, nOut);
   var btl = (nReq >= nIn && nReq >= nOut) ? 'Request throughput (C_req)' :
     (nIn >= nOut) ? 'Network ingress (C_in)' : 'Network egress (C_out)';
@@ -73,13 +94,36 @@ function recalculateReplicas() {
   var sel2 = document.getElementById('input-ec2-instance');
   if (sel2 && sel2.value && N > 0) {
     var parts = sel2.value.split('|');
-    var pricePerHr = parseFloat(parts[4]) || 0;  // instanceType|cReq|cIn|cOut|price format
-    if (pricePerHr <= 0 && window._ec2PriceMap) pricePerHr = window._ec2PriceMap[parts[0]] || 0;
+    // instType already declared above
+    var fallbackPrices7 = {'t3.micro':0.0104,'t3.small':0.0208,'t3.medium':0.0416,'t3.large':0.0832,
+      'm6i.large':0.096,'m6i.xlarge':0.192,'m6i.2xlarge':0.384,'m6i.4xlarge':0.768,
+      'c6i.large':0.085,'c6i.xlarge':0.170,'c6i.2xlarge':0.340,'c6i.4xlarge':0.680,
+      'r6i.large':0.126,'r6i.xlarge':0.252,'r6i.2xlarge':0.504,'r6i.4xlarge':1.008};
+    var pricePerHr = (window._ec2PriceMap && window._ec2PriceMap[instType])
+                    || fallbackPrices7[instType] || 0.10;
     if (pricePerHr > 0) {
+      var _eksActive = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license']
+        .some(function(id){ var cb=document.getElementById(id); return cb&&cb.checked; })
+        || parseFloat(sessionStorage.getItem('tco_container_cost')||'0') > 0;
       var ec2MoCost = Math.round(pricePerHr * 730 * N * 100) / 100;
+      // AWS EKS pricing:
+      //   tco_container_cost = EKS control plane only (~$73/mo = $0.10/hr)
+      //   tco_ec2_cost       = EC2 worker node instances (separate charge)
+      // These are DIFFERENT charges — not duplicated. Always write ec2 cost.
       sessionStorage.setItem('tco_ec2_cost', ec2MoCost.toFixed(4));
+      // Tag whether this is EKS worker nodes or standalone replicas
+      sessionStorage.setItem('tco_ec2_label', _eksActive
+        ? 'EKS Worker Nodes (' + instType + ' \u00d7' + N + ')'
+        : 'EC2 Replicas (' + instType + ' \u00d7' + N + ')');
       var ec2El = document.getElementById('ec2-replica-cost-display');
-      if (ec2El) ec2El.textContent = 'EC2 cost: ' + N + ' × $' + (pricePerHr * 730).toFixed(2) + '/mo = $' + ec2MoCost.toFixed(2) + '/mo';
+      if (ec2El) {
+        var _eksNote = _eksActive
+          ? '<span style="color:var(--ink-light);font-size:.75rem;"> = EKS worker nodes (separate from $73/mo control plane fee)</span>'
+          : '<span style="color:var(--ink-light);font-size:.75rem;"> = standalone EC2 replicas</span>';
+        ec2El.innerHTML = '<strong>' + instType + '</strong>: ' + N
+          + ' replica' + (N>1?'s':'') + ' × $' + (pricePerHr*730).toFixed(2)
+          + '/mo = <strong>$' + ec2MoCost.toFixed(2) + '/mo</strong>' + _eksNote;
+      }
       writeTcoSnapshot();
       var bRps = parseInt((document.getElementById('requestsPerSecond') || {value:'0'}).value) || 0;
       if (bRps) updateLiveComparison(bRps, _getEffectiveRps());
@@ -104,6 +148,18 @@ function calcMonthlyCost(rps, respBytes) {
   return { gbPerMonth: gbPerMonth, cost: cost };
 }
 
+/* =====================================================================
+   RPS CALCULATION + LIVE COMPARISON
+===================================================================== */
+
+/**
+ * Returns the effective RPS that was last computed by the backend
+ * /api/tco/effective-rps endpoint (accounts for ALL active RPS tactics:
+ * retry, TLS handshake, OAuth token-acq, etc.).
+ * Falls back to a local retry-only estimate if the backend hasn't
+ * responded yet — but only retry is approximated inline; all other
+ * tactic RPS adjustments require the backend call.
+ */
 function _getEffectiveRps() {
   var base = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (!base) return 0;
@@ -206,6 +262,8 @@ function hasAnyImpactingTactic() {
     'tactic-alb', 'tactic-cache', 'tactic-s3-backup', 'tactic-aurora-replica', 'tactic-apigw',
     // Container
     'cef-clusters', 'cef-cluster-lb', 'cef-host-storage', 'cef-workload-license',
+    // FIX 2 — security cloud-service checkboxes were missing, causing updateLiveComparison
+    // to return early before ever calling collectTacticContributions or renderComparison
     'sec-guardduty', 'sec-inspector', 'sec-waf', 'sec-macie',
     'sec-cloudwatch', 'sec-audit', 'sec-kms', 'sec-cloudtrail', 'sec-acm',
     // DB/DR cloud services
@@ -240,10 +298,16 @@ function updateLiveComparison(baseRps, effectiveRps) {
       aggregateCloudInfraCost();
       saveTacticsToSession()
         .then(function() {
-          return Promise.all([
-            fetchBackendCost(window._lastProtoFile, true),
-            fetchBackendCost(window._lastProtoFile, false)
-          ]);
+          // Run sequentially — base first (resets session), then tactics.
+          // Running in parallel causes a race condition on the shared backend
+          // session: the base reset overwrites the tactics state mid-flight,
+          // making the tactics calculation return base (non-tactic) costs.
+          return fetchBackendCost(window._lastProtoFile, true)
+            .then(function(baseRes) {
+              return saveTacticsToSession()
+                .then(function() { return fetchBackendCost(window._lastProtoFile, false); })
+                .then(function(tacRes) { return [baseRes, tacRes]; });
+            });
         })
         .then(function(results) {
           var baseResult    = results[0];
@@ -292,7 +356,7 @@ function fetchBackendCost(file, useBase) {
   return p1.then(function () {
     var fd = new FormData();
     fd.append('protoFile', file, file.name || 'upload.proto');
-    return fetch('/calculateTCO', { method: 'POST', body: fd });
+    return fetch('/calculateProtofileNetworkingCosts', { method: 'POST', body: fd });
   }).then(function (resp) {
     if (!resp.ok) return null;
     return resp.text();
@@ -376,6 +440,11 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
    * a cloud tactic (ALB, security service) triggers updateLiveComparison directly.
    * The contribution list is always fetched fresh by collectTacticContributions().
    */
+  // hasRealProto MUST be declared here — it is used by the retry gap check below
+  // and also by displayBaseCost. Declaring it after line 477 caused hasRealProto=undefined
+  // at the retry gap check, so the gap was never added to contributions.
+  var hasRealProto = !!window._lastProtoFile;
+
   var networkingCostDelta = 0;
   if (contributions && contributions.length) {
     contributions.forEach(function(c) {
@@ -383,12 +452,55 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
     });
     networkingCostDelta = Math.round(networkingCostDelta * 100) / 100;
   }
+  // The tactic contributions API returns TLS/JWT byte overhead costs but NOT
+  // the retry egress increase (retry adds effective RPS which the backend computes
+  // via RPSNetworkingCostCalculator → AWSDataTransferCostCalculationServiceAdapter).
+  // Detect the gap and synthesise a 'Retry egress increase' contribution line.
+  var _retryEgressGap = 0;
+  if (hasRealProto && base && base.cost > 0 && tactics && tactics.cost > 0) {
+    var _fullDelta = Math.round((tactics.cost - base.cost) * 100) / 100;
+    _retryEgressGap = Math.max(0, Math.round((_fullDelta - networkingCostDelta) * 100) / 100);
+    if (_retryEgressGap > 0.01 && contributions) {
+      contributions = contributions.concat([{
+        label: 'Retry Pattern — extra egress cost',
+        detail: 'Extra AWS data-transfer cost from ' + Math.round((effectiveRps||0)-(baseRps||0))
+          + ' additional RPS (' + (effectiveRps||0) + ' eff. vs ' + (baseRps||0) + ' base) · via /api/tco/calculate',
+        kind: 'rps',
+        costDisplayLabel: '+$' + _retryEgressGap.toFixed(2) + '/mo',
+        estimatedMonthlyCostUsd: _retryEgressGap
+      }]);
+      networkingCostDelta = Math.round((networkingCostDelta + _retryEgressGap) * 100) / 100;
+    }
+  }
 
-  var hasRealProto     = !!window._lastProtoFile;
+  // displayBaseCost: only show real cost when proto is uploaded
   var displayBaseCost  = hasRealProto ? base.cost : 0;
+  if (hasRealProto && displayBaseCost > 0) window._lastBaseEgressCost = displayBaseCost;
 
   var tacticsTotalCost      = displayBaseCost + networkingCostDelta + cachedCloudInfraCost;
-  var totalMonthlyCostDelta = networkingCostDelta + cachedCloudInfraCost;
+  // totalMonthlyCostDelta updated below after retry gap is added to networkingCostDelta
+  // Store Phase 3 total so Phase 4 uses the same number
+  sessionStorage.setItem('tco_phase3_total', tacticsTotalCost.toFixed(4));
+  // Store the full networking costs from the backend
+  // Use tactics.cost (real backend value) as the authoritative full networking cost.
+  // tactics.cost = $1,683.65 (includes retry RPS egress increase, not just tactic bytes).
+  // displayBaseCost + networkingCostDelta = $1,677.60 (misses retry egress increase).
+  // Now networkingCostDelta includes retry egress gap (if any), so
+  // displayBaseCost + networkingCostDelta should equal tactics.cost.
+  var _realNetworkingCost = (hasRealProto && tactics && tactics.cost > 0)
+    ? tactics.cost
+    : (displayBaseCost + networkingCostDelta);
+  // Recompute tacticsTotalCost using the real networking cost
+  tacticsTotalCost = _realNetworkingCost + cachedCloudInfraCost;
+  sessionStorage.setItem('tco_phase3_total', tacticsTotalCost.toFixed(4));
+  sessionStorage.setItem('tco_phase3_egress', _realNetworkingCost.toFixed(4));
+  sessionStorage.setItem('tco_phase3_base_egress', displayBaseCost.toFixed(4));
+  var _tacticDelta = Math.max(0, _realNetworkingCost - displayBaseCost);
+  sessionStorage.setItem('tco_tactic_overhead', _tacticDelta.toFixed(4));
+  // Recompute totals now that networkingCostDelta includes retry egress gap
+  tacticsTotalCost      = _realNetworkingCost + cachedCloudInfraCost;
+  var totalMonthlyCostDelta = _realNetworkingCost - displayBaseCost + cachedCloudInfraCost;
+  sessionStorage.setItem('tco_phase3_total', tacticsTotalCost.toFixed(4));
   var el;
 
   el = document.getElementById('cmp-base-cost');
@@ -406,8 +518,9 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
   if (el) el.textContent = '$' + tacticsTotalCost.toFixed(2) + ' / mo';
 
   el = document.getElementById('cmp-tactics-rps');
+  var _netDeltaDisplay = Math.round((_realNetworkingCost - displayBaseCost) * 100) / 100;
   if (el) el.textContent = effectiveRps.toLocaleString() + ' eff. RPS'
-    + (networkingCostDelta  > 0 ? ' (+$' + networkingCostDelta.toFixed(2)   + ' networking)'  : '')
+    + (_netDeltaDisplay  > 0 ? ' (+$' + _netDeltaDisplay.toFixed(2)   + ' networking)'  : '')
     + (cachedCloudInfraCost > 0 ? ' · +$' + cachedCloudInfraCost.toFixed(2) + ' cloud infra' : '');
 
   var breakdownTableEl = document.getElementById('cmp-tactic-breakdown');
@@ -554,7 +667,8 @@ function buildCloudServiceBreakdownRows() {
   if (containerCost > 0) rows += buildCloudRow('Containerized Cluster (' + orchestrationType.toUpperCase() + ')', '$' + containerCost.toFixed(2) + '/mo · cluster + storage + licenses', containerCost);
   // EC2 Compute Replicas — written by recalculateReplicas()
   var ec2ReplicaCost = parseFloat(sessionStorage.getItem('tco_ec2_cost') || '0');
-  if (ec2ReplicaCost > 0) rows += buildCloudRow('EC2 Compute Replicas', '$' + ec2ReplicaCost.toFixed(2) + '/mo', ec2ReplicaCost);
+  var _ec2Label = sessionStorage.getItem('tco_ec2_label') || 'EC2 Compute Replicas';
+  if (ec2ReplicaCost > 0) rows += buildCloudRow(_ec2Label, '$' + ec2ReplicaCost.toFixed(2) + '/mo', ec2ReplicaCost);
 
   // FinOps saving — single row, reads strategy + % from sessionStorage
   var _fSaving   = parseFloat(sessionStorage.getItem('tco_finops_saving')   || '0');
@@ -588,46 +702,30 @@ function buildCloudRow(serviceName, detailText, monthlyCostUsd) {
    window._lastCloudInfraCost so renderComparisonFromBackend can use it
 ===================================================================== */
 function aggregateCloudInfraCost() {
-  // For EVERY cost key, only count the value when the corresponding DOM checkbox
-  // is currently checked.  This prevents stale sessionStorage values from any
-  // previous session from inflating the cost before the user selects anything.
-  function checkedCost(checkboxId, storageKey) {
-    var cb = document.getElementById(checkboxId);
-    if (!cb || !cb.checked) return 0;
-    return parseFloat(sessionStorage.getItem(storageKey) || '0');
+  // Read directly from the tco_snapshot written by writeTcoSnapshot() after every
+  // recalculate* call. This is the single source of truth used by Phase 4 as well,
+  // so Phase 3 "With Current Tactics" total will always match Phase 4 TCO total.
+  var snap = {};
+  try { snap = JSON.parse(sessionStorage.getItem('tco_snapshot') || '{}'); } catch(e) {}
+  function ss(k) { return parseFloat(snap[k] || sessionStorage.getItem(k) || '0'); }
+
+  // Use sec_total from snapshot (sum already computed by writeTcoSnapshot).
+  // Do NOT also add snap.sec individual keys — that would double-count.
+  var gross = ss('alb') + ss('cache') + ss('apigw') + ss('container')
+            + ss('db') + ss('ec2') + ss('sec_total');
+
+  // Fallback: if sec_total not in snapshot, sum individual sec keys from sessionStorage
+  if (!snap.sec_total) {
+    var _sp = document.getElementById('cloudsec-content');
+    ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+     'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'].forEach(function(id){
+      var cb = (_sp && _sp.querySelector('#'+id)) || document.getElementById(id);
+      if (cb && cb.checked) gross += parseFloat(sessionStorage.getItem('tco_sec_'+id)||'0');
+    });
   }
 
-  var total = 0;
-  total += checkedCost('tactic-alb',            'tco_alb_cost');
-  total += checkedCost('tactic-cache',          'tco_cache_cost');
-  total += checkedCost('tactic-apigw',          'tco_apigw_cost');
-
-  // DB options are rendered dynamically — use key presence + any of their checkboxes
-  var dbKeys = ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
-                'tactic-aurora-replica','tactic-dynamo-global','tactic-dynamo-pitr'];
-  var anyDbChecked = dbKeys.some(function(id) {
-    var cb = document.getElementById(id); return cb && cb.checked;
-  });
-  if (anyDbChecked) total += parseFloat(sessionStorage.getItem('tco_db_cost') || '0');
-
-  // Container cost — gated on any EKS/container checkbox
-  var cefKeys = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'];
-  var anyCefChecked = cefKeys.some(function(id) {
-    var cb = document.getElementById(id); return cb && cb.checked;
-  });
-  if (anyCefChecked) total += parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
-
-  // Security services — one key per service, guarded individually
-  var secServiceIds = [
-    'sec-guardduty','sec-inspector','sec-waf','sec-macie',
-    'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
-  ];
-  secServiceIds.forEach(function(id) {
-    total += checkedCost(id, 'tco_sec_' + id);
-  });
-
-  var saving = parseFloat(sessionStorage.getItem('tco_finops_saving') || '0');
-  window._lastCloudInfraCost = Math.max(0, Math.round((total - saving) * 100) / 100);
+  var savings = ss('finops') + ss('spot');
+  window._lastCloudInfraCost = Math.max(0, Math.round((gross - savings) * 100) / 100);
   return window._lastCloudInfraCost;
 }
 
@@ -636,27 +734,16 @@ function aggregateCloudInfraCost() {
 // can read them reliably regardless of which panels are open or which DOM
 // checkboxes are currently in the document. Called after every recalculate*.
 function writeTcoSnapshot() {
-  var _sp = document.getElementById('cloudsec-content');
-  function dynCb(id) {
-    if (_sp) { var el = _sp.querySelector('#' + id); if (el) return el; }
-    return document.getElementById(id);
-  }
-  function secCost(id) {
-    var cb = dynCb(id);
-    if (!cb || !cb.checked) return 0;
-    return parseFloat(sessionStorage.getItem('tco_sec_' + id) || '0');
-  }
-  function plainCost(cbId, key) {
-    var cb = document.getElementById(cbId);
-    if (!cb || !cb.checked) return 0;
-    return parseFloat(sessionStorage.getItem(key) || '0');
-  }
-  var dbIds = ['tactic-s3-backup','tactic-rds-snapshot','tactic-rds-multiaz',
-               'tactic-aurora-replica','tactic-dynamo-global','tactic-dynamo-pitr'];
-  var cefIds = ['cef-clusters','cef-cluster-lb','cef-host-storage','cef-workload-license'];
-  // Pure sessionStorage reads — keys only exist when the user configured
-  // the service in Phase 3. No DOM checkbox gating needed.
+  // Pure sessionStorage reads — keys only exist when user configured the service.
+  // No DOM checkbox gating: the key presence IS the selection state.
+  // Also computes sec_total for use by aggregateCloudInfraCost.
   function ss2(k) { return parseFloat(sessionStorage.getItem(k)||'0'); }
+  var secObj = {};
+  var secTotal = 0;
+  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
+   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'].forEach(function(id){
+    var c = ss2('tco_sec_'+id); if (c > 0) { secObj[id] = c; secTotal += c; }
+  });
   var snap = {
     alb       : ss2('tco_alb_cost'),
     cache     : ss2('tco_cache_cost'),
@@ -665,14 +752,13 @@ function writeTcoSnapshot() {
     db        : ss2('tco_db_cost'),
     ec2       : ss2('tco_ec2_cost'),
     finops    : ss2('tco_finops_saving'),
-    finopsPct      : parseFloat(sessionStorage.getItem('tco_finops_pct') || '0'),
-    finopsStrategy : sessionStorage.getItem('tco_finops_strategy') || '',
-    sec       : {}
+    finopsPct      : parseFloat(sessionStorage.getItem('tco_finops_pct')||'0'),
+    finopsStrategy : sessionStorage.getItem('tco_finops_strategy')||'',
+    spot      : ss2('tco_spot_saving'),
+    spotPct   : ss2('tco_spot_pct'),
+    sec       : secObj,
+    sec_total : secTotal
   };
-  ['sec-guardduty','sec-inspector','sec-waf','sec-macie',
-   'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'].forEach(function(id){
-    var c = secCost(id); if (c > 0) snap.sec[id] = c;
-  });
   sessionStorage.setItem('tco_snapshot', JSON.stringify(snap));
 }
 
@@ -680,6 +766,7 @@ function renderComparisonEstimate(baseRps, effectiveRps) {
   var baseCost    = calcMonthlyCost(baseRps,      PLACEHOLDER_RESP_BYTES);
   var tacticsCost = calcMonthlyCost(effectiveRps, PLACEHOLDER_RESP_BYTES);
   aggregateCloudInfraCost();
+  // FIX 1 — show $0.00 base cost until a real proto file is uploaded
   var base    = {
     cost:            window._lastProtoFile ? baseCost.cost : 0,
     respGb:          baseCost.gbPerMonth,
@@ -700,6 +787,7 @@ function renderComparisonEstimateWithBytes(baseRps, effectiveRps) {
   var estRespBytes = PLACEHOLDER_RESP_BYTES + estTlsB;
   var fakeBackend  = { responseSizeEff: PLACEHOLDER_RESP_BYTES, tlsOverheadBytes: estTlsB, jwtOverheadBytes: estJwtB };
   aggregateCloudInfraCost();
+  // FIX 1 — show $0.00 base cost until a real proto file is uploaded
   var base = {
     cost: window._lastProtoFile
             ? calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).cost
@@ -734,11 +822,23 @@ function recalculateAlb() {
   if (!_albData) return;  /* data still loading — autoEnableAlb will call recalculateAlb() after load */
   var count = parseInt((document.getElementById('input-alb-count') || { value: '1' }).value) || 1;
   var lcu = parseFloat((document.getElementById('input-alb-lcu') || { value: '0' }).value) || 0;
-  var fixedM = _albData.fixedPerMonthUsd * count;
-  var lcuM = _albData.lcuPerHourUsd * lcu * 730 * count;
+  // ALB pricing: $0.0225/hr fixed per ALB + $0.008/LCU/hr
+  // fixedPerMonthUsd from backend: if < 1 it's an hourly rate → multiply by 730
+  var fixedHr = _albData.fixedPerMonthUsd > 1
+    ? _albData.fixedPerMonthUsd / 730
+    : (_albData.fixedPerMonthUsd || 0.0225);
+  var lcuHr   = _albData.lcuPerHourUsd || 0.008;
+  var fixedM  = fixedHr * 730 * count;    // e.g. 0.0225 × 730 × 1 = $16.43
+  var lcuM    = lcuHr   * lcu * 730 * count; // e.g. 0.008 × 5 × 730 × 1 = $29.20
+  var totalAlb = fixedM + lcuM;
   var res = document.getElementById('alb-result');
-  if (res) res.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i><strong>' + count + ' ALB(s): $' + fixedM.toFixed(2) + '/mo fixed' + (lcu > 0 ? ' + $' + lcuM.toFixed(2) + '/mo LCUs = <span style="color:var(--red);">$' + (fixedM + lcuM).toFixed(2) + '/mo</span>' : '') + '</strong>';
-  sessionStorage.setItem('tco_alb_cost', (fixedM + lcuM).toFixed(4));
+  if (res) res.innerHTML = '<i class="fas fa-calculator" style="margin-right:6px;"></i>'
+    + '<strong>' + count + ' ALB(s):</strong> '
+    + '$' + fixedHr.toFixed(4) + '/hr × 730h = $' + fixedM.toFixed(2) + '/mo fixed'
+    + (lcu > 0 ? ' + $' + lcuHr.toFixed(4) + '/LCU/hr × ' + lcu + ' LCU × 730h = $'
+      + lcuM.toFixed(2) + '/mo LCU = <span style="color:var(--red);font-weight:700;">$'
+      + totalAlb.toFixed(2) + '/mo total</span>' : ' = <strong>$' + fixedM.toFixed(2) + '/mo</strong>');
+  sessionStorage.setItem('tco_alb_cost', totalAlb.toFixed(4));
   sessionStorage.setItem('tco_alb_label', count + ' ALB' + (count > 1 ? 's' : ''));
   writeTcoSnapshot();
   var _albNotesEl = document.getElementById('alb-finops-notes');
@@ -843,12 +943,12 @@ function renderDbOptions() {
       + '</div>';
   }
   if (engine === 'rds-mysql') {
-    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardStoragePerGbUsd  + '/GB-month.', 'db-gb', 'DB size (GB)')
-      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotStoragePerGbUsd  + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
+    html = dbCb('tactic-s3-backup', 'S3 Backup', '$' + _dbData.s3StandardStoragePerGbUsd + '/GB-month.', 'db-gb', 'DB size (GB)')
+      + dbCb('tactic-rds-snapshot', 'RDS Snapshot', '$' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-month beyond free tier.', 'snapshot-retention', 'Retention days')
       + dbCb('tactic-rds-multiaz', 'RDS Multi-AZ', _dbData.rdsMultiAzSurchargeNote, null, null);
   } else if (engine === 'aurora') {
     html = dbCb('tactic-aurora-replica', 'Aurora Read Replica', '~$' + _dbData.auroraReplicaPerHour + '/hr ($' + (_dbData.auroraReplicaPerHour * 730).toFixed(2) + '/mo) db.r6g.large.', 'aurora-replica-count', 'Replicas')
-      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardStoragePerGbUsd  + '/GB-month.', 'db-gb', 'DB size (GB)');
+      + dbCb('tactic-s3-backup', 'S3 Snapshot Export', '$' + _dbData.s3StandardStoragePerGbUsd + '/GB-month.', 'db-gb', 'DB size (GB)');
   } else if (engine === 'dynamodb') {
     html = dbCb('tactic-dynamo-pitr', 'DynamoDB PITR', 'Free — pay only for backup storage (~$0.20/GB-month).', null, null)
       + dbCb('tactic-dynamo-global', 'DynamoDB Global Tables', _dbData.dynamoGlobalTableNote, 'dynamo-extra-regions', 'Extra regions');
@@ -859,63 +959,58 @@ function renderDbOptions() {
 }
 
 function recalculateDbCost() {
-  _syncPricingData();
-
   if (!_dbData) return;
-    var total = 0;
-    var lines = [];
-    var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
-    var snapshotRetention = parseFloat((document.getElementById('snapshot-retention') || { value: '10' }).value) || 10;
-    console.warn("snapshotRetention: " + snapshotRetention);
-    var snapshotRetentionCost = 0;
-    var g = function (id) { return document.getElementById(id) || {}; };
+  var total = 0;
+  var lines = [];
+  var dbGb = parseFloat((document.getElementById('db-gb') || { value: '10' }).value) || 10;
+  var snapshotRetention = parseFloat((document.getElementById('snapshot-retention') || { value: '10' }).value) || 10;
+  console.warn("snapshotRetention: " + snapshotRetention);
+  var snapshotRetentionCost = 0;
+  var g = function (id) { return document.getElementById(id) || {}; };
 
-    if (g('tactic-s3-backup').checked) {
-        let c = dbGb * _dbData.s3StandardStoragePerGbUsd;
-        total += c;
-        console.warn("Total DB cost: " + total);
-        lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)');
-    }
-    if (g('tactic-rds-snapshot').checked) {
-        snapshotRetentionCost = snapshotRetention > 10 ? _dbData.rdsSnapshotStoragePerGbUsd : 0;
-        total += snapshotRetentionCost;
-        console.warn("Total DB cost: " + total);
-        lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
-    }
-    if (g('tactic-rds-multiaz').checked) {
-        total += snapshotRetentionCost;
-        console.warn("Total DB cost: " + total);
-        lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
-    }
-    if (g('tactic-aurora-replica').checked) {
-        var cnt = parseInt(g('aurora-replica-count').value) || 1;
-        var c2 = _dbData.auroraReplicaPerHour * 730 * cnt;
-        total += c2;
-        console.warn("Total DB cost: " + total);
-        lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)');
-    }
-    if (g('tactic-dynamo-global').checked) {
-        var reg = parseInt(g('dynamo-extra-regions').value) || 1;
-        lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)');
-    }
+  if (g('tactic-s3-backup').checked) {
+      let c = dbGb * _dbData.s3StandardStoragePerGbUsd;
+      total += c;
+      console.warn("Total DB cost: " + total);
+      lines.push('S3 backup: $' + c.toFixed(2) + '/mo (' + dbGb + ' GB)');
+  }
+  if (g('tactic-rds-snapshot').checked) {
+      snapshotRetentionCost = snapshotRetention > 10 ? _dbData.rdsSnapshotStoragePerGbUsd : 0;
+      total += snapshotRetentionCost;
+      console.warn("Total DB cost: " + total);
+      lines.push('RDS Snapshot: first ' + dbGb + ' GB free, then $' + _dbData.rdsSnapshotStoragePerGbUsd + '/GB-mo');
+  }
+  if (g('tactic-rds-multiaz').checked) {
+      total += snapshotRetentionCost;
+      console.warn("Total DB cost: " + total);
+      lines.push('Multi-AZ: ~2\u00d7 your RDS instance cost');
+  }
+  if (g('tactic-aurora-replica').checked) {
+      var cnt = parseInt(g('aurora-replica-count').value) || 1;
+      var c2 = _dbData.auroraReplicaPerHour * 730 * cnt;
+      total += c2;
+      console.warn("Total DB cost: " + total);
+      lines.push('Aurora replicas: $' + c2.toFixed(2) + '/mo (' + cnt + ' nodes)');
+  }
+  if (g('tactic-dynamo-global').checked) {
+      var reg = parseInt(g('dynamo-extra-regions').value) || 1;
+      lines.push('DynamoDB Global: $' + _dbData.dynamoGlobalTablePerWruUsd + '/WRU \u00d7 ' + reg + ' region(s)');
+  }
 
-    var res = document.getElementById('dbbackup-result');
-    if (!res) return;
-    if (!lines.length) { res.style.display = 'none'; return; }
-    res.style.display = 'block';
-    res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
-      + lines.map(function (l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 ' + l + '</div>'; }).join('')
-      + (total > 0 ? '<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $' + total.toFixed(2) + '/mo</div>' : '');
-    if (total > 0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
-    else sessionStorage.removeItem('tco_db_cost');
-
-  writeTcoSnapshot();
+  var res = document.getElementById('dbbackup-result');
+  if (!res) return;
+  if (!lines.length) { res.style.display = 'none'; return; }
+  res.style.display = 'block';
+  res.innerHTML = '<i class="fas fa-database" style="margin-right:6px;"></i><strong>DB backup/DR estimate:</strong><br>'
+    + lines.map(function (l) { return '<div style="font-size:.8rem;margin-top:4px;">\u2022 ' + l + '</div>'; }).join('')
+    + (total > 0 ? '<div style="margin-top:8px;font-weight:700;color:var(--red);">Quantifiable total: $' + total.toFixed(2) + '/mo</div>' : '');
+  if (total > 0) sessionStorage.setItem('tco_db_cost', total.toFixed(4));
+  else sessionStorage.removeItem('tco_db_cost');
 
   /* Refresh live comparison — use authoritative effectiveRps from last /api/tco/effective-rps call */
   var _bRpsR = parseInt((document.getElementById('requestsPerSecond') || { value: '0' }).value) || 0;
   if (_bRpsR) updateLiveComparison(_bRpsR, _getEffectiveRps());
 }
-
 
 function recalculateSecCost() {
   _syncPricingData();
@@ -1026,10 +1121,10 @@ function recalculateCostOpt() {
   if (!_coData) return;
   var _spendEl = document.getElementById('input-ec2-monthly-spend');
   var spend = parseFloat((_spendEl || { value: '0' }).value) || 0;
-  // Auto-compute spend from EC2 replica + container costs when no manual value entered
+  // FinOps RI/SP discount applies to EC2 instances only (not EKS control plane fee).
+  // Auto-compute from tco_ec2_cost (worker nodes) when no manual value entered.
   if (!spend) {
-    spend = parseFloat(sessionStorage.getItem('tco_ec2_cost') || '0')
-           + parseFloat(sessionStorage.getItem('tco_container_cost') || '0');
+    spend = parseFloat(sessionStorage.getItem('tco_ec2_cost') || '0');
     if (spend > 0 && _spendEl && !_spendEl.value) {
       _spendEl.value = spend.toFixed(2);
     }
@@ -1185,7 +1280,7 @@ function recalculateContainerCost() {
   var _s3PerGb = 0.023; /* S3 Standard — stable, no API needed */
   /* If live prices not yet loaded, kick off the fetch */
   if (!window._containerPriceData) {
-    fetch('/api/aws/container-pricing').then(function (r) { return r.ok ? r.json() : null; })
+    fetch('/api/cloud/container-pricing').then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { if (d) { window._containerPriceData = d; recalculateContainerCost(); } }).catch(function () { });
   }
   var aLines = [], aTotal = 0;
@@ -1202,7 +1297,14 @@ function recalculateContainerCost() {
   if (chk('cef-workload-license')) { var wl = num('input-workload-license-cost', 0); if (wl > 0) { aTotal += wl; aLines.push('Workload License: $' + wl.toFixed(2) + '/mo'); } }
   /* Spot discount is still valid here — it's about instance type selection, not RI/SP purchasing */
   var spotDisc = (parseInt(g('input-spot-pct').value) || 0) / 100;
-  if (spotDisc > 0 && aTotal > 0) { var sv = aTotal * spotDisc; aTotal -= sv; aLines.push('Spot discount (' + Math.round(spotDisc * 100) + '%): -$' + sv.toFixed(2) + '/mo'); }
+  var _ec2WorkerCost2 = parseFloat(sessionStorage.getItem('tco_ec2_cost') || '0');
+  if (spotDisc > 0 && _ec2WorkerCost2 > 0) {
+    var sv = Math.round(_ec2WorkerCost2 * spotDisc * 100) / 100;
+    aLines.push('EC2 Spot (~' + Math.round(spotDisc*100) + '% off worker nodes): -$' + sv.toFixed(2) + '/mo saved');
+    sessionStorage.setItem('tco_spot_saving', sv.toFixed(4));
+    sessionStorage.setItem('tco_spot_pct', Math.round(spotDisc*100));
+    sessionStorage.setItem('tco_ec2_cost', Math.max(0, _ec2WorkerCost2 - sv).toFixed(4));
+  } else { sessionStorage.removeItem('tco_spot_saving'); sessionStorage.removeItem('tco_spot_pct'); }
   var appLines = [], appTotal = 0;
   var isFg = (g('input-underlying-resource').value || '').indexOf('fargate') >= 0;
   var _fgVcpuRate = (_cp.fargateVcpuPerHour != null) ? _cp.fargateVcpuPerHour : 0.04048;
@@ -1275,11 +1377,27 @@ function downloadTcoPdf() {
 }
 
 function computeEc2BaselineSpend() {
-  var s = 0, iSel = document.getElementById('input-instance-type'), nR = parseInt((document.getElementById('input-replica-count') || { value: '0' }).value) || 0;
-  if (iSel && nR > 0 && window._ec2PriceMap) { var p = window._ec2PriceMap[iSel.value]; if (p > 0) s += p * 730 * nR; }
-  var _cp = window._containerPriceData || {}, pods = parseInt((document.getElementById('input-pods') || { value: '0' }).value) || 0, ur = (document.getElementById('input-underlying-resource') || { value: '' }).value || '';
-  if (pods > 0 && ur.indexOf('fargate') < 0) { var eN = Math.max(1, Math.ceil(pods / 10)), nT = (document.getElementById('input-ec2-instance') || { value: 'm6i.large' }).value || 'm6i.large', nP = (_cp.ec2OnDemandPrices && _cp.ec2OnDemandPrices[nT]) || 0.096; s += nP * 730 * eN; }
-  return s > 0 ? Math.round(s * 100) / 100 : null;
+  // Use the EC2 price from window._ec2PriceMap (fetched from /api/aws/ec2-instances)
+  // and the number of replicas N from the current replica calculation result.
+  // This ensures the FinOps "Estimated on-demand spend" always reflects the
+  // instance type and replica count selected in the Scalability section.
+  var sel = document.getElementById('input-ec2-instance');
+  if (!sel || !sel.value) return 0;
+  var instType = sel.value.split('|')[0];
+  var fallback = {'t3.micro':0.0104,'t3.small':0.0208,'t3.medium':0.0416,'t3.large':0.0832,
+    'm6i.large':0.096,'m6i.xlarge':0.192,'m6i.2xlarge':0.384,'m6i.4xlarge':0.768,
+    'c6i.large':0.085,'c6i.xlarge':0.170,'c6i.2xlarge':0.340,'c6i.4xlarge':0.680,
+    'r6i.large':0.126,'r6i.xlarge':0.252,'r6i.2xlarge':0.504,'r6i.4xlarge':1.008};
+  var pricePerHr = (window._ec2PriceMap && window._ec2PriceMap[instType])
+                  || fallback[instType] || 0;
+  if (!pricePerHr) return 0;
+  // Get N from tco_ec2_cost / (pricePerHr*730) if available, or replica-count-display
+  var ec2Cost = parseFloat(sessionStorage.getItem('tco_ec2_cost') || '0');
+  if (ec2Cost > 0 && pricePerHr > 0) return ec2Cost; // already monthly total
+  // Fallback: read replica count from DOM
+  var nEl = document.getElementById('replica-count-display');
+  var N = nEl ? (parseInt(nEl.textContent) || 1) : 1;
+  return Math.round(pricePerHr * 730 * N * 100) / 100;
 }
 
 function autoEnableAlb() {
@@ -1435,6 +1553,11 @@ function wireAllHandlers() {
   on('input-sla', 'change', function () { recalculateAvailability(); });
   on('input-db-engine', 'change', function () { renderDbOptions(); });
 
+  on('input-max-req-per-replica', 'input', function () {
+    recalculateReplicas();
+    var _bR2 = parseInt((document.getElementById('requestsPerSecond')||{value:'0'}).value)||0;
+    if (_bR2) updateLiveComparison(_bR2, _getEffectiveRps());
+  });
   on('input-ec2-instance', 'change', function () { recalculateReplicas(); });
   on('input-max-req-per-replica', 'input', function () {
     var el = document.getElementById('input-max-req-per-replica');
@@ -1474,6 +1597,22 @@ document.addEventListener('DOMContentLoaded', function () {
    'sec-cloudwatch','sec-audit','sec-kms','sec-cloudtrail','sec-acm'
   ].forEach(function(id) { sessionStorage.removeItem('tco_sec_' + id); });
   sessionStorage.removeItem('tco_sec_cost');
+
+  // Fetch EC2 instance prices from backend and store in window._ec2PriceMap
+  fetch('/api/cloud/compute-instances')
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(list){
+      window._ec2PriceMap = {};
+      window._ec2InstanceMap = {};
+      (list||[]).forEach(function(inst){
+        if (inst.instanceType) {
+          window._ec2PriceMap[inst.instanceType] = inst.pricePerHourUsd || 0;
+          window._ec2InstanceMap[inst.instanceType] = inst; // store full entry incl. networkBytesPerSec
+        }
+      });
+      var sel = document.getElementById('input-ec2-instance');
+      if (sel && sel.value) recalculateReplicas();
+    }).catch(function(){});
 
   try {
     wireAllHandlers();
@@ -1534,7 +1673,16 @@ document.addEventListener('DOMContentLoaded', function () {
     else if (rpsSpans.length === 1) rendEffRps = parseInt((rpsSpans[0].textContent || '').replace(/[^0-9]/g, '')) || null;
     if (!rendEffRps) rendEffRps = parseInt(sessionStorage.getItem('svc_rps')) || null;
 
-    if (rawCost && parseFloat(rawCost) > 0) populateUnitEconomics(rawCost, rendEffRps, null);
+    if (rawCost && parseFloat(rawCost) > 0) {
+      // Store the authoritative Transfer Cost from the proto analysis table
+      // This is the exact backend value ($1,683.65) used for Phase 4 TCO egress
+      var _rcFloat = parseFloat(rawCost);
+      window._lastEgressCostUsd = _rcFloat;
+      sessionStorage.setItem('tco_phase3_egress', _rcFloat.toFixed(4));
+      sessionStorage.setItem('tco_phase3_base_egress',
+        (window._lastBaseEgressCost || _rcFloat).toFixed(4));
+      populateUnitEconomics(rawCost, rendEffRps, null);
+    }
     if (serverMsg) serverMsg.style.display = 'flex';
   }
 

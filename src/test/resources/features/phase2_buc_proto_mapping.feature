@@ -1,7 +1,7 @@
 @CostEfficiencyCalculator @Phase2 @ProtoContract
 Feature: gRPC Pattern Selection and Proto Contract Loading
   As a Software Architect
-  So that the backend can derive exact serialised message sizes
+  So that the backend can derive exact serialized message sizes
   I want to select my gRPC communication pattern and have the corresponding .proto IDL pre-loaded automatically
 
   Background:

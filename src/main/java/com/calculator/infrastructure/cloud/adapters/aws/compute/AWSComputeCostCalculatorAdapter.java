@@ -2,6 +2,7 @@ package com.calculator.infrastructure.cloud.adapters.aws.compute;
 
 import com.calculator.infrastructure.cloud.adapters.aws.AWSCloudCalculatorAdapter;
 import com.calculator.application.services.calculators.cost.cloud.ports.CloudComputeCostCalculatorPort;
+import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.PostConstruct;
 
@@ -99,6 +100,7 @@ public class AWSComputeCostCalculatorAdapter extends AWSCloudCalculatorAdapter i
 
             GetProductsResponse resp = pricingClient.getProducts(req);
             log.info("GetProductsResponse for " + instanceType + ": " + resp);
+            JSONLogger.logAsJSON(log, resp);
 
             if (resp.priceList().isEmpty()) {
                 return new Ec2InstanceSpecs(0.0, getLocalNetworkFallback(instanceType));

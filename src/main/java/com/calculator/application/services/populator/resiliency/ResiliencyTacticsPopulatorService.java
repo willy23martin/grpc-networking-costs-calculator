@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.calculator.domain.model.architecture.tactics.resiliency.retry.RetryPatternCostMessages.RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE;
-import static com.calculator.infrastructure.web.rest.TCOCalculatorController.DISPLAY_LOCALE;
+import static com.calculator.infrastructure.web.rest.NetworkingCostCalculatorController.DISPLAY_LOCALE;
 
 @Service
 public class ResiliencyTacticsPopulatorService {

@@ -13,7 +13,6 @@ import java.util.List;
 public final class ArchitecturalPattern extends ArchitecturalDecision {
 
     private String name;
-
     private List<ArchitecturalTactic> architecturalTactics;
 
     @Builder // DESIGN PATTERN: BUILDER

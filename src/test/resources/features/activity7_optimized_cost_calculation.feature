@@ -7,11 +7,11 @@ Feature: Optimized Cost Calculation
 
   @UI @API @Projections
   Scenario Outline: Cost impact for FinOps strategy across cloud service
-    Given I have applied "<finops_strategy>" to services implementing "<cloud_service>"
+    Given I have applied "<finops_strategy>" to services implementing "<cloud_service>" and a "<cloud_instance>"
     When I recalculate total costs across the architecture
     Then the system should show "<new_monthly_cost>" as the optimized cost
     And calculate "<annual_savings>"
 
     Examples: User Story: Optimized Cost Calculation - Feature Examples
-      | finops_strategy | cloud_service | new_monthly_cost | annual_savings |
-      | Spot Instances  | AWS EKS       | $36.50            | $36.50         |
+      | finops_strategy           | cloud_service | cloud_instance | new_monthly_cost | annual_savings |
+      | Reserved Instance 1 year  | AWS EC2       | t3.medium      | $19.44           | $131.18         |

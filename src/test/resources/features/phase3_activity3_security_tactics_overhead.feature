@@ -14,7 +14,7 @@ Feature: Security Tactic Configuration and Byte Overhead
 
     Examples:
       | security_tactic      | owasp_categories                                        | overhead                  |
-      | TLS (One-way)    | Cryptographic Failures                                      | 30 B                      |
+      | TLS (One-way)        | Cryptographic Failures                                  | 30 B                      |
       | mTLS (Mutual TLS)    | Broken Access Control                                   | 5 TLS messages            |
       | OAuth 2.0 + JWT      | Identification and Authentication Failures              | 650 B                     |
       | Basic Authentication | Identification and Authentication Failures              | 0                         |

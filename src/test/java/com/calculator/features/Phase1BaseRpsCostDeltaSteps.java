@@ -1,77 +1,91 @@
 package com.calculator.features;
 
+import com.calculator.infrastructure.cloud.adapters.aws.networking.AWSDataTransferCostCalculationServiceAdapter;
+import com.calculator.domain.dto.requests.EffectiveRequestPerSecondRequest;
+import com.calculator.domain.dto.responses.EffectiveRequestPerSecondResponse;
+import com.calculator.infrastructure.web.rest.BaseIntegrationTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.MvcResult;
 
+import static com.calculator.application.services.calculators.CostEfficiencyCalculator.SECONDS_PER_MONTH;
+import static com.calculator.infrastructure.web.rest.NetworkingCostCalculatorController.BYTES_PER_GB;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class Phase1BaseRpsCostDeltaSteps {
+public class Phase1BaseRpsCostDeltaSteps extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private int baseRps;
-    private String rpsDelta;
-    private ResultActions response;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    // ── Shared navigation step (reused across features) ──────────────────────
-    // This step is already declared in ChooseQualityAttributeSteps.
-    // Cucumber allows the same step text to be matched by one single method across
-    // the entire glue package; if you ever see "Ambiguous step definitions" move this
-    // into a shared SharedNavigationSteps class and remove it from both files.
+    @Autowired
+    private AWSDataTransferCostCalculationServiceAdapter dataTransferAdapter;
+
+    private int baseRps;
+    private EffectiveRequestPerSecondRequest requestPayload;
+    private EffectiveRequestPerSecondResponse apiResponse;
 
     @Given("a service with {int} requests per second")
     public void setBaseRps(Integer rps) {
         this.baseRps = rps;
+        this.requestPayload = new EffectiveRequestPerSecondRequest();
+        this.requestPayload.setBaseRequestPerSecond(rps);
     }
 
     @When("the architect selects a tactic that increases effective RPS by {string}")
-    public void selectTacticWithRpsDelta(String rpsDelta) {
-        // Store the tactic delta description for downstream assertion.
-        this.rpsDelta = rpsDelta;
+    public void selectTacticWithRpsDelta(String rpsDelta) throws Exception {
+        if (rpsDelta.contains("Retry Profile")) {
+            this.requestPayload.setRetryEnabled(true);
+            this.requestPayload.setRetryErrorPercentage(5);
+        } else if (rpsDelta.contains("SAGA Cascading")) {
+            this.requestPayload.setRetryEnabled(true);
+            this.requestPayload.setRetryErrorPercentage(100);
+        }
+
+        MvcResult result = mockMvc.perform(post("/api/tco/effective-rps")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestPayload)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        this.apiResponse = objectMapper.readValue(responseBody, EffectiveRequestPerSecondResponse.class);
+        assertNotNull(this.apiResponse, "The API response from /api/tco/effective-rps was null.");
     }
 
     @Then("the live cost delta panel shows an egress cost increase of approximately {string} per month")
-    public void verifyEgressCostDelta(String expectedDeltaUsd) throws Exception {
-        String body = """
-                {
-                  "baseRps": %d,
-                  "protoResponseSizeEffectiveBytes": 1200,
-                  "retryEnabled": true,
-                  "retryErrorRatePct": 5.0
-                }
-                """.formatted(baseRps);
+    public void verifyEgressCostDelta(String expectedDeltaUsd) {
+        double expectedCost = Double.parseDouble(
+                expectedDeltaUsd.replace("$", "")
+                        .replace("/ mo", "")
+                        .trim()
+        );
 
-        response = mockMvc.perform(post("/api/cost/tactic-contributions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
+        double effectiveRps = apiResponse.getEffectiveRps();
+        double baseRpsFromApi = apiResponse.getBaseRps();
+        double rpsDelta = Math.abs(effectiveRps - baseRpsFromApi);
 
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalTacticNetworkingDeltaUsd").exists())
-                .andExpect(jsonPath("$.contributions").isArray());
-    }
+        double responseSizeEffectiveBytes = 1200.0;
+        double secondsInMonth = SECONDS_PER_MONTH;
+        double bytesInGb = BYTES_PER_GB;
 
-    @Then("the API returns a cost delta of {string} for {int} base RPS and {string} tactic delta")
-    public void verifyApiCostDelta(String expectedCost, Integer rps, String delta) throws Exception {
-        String body = """
-                {
-                  "baseRps": %d,
-                  "protoResponseSizeEffectiveBytes": 1200,
-                  "retryEnabled": true,
-                  "retryErrorRatePct": 5.0
-                }
-                """.formatted(rps);
+        double calculatedGbPerMonth = (responseSizeEffectiveBytes * rpsDelta * secondsInMonth) / bytesInGb;
 
-        mockMvc.perform(post("/api/cost/tactic-contributions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalTacticNetworkingDeltaUsd").exists());
+        assertNotNull(dataTransferAdapter, "Data transfer cost adapter must be wired.");
+        double calculatedCost = dataTransferAdapter.calculateDataTransferCost(calculatedGbPerMonth);
+
+        assertEquals(expectedCost, calculatedCost, 0.05,
+                String.format("Egress incremental cost calculation mismatch. Expected: $%s, Calculated: $%s",
+                        expectedCost, calculatedCost));
     }
 }

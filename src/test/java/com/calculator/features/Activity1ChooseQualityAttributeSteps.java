@@ -8,7 +8,7 @@ import io.cucumber.java.en.Then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class ChooseQualityAttributeSteps extends BaseIntegrationTest {
+public class Activity1ChooseQualityAttributeSteps extends BaseIntegrationTest {
 
     private String currentRequirement;
     private String currentCharacteristic;

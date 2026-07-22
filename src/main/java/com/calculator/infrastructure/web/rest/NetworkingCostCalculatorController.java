@@ -2,7 +2,7 @@ package com.calculator.infrastructure.web.rest;
 
 import com.calculator.application.services.calculators.cost.cloud.ports.NetworkingCostCalculatorPort;
 import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
-import com.calculator.application.services.compilators.CompilationService;
+import com.calculator.application.services.compilators.ProtocolBufferCompilationService;
 import com.calculator.application.services.populator.TacticsPopulatorService;
 import com.calculator.application.services.protobuf.ProtocolBufferMessageSizeCalculationService;
 import com.calculator.application.services.protobuf.ProtocolBufferService;
@@ -44,7 +44,9 @@ import static com.calculator.shared.ProtocolBufferParsedFileUtils.initializeProt
 import static com.calculator.shared.ProtocolBufferParsedFileUtils.isValid;
 
 @Controller
-public class TCOCalculatorController implements ErrorController {
+public class NetworkingCostCalculatorController implements ErrorController {
+
+    private static final Logger log = Logger.getLogger(NetworkingCostCalculatorController.class.getName());
 
     public static final double BYTES_PER_GB = 1_073_741_824.0;
     public static final Locale DISPLAY_LOCALE = Locale.forLanguageTag("en-US");
@@ -57,13 +59,13 @@ public class TCOCalculatorController implements ErrorController {
             """;
 
     @Autowired
-    NetworkingCostCalculatorPort networkingCostCalculator;
+    TacticsPopulatorService tacticsModelPopulatorService;
 
     @Autowired
     ProtocolBufferService protocolBufferService;
 
     @Autowired
-    CompilationService compilationService;
+    ProtocolBufferCompilationService compilationService;
 
     @Autowired
     ProtocolBufferMessageSizeCalculationService protocolBufferMessageSizeCalculationService;
@@ -72,19 +74,10 @@ public class TCOCalculatorController implements ErrorController {
     RequestPerSecondCostCalculatorService requestsPerSecondCalculatorService;
 
     @Autowired
-    TacticsPopulatorService tacticsModelPopulatorService;
+    NetworkingCostCalculatorPort networkingCostCalculator;
 
-    private final Logger log = Logger.getLogger(TCOCalculatorController.class.getName());
-
-    @RequestMapping("/")
-    public String init(Model model) {
-        model.addAttribute("requestMessageBytes", "");
-        model.addAttribute("responseMessageBytes", "");
-        return "calculator";
-    }
-
-    @PostMapping("/calculateTCO")
-    public String calculateProtoFileTCONetworkingCosts(
+    @PostMapping("/calculateProtofileNetworkingCosts")
+    public String calculateProtoFileNetworkingCosts(
             @RequestParam("protoFile") MultipartFile protoFile,
             HttpSession session,
             Model model) {
@@ -100,11 +93,11 @@ public class TCOCalculatorController implements ErrorController {
             model.addAttribute("uploadMessage", NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
         }
 
-        String view = calculateTCO(protoFile, architecturalDecisionsDTO, model);
+        String view = calculateNetworkingCost(protoFile, architecturalDecisionsDTO, model);
         return (view != null) ? view : "calculator";
     }
 
-    private String calculateTCO(MultipartFile protoFile, ArchitecturalDecisionsDTO architecturalDecisionsDTO, Model model) {
+    private String calculateNetworkingCost(MultipartFile protoFile, ArchitecturalDecisionsDTO architecturalDecisionsDTO, Model model) {
         try {
             updateBytesSizeWithProtoFileSize(protoFile, model);
             Path protocolBufferFileDirectory = null;
@@ -133,7 +126,7 @@ public class TCOCalculatorController implements ErrorController {
 
                 long effectiveRequestsPerSecond = requestsPerSecondCalculatorService.calculateEffectiveRequestsPerSecond(architecturalDecisionsDTO);
                 populateTactics(architecturalDecisionsDTO, effectiveRequestsPerSecond, model);
-                showTCOCosts(effectiveRequestsPerSecond, model, protoProps, classLoader, architecturalDecisionsDTO);
+                displayNetworkingCosts(effectiveRequestsPerSecond, model, protoProps, classLoader, architecturalDecisionsDTO);
 
             } catch (Exception e) {
                 model.addAttribute("error", "Error: " + e.getMessage());
@@ -167,8 +160,8 @@ public class TCOCalculatorController implements ErrorController {
         model.addAttribute("rpsWasAdjusted", effectiveRps != requestsPerSecond);
     }
 
-    private void showTCOCosts(long effectiveRps,
-                              Model model, ProtoFileFullyQualifiedProperties protoProps, URLClassLoader classLoader, ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
+    private void displayNetworkingCosts(long effectiveRps,
+                                        Model model, ProtoFileFullyQualifiedProperties protoProps, URLClassLoader classLoader, ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
 
         MessageSizeCalculationResult requestResult = calculateRequestMessageSize(model, classLoader, protoProps.fullRequestMessageClassName());
         MessageSizeCalculationResult responseResult = calculateResponseMessageSize(model, classLoader, protoProps.fullResponseMessageClassName());
@@ -191,7 +184,9 @@ public class TCOCalculatorController implements ErrorController {
         model.addAttribute("requestsPerMonth",    compactNumberFormat.format(requestsPerMonth));
         model.addAttribute("requestGbPerMonth",   String.format(DISPLAY_LOCALE, "%,.4f",  requestGbPerMonth));
         model.addAttribute("responseGbPerMonth",  String.format(DISPLAY_LOCALE, "%,.4f",  responseGbPerMonth));
+        log.info("Response Gb per month: " +  String.format(DISPLAY_LOCALE, "%,.4f",  responseGbPerMonth));
         model.addAttribute("dataTransferCostUsd", String.format(DISPLAY_LOCALE, "%,.2f", dataTransferCostUsd));
+        log.info("Data transfer costs: " +  String.format(DISPLAY_LOCALE, "%,.2f", dataTransferCostUsd));
 
         showEffectiveSizesAndSecurityOverheadDetailForResultsTable(model, architecturalDecisionsDTO.securityTactics(), requestResult, responseResult, effectiveRequestSize, effectiveResponseSize, tlsOverhead, jwtOverhead);
     }
@@ -199,6 +194,7 @@ public class TCOCalculatorController implements ErrorController {
     private static void showEffectiveSizesAndSecurityOverheadDetailForResultsTable(Model model, SecurityTactics security, MessageSizeCalculationResult requestResult, MessageSizeCalculationResult responseResult, long effectiveRequestSize, long effectiveResponseSize, int tlsOverhead, int jwtOverhead) {
         model.addAttribute("requestSize",        requestResult.size());
         model.addAttribute("responseSize",        responseResult.size());
+        log.info("Response effective size: " + responseResult.size());
         model.addAttribute("requestSizeEffective", effectiveRequestSize);
         model.addAttribute("responseSizeEffective", effectiveResponseSize);
         model.addAttribute("securityByteOverheadApplied",
@@ -266,6 +262,7 @@ public class TCOCalculatorController implements ErrorController {
         try {
             result = protocolBufferMessageSizeCalculationService.getMessageSize(classLoader, fullClassName);
             model.addAttribute("responseSize", result.size());
+            log.info("responseSize: " + result.size());
         } catch (ClassNotFoundException e) {
             log.warning(e.getMessage());
             model.addAttribute("responseSize", 0);
@@ -287,6 +284,7 @@ public class TCOCalculatorController implements ErrorController {
     private static void updateBytesSizeWithProtoFileSize(MultipartFile protoFile, Model model) {
         model.addAttribute("uploadMessage",
                 "File '" + protoFile.getOriginalFilename() + "' uploaded successfully!");
+        log.info("File '" + protoFile.getOriginalFilename() + "' uploaded successfully!");
         model.addAttribute("requestMessageBytes",
                 "Request Message bytes: " + protoFile.getSize() + " calculated successfully.");
         model.addAttribute("responseMessageBytes",

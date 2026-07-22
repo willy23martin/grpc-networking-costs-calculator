@@ -654,7 +654,7 @@
                         <div class="tactics-category-body" id="body-alb">
                             <div class="notice notice-blue" style="margin-bottom:12px;">
                                 <i class="fas fa-info-circle"></i>
-                                <div>If you selected <strong>Client-side or Server-side Load Balancing</strong> above, an Application Load Balancer is likely part of your architecture. ALB costs have two components: a fixed hourly charge per ALB, and a Load Capacity Unit (LCU) charge based on traffic volume.</div>
+                                <div>If you selected <strong>Server-side Load Balancing</strong> above, an Application Load Balancer is likely part of your architecture. ALB costs have two components: a fixed hourly charge per ALB, and a Load Capacity Unit (LCU) charge based on traffic volume.</div>
                             </div>
                             <div id="alb-loading" style="font-size:.82rem;color:var(--ink-light);padding:8px 0;"><span class="spinner"></span> Fetching ALB pricing from AWS…</div>
                             <div id="alb-content" style="display:none;">
@@ -675,6 +675,7 @@
                                         <div class="tactic-input-group"><input type="number" id="input-alb-lcu" min="0" placeholder="5"><span class="tactic-unit">LCUs/hr</span></div>
                                     </div>
                                     <div id="alb-result" class="live-preview visible" style="display:block;margin-top:8px;"></div>
+                                    <div id="alb-finops-notes" style="display:none;margin-top:6px;padding:8px 12px;border-radius:var(--r);background:linear-gradient(135deg,#fefce8,#fef9c3);border:1px solid var(--gold-border);font-size:.8rem;color:var(--ink-medium);"></div>
                                 </div>
                             </div>
                         </div>
@@ -835,7 +836,7 @@
                                             <label class="tactic-label" for="cef-spot">Spot Instances <span class="warning-badge badge-warn" style="font-size:.62rem;">Non-prod</span></label>
                                             <span class="tactic-description">Up to 90% savings vs on-demand. Ideal for dev/test/staging. Requires interruption-tolerant workloads.</span>
                                         </div>
-                                        <div class="tactic-input-group"><select id="input-spot-pct" onchange="recalculateContainerCost()" style="width:155px;"><option value="0">&mdash; None &mdash;</option><option value="50">~50% saving</option><option value="70">~70% saving</option><option value="90">~90% saving</option></select><span class="tactic-unit">vs on-demand</span></div>
+                                        <div class="tactic-input-group"><select id="input-spot-pct" onchange="recalculateContainerCost()" style="width:155px;"><option value="0">&mdash; None &mdash;</option><option value="70">~70% saving (typical, Spot Advisor)</option><option value="90">~90% saving (max, GPU/flexible)</option></select><span class="tactic-unit">vs on-demand</span></div>
                                     </div>
                                     <!-- RI/SP discounts moved to FinOps Cost Optimisation section below -->
                                     <div class="notice notice-gold" style="margin:6px 0 10px;"><i class="fas fa-tags"></i>
@@ -1238,7 +1239,7 @@
 </div>
 
 <!-- Hidden form that submits to backend — input populated from phase 2 file picker -->
-<form id="uploadForm" action="/calculateTCO" method="post" enctype="multipart/form-data" style="display:none;">
+<form id="uploadForm" action="/calculateProtofileNetworkingCosts" method="post" enctype="multipart/form-data" style="display:none;">
     <input type="file" id="protoFile" name="protoFile" accept=".proto">
 </form>
 
@@ -1571,7 +1572,7 @@
             Important: Validate This TCO Report Before Acting On It
         </div>
         <div class="footer-warning-body">
-            This tool provides an <strong>architectural estimate</strong> of networking TCO based on the parameters you have modelled.
+            This tool provides an <strong>architectural estimate</strong> of TCO based on the parameters you have modelled.
             It is a starting point for financial planning — not a final procurement decision. Before presenting, approving, or budgeting
             based on these figures, you should present, validate, and discuss this report with all relevant stakeholders.
         </div>

@@ -1,6 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.dto.requests.UnitEconomicsRequest;
+import com.calculator.domain.dto.requests.TCOUnitEconomicsRequest;
 import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
 import com.calculator.domain.repository.cloud.resiliency.CloudResiliencyArchitecturalDecisionRepository;
 import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
@@ -22,7 +22,7 @@ import java.util.Collections;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class UnitEconomicsControllerTest extends BaseIntegrationTest {
+class TCOUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -89,7 +89,7 @@ class UnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Test
     void calculateUnitEconomics_noRevenueAndZeroTotals() throws Exception {
-        UnitEconomicsRequest req = new UnitEconomicsRequest();
+        TCOUnitEconomicsRequest req = new TCOUnitEconomicsRequest();
         req.cloudInfraCostUsd = 0.0;
         req.egressTransferCostUsd = 0.0;
         req.effectiveRps = 0;
