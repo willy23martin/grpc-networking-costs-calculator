@@ -120,7 +120,7 @@ public class AWSALBCostCalculatorAdapter extends AWSCloudCalculatorAdapter imple
             albCostMap.put("lcuPricingTiers",  lcuTiers.isEmpty()
                     ? List.of(Map.of("note", "no tiers returned"))
                     : lcuTiers);
-            albCostMap.put("finopsNotes",      buildFinopsNotes(resolvedFixed, resolvedLcu)); // TODO - to be shown in the Unit Economics notes
+            albCostMap.put("finopsNotes",      buildFinopsNotes(resolvedFixed, resolvedLcu));
             albCostMap.put("source",           fixedPerHour > 0 ? "AWS Pricing API" : "fallback");
 
         } catch (Exception e) {

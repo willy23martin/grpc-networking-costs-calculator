@@ -33,7 +33,7 @@ public class CloudArchitecturalDecisionRepository {
 
         return CloudService.builder()
                 .cloudProvider(CloudProvider.AWS)
-                .id("tactic-eks-controlplane")
+                .id("service-eks-controlplane")
                 .name("AWS EKS")
                 .architecturalCharacteristic(
                         ArchitecturalCharacteristic.builder()

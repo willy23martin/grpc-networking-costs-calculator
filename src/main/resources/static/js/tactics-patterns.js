@@ -498,7 +498,7 @@ function loadApiGwSection() {
     return;
   }
 
-  fetch('/api/aws/api-gateway-pricing')
+  fetch('/api/cloud/api-gateway-pricing')
     .then(response => response.ok ? response.json() : null)
     .then(data => {
       apiGatewayPricingDatabase = data || API_GATEWAY_FALLBACK_PRICING;
@@ -624,7 +624,7 @@ function collectTacticContributions(baseRequestsPerSecond, backendResult) {
 }
 
 function fetchAwsPrice(endpoint) {
-  return fetch('/api/aws/' + endpoint).then(function (response) {
+  return fetch('/api/cloud/' + endpoint).then(function (response) {
     if (!response.ok) throw new Error('HTTP ' + response.status);
     return response.json();
   });

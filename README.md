@@ -53,26 +53,26 @@ The service can be parametrized before building it to use a Cloud Service Provid
 
 ### MVC Controllers
 
-| Controller Class Name                    | Request Method & Endpoint Path | Replaces JS function / Description |
-|------------------------------------------|---|---|
-| `TCOCalculatorController`                | `POST /` | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
-| `ContainerizedEnvironmentCostController` | `GET /api/aws/ec2-instances` | Fetches live compute node on-demand/fallback definitions |
-| `CloudTCOCalculatorController`           | `GET /api/aws/alb-pricing` | Provides base structural load balancer tier schemas |
-| `CloudTCOCalculatorController`           | `GET /api/aws/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
-| `CloudTCOCalculatorController`           | `GET /api/aws/security-services` | `recalculateSecCost()` (Native AWS protection parameters) |
-| `CloudTCOCalculatorController`           | `GET /api/aws/cost-optimisation` | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
-| `CloudTCOCalculatorController`           | `GET /api/aws/caching-pricing` | `recalculateCaching()` (Cache tier sizing matrices) |
-| `EffectiveRPSCalculatorController`       | `POST /api/tco/effective-rps` | `recalculateRps()` (Network overhead scaling limits evaluation) |
-| `FinOpsDiscountController`               | `POST /api/finops/container-discounts` | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
-| `PortfolioUnitEconomicsController`       | `POST /api/portfolio/roi` | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
-| `UnitEconomicsController`                | `POST /api/cost/unit-economics` | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
-| `ReliabilityTacticsController`           | `GET /api/reliability/tactic-mappings` | Lists qualitative score matrices for streaming protocols |
-| `ResiliencyPatternsController`           | `GET /api/resiliency/tactic-mappings` | Lists resiliency structural tradeoff profiles |
-| `SecurityTacticsController`              | `GET /api/security/tactic-mappings` | Lists channel security tactic constraints profiles |
-| `TacticsContributionController`          | `POST /api/cost/tactic-contributions` | Quantifies individual egress additions induced by architectural design decisions |
-| `TacticsSessionController`               | `POST /api/session/tactics` | Saves active architectural decisions into context state |
-| `TacticsSessionController`               | `GET /api/session/tactics` | Retrieves current architectural choices from session buffer |
-| `TacticsSessionController`               | `DELETE /api/session/tactics` | Purges tracked tactical options from the contextual storage |
+| Controller Class Name                    | Request Method & Endpoint Path           | Replaces JS function / Description |
+|------------------------------------------|------------------------------------------|---|
+| `TCOCalculatorController`                | `POST /`                                 | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
+| `ContainerizedEnvironmentCostController` | `GET /api/cloud/compute-instances`       | Fetches live compute node on-demand/fallback definitions |
+| `CloudTCOCalculatorController`           | `GET /api/cloud/alb-pricing`             | Provides base structural load balancer tier schemas |
+| `CloudTCOCalculatorController`           | `GET /api/cloud/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
+| `CloudTCOCalculatorController`           | `GET /api/cloud/security-services`       | `recalculateSecCost()` (Native AWS protection parameters) |
+| `CloudTCOCalculatorController`           | `GET /api/cloud/cost-optimisation`       | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
+| `CloudTCOCalculatorController`           | `GET /api/cloud/caching-pricing`         | `recalculateCaching()` (Cache tier sizing matrices) |
+| `EffectiveRPSCalculatorController`       | `POST /api/tco/effective-rps`            | `recalculateRps()` (Network overhead scaling limits evaluation) |
+| `FinOpsDiscountController`               | `POST /api/finops/container-discounts`   | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
+| `PortfolioUnitEconomicsController`       | `POST /api/portfolio/roi`                | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
+| `UnitEconomicsController`                | `POST /api/cost/unit-economics`          | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
+| `ReliabilityTacticsController`           | `GET /api/reliability/tactic-mappings`   | Lists qualitative score matrices for streaming protocols |
+| `ResiliencyPatternsController`           | `GET /api/resiliency/tactic-mappings`    | Lists resiliency structural tradeoff profiles |
+| `SecurityTacticsController`              | `GET /api/security/tactic-mappings`      | Lists channel security tactic constraints profiles |
+| `TacticsContributionController`          | `POST /api/cost/tactic-contributions`    | Quantifies individual egress additions induced by architectural design decisions |
+| `TacticsSessionController`               | `POST /api/session/tactics`              | Saves active architectural decisions into context state |
+| `TacticsSessionController`               | `GET /api/session/tactics`               | Retrieves current architectural choices from session buffer |
+| `TacticsSessionController`               | `DELETE /api/session/tactics`            | Purges tracked tactical options from the contextual storage |
 
 ### Ports & Adapters (Hexagonal Architecture)
 
@@ -126,80 +126,36 @@ This application leverages the Hexagonal Architecture pattern to decouple core b
 
 ## Design principles
 
-- Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/aws/*`) to each endpoint.
+- Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/cloud/*`) to each endpoint.
 - Backend returns **computed results** only — costs, breakdowns, labels.
 - No business logic in JS. JS = form collection + API call + render.
 
 ## Retry formula (preserved)
 `tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
 
-## 🏛️ Unit Economics & Financial Projection Formulas
+## 🏛️ Unit Economics & TCO formulas
 
-The system evaluates the financial viability and architectural cost-efficiency of gRPC microservices by correlating infrastructure and networking Total Cost of Ownership (TCO) against business performance metrics.
+The following table outlines the mathematical formulations used by the TCO Networking Costs Calculator to determine economic viability, compared against two distinct operational scenarios (ARPU = $15.00).
 
-### 1. Total Cost of Ownership (TCO)
-The monthly operational cost combines baseline data transmission contracts, tactical overhead (e.g., retries, hedging), and active cloud infrastructure resources minus any applied FinOps cloud savings.
-
-$$TCO = \text{Base Networking Cost} + \Delta\text{Tactical Network Cost} + \text{Gross Infra Cost} - \text{FinOps Discount}$$
-
-Where:
-* **Base Networking Cost:** Monthly egress expenditure derived strictly from baseline `.proto` message payloads executed at baseline RPS.
-* **$\Delta$ Tactical Network Cost:** Amplified egress overhead caused by resilience patterns (e.g., traffic retry multipliers).
-* **Gross Infra Cost:** Sum total of active AWS resource layers:
-  $$\text{Gross Infra} = \text{ALB} + \text{ElastiCache} + \text{API Gateway} + \text{Containers} + \text{EC2 Replicas} + \sum\text{CloudSecurityServices}$$
-
----
-
-### 2. Business Workload Projections
-To convert raw technical metrics into business dimensions, the system calculates execution frequency over standard operational time horizons.
-
-#### Monthly Transaction Volume
-Calculates the total business request interactions processed over a standardized 30-day operational window ($2,592,000\text{ seconds}$).
-
-$$\text{Monthly Transactions} = \text{Base RPS} \times 2,592,000$$
-
-#### Generated Monthly Revenue
-Converts operational transactions directly into financial gross output based on transaction yield.
-
-$$\text{Monthly Revenue} = \text{Monthly Transactions} \times \text{Expected Revenue per Transaction}$$
+| Metric | Mathematical Formula | Scenario 1 (Optimized) | Scenario 2 (Unoptimized) |
+| :--- | :--- | :--- | :--- |
+| **RPS** | System Load | 1,000 | 1,050 |
+| **Consumers** | Paying Tenants | 350 | 350 |
+| **ARPU** | Revenue Per User | $15.00 | $15.00 |
+| **Total Monthly TCO** | $Egress + Cloud$ | $2,592.00 | $5,443.20 |
+| **Monthly Requests** | $RPS \times 2.592M$ | 2,592,000,000 | 2,721,600,000 |
+| **Cost per Request** | $TCO / Requests$ | $0.000001 | $0.000002 |
+| **Cost per User/Mo** | $TCO / Consumers$ | $7.4057 | $15.5520 |
+| **Cost per User/Day** | $CostPerUser / 30$ | $0.2469 | $0.5184 |
+| **Monthly Revenue** | $Consumers \times ARPU$ | $5,250.00 | $5,250.00 |
+| **Net Monthly Profit** | $Rev - TCO$ | +$2,658.00 | -$193.20 |
+| **Monthly ROI %** | $(Profit / TCO) \times 100$ | +102.55% | -3.55% |
+| **Break-Even Users** | $\lceil TCO / ARPU \rceil$ | 173 | 363 |
+| **Net Margin/User** | $ARPU - CostPerUser$ | +$7.5943 | -$0.5520 |
 
 ---
+*Note: Scenario 2 demonstrates a deficit state where current user demand is insufficient to cover the high-scale infrastructure costs, requiring either structural optimization or an increase in consumer footprint.*
 
-### 3. Financial Optimization & Efficiency Ratios
-
-#### Infrastructure Efficiency Ratio
-Quantifies the business revenue leverage obtained for every \$1.00 USD invested in the underlying cloud infrastructure footprint.
-
-$$\text{Infrastructure Efficiency Ratio} = \frac{\text{Generated Monthly Revenue}}{TCO}$$
-
-#### Break-Even Transaction Volume
-Determines the strict technical floor of monthly transaction interactions required to fully offset the service's operational TCO.
-
-$$\text{Break-Even Transactions} = \frac{TCO}{\text{Expected Revenue per Transaction}}$$
-
-#### Break-Even Active Users
-Determines the required active user base necessary to achieve financial equilibrium, assuming a standardized distribution of user transaction frequencies.
-
-$$\text{Break-Even Users} = \max\left(0, \left\lceil \frac{\text{Break-Even Transactions}}{\text{Monthly Transactions per User}} \right\rceil\right)$$
-
----
-
-### 4. Return on Investment (ROI) Metrics
-
-#### Baseline ROI (Without FinOps Optimization)
-Measures the net profitability percentage of the architecture relying purely on on-demand infrastructure costs before any strategic commitment discounts are evaluated.
-
-$$ROI_{\text{Baseline}} = \left( \frac{\text{Generated Monthly Revenue} - \text{Gross TCO}_{\text{On-Demand}}}{\text{Gross TCO}_{\text{On-Demand}}} \right) \times 100$$
-
-#### FinOps-Adjusted ROI
-Calculates the optimized financial efficiency of the architecture once cloud spend optimization tactics (e.g., Compute Savings Plans, EC2 Reserved Instances) have shifted the cost curve down.
-
-$$ROI_{\text{FinOps}} = \left( \frac{\text{Generated Monthly Revenue} - TCO_{\text{Optimized}}}{TCO_{\text{Optimized}}} \right) \times 100$$
-
-#### ROI Net Improvement Delta
-Isolates the exact financial margin percentage recovered purely through active FinOps interventions.
-
-$$\Delta ROI = ROI_{\text{FinOps}} - ROI_{\text{Baseline}}$$
 
 ## How to run it?
 1. Execute ``mvn clean install -e`` from your terminal in order to generate the gRPCTCONetworkingCostCalculator **jar file**.
@@ -262,6 +218,38 @@ $$\Delta ROI = ROI_{\text{FinOps}} - ROI_{\text{Baseline}}$$
 
 ![Phase 4 report example - Portfolio with FinOps savings.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20Portfolio%20with%20FinOps%20savings.png)
 
+## Notes on containerized costs:
+## EKS Cost Breakdown
+
+### Overview
+
+The total cost of running an Amazon EKS cluster consists of two distinct components:
+
+1. **EKS Control Plane Fee** – A fixed charge for managing the Kubernetes control plane.
+2. **EC2 Worker Nodes** – The compute cost for the instances running your workloads.
+
+These charges are **not duplicated**; they represent separate AWS services.
+
+### Cost Components
+
+| Component | Pricing | Approx. Monthly Cost |
+|-----------|---------|----------------------|
+| **EKS Control Plane** | $0.10/hour per cluster | ~$73/month |
+| **EC2 Worker Nodes** (e.g., t3.medium) | $0.0416/hour per instance (us-east-1) | ~$30/month per node |
+
+### Key Points
+
+- The **$73/month** charge is **only** for the EKS control plane.
+- **EC2 worker nodes** (e.g., t3.medium) are billed **separately** as standard EC2 instances.
+- **Reserved Instances (RI)** or **Compute Savings Plans** apply **only to the EC2 worker node costs**, not the EKS control plane fee.
+- Therefore, a FinOps RI discount should be applied to the **total EC2 worker node cost** (e.g., $30.37), not to the control plane charge.
+
+### Example Monthly Cost (1 cluster + 1 t3.medium node)
+
+- **EKS Control Plane**: ~$73
+- **1× t3.medium (On-Demand)**: ~$30
+- **Total**: ~$103/month (before RI/SP discounts)
+
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
 2. [Data Transfer OUT From Amazon EC2 To Internet](https://aws.amazon.com/ec2/pricing/on-demand/).
@@ -290,6 +278,9 @@ $$\Delta ROI = ROI_{\text{FinOps}} - ROI_{\text{Baseline}}$$
 25. [System Design on AWS](https://www.oreilly.com/library/view/system-design-on/9781098146887/).
 26. [Efficient Cloud FinOps](https://www.oreilly.com/library/view/efficient-cloud-finops/9781805122579/).
 27. [AWS Certified Solutions Architect](https://www.oreilly.com/library/view/aws-certified-solutions/9781119982623/).
+28. [AWS EKS Pricing](https://aws.amazon.com/eks/pricing/)
+29. [EKS Pricing: A Complete Breakdown (2025 Guide)](https://www.devzero.io/blog/eks-pricing)
+30. [AWS EKS Cluster Pricing - StackSimplify](https://docs.stacksimplify.com/aws-eks/eks-cluster/eks-cluster-pricing/)
 
 ## Credits
 [CREDITS.md](CREDITS.md)

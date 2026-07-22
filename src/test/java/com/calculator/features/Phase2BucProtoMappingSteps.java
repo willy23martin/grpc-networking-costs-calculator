@@ -5,17 +5,30 @@ import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.And;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.containsString;
 
 public class Phase2BucProtoMappingSteps {
 
+    public static final String CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES = "classpath:static/protos/";
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ResourceLoader resourceLoader;
 
     private String selectedBucId;
     private ResultActions response;
@@ -38,6 +51,8 @@ public class Phase2BucProtoMappingSteps {
 
     @Then("the tool automatically loads {string} into application state")
     public void verifyProtoAutoLoaded(String protoFile) throws Exception {
+        Resource resource = resourceLoader.getResource(CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES + protoFile);
+        assertTrue(resource.exists());
         response.andExpect(status().isOk());
     }
 
@@ -67,6 +82,38 @@ public class Phase2BucProtoMappingSteps {
 
     @Then("{string} is loaded and {string} is shown as the pattern badge")
     public void verifyProtoAndBadge(String protoFile, String rpcType) throws Exception {
+        Resource resource = resourceLoader.getResource(CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES + protoFile);
+        assertTrue(resource.exists());
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            String protoContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            String normalizedContent = protoContent.replaceAll("\\s+", " ");
+
+            Pattern rpcPattern = Pattern.compile("rpc\\s+\\w+\\s*\\(([^)]+)\\)\\s*returns\\s*\\(([^)]+)\\)");
+            Matcher matcher = rpcPattern.matcher(normalizedContent);
+
+            assertTrue(matcher.find());
+
+            String inputParam = matcher.group(1);
+            String outputParam = matcher.group(2);
+
+            boolean streamInInput = inputParam.contains("stream");
+            boolean streamInOutput = outputParam.contains("stream");
+
+            String detectedRpcType;
+            if (streamInInput && streamInOutput) {
+                detectedRpcType = "Bi-Directional Streaming";
+            } else if (streamInInput) {
+                detectedRpcType = "Client Streaming";
+            } else if (streamInOutput) {
+                detectedRpcType = "Server Streaming";
+            } else {
+                detectedRpcType = "Unary RPC";
+            }
+
+            assertEquals(rpcType, detectedRpcType);
+        }
+
         response.andExpect(status().isOk());
     }
 }

@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-public class ChooseTacticsToPromoteQualityAttributesSteps extends BaseIntegrationTest {
+public class Activity2ChooseTacticsToPromoteQualityAttributesSteps extends BaseIntegrationTest {
 
     private String architecturalCharacteristic;
     private String specificTactic;

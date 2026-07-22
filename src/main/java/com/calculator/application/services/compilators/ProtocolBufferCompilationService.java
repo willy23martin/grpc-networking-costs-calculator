@@ -15,11 +15,11 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @Service
-public class CompilationService {
+public class ProtocolBufferCompilationService {
 
     private final Path protobufJarPath;
 
-    public CompilationService(Path protobufJarPath) {
+    public ProtocolBufferCompilationService(Path protobufJarPath) {
         this.protobufJarPath = protobufJarPath;
     }
 

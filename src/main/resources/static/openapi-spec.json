@@ -76,7 +76,7 @@
         }
       }
     },
-    "/api/aws/ec2-instances": {
+    "/api/cloud/compute-instances": {
       "get": {
         "tags": ["Cloud TCO Resources"],
         "summary": "Fetch live or fallback pricing data for compute EC2 instances",
@@ -98,7 +98,7 @@
         }
       }
     },
-    "/api/aws/alb-pricing": {
+    "/api/cloud/alb-pricing": {
       "get": {
         "tags": ["Cloud TCO Resources"],
         "summary": "Get baseline AWS ALB resource pricing structural schemas",
@@ -117,7 +117,7 @@
         }
       }
     },
-    "/api/aws/database-backup-pricing": {
+    "/api/cloud/database-backup-pricing": {
       "get": {
         "tags": ["Cloud TCO Resources"],
         "summary": "Get database storage and snapshot backup pricing frameworks",
@@ -136,7 +136,7 @@
         }
       }
     },
-    "/api/aws/security-services": {
+    "/api/cloud/security-services": {
       "get": {
         "tags": ["Cloud TCO Resources"],
         "summary": "Fetch baseline costs for AWS native protection services",
@@ -155,7 +155,7 @@
         }
       }
     },
-    "/api/aws/cost-optimisation": {
+    "/api/cloud/cost-optimisation": {
       "get": {
         "tags": ["Cloud TCO Resources"],
         "summary": "Fetch cost optimization rules and FinOps tactic strategies",
@@ -174,7 +174,7 @@
         }
       }
     },
-    "/api/aws/caching-pricing": {
+    "/api/cloud/caching-pricing": {
       "get": {
         "tags": ["Cloud TCO Resources"],
         "summary": "Retrieve baseline cache instance tier allocations",

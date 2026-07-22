@@ -10,73 +10,87 @@ workspace {
                 // ==========================================
                 // LAYER 1: ENTRY POINT (FAR LEFT)
                 // ==========================================
-                thymeleafUi = component "Thymeleaf Web UI" "Server-side rendered user interface templates for the cloud architect dashboard." "Thymeleaf MVC Views"
+                thymeleafUi = component "Thymeleaf Web UI" "Server-side rendered user interface templates for the software architect UI." "Thymeleaf MVC Views"
 
                 // ==========================================
                 // LAYER 2: PRIMARY ADAPTERS (MIDDLE LEFT)
                 // ==========================================
-                tcoController = component "TCO Calculator Controller" "Handles .proto payload sizes, networking egress allocations, and macro TCO breakdown." "Spring RestController"
-                cloudServicesTccController = component "Cloud Services TCC Calculator Controller" "Exposes AWS infrastructure baseline pricing endpoints (EC2, ALB, DB, Caching)." "Spring RestController"
-                containerizedCostController = component "Containerized Environment Cost Controller" "Calculates EKS and managed container infrastructure overhead." "Spring RestController"
-                finopsDiscountController = component "FinOps Discount Controller" "Exposes active cloud Savings Plans and Reserved Instances (RI) optimization metrics." "Spring RestController"
-                unitEconomicsController = component "Unit Economics Controller" "Computes structural unit costs and macro application affordability metrics." "Spring RestController"
+                tcoController = component "NetworkingCostCalculatorController" "Handles .proto payload sizes, networking egress allocations." "Spring RestController"
+                cloudServicesTccController = component "Cloud Services TCC Calculator Controller" "Exposes AWS infrastructure baseline costs endpoints (EC2, ALB, DB, Caching) for calculating TCC for each service." "Spring RestController"
+                containerizedCostController = component "Containerized Environment Cost Controller" "Exposes the container infrastructure costs calculation endpoint." "Spring RestController"
+                finopsDiscountController = component "FinOps Discount Controller" "Exposes available cloud Savings Plans and Reserved Instances (RI) optimization options." "Spring RestController"
+                unitEconomicsController = component "TCO and Unit Economics Controller" "Handles TCO and unit economics computation requests." "Spring RestController"
+
+                // ==========================================
+                // LAYER 2.5: PROTOCOL BUFFER PARSERS, SERVICES & COMPILERS (ADDED FOR NETWORKING CONTROLLER)
+                // ==========================================
+                protocolBufferService = component "Protocol Buffer Service" "Parses uploaded .proto files into structured format." "Spring Service"
+                protocolBufferCompilationService = component "Protocol Buffer Compilation Service" "Compiles generated Java classes from parsed protocol buffers." "Spring Service"
+                protocolBufferMessageSizeCalculationService = component "Protocol Buffer Message Size Calculation Service" "Calculates the exact message byte sizes via reflection and class loaders." "Spring Service"
+                requestsPerSecondCalculatorService = component "Request Per Second Cost Calculator Service" "Calculates effective requests per second based on architectural tactics." "Spring Service"
 
                 // ==========================================
                 // LAYER 3: APPLICATION CORE PORTS & SERVICES (CENTER LINE)
                 // ==========================================
                 cloudComputeCostPort = component "Cloud Compute Cost Calculator Port" "Interface for computing instance-level compute baseline infrastructure costs." "Java Interface (Port)"
-                albCostPort = component "ALB Cost Calculator Port" "Interface for computing Application Load Balancer entry-point overhead." "Java Interface (Port)"
-                databaseCostPort = component "Database Cost Calculator Port" "Interface for multi-AZ, Aurora storage engine, and DynamoDB pricing." "Java Interface (Port)"
-                finopsStrategyCostPort = component "FinOps Strategy Cost Calculator Port" "Interface for modeling optimized optimization structures and dynamic cloud discounts." "Java Interface (Port)"
-                containerizedCostPort = component "Containerized Cost Calculator Port" "Interface for cluster control planes and serverless task models." "Java Interface (Port)"
-                networkingCostPort = component "Networking Cost Calculator Port" "Interface for computing network egress data transfer variables." "Java Interface (Port)"
+                albCostPort = component "ALB Cost Calculator Port" "Interface for computing Application Load Balancer entry-point costs." "Java Interface (Port)"
+                databaseCostPort = component "Database Cost Calculator Port" "Interface for multi-AZ, Aurora storage engine, and DynamoDB costs." "Java Interface (Port)"
+                finopsStrategyCostPort = component "FinOps Strategy Cost Calculator Port" "Interface for computing FinOps optimization strategies for cloud discounts." "Java Interface (Port)"
+                containerizedCostPort = component "Containerized Cost Calculator Port" "Interface for calculating containerization services costs." "Java Interface (Port)"
+                networkingCostPort = component "Networking Cost Calculator Port" "Interface for computing network egress data transfer costs." "Java Interface (Port)"
 
                 // Added CostEfficiencyCalculator Service
-                costEfficiencyCalculator = component "Cost Efficiency Calculator" "Computes structural unit costs, TCO totals, and monthly ROI margins." "Spring Service"
+                costEfficiencyCalculator = component "Cost Efficiency Calculator" "Computes unit economics, TCO totals, and monthly ROI margins." "Spring Service"
 
                 // ==========================================
                 // LAYER 4: SECONDARY ADAPTERS & DOMAIN ENTITIES (MIDDLE RIGHT)
                 // ==========================================
-                ec2ComputeAdapter = component "AWS Compute Cost Calculator Adapter" "Fetches and models Amazon EC2 instance prices via Cloud Client." "Java Class (Adapter)"
-                awsAlbAdapter = component "AWS ALB Cost Calculator Adapter" "Calculates AWS Application Load Balancer matrix calculations." "Java Class (Adapter)"
-                awsDatabaseAdapter = component "AWS Database Cost Calculator Adapter" "Calculates global engine storage metrics." "Java Class (Adapter)"
-                awsFinopsStrategyAdapter = component "AWS FinOps Strategy Cost Calculator Adapter" "Calculates standard optimization saving options." "Java Class (Adapter)"
-                eksContainersAdapter = component "AWS Containers Cost Calculator Adapter" "Fetches resource allocation schemas for orchestrators." "Java Class (Adapter)"
-                awsDataTransferAdapter = component "AWS Data Transfer Cost Calculator Adapter" "Calculates inter-zone and public internet transfer data rates." "Java Class (Adapter)"
+                ec2ComputeAdapter = component "AWS Compute Cost Calculator Adapter" "Calculates Amazon EC2 instance costs via the AWS PricingClient." "Java Class (Adapter)"
+                awsAlbAdapter = component "AWS ALB Cost Calculator Adapter" "Calculates the AWS Application Load Balancer costs via the AWS PricingClient." "Java Class (Adapter)"
+                awsDatabaseAdapter = component "AWS Database Cost Calculator Adapter" "Calculates the database and storage costs via the AWS PricingClient." "Java Class (Adapter)"
+                awsFinopsStrategyAdapter = component "AWS FinOps Strategy Cost Calculator Adapter" "Calculates standard costs optimization saving options." "Java Class (Adapter)"
+                eksContainersAdapter = component "AWS Containers Cost Calculator Adapter" "Calculates containerization and orchestrator costs via the AWS PricingClient." "Java Class (Adapter)"
+                awsDataTransferAdapter = component "AWS Data Transfer Cost Calculator Adapter" "Calculates public internet transfer data rates (pricing) via the AWS PricingClient." "Java Class (Adapter)"
 
                 // Added Architectural Decision domain abstraction
-                architecturalDecision = component "Architectural Decision" "Domain entity model encapsulating quality characteristics and affordability impacts." "Java Sealed Class"
+                architecturalDecision = component "Architectural Decision" "Domain class that encapsulates tactics, patterns, architectural characteristics and cost factors (affordability impacts)." "Java Sealed Class"
             }
         }
 
         // External System Boundary (FAR RIGHT)
-        aws = softwareSystem "Amazon Web Services (AWS)" "Provides current localized cloud service catalog schemas." "Existing System"
+        aws = softwareSystem "Amazon Web Services (AWS)" "Provides current localized cloud service catalog schemas and prices." "Existing System"
 
         // ==========================================
         // RELATIONSHIPS & STRUCTURAL LAYOUT DIRECTIONS
         // ==========================================
 
         // Architect to UI
-        softwarearchitect -> thymeleafUi "Interacts with dashboard UI elements via"
+        softwarearchitect -> thymeleafUi "Interacts with the tool's UI elements via"
 
         // UI to Controllers (Pushes Controllers right of UI)
-        thymeleafUi -> tcoController "Submits calculations to"
-        thymeleafUi -> cloudServicesTccController "Queries baseline infrastructure from"
-        thymeleafUi -> containerizedCostController "Requests container infrastructure metrics from"
+        thymeleafUi -> tcoController "Submits networking costs calculations to"
+        thymeleafUi -> cloudServicesTccController "Queries baseline infrastructure costs from"
+        thymeleafUi -> containerizedCostController "Requests container infrastructure costs from"
         thymeleafUi -> finopsDiscountController "Applies cost optimization strategies through"
-        thymeleafUi -> unitEconomicsController "Evaluates business viability constraints via"
+        thymeleafUi -> unitEconomicsController "Evaluates cost-effiency via"
+
+        // Controllers to Internal Protobuf Services & Ports
+        tcoController -> protocolBufferService "Parses .proto files using"
+        tcoController -> protocolBufferCompilationService "Compiles generated classes via"
+        tcoController -> protocolBufferMessageSizeCalculationService "Calculates payload sizes using"
+        tcoController -> requestsPerSecondCalculatorService "Computes effective RPS via"
+        tcoController -> networkingCostPort "Drives"
 
         // Controllers to Ports & Services (Pushes Core right of Controllers)
         cloudServicesTccController -> cloudComputeCostPort "Drives"
         cloudServicesTccController -> albCostPort "Drives"
         cloudServicesTccController -> databaseCostPort "Drives"
 
-        tcoController -> networkingCostPort "Drives"
         containerizedCostController -> containerizedCostPort "Drives"
         finopsDiscountController -> finopsStrategyCostPort "Drives"
 
         // Relationship between Controller and newly added Service
-        unitEconomicsController -> costEfficiencyCalculator "Delegates unit costs and ROI calculation to"
+        unitEconomicsController -> costEfficiencyCalculator "Delegates unit economics and ROI calculations to"
 
         // Service to Domain relationships
         costEfficiencyCalculator -> architecturalDecision "Evaluates tradeoffs and constraints defined in"

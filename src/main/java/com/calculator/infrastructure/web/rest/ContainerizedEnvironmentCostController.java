@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/aws")
+@RequestMapping("/api/cloud")
 @CrossOrigin(origins = "*")
 public class ContainerizedEnvironmentCostController {
 

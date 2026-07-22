@@ -1,7 +1,7 @@
 package com.calculator.application.services.calculators;
 
-import com.calculator.domain.dto.requests.UnitEconomicsRequest;
-import com.calculator.domain.dto.responses.UnitEconomicsResponse;
+import com.calculator.domain.dto.requests.TCOUnitEconomicsRequest;
+import com.calculator.domain.dto.responses.TCOUnitEconomicsResponse;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.TradeoffType;
@@ -50,13 +50,13 @@ public class CostEfficiencyCalculator {
     private int consumerCount = 1;
     private double revenuePerUserPerMonth = 0.0;
 
-    public UnitEconomicsResponse calculateUnitEconomics(
-            UnitEconomicsRequest unitEconomicsRequest
+    public TCOUnitEconomicsResponse calculateUnitEconomics(
+            TCOUnitEconomicsRequest unitEconomicsRequest
     ) {
 
         setCostEfficiencyCalculationParameters(unitEconomicsRequest);
 
-        UnitEconomicsResponse unitEconomicsResponse = new UnitEconomicsResponse();
+        TCOUnitEconomicsResponse unitEconomicsResponse = new TCOUnitEconomicsResponse();
 
         int serviceConsumers = Math.max(1, consumerCount);
         double totalCostOfOwnership = Math.max(0, egressTransferCostUsd + cloudInfraCostUsd);
@@ -69,7 +69,7 @@ public class CostEfficiencyCalculator {
         return unitEconomicsResponse;
     }
 
-    private void setCostEfficiencyCalculationParameters(UnitEconomicsRequest unitEconomicsRequest) {
+    private void setCostEfficiencyCalculationParameters(TCOUnitEconomicsRequest unitEconomicsRequest) {
         this.architecturalDecisions = getArchitecturalDecisions();
         this.egressTransferCostUsd = unitEconomicsRequest.egressTransferCostUsd;
         this.cloudInfraCostUsd = unitEconomicsRequest.cloudInfraCostUsd;
@@ -79,36 +79,42 @@ public class CostEfficiencyCalculator {
         this.revenuePerUserPerMonth = unitEconomicsRequest.revenuePerUserPerMonth;
     }
 
-    private void calculateROI(UnitEconomicsResponse unitEconomicsResponse, int safeConsumers, double totalCostOfOwnership) {
+    private void calculateROI(TCOUnitEconomicsResponse unitEconomicsResponse, int endUsers, double totalCostOfOwnership) {
         double revenue = revenuePerUserPerMonth;
         unitEconomicsResponse.hasRevenueData = revenue > 0;
 
         if (unitEconomicsResponse.hasRevenueData) {
-            double totalMonthlyRevenue = revenue * safeConsumers;
+            double totalMonthlyRevenue = revenue * endUsers;
             double netProfit = totalMonthlyRevenue - totalCostOfOwnership;
 
             unitEconomicsResponse.totalMonthlyRevenueUsd = round2(totalMonthlyRevenue);
             unitEconomicsResponse.totalAnnualRevenueUsd = round2(totalMonthlyRevenue * MONTHS_PER_YEAR);
             unitEconomicsResponse.arpuMonthly = round2(revenue);
 
-            unitEconomicsResponse.monthlyRoiPct = totalCostOfOwnership > 0 ? round2(netProfit / totalCostOfOwnership * 100) : 0;
-            unitEconomicsResponse.annualRoiPct = unitEconomicsResponse.monthlyRoiPct; // same ratio, annualised inputs
+            unitEconomicsResponse.monthlyRoiPct = totalCostOfOwnership > 0
+                    ? round2(netProfit / totalCostOfOwnership * 100) : 0;
+            unitEconomicsResponse.annualRoiPct = (totalCostOfOwnership > 0)
+                    ? round2(((totalMonthlyRevenue * MONTHS_PER_YEAR)
+                    - (totalCostOfOwnership * MONTHS_PER_YEAR))
+                    / (totalCostOfOwnership * MONTHS_PER_YEAR) * 100)
+                    : 0;
             unitEconomicsResponse.netMonthlyProfitUsd = round2(netProfit);
             unitEconomicsResponse.netAnnualProfitUsd = round2(netProfit * MONTHS_PER_YEAR);
             unitEconomicsResponse.breakEvenUsers = (revenue > 0 && totalCostOfOwnership > 0)
                     ? (int) Math.ceil(totalCostOfOwnership / revenue) : 0;
-            unitEconomicsResponse.revenuePerDollarInfra = totalCostOfOwnership > 0 ? round2(totalMonthlyRevenue / totalCostOfOwnership) : 0;
+            unitEconomicsResponse.revenuePerDollarInfra = totalCostOfOwnership > 0
+                    ? round2(totalMonthlyRevenue / totalCostOfOwnership) : 0;
             unitEconomicsResponse.netMarginPerUserMonthly = round4(revenue - unitEconomicsResponse.costPerUserPerMonthUsd);
         }
     }
 
-    private void calculateUnitCosts(UnitEconomicsResponse resp, long monthlyReqs, double totalTco, int safeConsumers) {
+    private void calculateUnitCosts(TCOUnitEconomicsResponse resp, long monthlyReqs, double totalTco, int endUsers) {
         resp.costPerRequestUsd = monthlyReqs > 0 ? round6(totalTco / monthlyReqs) : 0;
-        resp.costPerUserPerMonthUsd = round4(totalTco / safeConsumers);
+        resp.costPerUserPerMonthUsd = round4(totalTco / endUsers);
         resp.costPerUserPerDayUsd = round6(resp.costPerUserPerMonthUsd / DAYS_PER_MONTH);
     }
 
-    private void calculateTCO(UnitEconomicsResponse resp, double totalTco, long monthlyReqs) {
+    private void calculateTCO(TCOUnitEconomicsResponse resp, double totalTco, long monthlyReqs) {
         resp.totalMonthlyTcoUsd = round2(totalTco);
         resp.totalAnnualTcoUsd = round2(totalTco * MONTHS_PER_YEAR);
         resp.egressCostUsd = round2(egressTransferCostUsd);

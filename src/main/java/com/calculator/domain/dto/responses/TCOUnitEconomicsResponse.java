@@ -2,7 +2,7 @@ package com.calculator.domain.dto.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UnitEconomicsResponse {
+public class TCOUnitEconomicsResponse {
     /* ── TCO ── */
     @JsonProperty
     public double totalMonthlyTcoUsd;

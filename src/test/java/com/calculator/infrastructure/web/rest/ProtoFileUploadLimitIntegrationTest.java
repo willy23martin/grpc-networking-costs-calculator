@@ -73,7 +73,7 @@ class ProtoFileUploadLimitIntegrationTest {
         });
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "/calculateTCO",
+                "/calculateProtofileNetworkingCosts",
                 new HttpEntity<>(body, multipartHeaders),
                 String.class);
 

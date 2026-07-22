@@ -40,9 +40,10 @@ public class RequestPerSecondCostCalculatorService {
                     architecturalDecisionsDTO.retryTactic()
             );
         }
+        long effectiveRequestPerSecond = currentTrafficBaseline + addition;
         log.info("effectiveRequestsPerSecond addition from resiliency: " + addition);
-        log.info("effectiveRequestsPerSecond rps response: " + currentTrafficBaseline + addition);
-        return currentTrafficBaseline + addition;
+        log.info("effectiveRequestsPerSecond rps response: " + effectiveRequestPerSecond);
+        return effectiveRequestPerSecond;
     }
 
     private boolean resiliencyPatternsHaveBeenConfigured(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {

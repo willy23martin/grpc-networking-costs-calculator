@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import static com.calculator.application.services.utils.MathUtils.round2;
 import static com.calculator.application.services.calculators.CostEfficiencyCalculator.SECONDS_PER_MONTH;
-import static com.calculator.infrastructure.web.rest.TCOCalculatorController.BYTES_PER_GB;
+import static com.calculator.infrastructure.web.rest.NetworkingCostCalculatorController.BYTES_PER_GB;
 
 @Service
 public class TacticsTCCContributionService {

@@ -2,7 +2,7 @@ package com.calculator.domain.dto.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UnitEconomicsRequest {
+public class TCOUnitEconomicsRequest {
     @JsonProperty
     public double egressTransferCostUsd = 0.0;
     @JsonProperty

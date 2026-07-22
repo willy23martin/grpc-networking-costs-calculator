@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 @RestController
-@RequestMapping("/api/aws")
+@RequestMapping("/api/cloud")
 @CrossOrigin(origins = "*")
 public class CloudServicesTCCCalculatorController {
 
@@ -37,39 +37,39 @@ public class CloudServicesTCCCalculatorController {
     @Autowired
     CachingCostCalculatorPort cachingCostCalculator;
 
-    @GetMapping("/ec2-instances")
+    @GetMapping("/compute-instances")
     public List<Map<String, Object>> getComputeInstances() {
-        log.info("/api/aws/ec2-instances has been invoked");
+        log.info("/api/cloud/compute-instances has been invoked");
         return cloudComputeCostCalculator.calculatePriceByComputeInstance();
     }
 
     @GetMapping("/alb-pricing")
     public Map<String, Object> getAlbPricing() {
-        log.info("/api/aws/alb-pricing has been invoked");
+        log.info("/api/cloud/alb-pricing has been invoked");
         return albCostCalculator.calculateALBCosts();
     }
 
     @GetMapping("/database-backup-pricing")
     public Map<String, Object> getDatabaseBackupPricing() {
-        log.info("/api/aws/database-backup-pricing has been invoked");
+        log.info("/api/cloud/database-backup-pricing has been invoked");
         return databaseCostCalculator.calculateDatabaseBackupPricing();
     }
 
     @GetMapping("/security-services")
     public Map<String, Object> getSecurityServicesPricing() {
-        log.info("/api/aws/security-services-pricing has been invoked");
+        log.info("/api/cloud/security-services-pricing has been invoked");
         return securityCostCalculator.calculateSecurityCosts();
     }
 
     @GetMapping("/cost-optimisation")
     public Map<String, Object> getCostOptimisationPricing() {
-        log.info("/api/aws/cost-optimisation has been invoked");
+        log.info("/api/cloud/cost-optimisation has been invoked");
         return finOpsStrategyCostCalculator.calculateFinOpsStrategiesCosts();
     }
 
     @GetMapping("/caching-pricing")
     public Map<String, Object> getCachingPricing() {
-        log.info("/api/aws/caching-pricing has been invoked");
+        log.info("/api/cloud/caching-pricing has been invoked");
         return cachingCostCalculator.calculateCachingCosts();
     }
 }

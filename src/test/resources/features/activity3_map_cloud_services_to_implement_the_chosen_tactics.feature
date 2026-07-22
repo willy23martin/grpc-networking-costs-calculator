@@ -9,7 +9,7 @@ Feature: Cloud Service Mapping
     And the architect is configuring tactics in the Cloud Tactics & Patterns panel
 
   @UI @CloudMapping @AWS
-  Scenario Outline: Mapping architectural patterns and tactics to AWS cloud infrastructure in the UI
+  Scenario Outline: Mapping architectural patterns and tactics to AWS cloud infrastructure
     Given I have selected pattern or tactic "<pattern_or_tactic>" for implementation that promotes "<architectural_characteristic>"
     When I specify "<cloud_provider>" as my deployment target
     Then the system should map the configuration to specific services "<specific_services>"

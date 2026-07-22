@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class BaseCostCalculationSteps extends BaseIntegrationTest {
+public class Activity4BaseCostCalculationSteps extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

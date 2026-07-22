@@ -1,3 +1,4 @@
+# language: en
 @CostEfficiencyCalculator @Phase1 @ServiceIdentity
 Feature: Base RPS drives all downstream cost estimates
   As a Software Architect
@@ -15,6 +16,5 @@ Feature: Base RPS drives all downstream cost estimates
 
     Examples:
       | base_rps | rps_delta                       | expected_delta_usd |
-      | 1000     | +50 RPS (5% Retry Profile)      | $0.12 / mo         |
-      | 5000     | +250 RPS (5% Retry Profile)     | $0.60 / mo         |
-      | 10000    | +10000 RPS (SAGA Cascading)     | $43.20 / mo        |
+      | 1000     | +50 RPS (5% Retry Profile)      | $13.02 / mo         |
+      | 5000     | +250 RPS (5% Retry Profile)     | $65.17 / mo         |

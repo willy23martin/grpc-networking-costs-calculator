@@ -110,7 +110,7 @@ class ContainerizedEnvironmentCostControllerTest {
                 .thenReturn(gbResponse)
                 .thenReturn(fallbackResponse);
 
-        mockMvc.perform(get("/api/aws/container-pricing")
+        mockMvc.perform(get("/api/cloud/container-pricing")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.fargateVcpuPerHour").value(0.04048))
@@ -131,7 +131,7 @@ class ContainerizedEnvironmentCostControllerTest {
         when(pricingClientMock.getProducts(any(GetProductsRequest.class)))
                 .thenReturn(faultyResponse);
 
-        mockMvc.perform(get("/api/aws/container-pricing"))
+        mockMvc.perform(get("/api/cloud/container-pricing"))
                 .andExpect(status().isOk())
                 // Validates that it drops the parsing anomalies and retains hardcoded production fallback safety boundaries
                 .andExpect(jsonPath("$.fargateVcpuPerHour").value(0.04048))

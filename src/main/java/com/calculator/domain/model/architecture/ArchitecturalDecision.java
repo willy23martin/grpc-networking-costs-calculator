@@ -11,7 +11,8 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @AllArgsConstructor
 @SuperBuilder
-public abstract sealed class ArchitecturalDecision permits ArchitecturalPattern, ArchitecturalTactic, CloudService, FinOpsStrategy {
+public abstract sealed class ArchitecturalDecision
+        permits ArchitecturalPattern, ArchitecturalTactic, CloudService, FinOpsStrategy {
 
     protected String id;
     protected ArchitecturalCharacteristic architecturalCharacteristic;
