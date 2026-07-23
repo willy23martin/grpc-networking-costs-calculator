@@ -42,7 +42,7 @@ public class CostEfficiencyCalculator {
     @Autowired
     private CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
 
-    private List<ArchitecturalDecision> architecturalDecisions; // TODO - Receive them from the controller the selected ones to calculate the unit economics
+    private List<ArchitecturalDecision> architecturalDecisions;
 
     private double egressTransferCostUsd = 0.0;
     private double cloudInfraCostUsd = 0.0;
