@@ -365,38 +365,29 @@ function _renderTcoBreakdownTable(
   var isTls  = !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked);
   var isMtls = !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked);
   var isOauth= !!(document.getElementById('tactic-oauth') && document.getElementById('tactic-oauth').checked);
-  // Tactic overhead already included in egressCost — show breakdown sub-detail only
-  if (_tacticOverhead > 0.01 && _baseEgress > 0) {
-    // isInfo=true excludes from TCO sum (already counted in egress row above)
-    // Pass 0 as cost so it shows as informational, not $0 from isInfo path
-    rows.push({
-      label: '\u2514 Tactic overhead: Retry extra RPS + TLS/JWT bytes',
-      cat: 'Networking', badge: 'badge-bytes', cost: 0,
-      detail: 'Base egress (no tactics): $' + _baseEgress.toFixed(2) + '/mo + $' + _tacticOverhead.toFixed(2)
-        + '/mo (retry RPS increase + TLS frame bytes + JWT headers) = $' + egressCost.toFixed(2) + '/mo total',
-      isSaving: false, isInfo: true, infoLabel: '+$' + _tacticOverhead.toFixed(2) + '/mo'
-    });
-    sumPositive += 0; // not added to sum
-  }
-
   // TLS/mTLS and JWT overhead are included in the egress total.
   // Show the actual overhead cost as informational with real amount.
-  var _tlsShare = (isTls||isMtls) && _tacticOverhead > 0
-    ? Math.round(_tacticOverhead * 0.95 * 100) / 100 : 0;  // ~95% of overhead is TLS bytes
-  var _jwtShare = isOauth && _tacticOverhead > 0
-    ? Math.round(_tacticOverhead * 0.05 * 100) / 100 : 0;  // ~5% is JWT header bytes
-  if (isTls||isMtls) {
-    var _tlsAmt = _tlsShare > 0 ? '$' + _tlsShare.toFixed(2) + '/mo included in egress above' : 'included in egress above';
-    addRow((isMtls?'mTLS (Mutual TLS)':'TLS')+' byte overhead (RFC 8446)',
-      'Security','badge-dr', _tlsShare,
-      (_baseEgress > 0 ? 'Base egress $' + _baseEgress.toFixed(2) + ' + tactic overhead $' + _tacticOverhead.toFixed(2) + ' = $' + egressCost.toFixed(2) + ' total. TLS/mTLS frame bytes included.' : 'Included in AWS Egress row above.'),
-      false, true);
+  // Show them as informational rows with the actual overhead amount for clarity.
+  if ((isTls||isMtls) && _tacticOverhead > 0) {
+    var _tlsCost = _tacticOverhead > 0 ? Math.round(_tacticOverhead * 100) / 100 : 0;
+    var _tlsDetail = _baseEgress > 0
+      ? 'Base egress (no tactics): $' + _baseEgress.toFixed(2) + '/mo. '
+        + 'Tactic overhead: $' + _tacticOverhead.toFixed(2) + '/mo (retry extra RPS + '
+        + (isMtls ? 'mTLS 30 B/frame RFC 8446' : 'TLS 30 B/frame RFC 8446') + '). '
+        + 'Total egress: $' + egressCost.toFixed(2) + '/mo. Overhead included in AWS Egress row.'
+      : 'Included in AWS Egress row above.';
+    rows.push({ label: (isMtls?'mTLS (Mutual TLS)':'TLS') + ' frame overhead (RFC 8446 § 5.2 — 30 B/frame)',
+      cat: 'Security', badge: 'badge-dr', cost: 0,
+      detail: _tlsDetail, isSaving: false, isInfo: true,
+      infoLabel: 'incl. in egress'
+    });
   }
-  if (isOauth && _jwtShare > 0) {
-    addRow('JWT header overhead (RFC 7519)',
-      'Security','badge-dr', _jwtShare,
-      'JWT request headers add inbound bytes — AWS inbound transfer is free. Cost shown is outbound JWT in response overhead.',
-      false, true);
+  if (isOauth) {
+    rows.push({ label: 'JWT header overhead (RFC 7519 — inbound, free)',
+      cat: 'Security', badge: 'badge-dr', cost: 0,
+      detail: 'AWS inbound data transfer is free. JWT headers add bytes to requests only.',
+      isSaving: false, isInfo: true, infoLabel: '$0 (inbound free)'
+    });
   }
 
   if (albCost > 0)       addRow('Application Load Balancer (ALB)', 'Cloud Infra', 'badge-warn', albCost, '$'+albCost.toFixed(2)+'/mo · /api/cloud/alb-pricing');
@@ -460,9 +451,9 @@ function _renderTcoBreakdownTable(
     } else {
       roiCell = '<span style="color:var(--red);font-size:.82rem;font-weight:700;font-family:monospace;">'+roiPct.toFixed(1)+'%</span>';
     }
-    // Custom info label for sub-rows (e.g. tactic overhead breakdown)
-    var infoCostCell = c.infoLabel
-      ? '<span style="font-size:.78rem;color:var(--amber);font-weight:600;">'+c.infoLabel+'</span>'
+    // Info rows: show infoLabel or 'incl. in egress' instead of $0 (free)
+    var infoCostCell = (c.isInfo && c.infoLabel)
+      ? '<span style="font-size:.78rem;color:var(--ink-light);font-style:italic;">'+c.infoLabel+'</span>'
       : null;
     return '<tr style="border-bottom:1px solid var(--rule);">'
       +'<td style="padding:8px 12px;font-weight:600;">'+c.label+detailHtml+'</td>'

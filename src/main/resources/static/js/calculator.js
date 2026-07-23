@@ -460,7 +460,10 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
   // Detect the gap and synthesise a 'Retry egress increase' contribution line.
   // displayBaseCost: only show real cost when proto is uploaded
   var displayBaseCost  = hasRealProto ? base.cost : 0;
-  if (hasRealProto && displayBaseCost > 0) window._lastBaseEgressCost = displayBaseCost;
+  if (hasRealProto && displayBaseCost > 0) {
+    window._lastBaseEgressCost = displayBaseCost;
+    sessionStorage.setItem('tco_phase3_base_egress', displayBaseCost.toFixed(4));
+  }
 
   var tacticsTotalCost      = displayBaseCost + networkingCostDelta + cachedCloudInfraCost;
   // totalMonthlyCostDelta updated below after retry gap is added to networkingCostDelta
@@ -1661,12 +1664,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (rawCost && parseFloat(rawCost) > 0) {
       // Store the authoritative Transfer Cost from the proto analysis table
-      // This is the exact backend value ($1,683.65) used for Phase 4 TCO egress
+      // This is the exact backend value ($1,683.65) used for Phase 4 TCO egress BUC1
       var _rcFloat = parseFloat(rawCost);
       window._lastEgressCostUsd = _rcFloat;
       sessionStorage.setItem('tco_phase3_egress', _rcFloat.toFixed(4));
-      sessionStorage.setItem('tco_phase3_base_egress',
-        (window._lastBaseEgressCost || _rcFloat).toFixed(4));
+      // tco_phase3_base_egress = the base cost WITHOUT tactics ($1,599.76) - BUC1
+      // This is set by renderComparisonFromBackend when base result arrives.
+      // If not yet set, leave it — it will be set on the next comparison render.
+      if (!sessionStorage.getItem('tco_phase3_base_egress') && window._lastBaseEgressCost > 0) {
+        sessionStorage.setItem('tco_phase3_base_egress', window._lastBaseEgressCost.toFixed(4));
+      }
       populateUnitEconomics(rawCost, rendEffRps, null);
     }
     if (serverMsg) serverMsg.style.display = 'flex';
