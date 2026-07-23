@@ -13,4 +13,4 @@ Feature: Base Cost Calculation
 
     Examples: User Story: Base Cost Calculation - Feature Examples
       | cloud_provider | cloud_service                       | tactic                          | hourly_cost | cost_factors                                                                                                                                                              |
-      | AWS            | Elastic Load Balancer - ALB Layer 7 | Server-side Load Balancing      | $0.0225     | Standard ALB running instances are billed at $0.0225 per hour, combined with a volumetric usage rate of $0.008 per Load Balancer Capacity Unit (LCU) consumed per hour. |
+      | AWS            | Elastic Load Balancer - ALB Layer 7 | Server-side Load Balancing      | $0.025     | $0.008 per GB Data Processed by the LoadBalancer $0.025 per LoadBalancer-hour (or partial hour) |

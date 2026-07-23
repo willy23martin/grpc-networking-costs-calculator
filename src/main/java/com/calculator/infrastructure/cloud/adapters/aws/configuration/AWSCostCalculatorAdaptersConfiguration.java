@@ -1,6 +1,7 @@
 package com.calculator.infrastructure.cloud.adapters.aws.configuration;
 
 import com.calculator.application.services.calculators.cost.cloud.ports.*;
+import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
 import com.calculator.domain.repository.finops.reliability.FinOpsStrategyReliabilityArchitecturalDecisionRepository;
 import com.calculator.infrastructure.cloud.adapters.CloudProvider;
 import com.calculator.infrastructure.cloud.adapters.aws.alb.AWSALBCostCalculatorAdapter;
@@ -66,7 +67,10 @@ public class AWSCostCalculatorAdaptersConfiguration {
 
     @Bean
     @Profile(CloudProvider.AWS)
-    public SecurityCostCalculatorPort securityCostCalculator(PricingClient pricingClient, AWSSecurityWAFCostCalculator awsSecurityWAFCostCalculator) {
+    public SecurityCostCalculatorPort securityCostCalculator(
+            PricingClient pricingClient,
+            AWSSecurityWAFCostCalculator awsSecurityWAFCostCalculator
+    ) {
         return  new AWSSecurityCostCalculatorAdapter(pricingClient, awsSecurityWAFCostCalculator);
     }
 

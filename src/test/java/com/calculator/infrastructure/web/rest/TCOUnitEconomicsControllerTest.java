@@ -1,27 +1,18 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.application.services.calculators.CostEfficiencyCalculator;
 import com.calculator.domain.dto.requests.TCOUnitEconomicsRequest;
-import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.cloud.resiliency.CloudResiliencyArchitecturalDecisionRepository;
-import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.finops.reliability.FinOpsStrategyReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
-import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestRepositoryStubsConfiguration.class)
 class TCOUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Autowired
@@ -30,40 +21,8 @@ class TCOUnitEconomicsControllerTest extends BaseIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
-
-    @MockitoBean
-    private CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
-
-    @MockitoBean
-    private ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository;
-
-    @MockitoBean
-    private CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository;
-
-    @MockitoBean
-    private ResiliencyArchitecturalDecisionRepository resiliencyArchitecturalDecisionRepository;
-
-    @MockitoBean
-    private CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
-
-    @MockitoBean
-    private FinOpsStrategyReliabilityArchitecturalDecisionRepository finOpsStrategyReliabilityArchitecturalDecisionRepository;
-
-    @BeforeEach
-    void setUp() {
-        Mockito.lenient().when(reliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(cloudReliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
-
-        Mockito.lenient().when(resiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(cloudResiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
-
-        Mockito.lenient().when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
-
-        Mockito.lenient().when(finOpsStrategyReliabilityArchitecturalDecisionRepository.getFinOpsStrategyForAWSApplicationLoadBalancer()).thenReturn(null);
-    }
+    @Autowired
+    private CostEfficiencyCalculator costEfficiencyCalculator;
 
     @Test
     void calculateCloudInfraTotal_allScenarios() throws Exception {

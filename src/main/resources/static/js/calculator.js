@@ -52,11 +52,10 @@ function recalculateReplicas() {
   var sReq = window._lastProtoReqBytes  || PLACEHOLDER_REQ_BYTES;
   var sRes = window._lastProtoRespBytes || PLACEHOLDER_RESP_BYTES;
   // C_req: per-replica request capacity derived from instance network bandwidth / proto size
-  // C_req: per-replica request capacity derived from instance network bandwidth / proto size
   var _ec2Entry = window._ec2InstanceMap && window._ec2InstanceMap[instType];
   var _netBytesPerSec = _ec2Entry ? (_ec2Entry.networkBytesPerSec || 0) : 0;
   if (!_netBytesPerSec) {
-    var _fbGbps = instType.startsWith('t3.')        ? 5     : 12.5;
+    var _fbGbps = instType.startsWith('t3.') ? 5 : 12.5;
     _netBytesPerSec = Math.floor(_fbGbps * 1e9 / 8);
   }
   // C_in / C_out = network bandwidth per replica (bytes/sec) — NOT bandwidth/size
@@ -315,7 +314,10 @@ function updateLiveComparison(baseRps, effectiveRps) {
           if (!baseResult || !tacticsResult) return;
           aggregateCloudInfraCost();
           // collectTacticContributions now returns a Promise
-          return collectTacticContributions(baseRps, baseResult)
+          // Use tacticsResult (not baseResult) so protoResponseSizeEffectiveBytes
+          // includes TLS overhead (e.g. 7577 vs 7547 raw) — this makes the
+          // retry cost in contributions match the TCO calculator's $83.89 delta.
+          return collectTacticContributions(baseRps, tacticsResult)
             .then(function(contributions) {
               renderComparisonFromBackend(
                 baseResult, tacticsResult, baseRps, effectiveRps, false, contributions
@@ -456,23 +458,6 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
   // the retry egress increase (retry adds effective RPS which the backend computes
   // via RPSNetworkingCostCalculator → AWSDataTransferCostCalculationServiceAdapter).
   // Detect the gap and synthesise a 'Retry egress increase' contribution line.
-  var _retryEgressGap = 0;
-  if (hasRealProto && base && base.cost > 0 && tactics && tactics.cost > 0) {
-    var _fullDelta = Math.round((tactics.cost - base.cost) * 100) / 100;
-    _retryEgressGap = Math.max(0, Math.round((_fullDelta - networkingCostDelta) * 100) / 100);
-    if (_retryEgressGap > 0.01 && contributions) {
-      contributions = contributions.concat([{
-        label: 'Retry Pattern — extra egress cost',
-        detail: 'Extra AWS data-transfer cost from ' + Math.round((effectiveRps||0)-(baseRps||0))
-          + ' additional RPS (' + (effectiveRps||0) + ' eff. vs ' + (baseRps||0) + ' base) · via /api/tco/calculate',
-        kind: 'rps',
-        costDisplayLabel: '+$' + _retryEgressGap.toFixed(2) + '/mo',
-        estimatedMonthlyCostUsd: _retryEgressGap
-      }]);
-      networkingCostDelta = Math.round((networkingCostDelta + _retryEgressGap) * 100) / 100;
-    }
-  }
-
   // displayBaseCost: only show real cost when proto is uploaded
   var displayBaseCost  = hasRealProto ? base.cost : 0;
   if (hasRealProto && displayBaseCost > 0) window._lastBaseEgressCost = displayBaseCost;
@@ -494,6 +479,7 @@ function renderComparisonFromBackend(base, tactics, baseRps, effectiveRps, isEst
   tacticsTotalCost = _realNetworkingCost + cachedCloudInfraCost;
   sessionStorage.setItem('tco_phase3_total', tacticsTotalCost.toFixed(4));
   sessionStorage.setItem('tco_phase3_egress', _realNetworkingCost.toFixed(4));
+  sessionStorage.setItem('tco_effective_rps', String(effectiveRps || baseRps || 0));
   sessionStorage.setItem('tco_phase3_base_egress', displayBaseCost.toFixed(4));
   var _tacticDelta = Math.max(0, _realNetworkingCost - displayBaseCost);
   sessionStorage.setItem('tco_tactic_overhead', _tacticDelta.toFixed(4));
@@ -822,13 +808,13 @@ function recalculateAlb() {
   if (!_albData) return;  /* data still loading — autoEnableAlb will call recalculateAlb() after load */
   var count = parseInt((document.getElementById('input-alb-count') || { value: '1' }).value) || 1;
   var lcu = parseFloat((document.getElementById('input-alb-lcu') || { value: '0' }).value) || 0;
-  // ALB pricing: $0.0225/hr fixed per ALB + $0.008/LCU/hr
+  // ALB pricing: $0.025/hr fixed per ALB + $0.008/LCU/hr
   // fixedPerMonthUsd from backend: if < 1 it's an hourly rate → multiply by 730
   var fixedHr = _albData.fixedPerMonthUsd > 1
     ? _albData.fixedPerMonthUsd / 730
-    : (_albData.fixedPerMonthUsd || 0.0225);
+    : (_albData.fixedPerMonthUsd || 0.025);
   var lcuHr   = _albData.lcuPerHourUsd || 0.008;
-  var fixedM  = fixedHr * 730 * count;    // e.g. 0.0225 × 730 × 1 = $16.43
+  var fixedM  = fixedHr * 730 * count;    // e.g. 0.025 × 730 × 1 = $18.25
   var lcuM    = lcuHr   * lcu * 730 * count; // e.g. 0.008 × 5 × 730 × 1 = $29.20
   var totalAlb = fixedM + lcuM;
   var res = document.getElementById('alb-result');
@@ -1272,7 +1258,7 @@ function recalculateContainerCost() {
   var g = function (id) { return document.getElementById(id) || {}; };
   var chk = function (id) { return !!(g(id).checked); };
   var num = function (id, def) { return parseFloat(g(id).value) || (def || 0); };
-  /* Use live AWS prices from /api/aws/container-pricing if already loaded */
+  /* Use live AWS prices from /api/cloud/container-pricing if already loaded */
   var _cp = window._containerPriceData || {};
   var _eksPerCluster = (_cp.eksControlPlanePerMonth != null) ? _cp.eksControlPlanePerMonth : 73.0;
   var _albPerLb = (_cp.albFixedPerMonth != null) ? _cp.albFixedPerMonth : 16.43;
@@ -1377,7 +1363,7 @@ function downloadTcoPdf() {
 }
 
 function computeEc2BaselineSpend() {
-  // Use the EC2 price from window._ec2PriceMap (fetched from /api/aws/ec2-instances)
+  // Use the EC2 price from window._ec2PriceMap (fetched from /api/cloud/compute-instances)
   // and the number of replicas N from the current replica calculation result.
   // This ensures the FinOps "Estimated on-demand spend" always reflects the
   // instance type and replica count selected in the Scalability section.

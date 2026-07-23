@@ -6,6 +6,7 @@ import com.calculator.domain.model.cost.InfrastructureCost;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristic;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ public final class CloudService extends ArchitecturalDecision {
     private String name;
     private ArchitecturalCharacteristic architecturalCharacteristic;
     private ArchitecturalTactic supportedArchitecturalTactic;
+    @Setter
     private InfrastructureCost infrastructureCost;
     private List<ArchitecturalDecision> supportedArchitecturalDecisions;
 

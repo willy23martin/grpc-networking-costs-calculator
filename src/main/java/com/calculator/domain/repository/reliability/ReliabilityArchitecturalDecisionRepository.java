@@ -53,6 +53,7 @@ public class ReliabilityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.NONE,
+                                0,
                                 "Bypasses central proxy overhead with client-side load balancing."
                         )
                 )
@@ -87,6 +88,7 @@ public class ReliabilityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
+                                0, // Because at the beginning the ALB service has not be defined yet
                                 "Adds ALB fixed hourly charge + LCU costs from AWS Pricing API."
                         )
                 )

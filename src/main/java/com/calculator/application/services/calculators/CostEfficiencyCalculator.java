@@ -43,6 +43,7 @@ public class CostEfficiencyCalculator {
     private CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
 
     private List<ArchitecturalDecision> architecturalDecisions;
+
     private double egressTransferCostUsd = 0.0;
     private double cloudInfraCostUsd = 0.0;
     private double finopsSavingUsd = 0.0;

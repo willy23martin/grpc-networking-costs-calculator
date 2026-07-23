@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.calculator.infrastructure.cloud.adapters.aws.containers.AWSContainersCostCalculatorAdapter.FALLBACK_EKS_HOURLY;
+
 @Component
 public class CloudArchitecturalDecisionRepository {
 
@@ -41,6 +43,7 @@ public class CloudArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
+                                FALLBACK_EKS_HOURLY,
                                 "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode 'AmazonEKS' with Filters: productFamily='Compute', operation='Cluster', and usageType='BoxUsage' / 'EKS:ClusterContinuous': Standard Kubernetes version support is billed at a flat fee of $0.10 per cluster per hour."
                         )
                 )

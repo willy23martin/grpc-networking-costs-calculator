@@ -22,9 +22,15 @@ public class AWSContainersCostCalculatorAdapter extends AWSCloudCalculatorAdapte
 
     private static final Logger log = Logger.getLogger(AWSContainersCostCalculatorAdapter.class.getName());
 
-    private static final double FALLBACK_EKS_HOURLY = 0.10; // $73.0/mo baseline
+    public static final double FALLBACK_EKS_HOURLY = 0.10; // Because of $73.0/mo baseline
 
     // EC2 instance approximate on-demand prices (us-east-1, Linux, on-demand, Q1-2025)
+    /**
+     * * **Primary Reference URL:** [Amazon EC2 On-Demand Pricing - AWS](https://aws.amazon.com/ec2/pricing/on-demand/)
+     * * **Instance Family Overviews & Specifications:**
+     *   * [Amazon EC2 Instance Types (M6i)](https://aws.amazon.com/ec2/instance-types/m6i/)
+     *   * [Amazon EC2 Pricing Overview](https://aws.amazon.com/ec2/pricing/)
+     */
     public static final Map<String, Double> EC2_FALLBACK_PRICES = new HashMap<>();
 
     static {
@@ -57,9 +63,9 @@ public class AWSContainersCostCalculatorAdapter extends AWSCloudCalculatorAdapte
     public static final double EBS_GP3_THROUGHPUT_PER_MBPS = 0.040;  // beyond 125 MiB/s free
 
     // ALB (same as AWSALBCostCalculator)
-    public static final double ALB_FIXED_PER_HOUR = 0.0225;
+    public static final double ALB_FIXED_PER_HOUR = 0.025;
     public static final double ALB_LCU_PER_HOUR = 0.008;
-    public static final double ALB_FIXED_PER_MONTH = 0.0225 * HOURS_PER_MONTH; // $16.425/mo
+    public static final double ALB_FIXED_PER_MONTH = 0.025 * HOURS_PER_MONTH; // $18.25/mo
 
     // ECR image storage
     public static final double ECR_STORAGE_PER_GB_MONTH = 0.10;

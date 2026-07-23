@@ -11,6 +11,7 @@ import com.calculator.domain.model.quality.QualityTradeoff;
 import com.calculator.domain.model.quality.TradeoffType;
 import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,6 +19,12 @@ import java.util.List;
 
 @Component
 public class CloudReliabilityArchitecturalDecisionRepository {
+
+    @Value("${aws.pricing.alb.fixed.charged.per.hour}")
+    private double albFixedChargePerHour;
+
+    @Value("${aws.pricing.lcu.fixed.charged.per.hour}")
+    private double albLCUFixedChargePerHour;
 
     @Autowired
     ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository;
@@ -60,7 +67,9 @@ public class CloudReliabilityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode 'AmazonElasticLoadBalancing' with operations filtered specifically to 'Application' metrics matching the official <a href=\"https://aws.amazon.com/elasticloadbalancing/pricing/\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">Elastic Load Balancing Pricing Matrix</a>: Standard ALB running instances are billed at $0.0225 per hour, combined with a volumetric usage rate of $0.008 per Load Balancer Capacity Unit (LCU) consumed per hour."// TODO - LOAD FROM AWS
+                                albFixedChargePerHour + albLCUFixedChargePerHour,
+                                "$" +albFixedChargePerHour + " per GB Data Processed by the LoadBalancer "
+                                + "$" + albLCUFixedChargePerHour + " per LoadBalancer-hour (or partial hour)" // Based on the AWS ALB API results /resources/awspricelistapiexamples/aws-alb-pricing.json
                         )
                 )
                 .supportedArchitecturalTactic(serverSideLoadBalancing)

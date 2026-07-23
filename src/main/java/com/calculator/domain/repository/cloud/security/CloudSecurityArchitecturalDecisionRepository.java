@@ -17,11 +17,21 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.calculator.infrastructure.cloud.adapters.aws.security.AWSSecurityCostCalculatorAdapter.*;
+import static com.calculator.infrastructure.cloud.adapters.aws.security.AWSSecurityWAFCostCalculator.*;
+
 @Component
 public class CloudSecurityArchitecturalDecisionRepository {
 
+    private final SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+
     @Autowired
-    SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+    public CloudSecurityArchitecturalDecisionRepository(
+            SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository
+    ) {
+        this.securityArchitecturalDecisionRepository = securityArchitecturalDecisionRepository;
+    }
+
 
     public List<ArchitecturalDecision> getAvailableSecurityDecisions() {
         return new ArrayList<>(
@@ -85,8 +95,8 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Per GB of logs analysed. First 500 GB/month free." +
-                                        "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode 'AmazonGuardDuty' attributes: VPC/DNS log telemetry processed at $1.00/GB (First 500 GB, with a 30-day foundational free trial period) and CloudTrail audit streams at $4.00 per million events."// TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_AMAZON_GUARDUTY_FALLBACK_VALUE,
+                                "First 500 GB/month free. $" + SECURITY_CLOUD_SERVICE_AMAZON_GUARDUTY_FALLBACK_VALUE + "/GB thereafter (tiered)."
                         )
                 )
                 .supportedArchitecturalTactic(oAuthJWTTactic)
@@ -129,8 +139,8 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Per EC2 instance/Container image per month." +
-                                        "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode 'AmazonInspector' variables matching <a href=\"https://aws.amazon.com/inspector/pricing/\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">Amazon Inspector Pricing</a> scales: EC2 host-scans ($1.258/mo), ECR initial-push scans ($0.09), and automated database rescans ($0.01)." // TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_AMAZON_INSPECTOR_FALLBACK_VALUE,
+                                "Amazon EC2 instances scanned per month using SSM-agent based scanning*\t$" + SECURITY_CLOUD_SERVICE_AMAZON_INSPECTOR_FALLBACK_VALUE + "per instance"
                         )
                 )
                 .supportedArchitecturalTactic(tlsTactic)
@@ -175,7 +185,8 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> (ServiceCode 'AWSCloudTrail'): The first copy of management events per region is free. Additional trails or duplicate delivery copies are calculated at $2.00 per 100,000 events, while high-volume data events scale at $0.10 per 100,000 events." // TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_AMAZON_GUARDUTY_FALLBACK_VALUE,
+                                "First 500 GB/month free. $" + SECURITY_CLOUD_SERVICE_AMAZON_GUARDUTY_FALLBACK_VALUE + "/GB thereafter (tiered)."
                         )
                 )
                 .supportedArchitecturalTactic(oAuthJWTTactic)
@@ -231,8 +242,12 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "WebACL fee + per-rule + per-million-request charges." +
-                                        "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode 'AwsWAF' attributes (WebACL: $5.00/mo, Rule: $1.00/mo, Request: $0.60 per million)."// TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_WAF_WEB_ACL_PER_MONTH_VALUE
+                                        + SECURITY_CLOUD_SERVICE_WAF_RULE_PER_MONTH_VALUE
+                                        + SECURITY_CLOUD_SERVICE_WAF_MILLION_REQUESTS_CHARGES_FALLBACK_VALUE,
+                                "WebACL fee " + SECURITY_CLOUD_SERVICE_WAF_WEB_ACL_PER_MONTH_VALUE
+                                        + "per-rule " + SECURITY_CLOUD_SERVICE_WAF_RULE_PER_MONTH_VALUE
+                                        + "per-million-request charges." + SECURITY_CLOUD_SERVICE_WAF_MILLION_REQUESTS_CHARGES_FALLBACK_VALUE
                         )
                 )
                 .supportedArchitecturalTactic(tlsTactic)
@@ -277,7 +292,8 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode combinations 'AmazonMacie' and 'AmazonS3'. Combines tiered classification scales ($1.00/GB for Macie discovery after free trial thresholds) with baseline storage components (<a href=\"https://aws.amazon.com/s3/pricing/\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">S3 Standard Pricing</a>: $0.023/GB storage overhead + $0.005 per 1,000 PutObject ingestion operations)." // TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_MACIE_FALLBACK_VALUE,
+                                "First :1 GB/month free. $" + SECURITY_CLOUD_SERVICE_MACIE_FALLBACK_VALUE + "/GB thereafter."
                         )
                 )
                 .supportedArchitecturalTactic(oAuthJWTTactic)
@@ -333,7 +349,11 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode 'AmazonCloudWatch' fields mapped to standard <a href=\"https://aws.amazon.com/cloudwatch/pricing/\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">Amazon CloudWatch Pricing</a> tiers: Log collection data ingestion is billed at $0.50 per GB, while subsequent archival storage components accrue at $0.03 per GB-month." // TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_CLOUDWATCH_LOGS_INGESTION_PER_GB_FALLBACK_VALUE
+                                + SECURITY_CLOUD_SERVICE_CLOUDWATCH_STORAGE_PER_GB_MONTH_FALLBACK_VALUE,
+                                "Collect (Data Ingestion) Standard $" + SECURITY_CLOUD_SERVICE_CLOUDWATCH_LOGS_INGESTION_PER_GB_FALLBACK_VALUE
+                                        + " per GB/month Store (Archival) Standard $" + SECURITY_CLOUD_SERVICE_CLOUDWATCH_STORAGE_PER_GB_MONTH_FALLBACK_VALUE
+                                        + " per GB compressed"
                         )
                 )
                 .supportedArchitecturalTactic(oAuthJWTTactic)
@@ -392,7 +412,9 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> matching standard <a href=\"https://aws.amazon.com/audit-manager/pricing/\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Audit Manager Pricing</a> metrics: Standard usage is billed strictly on utility at $1.25 per 1,000 resource assessments per account per region (with an introductory free tier providing 35,000 resource assessments per month for the first two months)." // TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_AUDIT_MANAGER_FALLBACK_PRICE,
+                                "Per 1,000 Audit Manager resource assessments per account per Region $"
+                                        + SECURITY_CLOUD_SERVICE_AUDIT_MANAGER_FALLBACK_PRICE
                         )
                 )
                 .supportedArchitecturalTactic(oAuthJWTTactic)
@@ -450,7 +472,11 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "Calculated via <a href=\"https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_pricing_GetProducts.html\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS Price List Query API</a> using ServiceCode 'awskms' metrics matching formal <a href=\"https://aws.amazon.com/kms/pricing/\" target=\"_blank\" style=\"color: #7c3aed; text-decoration: underline; font-weight: 600;\">AWS KMS Pricing</a> guidelines: Key storage overhead is flat-rated at $1.00 per Customer Managed Key (CMK) per month (prorated hourly), combined with standard symmetric cryptographic API request processing billed at $0.03 per 10,000 calls (beyond a monthly free tier allowance of 20,000 requests)." // TODO - LOAD FROM AWS
+                                SECURITY_CLOUD_SERVICE_KMS_CMK_PRICE_PER_MONTH_FALLBACK_VALUE
+                                + SECURITY_CLOUD_SERVICE_KMS_API_CALLS_PER_10K_FALLBACK_VALUE,
+                                "Each AWS KMS key that you create in AWS KMS costs $" + SECURITY_CLOUD_SERVICE_KMS_CMK_PRICE_PER_MONTH_FALLBACK_VALUE + "/month (prorated hourly)"
+                                + "US East (N. Virginia)"
+                                + "$" + SECURITY_CLOUD_SERVICE_KMS_API_CALLS_PER_10K_FALLBACK_VALUE + " per 10,000 requests"
                         )
                 )
                 .supportedArchitecturalTactic(tlsTactic)
@@ -496,7 +522,8 @@ public class CloudSecurityArchitecturalDecisionRepository {
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
                         new InfrastructureCost(
-                                "$0 no cost" // TODO - LOAD FROM AWS
+                                0,
+                                "By default, ACM issues certificates at no cost for use with services integrated with ACM."
                         )
                 )
                 .supportedArchitecturalTactic(tlsTactic)
