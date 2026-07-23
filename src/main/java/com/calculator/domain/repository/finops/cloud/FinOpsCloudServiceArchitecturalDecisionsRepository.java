@@ -46,6 +46,7 @@ public class FinOpsCloudServiceArchitecturalDecisionsRepository {
                 .cloudServices(List.of(awsEKS))
                 .costFactor(
                         new InfrastructureCost(
+                                0, // Becuase it has not been applied in its initialization to any EC2 instance
                                 """
                                 Up to 90% reduction. Requires interruption-tolerant workloads.
                                 """

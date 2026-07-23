@@ -47,6 +47,7 @@ public class FinOpsStrategyReliabilityArchitecturalDecisionRepository {
                 .cloudServices(List.of(awsALB))
                 .costFactor(
                         new InfrastructureCost(
+                                0,
                                 """
                                 ALB has NO Reserved Instances or Savings Plans — only usage reduction cuts cost, \n
                                 Consider NLB for pure TCP/UDP: NLCU pricing is often cheaper than ALB LCU at scale.

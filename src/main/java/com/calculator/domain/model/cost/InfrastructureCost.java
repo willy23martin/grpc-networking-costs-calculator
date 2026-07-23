@@ -5,8 +5,9 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Getter
+@Setter
 public final class InfrastructureCost extends CostFactor {
-    public InfrastructureCost(String costImpactNotes) {
-        super(costImpactNotes);
+    public InfrastructureCost(double value, String costImpactNotes) {
+        super(value, costImpactNotes);
     }
 }

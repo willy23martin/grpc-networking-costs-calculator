@@ -37,7 +37,7 @@ class AWSALBCostCalculatorAdapterTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(calculator, "albFixedChargePerHour", 0.0225);
+        ReflectionTestUtils.setField(calculator, "albFixedChargePerHour", 0.025);
         ReflectionTestUtils.setField(calculator, "albLCUFixedChargePerHour", 0.008);
     }
 
@@ -59,7 +59,7 @@ class AWSALBCostCalculatorAdapterTest {
                     "priceDimensions" : {
                       "SKU.TERM.DIM" : {
                         "unit" : "Hrs",
-                        "pricePerUnit" : { "USD" : "0.0225" }
+                        "pricePerUnit" : { "USD" : "0.025" }
                       }
                     }
                   }
@@ -105,6 +105,7 @@ class AWSALBCostCalculatorAdapterTest {
                                 )
                                 .costFactor(
                                         new InfrastructureCost(
+                                                0,
                                                 """
                                                 ALB has NO Reserved Instances or Savings Plans — only usage reduction cuts cost, \n
                                                 Consider NLB for pure TCP/UDP: NLCU pricing is often cheaper than ALB LCU at scale.
@@ -127,8 +128,8 @@ class AWSALBCostCalculatorAdapterTest {
 
         assertThat(result).isNotNull();
         assertThat(result.get("source")).isEqualTo("AWS Pricing API");
-        assertThat(result.get("fixedPerHourUsd")).isEqualTo(0.0225);
+        assertThat(result.get("fixedPerHourUsd")).isEqualTo(0.025);
         assertThat(result.get("lcuPerHourUsd")).isEqualTo(0.008);
-        assertThat(result.get("fixedPerMonthUsd")).isEqualTo(16.43);
+        assertThat(result.get("fixedPerMonthUsd")).isEqualTo(18.25);
     }
 }

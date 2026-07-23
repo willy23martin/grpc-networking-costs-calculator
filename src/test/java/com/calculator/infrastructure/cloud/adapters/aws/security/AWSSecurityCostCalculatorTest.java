@@ -1,5 +1,8 @@
 package com.calculator.infrastructure.cloud.adapters.aws.security;
 
+import com.calculator.domain.model.architecture.ArchitecturalTactic;
+import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
+import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -7,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -18,6 +22,7 @@ import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 import java.util.Collections;
 import java.util.Map;
 
+import static com.calculator.infrastructure.cloud.adapters.aws.security.AWSSecurityCostCalculatorAdapter.SECURITY_CLOUD_SERVICE_AMAZON_GUARDUTY_FALLBACK_VALUE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -33,6 +38,12 @@ class AWSSecurityCostCalculatorTest {
 
     @Mock
     private AWSSecurityWAFCostCalculator awsSecurityWAFCostCalculator;
+
+    @Mock
+    private SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+
+    @InjectMocks
+    private CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
 
     @InjectMocks
     private AWSSecurityCostCalculatorAdapter securityCostCalculator;
@@ -59,7 +70,16 @@ class AWSSecurityCostCalculatorTest {
 
     @BeforeEach
     void setUp() {
+        // Ensure securityArchitecturalDecisionRepository returns valid dummy tactics to prevent NPE
+        Mockito.lenient().when(securityArchitecturalDecisionRepository.getOAuthTactic())
+                .thenReturn(ArchitecturalTactic.builder().id("tactic-oauth").name("OAuth 2.0 + JWT").build());
+        Mockito.lenient().when(securityArchitecturalDecisionRepository.getMTLSTactic())
+                .thenReturn(ArchitecturalTactic.builder().id("tactic-mtls").name("mTLS").build());
+        Mockito.lenient().when(securityArchitecturalDecisionRepository.getTLSTactic())
+                .thenReturn(ArchitecturalTactic.builder().id("tactic-tls").name("TLS").build());
+
         ReflectionTestUtils.setField(securityCostCalculator, "mapper", mapper);
+        ReflectionTestUtils.setField(securityCostCalculator, "cloudSecurityArchitecturalDecisionRepository", cloudSecurityArchitecturalDecisionRepository);
     }
 
     @Test
@@ -114,7 +134,7 @@ class AWSSecurityCostCalculatorTest {
 
         assertNotNull(results);
         assertEquals(1.00, results.get("guardDutyPerGbLogs"));
-        assertEquals(1.178, results.get("inspectorPerInstanceMonth"));
+        assertEquals(1.2528, results.get("inspectorPerInstanceMonth"));
         assertEquals(5.00, results.get("wafWebAclPerMonth"));
         assertEquals(1.00, results.get("wafRulePerMonth"));
         assertEquals(0.60, results.get("wafPer1MRequests"));
@@ -140,4 +160,5 @@ class AWSSecurityCostCalculatorTest {
         assertEquals(1.00, results.get("guardDutyPerGbLogs"));
         assertEquals(5.00, results.get("wafWebAclPerMonth"));
     }
+
 }

@@ -1,8 +1,10 @@
 package com.calculator.infrastructure.cloud.adapters.aws.security;
 
+import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
 import com.calculator.shared.JSONLogger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.Filter;
@@ -16,15 +18,22 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import static com.calculator.infrastructure.cloud.adapters.aws.AWSCloudCalculatorAdapter.AWS_LOCATION;
+import static com.calculator.infrastructure.cloud.adapters.aws.security.AWSSecurityCostCalculatorAdapter.CLOUD_SERVICE_COST_FACTOR_HAS_CHANGED_TO;
 
 @Component
 public class AWSSecurityWAFCostCalculator {
 
     private static final Logger log = Logger.getLogger(AWSSecurityWAFCostCalculator.class.getName());
+    public static final double SECURITY_CLOUD_SERVICE_WAF_WEB_ACL_PER_MONTH_VALUE = 5.00;
+    public static final double SECURITY_CLOUD_SERVICE_WAF_RULE_PER_MONTH_VALUE = 1.00;
+    public static final double SECURITY_CLOUD_SERVICE_WAF_MILLION_REQUESTS_CHARGES_FALLBACK_VALUE = 0.60;
 
     private final PricingClient pricingClient;
 
     private final ObjectMapper mapper = new ObjectMapper();
+
+    @Autowired
+    CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
 
     public AWSSecurityWAFCostCalculator(PricingClient pricingClient) {
         this.pricingClient = pricingClient;
@@ -37,9 +46,29 @@ public class AWSSecurityWAFCostCalculator {
     }
 
     private void mapAWSWAFPerACLAndRuleAndMillionRequestsCosts(Map<String, Object> securityCosts) {
-        securityCosts.put("wafWebAclPerMonth",         fetchWafPrice("WebACL", 5.00));
-        securityCosts.put("wafRulePerMonth",           fetchWafPrice("Rule", 1.00));
-        securityCosts.put("wafPer1MRequests",          fetchWafPrice("Request", 0.60));
+
+        double wafWebAclPerMonth = fetchWafPrice("WebACL", SECURITY_CLOUD_SERVICE_WAF_WEB_ACL_PER_MONTH_VALUE);
+        double wafRulePerMonth = fetchWafPrice("Rule", SECURITY_CLOUD_SERVICE_WAF_RULE_PER_MONTH_VALUE);
+        double wafPer1MRequests = fetchWafPrice("Request", SECURITY_CLOUD_SERVICE_WAF_MILLION_REQUESTS_CHARGES_FALLBACK_VALUE);
+
+        securityCosts.put("wafWebAclPerMonth", wafWebAclPerMonth);
+        securityCosts.put("wafRulePerMonth", wafRulePerMonth);
+        securityCosts.put("wafPer1MRequests",wafPer1MRequests);
+
+        cloudSecurityArchitecturalDecisionRepository.getAWSWAFCloudService().getCostFactor().setValue(
+                SECURITY_CLOUD_SERVICE_WAF_WEB_ACL_PER_MONTH_VALUE
+                + SECURITY_CLOUD_SERVICE_WAF_RULE_PER_MONTH_VALUE
+                + SECURITY_CLOUD_SERVICE_WAF_MILLION_REQUESTS_CHARGES_FALLBACK_VALUE
+        );
+        cloudSecurityArchitecturalDecisionRepository.getAWSWAFCloudService().getCostFactor().setCostFactorNotes(
+                "WebACL fee " + SECURITY_CLOUD_SERVICE_WAF_WEB_ACL_PER_MONTH_VALUE
+                + "per-rule " + SECURITY_CLOUD_SERVICE_WAF_RULE_PER_MONTH_VALUE
+                + "per-million-request charges." + SECURITY_CLOUD_SERVICE_WAF_MILLION_REQUESTS_CHARGES_FALLBACK_VALUE
+        );
+
+        log.info(cloudSecurityArchitecturalDecisionRepository.getAWSKMSCloudService().getId()
+                + CLOUD_SERVICE_COST_FACTOR_HAS_CHANGED_TO
+                + cloudSecurityArchitecturalDecisionRepository.getAWSKMSCloudService().getCostFactor());
     }
 
     private double fetchWafPrice(String groupType, double fallback) {

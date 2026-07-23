@@ -24,6 +24,12 @@ public class AWSDataTransferCostCalculationServiceAdapter extends AWSCloudCalcul
 
     private final Logger log = Logger.getLogger(AWSDataTransferCostCalculationServiceAdapter.class.getName());
 
+    // Because it is 650 bytes * $0.085 per GB - next 40 TB / month data transfer out
+    public static final double OAUTH_JWT_DATA_TRANSFER_COST = 0.00000005525;
+
+    // Because it is 30 bytes * $0.085 per GB - next 40 TB / month data transfer out
+    public static final double TLS_DATA_TRANSFER_COST = 0.00000000255;
+
     // Based on the ones defined https://aws.amazon.com/ec2/pricing/on-demand/ up to date:
     public final static double[] AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB = {10_240.0, 40_960.0, 102_400.0, Double.MAX_VALUE };
 

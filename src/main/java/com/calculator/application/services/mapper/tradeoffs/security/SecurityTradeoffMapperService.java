@@ -9,7 +9,6 @@ import com.calculator.domain.model.quality.TradeoffType;
 import com.calculator.domain.model.quality.security.SecurityQualityTradeoff;
 import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
 import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
-import com.calculator.infrastructure.web.rest.ContainerizedEnvironmentCostController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

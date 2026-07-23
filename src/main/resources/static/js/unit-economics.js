@@ -7,7 +7,7 @@
      POST /api/cost/unit-economics     (UnitEconomicsController)
 
    Security service costs are read from per-service sessionStorage keys
-   (written by recalculateSecCost() which uses /api/aws/security-services
+   (written by recalculateSecCost() which uses /api/cloud/security-services
    pricing data) — one row per service, only when selected and cost > 0.
    ======================================================================= */
 
@@ -352,12 +352,15 @@ function _renderTcoBreakdownTable(
 
   // Show tactic networking overhead (TLS/retry byte cost) separately from base egress
   var _tacticOverhead = parseFloat(sessionStorage.getItem('tco_tactic_overhead')||'0');
-  var _baseEgress = parseFloat(sessionStorage.getItem('tco_phase3_base_egress')||'0') || egressCost;
-  // egressCost = full networking cost including all tactic effects (retry RPS, TLS bytes etc)
-  // This matches the Transfer Cost shown in the proto analysis table above
-  var _effRpsLabel = (effectiveRps || baseRps || 0);
+  var _baseEgress = parseFloat(sessionStorage.getItem('tco_phase3_base_egress')||'0');
+  // Use stored effectiveRps so the label is correct even when called with no args
+  var _storedEffRps = parseInt(sessionStorage.getItem('tco_effective_rps')||'0');
+  var _effRpsLabel = effectiveRps || _storedEffRps || baseRps || 0;
   addRow('AWS Egress (Response Transfer)', 'Networking', 'badge-bytes', egressCost,
-    _effRpsLabel + ' eff. RPS · AWS data-out tiers');
+    _effRpsLabel + ' eff. RPS · AWS data-out tiers'
+    + (_tacticOverhead > 0.01 && _baseEgress > 0
+      ? ' (base $' + _baseEgress.toFixed(2) + ' + $' + _tacticOverhead.toFixed(2) + ' tactic overhead incl. retry+TLS)'
+      : ''));
 
   var isTls  = !!(document.getElementById('tactic-tls')  && document.getElementById('tactic-tls').checked);
   var isMtls = !!(document.getElementById('tactic-mtls') && document.getElementById('tactic-mtls').checked);
@@ -376,10 +379,25 @@ function _renderTcoBreakdownTable(
     sumPositive += 0; // not added to sum
   }
 
-  if (isTls||isMtls) addRow((isMtls?'mTLS':'TLS')+' frame overhead (RFC 8446)',
-    'Security','badge-dr', 0, 'Included in egress above — no additional charge', false, true);
-  if (isOauth) addRow('JWT header overhead (RFC 7519 — request-side)',
-    'Security','badge-dr', 0, 'AWS inbound data transfer is free', false, true);
+  // TLS/mTLS and JWT overhead are included in the egress total.
+  // Show the actual overhead cost as informational with real amount.
+  var _tlsShare = (isTls||isMtls) && _tacticOverhead > 0
+    ? Math.round(_tacticOverhead * 0.95 * 100) / 100 : 0;  // ~95% of overhead is TLS bytes
+  var _jwtShare = isOauth && _tacticOverhead > 0
+    ? Math.round(_tacticOverhead * 0.05 * 100) / 100 : 0;  // ~5% is JWT header bytes
+  if (isTls||isMtls) {
+    var _tlsAmt = _tlsShare > 0 ? '$' + _tlsShare.toFixed(2) + '/mo included in egress above' : 'included in egress above';
+    addRow((isMtls?'mTLS (Mutual TLS)':'TLS')+' byte overhead (RFC 8446)',
+      'Security','badge-dr', _tlsShare,
+      (_baseEgress > 0 ? 'Base egress $' + _baseEgress.toFixed(2) + ' + tactic overhead $' + _tacticOverhead.toFixed(2) + ' = $' + egressCost.toFixed(2) + ' total. TLS/mTLS frame bytes included.' : 'Included in AWS Egress row above.'),
+      false, true);
+  }
+  if (isOauth && _jwtShare > 0) {
+    addRow('JWT header overhead (RFC 7519)',
+      'Security','badge-dr', _jwtShare,
+      'JWT request headers add inbound bytes — AWS inbound transfer is free. Cost shown is outbound JWT in response overhead.',
+      false, true);
+  }
 
   if (albCost > 0)       addRow('Application Load Balancer (ALB)', 'Cloud Infra', 'badge-warn', albCost, '$'+albCost.toFixed(2)+'/mo · /api/cloud/alb-pricing');
   if (cacheCost > 0)     addRow('Amazon ElastiCache', 'Cloud Infra', 'badge-warn', cacheCost, '$'+cacheCost.toFixed(2)+'/mo · /api/cloud/caching-pricing');

@@ -1,17 +1,8 @@
 package com.calculator.infrastructure.web.rest;
 
-import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.cloud.resiliency.CloudResiliencyArchitecturalDecisionRepository;
-import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
-import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,7 +10,6 @@ import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
 import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -27,39 +17,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class ContainerizedEnvironmentCostControllerTest {
+@Import(TestRepositoryStubsConfiguration.class)
+class ContainerizedEnvironmentCostControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private PricingClient pricingClientMock;
-
-    // Architecture decision repositories to satisfy application context initialization
-    @MockitoBean
-    private SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
-    @MockitoBean
-    private CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
-    @MockitoBean
-    private ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository;
-    @MockitoBean
-    private CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository;
-    @MockitoBean
-    private ResiliencyArchitecturalDecisionRepository resiliencyArchitecturalDecisionRepository;
-    @MockitoBean
-    private CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
-
-    @BeforeEach
-    void setUp() {
-        Mockito.lenient().when(reliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(cloudReliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(resiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(cloudResiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
-        Mockito.lenient().when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
-    }
 
     @Test
     void getContainerPricing_successfulExecution() throws Exception {

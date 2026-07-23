@@ -1,9 +1,7 @@
 package com.calculator.domain.repository.resiliency;
 
-import com.calculator.domain.dto.tactics.resiliency.ResiliencyTradeoffDTO;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
 import com.calculator.domain.model.architecture.ArchitecturalPattern;
-import com.calculator.domain.model.architecture.ArchitecturalTactic;
 import com.calculator.domain.model.cost.InfrastructureCost;
 import com.calculator.domain.model.cost.NetworkingCost;
 import com.calculator.domain.model.cost.networking.NetworkingCostCriteria;
@@ -54,7 +52,10 @@ public class ResiliencyArchitecturalDecisionRepository {
                                 .name(ArchitecturalCharacteristics.RESILIENCY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
-                        new InfrastructureCost("No direct cloud cost impact.")
+                        new InfrastructureCost(
+                                0,
+                                "No direct cloud cost impact."
+                        )
                 )
                 .build();
     }
@@ -88,6 +89,7 @@ public class ResiliencyArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.REQUESTS_PER_SECOND,
+                                0, // Initially 0 as no retry percentage is defined by the moment this object is initialized.
                                 "Each retry adds to effective RPS. With a 10% error rate and 2 retries, " +
                                         "effective RPS can increase by up to 20%."
                         )
@@ -122,7 +124,10 @@ public class ResiliencyArchitecturalDecisionRepository {
                                 .name(ArchitecturalCharacteristics.RESILIENCY.name())
                                 .qualityTradeoffs(qualityTradeoffs).build()
                 ).costFactor(
-                        new InfrastructureCost("No direct cloud cost impact.")
+                        new InfrastructureCost(
+                                0,
+                                "No direct cloud cost impact."
+                        )
                 )
                 .build();
     }

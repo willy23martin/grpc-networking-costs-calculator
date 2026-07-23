@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.calculator.infrastructure.cloud.adapters.aws.networking.AWSDataTransferCostCalculationServiceAdapter.OAUTH_JWT_DATA_TRANSFER_COST;
+import static com.calculator.infrastructure.cloud.adapters.aws.security.AWSSecurityCostCalculatorAdapter.SECURITY_CLOUD_SERVICE_KMS_CMK_PRICE_PER_MONTH_FALLBACK_VALUE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -78,7 +80,11 @@ class SecurityTradeoffMapperServiceTest {
                                 .qualityTradeoffs(tradeoffs)
                                 .build()
                 )
-                .costFactor(new NetworkingCost(NetworkingCostCriteria.OVERHEAD, "Adds 650 Bytes per request header"))
+                .costFactor(
+                        new NetworkingCost(NetworkingCostCriteria.OVERHEAD,
+                                OAUTH_JWT_DATA_TRANSFER_COST,
+                        "Adds 650 Bytes per request header"
+                ))
                 .build();
 
         when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(List.of(tactic));
@@ -90,7 +96,7 @@ class SecurityTradeoffMapperServiceTest {
         // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        SecurityTradeoffsDTO dto = results.get(0);
+        SecurityTradeoffsDTO dto = results.getFirst();
 
         assertEquals("tactic-oauth", dto.getTacticId());
         assertEquals("OAuth 2.0 + JWT", dto.getTacticName());
@@ -128,7 +134,11 @@ class SecurityTradeoffMapperServiceTest {
                                 .qualityTradeoffs(tradeoffs)
                                 .build()
                 )
-                .costFactor(new InfrastructureCost("Flat rate of $1.00 per month per key"))
+                .costFactor(
+                        new InfrastructureCost(
+                                SECURITY_CLOUD_SERVICE_KMS_CMK_PRICE_PER_MONTH_FALLBACK_VALUE,
+                                "Flat rate of $" + SECURITY_CLOUD_SERVICE_KMS_CMK_PRICE_PER_MONTH_FALLBACK_VALUE + " per month per key")
+                )
                 .build();
 
         when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
@@ -141,11 +151,11 @@ class SecurityTradeoffMapperServiceTest {
         // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        SecurityTradeoffsDTO dto = results.get(0);
+        SecurityTradeoffsDTO dto = results.getFirst();
 
         assertEquals("sec-kms", dto.getTacticId());
         assertEquals("AWS KMS (Encryption)", dto.getTacticName());
-        assertEquals("Flat rate of $1.00 per month per key", dto.getCostFactor());
+        assertEquals("Flat rate of $1.0 per month per key", dto.getCostFactor());
         assertEquals("Encrypts data at rest via automatic key rotation.", dto.getVulnerabilityPrevented());
     }
 }

@@ -16,10 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.calculator.infrastructure.cloud.adapters.aws.networking.AWSDataTransferCostCalculationServiceAdapter.OAUTH_JWT_DATA_TRANSFER_COST;
+import static com.calculator.infrastructure.cloud.adapters.aws.networking.AWSDataTransferCostCalculationServiceAdapter.TLS_DATA_TRANSFER_COST;
+
 @Component
 public class SecurityArchitecturalDecisionRepository {
-
-
 
     public List<ArchitecturalDecision> getAvailableSecurityDecisions() {
         return List.of(
@@ -75,6 +76,7 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
+                                TLS_DATA_TRANSFER_COST,
                                 "Adds ~" +
                                         TLSOverhead.RFC_8446_AES_GCM_AEAD_TLS_WITHOUT_PADDING_OVERHEAD_BYTES_MAX.getOverhead()
                                 + " B/frame TLS overhead. Reconnect RPS adds handshake requests."
@@ -140,6 +142,7 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
+                                TLS_DATA_TRANSFER_COST,
                                 TLSOverhead.MTLS_HANDSHAKE_MESSAGES.getOverhead() +
                                 " TLS messages per handshake vs 2 for one-way TLS. Increases networking cost and processing overhead."
                         )
@@ -216,6 +219,7 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.OVERHEAD,
+                                OAUTH_JWT_DATA_TRANSFER_COST,
                                 "JWT header overhead ~"
                                         + JWTOverhead.JWT_OVERHEAD_BYTES_TYPICAL.getOverhead()
                                         + " B (bytes) per request (inbound to service, AWS charges $0). " +
@@ -258,6 +262,7 @@ public class SecurityArchitecturalDecisionRepository {
                 ).costFactor(
                         new NetworkingCost(
                                 NetworkingCostCriteria.NONE,
+                                0,
                                 "0 B (bytes) or RPS overhead."
                         )
                 )

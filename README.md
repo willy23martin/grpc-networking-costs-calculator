@@ -55,7 +55,7 @@ The service can be parametrized before building it to use a Cloud Service Provid
 
 | Controller Class Name                    | Request Method & Endpoint Path           | Replaces JS function / Description |
 |------------------------------------------|------------------------------------------|---|
-| `TCOCalculatorController`                | `POST /`                                 | `recalculateRps()`, `calcMonthlyCost()`, and compiles `.proto` file uploads dynamically |
+| `NetworkingCostCalculatorController`     | `POST /calculateProtofileNetworkingCosts`| `recalculateRps()`, and compiles `.proto` file uploads dynamically |
 | `ContainerizedEnvironmentCostController` | `GET /api/cloud/compute-instances`       | Fetches live compute node on-demand/fallback definitions |
 | `CloudTCOCalculatorController`           | `GET /api/cloud/alb-pricing`             | Provides base structural load balancer tier schemas |
 | `CloudTCOCalculatorController`           | `GET /api/cloud/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
@@ -65,7 +65,7 @@ The service can be parametrized before building it to use a Cloud Service Provid
 | `EffectiveRPSCalculatorController`       | `POST /api/tco/effective-rps`            | `recalculateRps()` (Network overhead scaling limits evaluation) |
 | `FinOpsDiscountController`               | `POST /api/finops/container-discounts`   | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
 | `PortfolioUnitEconomicsController`       | `POST /api/portfolio/roi`                | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
-| `UnitEconomicsController`                | `POST /api/cost/unit-economics`          | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
+| `TCOUnitEconomicsController`             | `POST /api/cost/unit-economics`          | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
 | `ReliabilityTacticsController`           | `GET /api/reliability/tactic-mappings`   | Lists qualitative score matrices for streaming protocols |
 | `ResiliencyPatternsController`           | `GET /api/resiliency/tactic-mappings`    | Lists resiliency structural tradeoff profiles |
 | `SecurityTacticsController`              | `GET /api/security/tactic-mappings`      | Lists channel security tactic constraints profiles |
@@ -124,11 +124,24 @@ This application leverages the Hexagonal Architecture pattern to decouple core b
     - FinOps strategies pricing: [finops-strategies-pricing.json](src/main/resources/awspricelistbulkapiexamples/aws-finops-strategies-pricing.json)
     - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/main/resources/awspricelistbulkapiexamples/aws-computesavingsplans-jsonpricingfile-response.json)
 
+## Fallback pricing values per services to fill cost factors:
+
+### Fallback pricing for security services:
+
+| Cloud Service | Cost Factor / Key Mapping | Fallback Value                                           | AWS Pricing Reference |
+| :--- | :--- |:---------------------------------------------------------| :--- |
+| **AWS KMS** | `kmsCmkPerMonth`<br>`kmsApiCallsPer10k` | `$1.00` per CMK / month<br>`$0.03` per 10,000 requests   | [AWS KMS Pricing](https://aws.amazon.com/kms/pricing/) |
+| **AWS Audit Manager** | `auditManagerPerAssessmentMonth` | `$1.25` per 1,000 resource assessments                   | [AWS Audit Manager Pricing](https://aws.amazon.com/audit-manager/pricing/) |
+| **Amazon CloudWatch** | `cloudwatchLogsIngestionPerGb`<br>`cloudwatchLogsStoragePricePerGbMonth` | `$0.50` per GB ingestion<br>`$0.03` per GB-month storage | [Amazon CloudWatch Pricing](https://aws.amazon.com/cloudwatch/pricing/) |
+| **Amazon Macie** | `maciePerGbClassified`<br>`macieFirstGbFreeNote` | `$1.00` per GB (First 1 GB free)                         | [Amazon Macie Pricing](https://aws.amazon.com/macie/pricing/) |
+| **Amazon Inspector** | `inspectorPerInstanceMonth` | `$1.2528` per EC2 instance / month                       | [Amazon Inspector Pricing](https://aws.amazon.com/inspector/pricing/) |
+| **Amazon GuardDuty** | `guardDutyPerGbLogs`<br>`guardDutyFirstGbFreeNote` | `$1.00` per GB (First 500 GB free)                       | [Amazon GuardDuty Pricing](https://aws.amazon.com/guardduty/pricing/) |
+
+
 ## Design principles
 
-- Frontend sends **raw inputs** (form values) + **pricing data** (already fetched from `/api/cloud/*`) to each endpoint.
+- Frontend sends and project **raw inputs and outputs** (form values) + **pricing data** (already fetched from `/api/cloud/*`) to and from each endpoint.
 - Backend returns **computed results** only — costs, breakdowns, labels.
-- No business logic in JS. JS = form collection + API call + render.
 
 ## Retry formula (preserved)
 `tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
@@ -247,8 +260,8 @@ These charges are **not duplicated**; they represent separate AWS services.
 ### Example Monthly Cost (1 cluster + 1 t3.medium node)
 
 - **EKS Control Plane**: ~$73
-- **1× t3.medium (On-Demand)**: ~$30
-- **Total**: ~$103/month (before RI/SP discounts)
+- **1× t3.medium (On-Demand)**: ~$30.37
+- **Total**: ~$103.37/month (before RI/SP discounts)
 
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
