@@ -9,9 +9,9 @@ import com.calculator.domain.dto.tactics.security.SecurityTactics;
 public record ArchitecturalDecisionsDTO(
         long requestsPerSecond,
         ReliabilityTactics reliabilityTactics,
-        TimeoutPattern timeoutTactic,
-        RetryPattern retryTactic,
-        CircuitBreakerPattern circuitBreakerTactic,
+        TimeoutPattern timeoutPattern,
+        RetryPattern retryPattern,
+        CircuitBreakerPattern circuitBreakerPattern,
         SecurityTactics securityTactics
 ) {
     public static ArchitecturalDecisionsDTO empty() {

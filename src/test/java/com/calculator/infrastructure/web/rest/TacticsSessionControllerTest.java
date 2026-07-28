@@ -35,15 +35,15 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 "reliabilityClientSideLoadBalancerTactic": true,
                 "reliabilityServerSideLoadBalancerTactic": false
               },
-              "timeoutTactic": {
-                "resiliencyTimeoutTactic": true,
-                "tacticTimeoutMilliseconds": 300
+              "timeoutPattern": {
+                "resiliencyTimeoutPattern": true,
+                "patternTimeoutMilliseconds": 300
               },
-              "retryTactic": {
-                "resiliencyRetryTactic": true,
-                "tacticRetryTimes": 3
+              "retryPattern": {
+                "resiliencyRetryPattern": true,
+                "patternRetryTimes": 3
               },
-              "circuitBreakerTactic": {
+              "circuitBreakerPattern": {
                 "resiliencyCircuitBreakerPattern": true,
                 "circuitBreakerPatternMinimumCalls": 10,
                 "circuitBreakerHalfOpen": 5,
@@ -82,9 +82,9 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                         .session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reliabilityTactics").isNotEmpty())
-                .andExpect(jsonPath("$.timeoutTactic").isNotEmpty())
-                .andExpect(jsonPath("$.retryTactic").isNotEmpty())
-                .andExpect(jsonPath("$.circuitBreakerTactic").isNotEmpty())
+                .andExpect(jsonPath("$.timeoutPattern").isNotEmpty())
+                .andExpect(jsonPath("$.retryPattern").isNotEmpty())
+                .andExpect(jsonPath("$.circuitBreakerPattern").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics.tlsTactic").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics.jwtTactic").isNotEmpty())
@@ -92,15 +92,15 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.requestsPerSecond").value(1000))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityClientSideLoadBalancerTactic").value(true))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityServerSideLoadBalancerTactic").value(false))
-                .andExpect(jsonPath("$.timeoutTactic.resiliencyTimeoutTactic").value(true))
-                .andExpect(jsonPath("$.timeoutTactic.tacticTimeoutMilliseconds").value(300))
-                .andExpect(jsonPath("$.retryTactic.resiliencyRetryTactic").value(true))
-                .andExpect(jsonPath("$.retryTactic.tacticRetryTimes").value(3))
-                .andExpect(jsonPath("$.circuitBreakerTactic.resiliencyCircuitBreakerPattern").value(true))
-                .andExpect(jsonPath("$.circuitBreakerTactic.circuitBreakerPatternMinimumCalls").value(10))
-                .andExpect(jsonPath("$.circuitBreakerTactic.circuitBreakerHalfOpen").value(5))
-                .andExpect(jsonPath("$.circuitBreakerTactic.circuitBreakerWaitMilliseconds").value(60000))
-                .andExpect(jsonPath("$.circuitBreakerTactic.circuitBreakerFailureRate").value(50))
+                .andExpect(jsonPath("$.timeoutPattern.resiliencyTimeoutPattern").value(true))
+                .andExpect(jsonPath("$.timeoutPattern.patternTimeoutMilliseconds").value(300))
+                .andExpect(jsonPath("$.retryPattern.resiliencyRetryPattern").value(true))
+                .andExpect(jsonPath("$.retryPattern.patternRetryTimes").value(3))
+                .andExpect(jsonPath("$.circuitBreakerPattern.resiliencyCircuitBreakerPattern").value(true))
+                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerPatternMinimumCalls").value(10))
+                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerHalfOpen").value(5))
+                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerWaitMilliseconds").value(60000))
+                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerFailureRate").value(50))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(true))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.mtlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsReconnectsPerHour").value(2))
@@ -135,9 +135,9 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.requestsPerSecond").value(0))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityClientSideLoadBalancerTactic").value(false))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityServerSideLoadBalancerTactic").value(false))
-                .andExpect(jsonPath("$.timeoutTactic.resiliencyTimeoutTactic").value(false))
-                .andExpect(jsonPath("$.retryTactic.resiliencyRetryTactic").value(false))
-                .andExpect(jsonPath("$.circuitBreakerTactic.resiliencyCircuitBreakerPattern").value(false))
+                .andExpect(jsonPath("$.timeoutPattern.resiliencyTimeoutPattern").value(false))
+                .andExpect(jsonPath("$.retryPattern.resiliencyRetryPattern").value(false))
+                .andExpect(jsonPath("$.circuitBreakerPattern.resiliencyCircuitBreakerPattern").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.mtlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.oauthJwtEnabled").value(false))
@@ -159,7 +159,7 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.requestsPerSecond").value(500))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityClientSideLoadBalancerTactic").value(true))
-                .andExpect(jsonPath("$.timeoutTactic.tacticTimeoutMilliseconds").value(200))
+                .andExpect(jsonPath("$.timeoutPattern.patternTimeoutMilliseconds").value(200))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.oauthJwtEnabled").value(false));
     }

@@ -373,9 +373,9 @@ function buildBaseTacticsDTO(rps) {
   return {
     requestsPerSecond: rps,
     reliabilityTactics: { reliabilityClientSideLoadBalancerTactic: false, reliabilityServerSideLoadBalancerTactic: false },
-    timeoutTactic: { resiliencyTimeoutTactic: false, tacticTimeoutMilliseconds: 0 },
-    retryTactic: { resiliencyRetryTactic: false, tacticRetryTimes: 0 },
-    circuitBreakerTactic: { resiliencyCircuitBreakerPattern: false, circuitBreakerPatternMinimumCalls: 0, circuitBreakerHalfOpen: 0, circuitBreakerWaitMilliseconds: 0, circuitBreakerFailureRate: 0 },
+    timeoutPattern: { resiliencyTimeoutPattern: false, patternTimeoutMilliseconds: 0 },
+    retryPattern: { resiliencyRetryPattern: false, patternRetryTimes: 0 },
+    circuitBreakerPattern: { resiliencyCircuitBreakerPattern: false, circuitBreakerPatternMinimumCalls: 0, circuitBreakerHalfOpen: 0, circuitBreakerWaitMilliseconds: 0, circuitBreakerFailureRate: 0 },
     securityTactics: {
       tlsTactic: { tlsEnabled: false, mtlsEnabled: false, tlsReconnectsPerHour: 0 },
       jwtTactic: { oauthJwtEnabled: false, tokenValidationMode: 'LOCAL', tokenTtlSeconds: 3600, concurrentClients: 1, interceptorType: 'UNARY' },
@@ -1718,21 +1718,21 @@ document.addEventListener('DOMContentLoaded', function () {
       s('tactic-client-lb', dto.reliabilityTactics.reliabilityClientSideLoadBalancerTactic);
       s('tactic-server-lb', dto.reliabilityTactics.reliabilityServerSideLoadBalancerTactic);
 
-      s('tactic-timeout', dto.timeoutTactic.resiliencyTimeoutTactic);
-      v('input-timeout', dto.timeoutTactic.tacticTimeoutMilliseconds);
-      var tout = document.getElementById('input-timeout'); if (tout) tout.disabled = !dto.timeoutTactic.resiliencyTimeoutTactic;
+      s('tactic-timeout', dto.timeoutPattern.resiliencyTimeoutPattern);
+      v('input-timeout', dto.timeoutPattern.patternTimeoutMilliseconds);
+      var tout = document.getElementById('input-timeout'); if (tout) tout.disabled = !dto.timeoutPattern.resiliencyTimeoutPattern;
 
-      s('tactic-retry', dto.retryTactic.resiliencyRetryTactic);
-      if (dto.retryTactic.tacticRetryErrorPct) v('input-retry-error-pct', dto.retryTactic.tacticRetryErrorPct);
-      var ri = document.getElementById('input-retry-error-pct'); if (ri) ri.disabled = !dto.retryTactic.resiliencyRetryTactic;
+      s('tactic-retry', dto.retryPattern.resiliencyRetryPattern);
+      if (dto.retryPattern.tacticRetryErrorPct) v('input-retry-error-pct', dto.retryPattern.tacticRetryErrorPct);
+      var ri = document.getElementById('input-retry-error-pct'); if (ri) ri.disabled = !dto.retryPattern.resiliencyRetryPattern;
 
-      s('tactic-cb', dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern);
-      if (dto.circuitBreakerTactic.resiliencyCircuitBreakerPattern) {
+      s('tactic-cb', dto.circuitBreakerPattern.resiliencyCircuitBreakerPattern);
+      if (dto.circuitBreakerPattern.resiliencyCircuitBreakerPattern) {
         toggleCbParams(true);
-        v('input-cb-min-calls', dto.circuitBreakerTactic.circuitBreakerPatternMinimumCalls);
-        v('input-cb-half-open', dto.circuitBreakerTactic.circuitBreakerHalfOpen);
-        v('input-cb-wait', dto.circuitBreakerTactic.circuitBreakerWaitMilliseconds);
-        v('input-cb-failure-rate', dto.circuitBreakerTactic.circuitBreakerFailureRate);
+        v('input-cb-min-calls', dto.circuitBreakerPattern.circuitBreakerPatternMinimumCalls);
+        v('input-cb-half-open', dto.circuitBreakerPattern.circuitBreakerHalfOpen);
+        v('input-cb-wait', dto.circuitBreakerPattern.circuitBreakerWaitMilliseconds);
+        v('input-cb-failure-rate', dto.circuitBreakerPattern.circuitBreakerFailureRate);
       }
 
       if (dto.securityTactics) {

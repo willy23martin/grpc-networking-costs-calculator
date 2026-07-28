@@ -144,7 +144,7 @@ This application leverages the Hexagonal Architecture pattern to decouple core b
 - Backend returns **computed results** only — costs, breakdowns, labels.
 
 ## Retry formula (preserved)
-`tacticRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
+`patternRetryTimes = baseRps × (errorPct / 100)` — always uses BASE RPS.
 
 ## 🏛️ Unit Economics & TCO formulas
 

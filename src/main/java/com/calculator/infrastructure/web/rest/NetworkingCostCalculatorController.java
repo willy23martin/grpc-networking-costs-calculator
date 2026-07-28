@@ -1,5 +1,6 @@
 package com.calculator.infrastructure.web.rest;
 
+import com.calculator.application.services.calculators.CostEfficiencyCalculator;
 import com.calculator.application.services.calculators.cost.cloud.ports.NetworkingCostCalculatorPort;
 import com.calculator.application.services.calculators.rps.RequestPerSecondCostCalculatorService;
 import com.calculator.application.services.compilators.ProtocolBufferCompilationService;
@@ -76,6 +77,9 @@ public class NetworkingCostCalculatorController implements ErrorController {
     @Autowired
     NetworkingCostCalculatorPort networkingCostCalculator;
 
+    @Autowired
+    private CostEfficiencyCalculator costEfficiencyCalculator;
+
     @PostMapping("/calculateProtofileNetworkingCosts")
     public String calculateProtoFileNetworkingCosts(
             @RequestParam("protoFile") MultipartFile protoFile,
@@ -92,6 +96,8 @@ public class NetworkingCostCalculatorController implements ErrorController {
             architecturalDecisionsDTO = ArchitecturalDecisionsDTO.empty();
             model.addAttribute("uploadMessage", NO_TACTICS_CONFIGURATION_FOUND_MESSAGE);
         }
+
+        costEfficiencyCalculator.setArchitecturalDecisions(architecturalDecisionsDTO);
 
         String view = calculateNetworkingCost(protoFile, architecturalDecisionsDTO, model);
         return (view != null) ? view : "calculator";
