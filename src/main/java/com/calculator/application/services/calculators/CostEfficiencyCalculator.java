@@ -163,6 +163,7 @@ public class CostEfficiencyCalculator {
         return TradeoffType.ORTHOGONAL;
     }
 
+    // TODO - Use a Refactoring Pattern to refactor the creation based on conditionals
     public void setArchitecturalDecisions(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
         setReliabilityArchitecturalDecisions(architecturalDecisionsDTO.reliabilityTactics());
         setSecurityArchitecturalDecisions(architecturalDecisionsDTO.securityTactics());
