@@ -1,11 +1,15 @@
 package com.calculator.features;
 
+import com.calculator.infrastructure.cloud.adapters.aws.networking.AWSDataTransferCostCalculationServiceAdapter;
 import com.calculator.infrastructure.web.rest.CloudServicesTCCCalculatorController;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
+@ExtendWith(SpringExtension.class) // Because it needs to use the lightweight test engine (no Tomcat, no Security)
+@ContextConfiguration(classes = {
+        CloudServicesTCCCalculatorController.class
+})
 public class Activity5CostOptimizationStrategiesSteps {
 
     @Autowired
