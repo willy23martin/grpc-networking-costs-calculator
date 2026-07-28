@@ -87,14 +87,14 @@ function collectTacticsDTO() {
       reliabilityServerSideLoadBalancerTactic: isChecked('tactic-server-lb')
     },
 
-    timeoutTactic: {
-      resiliencyTimeoutTactic: isChecked('tactic-timeout'),
-      tacticTimeoutMilliseconds: getParsedInteger('input-timeout')
+    timeoutPattern: {
+      resiliencyTimeoutPattern: isChecked('tactic-timeout'),
+      patternTimeoutMilliseconds: getParsedInteger('input-timeout')
     },
 
-    retryTactic: calculateResiliencyRetryParameters(requestsPerSecond),
+    retryPattern: calculateResiliencyRetryParameters(requestsPerSecond),
 
-    circuitBreakerTactic: {
+    circuitBreakerPattern: {
       resiliencyCircuitBreakerPattern: isChecked('tactic-cb'),
       circuitBreakerPatternMinimumCalls: getParsedInteger('input-cb-min-calls'),
       circuitBreakerHalfOpen: getParsedInteger('input-cb-half-open'),
@@ -135,13 +135,13 @@ function calculateResiliencyRetryParameters(baselineRequestsPerSecond) {
   const totalCalculatedRetryInvocations = Math.round((effectiveBaseTrafficLoad * failureRatePercentageThreshold) / 100);
 
   return {
-    resiliencyRetryTactic: isChecked('tactic-retry'),
+    resiliencyRetryPattern: isChecked('tactic-retry'),
     tacticRetryErrorPct: failureRatePercentageThreshold,
-    /* tacticRetryTimes must be the raw error-rate percentage (not the pre-calculated
+    /* patternRetryTimes must be the raw error-rate percentage (not the pre-calculated
        extra req/s count) because RequestPerSecondCostCalculatorService computes:
-       extra = baseRps × tacticRetryTimes / 100
-       So tacticRetryTimes = 5 gives +50 req/s at 1000 base RPS (correct).
+       extra = baseRps × patternRetryTimes / 100
+       So patternRetryTimes = 5 gives +50 req/s at 1000 base RPS (correct).
        Sending 50 here would give +500 req/s (wrong — produces effectiveRps 1,500). */
-    tacticRetryTimes: failureRatePercentageThreshold
+    patternRetryTimes: failureRatePercentageThreshold
   };
 }

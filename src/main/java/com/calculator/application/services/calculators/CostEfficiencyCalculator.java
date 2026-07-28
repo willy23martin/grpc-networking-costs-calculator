@@ -1,7 +1,10 @@
 package com.calculator.application.services.calculators;
 
+import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.requests.TCOUnitEconomicsRequest;
 import com.calculator.domain.dto.responses.TCOUnitEconomicsResponse;
+import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
+import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.TradeoffType;
@@ -11,16 +14,21 @@ import com.calculator.domain.repository.cloud.security.CloudSecurityArchitectura
 import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
 import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
 import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Logger;
 
 import static com.calculator.application.services.utils.MathUtils.*;
 
 @Service
 public class CostEfficiencyCalculator {
+
+    private static final Logger log = Logger.getLogger(CostEfficiencyCalculator.class.getName());
 
     public static final double SECONDS_PER_MONTH = 2_592_000.0;
     public static final int MONTHS_PER_YEAR = 12;
@@ -51,6 +59,11 @@ public class CostEfficiencyCalculator {
     private int consumerCount = 1;
     private double revenuePerUserPerMonth = 0.0;
 
+    @PostConstruct
+    public void initializeArchitecturalDecisions() {
+        architecturalDecisions = new CopyOnWriteArrayList<>();
+    }
+
     public TCOUnitEconomicsResponse calculateUnitEconomics(
             TCOUnitEconomicsRequest unitEconomicsRequest
     ) {
@@ -71,7 +84,6 @@ public class CostEfficiencyCalculator {
     }
 
     private void setCostEfficiencyCalculationParameters(TCOUnitEconomicsRequest unitEconomicsRequest) {
-        this.architecturalDecisions = getArchitecturalDecisions();
         this.egressTransferCostUsd = unitEconomicsRequest.egressTransferCostUsd;
         this.cloudInfraCostUsd = unitEconomicsRequest.cloudInfraCostUsd;
         this.finopsSavingUsd = unitEconomicsRequest.finopsSavingUsd;
@@ -151,17 +163,46 @@ public class CostEfficiencyCalculator {
         return TradeoffType.ORTHOGONAL;
     }
 
-    private List<ArchitecturalDecision> getArchitecturalDecisions() {
-        List<ArchitecturalDecision> allDecisions = new ArrayList<>();
+    public void setArchitecturalDecisions(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
+        setReliabilityArchitecturalDecisions(architecturalDecisionsDTO.reliabilityTactics());
+        setSecurityArchitecturalDecisions(architecturalDecisionsDTO.securityTactics());
+        setResiliencyArchitecturalDecisions(architecturalDecisionsDTO);
+        log.info("ArchitecturalDecisions: " + architecturalDecisions);
+    }
 
-        allDecisions.addAll(reliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions());
-        allDecisions.addAll(cloudReliabilityArchitecturalDecisionRepository.getAvailableReliabilityDecisions());
+    private void setResiliencyArchitecturalDecisions(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
+        if(architecturalDecisionsDTO.timeoutPattern().resiliencyTimeoutPattern()) {
+            architecturalDecisions.add(resiliencyArchitecturalDecisionRepository.getTimeoutPattern());
+        }
+        if(architecturalDecisionsDTO.retryPattern().resiliencyRetryPattern()) {
+            architecturalDecisions.add(resiliencyArchitecturalDecisionRepository.getRetryPattern());
+        }
+        if(architecturalDecisionsDTO.circuitBreakerPattern().resiliencyCircuitBreakerPattern()) {
+            architecturalDecisions.add(resiliencyArchitecturalDecisionRepository.getCircuitBreakerPattern());
+        }
+    }
 
-        allDecisions.addAll(resiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions());
-        allDecisions.addAll(cloudResiliencyArchitecturalDecisionRepository.getAvailableResiliencyDecisions());
+    private void setSecurityArchitecturalDecisions(SecurityTactics securityTactics) {
+        if(securityTactics.jwtTactic().oauthJwtEnabled()) {
+            architecturalDecisions.add(securityArchitecturalDecisionRepository.getOAuthTactic());
+        }
+        if(securityTactics.tlsTactic().tlsEnabled()) {
+            architecturalDecisions.add(securityArchitecturalDecisionRepository.getTLSTactic());
+        }
+        if(securityTactics.tlsTactic().mtlsEnabled()) {
+            architecturalDecisions.add(securityArchitecturalDecisionRepository.getMTLSTactic());
+        }
+        if(securityTactics.basicAuthenticationPattern().basicAuthEnabled()) {
+            architecturalDecisions.add(securityArchitecturalDecisionRepository.getBasicAuthTactic());
+        }
+    }
 
-        allDecisions.addAll(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions());
-        allDecisions.addAll(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions());
-        return allDecisions;
+    private void setReliabilityArchitecturalDecisions(ReliabilityTactics reliabilityTactics) {
+        if (reliabilityTactics.reliabilityClientSideLoadBalancerTactic()) {
+            architecturalDecisions.add(reliabilityArchitecturalDecisionRepository.getClientSideLoadBalancing());
+        }
+        if (reliabilityTactics.reliabilityServerSideLoadBalancerTactic()) {
+            architecturalDecisions.add(reliabilityArchitecturalDecisionRepository.getServerSideLoadBalancing());
+        }
     }
 }

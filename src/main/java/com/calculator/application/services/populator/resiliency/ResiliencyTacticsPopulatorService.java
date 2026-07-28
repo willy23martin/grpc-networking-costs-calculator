@@ -28,15 +28,15 @@ public class ResiliencyTacticsPopulatorService {
             List<Map<String, String>> rpsTactics,
             List<Map<String, String>> infoTactics
     ) {
-        if (architecturalDecisionsDTO.timeoutTactic().resiliencyTimeoutTactic()) {
-            infoTactics.add(tacticsMapperService.tacticEntry("Timeout", architecturalDecisionsDTO.timeoutTactic().tacticTimeoutMilliseconds() + " ms",
+        if (architecturalDecisionsDTO.timeoutPattern().resiliencyTimeoutPattern()) {
+            infoTactics.add(tacticsMapperService.tacticEntry("Timeout", architecturalDecisionsDTO.timeoutPattern().patternTimeoutMilliseconds() + " ms",
                     "Discards lost packets and frees the client thread after the configured wait.", null));
         }
-        if (architecturalDecisionsDTO.retryTactic().resiliencyRetryTactic()) {
-            populateRetryPattern(architecturalDecisionsDTO.retryTactic(), architecturalDecisionsDTO.requestsPerSecond(), rpsTactics);
+        if (architecturalDecisionsDTO.retryPattern().resiliencyRetryPattern()) {
+            populateRetryPattern(architecturalDecisionsDTO.retryPattern(), architecturalDecisionsDTO.requestsPerSecond(), rpsTactics);
         }
-        if (architecturalDecisionsDTO.circuitBreakerTactic().resiliencyCircuitBreakerPattern()) {
-            populateCircuitBreakerPattern(architecturalDecisionsDTO.circuitBreakerTactic(), infoTactics);
+        if (architecturalDecisionsDTO.circuitBreakerPattern().resiliencyCircuitBreakerPattern()) {
+            populateCircuitBreakerPattern(architecturalDecisionsDTO.circuitBreakerPattern(), infoTactics);
         }
     }
 
@@ -53,7 +53,7 @@ public class ResiliencyTacticsPopulatorService {
     private void populateRetryPattern(RetryPattern retryPattern, long baseRps,
                                      List<Map<String, String>> rpsTactics) {
         long extra = rpsResiliencyCostCalculator.calculateEffectiveRequestsPerSecond(baseRps, retryPattern);
-        rpsTactics.add(tacticsMapperService.tacticEntry("Retry", retryPattern.tacticRetryTimes() + "% max retries",
+        rpsTactics.add(tacticsMapperService.tacticEntry("Retry", retryPattern.patternRetryTimes() + "% max retries",
                 RETRY_TACTICS_NETWORKING_COST_ALTER_MESSAGE.getMessage(),
                 "+" + String.format(DISPLAY_LOCALE, "%,d", extra) + " req/s"));
     }
