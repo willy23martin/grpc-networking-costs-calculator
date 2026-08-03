@@ -373,9 +373,11 @@ function buildBaseTacticsDTO(rps) {
   return {
     requestsPerSecond: rps,
     reliabilityTactics: { reliabilityClientSideLoadBalancerTactic: false, reliabilityServerSideLoadBalancerTactic: false },
-    timeoutPattern: { resiliencyTimeoutPattern: false, patternTimeoutMilliseconds: 0 },
-    retryPattern: { resiliencyRetryPattern: false, patternRetryTimes: 0 },
-    circuitBreakerPattern: { resiliencyCircuitBreakerPattern: false, circuitBreakerPatternMinimumCalls: 0, circuitBreakerHalfOpen: 0, circuitBreakerWaitMilliseconds: 0, circuitBreakerFailureRate: 0 },
+    resiliencyPatterns: {
+      timeoutPattern: { resiliencyTimeoutPattern: false, patternTimeoutMilliseconds: 0 },
+      retryPattern: { resiliencyRetryPattern: false, patternRetryTimes: 0 },
+      circuitBreakerPattern: { resiliencyCircuitBreakerPattern: false, circuitBreakerPatternMinimumCalls: 0, circuitBreakerHalfOpen: 0, circuitBreakerWaitMilliseconds: 0, circuitBreakerFailureRate: 0 }
+    },
     securityTactics: {
       tlsTactic: { tlsEnabled: false, mtlsEnabled: false, tlsReconnectsPerHour: 0 },
       jwtTactic: { oauthJwtEnabled: false, tokenValidationMode: 'LOCAL', tokenTtlSeconds: 3600, concurrentClients: 1, interceptorType: 'UNARY' },
@@ -1718,21 +1720,21 @@ document.addEventListener('DOMContentLoaded', function () {
       s('tactic-client-lb', dto.reliabilityTactics.reliabilityClientSideLoadBalancerTactic);
       s('tactic-server-lb', dto.reliabilityTactics.reliabilityServerSideLoadBalancerTactic);
 
-      s('tactic-timeout', dto.timeoutPattern.resiliencyTimeoutPattern);
-      v('input-timeout', dto.timeoutPattern.patternTimeoutMilliseconds);
-      var tout = document.getElementById('input-timeout'); if (tout) tout.disabled = !dto.timeoutPattern.resiliencyTimeoutPattern;
+      s('tactic-timeout', dto.resiliencyPatterns.timeoutPattern.resiliencyTimeoutPattern);
+      v('input-timeout', dto.resiliencyPatterns.timeoutPattern.patternTimeoutMilliseconds);
+      var tout = document.getElementById('input-timeout'); if (tout) tout.disabled = !dto.resiliencyPatterns.timeoutPattern.resiliencyTimeoutPattern;
 
-      s('tactic-retry', dto.retryPattern.resiliencyRetryPattern);
-      if (dto.retryPattern.tacticRetryErrorPct) v('input-retry-error-pct', dto.retryPattern.tacticRetryErrorPct);
-      var ri = document.getElementById('input-retry-error-pct'); if (ri) ri.disabled = !dto.retryPattern.resiliencyRetryPattern;
+      s('tactic-retry', dto.resiliencyPatterns.retryPattern.resiliencyRetryPattern);
+      if (dto.resiliencyPatterns.retryPattern.tacticRetryErrorPct) v('input-retry-error-pct', dto.resiliencyPatterns.retryPattern.tacticRetryErrorPct);
+      var ri = document.getElementById('input-retry-error-pct'); if (ri) ri.disabled = !dto.resiliencyPatterns.retryPattern.resiliencyRetryPattern;
 
-      s('tactic-cb', dto.circuitBreakerPattern.resiliencyCircuitBreakerPattern);
-      if (dto.circuitBreakerPattern.resiliencyCircuitBreakerPattern) {
+      s('tactic-cb', dto.resiliencyPatterns.circuitBreakerPattern.resiliencyCircuitBreakerPattern);
+      if (dto.resiliencyPatterns.circuitBreakerPattern.resiliencyCircuitBreakerPattern) {
         toggleCbParams(true);
-        v('input-cb-min-calls', dto.circuitBreakerPattern.circuitBreakerPatternMinimumCalls);
-        v('input-cb-half-open', dto.circuitBreakerPattern.circuitBreakerHalfOpen);
-        v('input-cb-wait', dto.circuitBreakerPattern.circuitBreakerWaitMilliseconds);
-        v('input-cb-failure-rate', dto.circuitBreakerPattern.circuitBreakerFailureRate);
+        v('input-cb-min-calls', dto.resiliencyPatterns.circuitBreakerPattern.circuitBreakerPatternMinimumCalls);
+        v('input-cb-half-open', dto.resiliencyPatterns.circuitBreakerPattern.circuitBreakerHalfOpen);
+        v('input-cb-wait', dto.resiliencyPatterns.circuitBreakerPattern.circuitBreakerWaitMilliseconds);
+        v('input-cb-failure-rate', dto.resiliencyPatterns.circuitBreakerPattern.circuitBreakerFailureRate);
       }
 
       if (dto.securityTactics) {

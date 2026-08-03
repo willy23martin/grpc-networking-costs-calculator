@@ -4,6 +4,7 @@ import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.requests.EffectiveRequestPerSecondRequest;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
+import com.calculator.domain.dto.tactics.resiliency.ResiliencyPatterns;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
@@ -49,9 +50,11 @@ public class ArchitecturalDecisionsDTOMapper {
         ArchitecturalDecisionsDTO architecturalDecisions = new ArchitecturalDecisionsDTO(
                 effectiveRpsRequest.getBaseRequestPerSecond(),
                 ReliabilityTactics.empty(),
-                TimeoutPattern.empty(),
-                retryPattern,
-                CircuitBreakerPattern.empty(),
+                new ResiliencyPatterns(
+                        TimeoutPattern.empty(),
+                        retryPattern,
+                        CircuitBreakerPattern.empty()
+                ),
                 securityTactics
         );
         return architecturalDecisions;

@@ -3,6 +3,7 @@ package com.calculator.infrastructure.web.rest;
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
+import com.calculator.domain.dto.tactics.resiliency.ResiliencyPatterns;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
@@ -33,9 +34,11 @@ class ProtoFileUploadLimitIntegrationTest {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true,  false),
-                new TimeoutPattern(true,  300),
-                new RetryPattern(true,  3),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
+                new ResiliencyPatterns(
+                        new TimeoutPattern(true,  300),
+                        new RetryPattern(true,  3),
+                        new CircuitBreakerPattern(false, 0, 0, 0, 0)
+                ),
                 SecurityTactics.empty()
         );
 
@@ -54,9 +57,11 @@ class ProtoFileUploadLimitIntegrationTest {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
-                new TimeoutPattern(true, 300),
-                new RetryPattern(true, 3),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
+                new ResiliencyPatterns(
+                        new TimeoutPattern(true, 300),
+                        new RetryPattern(true, 3),
+                        new CircuitBreakerPattern(false, 0, 0, 0, 0)
+                ),
                 SecurityTactics.empty()
         );
         HttpHeaders jsonHeaders = new HttpHeaders();
@@ -96,9 +101,11 @@ class ProtoFileUploadLimitIntegrationTest {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 500,
                 new ReliabilityTactics(true, true),
-                new TimeoutPattern(false, 0),
-                new RetryPattern(false, 0),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
+                new ResiliencyPatterns(
+                        new TimeoutPattern(false, 0),
+                        new RetryPattern(false, 0),
+                        new CircuitBreakerPattern(false, 0, 0, 0, 0)
+                ),
                 SecurityTactics.empty()
         );
         HttpHeaders headers = new HttpHeaders();

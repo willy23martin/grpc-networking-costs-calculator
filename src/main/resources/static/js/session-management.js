@@ -87,19 +87,21 @@ function collectTacticsDTO() {
       reliabilityServerSideLoadBalancerTactic: isChecked('tactic-server-lb')
     },
 
-    timeoutPattern: {
-      resiliencyTimeoutPattern: isChecked('tactic-timeout'),
-      patternTimeoutMilliseconds: getParsedInteger('input-timeout')
-    },
+    resiliencyPatterns: {
+        timeoutPattern: {
+          resiliencyTimeoutPattern: isChecked('tactic-timeout'),
+          patternTimeoutMilliseconds: getParsedInteger('input-timeout')
+        },
 
-    retryPattern: calculateResiliencyRetryParameters(requestsPerSecond),
+        retryPattern: calculateResiliencyRetryParameters(requestsPerSecond),
 
-    circuitBreakerPattern: {
-      resiliencyCircuitBreakerPattern: isChecked('tactic-cb'),
-      circuitBreakerPatternMinimumCalls: getParsedInteger('input-cb-min-calls'),
-      circuitBreakerHalfOpen: getParsedInteger('input-cb-half-open'),
-      circuitBreakerWaitMilliseconds: getParsedInteger('input-cb-wait'),
-      circuitBreakerFailureRate: getParsedInteger('input-cb-failure-rate')
+        circuitBreakerPattern: {
+          resiliencyCircuitBreakerPattern: isChecked('tactic-cb'),
+          circuitBreakerPatternMinimumCalls: getParsedInteger('input-cb-min-calls'),
+          circuitBreakerHalfOpen: getParsedInteger('input-cb-half-open'),
+          circuitBreakerWaitMilliseconds: getParsedInteger('input-cb-wait'),
+          circuitBreakerFailureRate: getParsedInteger('input-cb-failure-rate')
+        }
     },
 
     securityTactics: {

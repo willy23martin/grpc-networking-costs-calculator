@@ -3,6 +3,7 @@ package com.calculator.infrastructure.web.rest.helper;
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
+import com.calculator.domain.dto.tactics.resiliency.ResiliencyPatterns;
 import com.calculator.domain.dto.tactics.resiliency.retry.RetryPattern;
 import com.calculator.domain.dto.tactics.resiliency.TimeoutPattern;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
@@ -13,9 +14,11 @@ public class TacticsSessionControllerTestHelper {
         return new ArchitecturalDecisionsDTO(
                 rps,
                 new ReliabilityTactics(false, false),
-                new TimeoutPattern(false, 0),
-                new RetryPattern(false, 0),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
+                new ResiliencyPatterns(
+                        new TimeoutPattern(false, 0),
+                        new RetryPattern(false, 0),
+                        new CircuitBreakerPattern(false, 0, 0, 0, 0)
+                ),
                 securityTactics
         );
     }
@@ -66,15 +69,15 @@ public class TacticsSessionControllerTestHelper {
                 architecturalDecisionsDTO.requestsPerSecond(),
                 architecturalDecisionsDTO.reliabilityTactics().reliabilityClientSideLoadBalancerTactic(),
                 architecturalDecisionsDTO.reliabilityTactics().reliabilityServerSideLoadBalancerTactic(),
-                architecturalDecisionsDTO.timeoutPattern().resiliencyTimeoutPattern(),
-                architecturalDecisionsDTO.timeoutPattern().patternTimeoutMilliseconds(),
-                architecturalDecisionsDTO.retryPattern().resiliencyRetryPattern(),
-                architecturalDecisionsDTO.retryPattern().patternRetryTimes(),
-                architecturalDecisionsDTO.circuitBreakerPattern().resiliencyCircuitBreakerPattern(),
-                architecturalDecisionsDTO.circuitBreakerPattern().circuitBreakerPatternMinimumCalls(),
-                architecturalDecisionsDTO.circuitBreakerPattern().circuitBreakerHalfOpen(),
-                architecturalDecisionsDTO.circuitBreakerPattern().circuitBreakerWaitMilliseconds(),
-                architecturalDecisionsDTO.circuitBreakerPattern().circuitBreakerFailureRate(),
+                architecturalDecisionsDTO.resiliencyPatterns().timeoutPattern().resiliencyTimeoutPattern(),
+                architecturalDecisionsDTO.resiliencyPatterns().timeoutPattern().patternTimeoutMilliseconds(),
+                architecturalDecisionsDTO.resiliencyPatterns().retryPattern().resiliencyRetryPattern(),
+                architecturalDecisionsDTO.resiliencyPatterns().retryPattern().patternRetryTimes(),
+                architecturalDecisionsDTO.resiliencyPatterns().circuitBreakerPattern().resiliencyCircuitBreakerPattern(),
+                architecturalDecisionsDTO.resiliencyPatterns().circuitBreakerPattern().circuitBreakerPatternMinimumCalls(),
+                architecturalDecisionsDTO.resiliencyPatterns().circuitBreakerPattern().circuitBreakerHalfOpen(),
+                architecturalDecisionsDTO.resiliencyPatterns().circuitBreakerPattern().circuitBreakerWaitMilliseconds(),
+                architecturalDecisionsDTO.resiliencyPatterns().circuitBreakerPattern().circuitBreakerFailureRate(),
                 securityTactics.tlsTactic().tlsEnabled(),
                 securityTactics.tlsTactic().mtlsEnabled(),
                 securityTactics.tlsTactic().tlsReconnectsPerHour(),

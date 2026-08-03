@@ -6,19 +6,19 @@ import com.calculator.domain.dto.responses.TCOUnitEconomicsResponse;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
+import com.calculator.domain.model.architecture.strategy.ReliabilityArchitecturalDecisionSettingStrategy;
+import com.calculator.domain.model.architecture.strategy.ResiliencyArchitecturalDecisionSettingStrategy;
+import com.calculator.domain.model.architecture.strategy.SecurityArchitecturalDecisionSettingStrategy;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.TradeoffType;
 import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.cloud.resiliency.CloudResiliencyArchitecturalDecisionRepository;
 import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
 import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.resiliency.ResiliencyArchitecturalDecisionRepository;
 import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
@@ -36,19 +36,11 @@ public class CostEfficiencyCalculator {
     public static final int HOURS_PER_MONTH = 730;
 
     @Autowired
-    private SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository;
+    private SecurityArchitecturalDecisionSettingStrategy securityArchitecturalDecisionSettingStrategy;
     @Autowired
-    private CloudSecurityArchitecturalDecisionRepository cloudSecurityArchitecturalDecisionRepository;
-
+    private ReliabilityArchitecturalDecisionSettingStrategy reliabilityArchitecturalDecisionSettingStrategy;
     @Autowired
-    private ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository;
-    @Autowired
-    private CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository;
-
-    @Autowired
-    private ResiliencyArchitecturalDecisionRepository resiliencyArchitecturalDecisionRepository;
-    @Autowired
-    private CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository;
+    private ResiliencyArchitecturalDecisionSettingStrategy resiliencyArchitecturalDecisionSettingStrategy;
 
     private List<ArchitecturalDecision> architecturalDecisions;
 
@@ -164,45 +156,9 @@ public class CostEfficiencyCalculator {
     }
 
     public void setArchitecturalDecisions(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
-        setReliabilityArchitecturalDecisions(architecturalDecisionsDTO.reliabilityTactics());
-        setSecurityArchitecturalDecisions(architecturalDecisionsDTO.securityTactics());
-        setResiliencyArchitecturalDecisions(architecturalDecisionsDTO);
+        reliabilityArchitecturalDecisionSettingStrategy.setArchitecturalDecisions(architecturalDecisionsDTO.reliabilityTactics(), this.architecturalDecisions);
+        securityArchitecturalDecisionSettingStrategy.setArchitecturalDecisions(architecturalDecisionsDTO.securityTactics(), this.architecturalDecisions);
+        resiliencyArchitecturalDecisionSettingStrategy.setArchitecturalDecisions(architecturalDecisionsDTO.resiliencyPatterns(), this.architecturalDecisions);
         log.info("ArchitecturalDecisions: " + architecturalDecisions);
-    }
-
-    private void setResiliencyArchitecturalDecisions(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
-        if(architecturalDecisionsDTO.timeoutPattern().resiliencyTimeoutPattern()) {
-            architecturalDecisions.add(resiliencyArchitecturalDecisionRepository.getTimeoutPattern());
-        }
-        if(architecturalDecisionsDTO.retryPattern().resiliencyRetryPattern()) {
-            architecturalDecisions.add(resiliencyArchitecturalDecisionRepository.getRetryPattern());
-        }
-        if(architecturalDecisionsDTO.circuitBreakerPattern().resiliencyCircuitBreakerPattern()) {
-            architecturalDecisions.add(resiliencyArchitecturalDecisionRepository.getCircuitBreakerPattern());
-        }
-    }
-
-    private void setSecurityArchitecturalDecisions(SecurityTactics securityTactics) {
-        if(securityTactics.jwtTactic().oauthJwtEnabled()) {
-            architecturalDecisions.add(securityArchitecturalDecisionRepository.getOAuthTactic());
-        }
-        if(securityTactics.tlsTactic().tlsEnabled()) {
-            architecturalDecisions.add(securityArchitecturalDecisionRepository.getTLSTactic());
-        }
-        if(securityTactics.tlsTactic().mtlsEnabled()) {
-            architecturalDecisions.add(securityArchitecturalDecisionRepository.getMTLSTactic());
-        }
-        if(securityTactics.basicAuthenticationPattern().basicAuthEnabled()) {
-            architecturalDecisions.add(securityArchitecturalDecisionRepository.getBasicAuthTactic());
-        }
-    }
-
-    private void setReliabilityArchitecturalDecisions(ReliabilityTactics reliabilityTactics) {
-        if (reliabilityTactics.reliabilityClientSideLoadBalancerTactic()) {
-            architecturalDecisions.add(reliabilityArchitecturalDecisionRepository.getClientSideLoadBalancing());
-        }
-        if (reliabilityTactics.reliabilityServerSideLoadBalancerTactic()) {
-            architecturalDecisions.add(reliabilityArchitecturalDecisionRepository.getServerSideLoadBalancing());
-        }
     }
 }
