@@ -28,15 +28,15 @@ public class ResiliencyTacticsPopulatorService {
             List<Map<String, String>> rpsTactics,
             List<Map<String, String>> infoTactics
     ) {
-        if (architecturalDecisionsDTO.timeoutPattern().resiliencyTimeoutPattern()) {
-            infoTactics.add(tacticsMapperService.tacticEntry("Timeout", architecturalDecisionsDTO.timeoutPattern().patternTimeoutMilliseconds() + " ms",
+        if (architecturalDecisionsDTO.resiliencyPatterns().timeoutPattern().resiliencyTimeoutPattern()) {
+            infoTactics.add(tacticsMapperService.tacticEntry("Timeout", architecturalDecisionsDTO.resiliencyPatterns().timeoutPattern().patternTimeoutMilliseconds() + " ms",
                     "Discards lost packets and frees the client thread after the configured wait.", null));
         }
-        if (architecturalDecisionsDTO.retryPattern().resiliencyRetryPattern()) {
-            populateRetryPattern(architecturalDecisionsDTO.retryPattern(), architecturalDecisionsDTO.requestsPerSecond(), rpsTactics);
+        if (architecturalDecisionsDTO.resiliencyPatterns().retryPattern().resiliencyRetryPattern()) {
+            populateRetryPattern(architecturalDecisionsDTO.resiliencyPatterns().retryPattern(), architecturalDecisionsDTO.requestsPerSecond(), rpsTactics);
         }
-        if (architecturalDecisionsDTO.circuitBreakerPattern().resiliencyCircuitBreakerPattern()) {
-            populateCircuitBreakerPattern(architecturalDecisionsDTO.circuitBreakerPattern(), infoTactics);
+        if (architecturalDecisionsDTO.resiliencyPatterns().circuitBreakerPattern().resiliencyCircuitBreakerPattern()) {
+            populateCircuitBreakerPattern(architecturalDecisionsDTO.resiliencyPatterns().circuitBreakerPattern(), infoTactics);
         }
     }
 

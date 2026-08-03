@@ -37,7 +37,7 @@ public class RequestPerSecondCostCalculatorService {
         if (resiliencyPatternsHaveBeenConfigured(architecturalDecisionsDTO)) {
             addition = rpsResiliencyCostCalculator.calculateEffectiveRequestsPerSecond(
                     currentTrafficBaseline,
-                    architecturalDecisionsDTO.retryPattern()
+                    architecturalDecisionsDTO.resiliencyPatterns().retryPattern()
             );
         }
         long effectiveRequestPerSecond = currentTrafficBaseline + addition;
@@ -47,7 +47,7 @@ public class RequestPerSecondCostCalculatorService {
     }
 
     private boolean resiliencyPatternsHaveBeenConfigured(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
-        return architecturalDecisionsDTO.retryPattern().resiliencyRetryPattern() && architecturalDecisionsDTO.retryPattern().patternRetryTimes() > 0;
+        return architecturalDecisionsDTO.resiliencyPatterns().retryPattern().resiliencyRetryPattern() && architecturalDecisionsDTO.resiliencyPatterns().retryPattern().patternRetryTimes() > 0;
     }
 
 }

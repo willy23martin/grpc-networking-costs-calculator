@@ -34,6 +34,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.CompactNumberFormat;
 import java.text.NumberFormat;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -86,6 +88,8 @@ public class NetworkingCostCalculatorController implements ErrorController {
             HttpSession session,
             Model model) {
 
+        ZonedDateTime zonedDateTimeStart = ZonedDateTime.now();
+
         if (protoFile == null || protoFile.isEmpty()) {
             model.addAttribute("uploadMessage", "No file selected for upload.");
             return "calculator";
@@ -100,6 +104,11 @@ public class NetworkingCostCalculatorController implements ErrorController {
         costEfficiencyCalculator.setArchitecturalDecisions(architecturalDecisionsDTO);
 
         String view = calculateNetworkingCost(protoFile, architecturalDecisionsDTO, model);
+        ZonedDateTime finish = ZonedDateTime.now();
+
+        log.info("The time it took to processing networking costs was: "
+                + ChronoUnit.MILLIS.between(zonedDateTimeStart, finish));
+
         return (view != null) ? view : "calculator";
     }
 

@@ -1,6 +1,7 @@
 package com.calculator.infrastructure.web.rest;
 
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
+import com.calculator.domain.dto.tactics.resiliency.ResiliencyPatterns;
 import com.calculator.domain.model.architecture.tactics.gRPC.interceptor.InterceptorType;
 import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
 import com.calculator.domain.dto.tactics.resiliency.CircuitBreakerPattern;
@@ -35,20 +36,22 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 "reliabilityClientSideLoadBalancerTactic": true,
                 "reliabilityServerSideLoadBalancerTactic": false
               },
-              "timeoutPattern": {
-                "resiliencyTimeoutPattern": true,
-                "patternTimeoutMilliseconds": 300
-              },
-              "retryPattern": {
-                "resiliencyRetryPattern": true,
-                "patternRetryTimes": 3
-              },
-              "circuitBreakerPattern": {
-                "resiliencyCircuitBreakerPattern": true,
-                "circuitBreakerPatternMinimumCalls": 10,
-                "circuitBreakerHalfOpen": 5,
-                "circuitBreakerWaitMilliseconds": 60000,
-                "circuitBreakerFailureRate": 50
+              "resiliencyPatterns": {
+                "timeoutPattern": {
+                  "resiliencyTimeoutPattern": true,
+                  "patternTimeoutMilliseconds": 300
+                },
+                "retryPattern": {
+                  "resiliencyRetryPattern": true,
+                  "patternRetryTimes": 3
+                },
+                "circuitBreakerPattern": {
+                  "resiliencyCircuitBreakerPattern": true,
+                  "circuitBreakerPatternMinimumCalls": 10,
+                  "circuitBreakerHalfOpen": 5,
+                  "circuitBreakerWaitMilliseconds": 60000,
+                  "circuitBreakerFailureRate": 50
+                }
               },
               "securityTactics": {
                 "tlsTactic": {
@@ -82,9 +85,9 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                         .session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reliabilityTactics").isNotEmpty())
-                .andExpect(jsonPath("$.timeoutPattern").isNotEmpty())
-                .andExpect(jsonPath("$.retryPattern").isNotEmpty())
-                .andExpect(jsonPath("$.circuitBreakerPattern").isNotEmpty())
+                .andExpect(jsonPath("$.resiliencyPatterns.timeoutPattern").isNotEmpty())
+                .andExpect(jsonPath("$.resiliencyPatterns.retryPattern").isNotEmpty())
+                .andExpect(jsonPath("$.resiliencyPatterns.circuitBreakerPattern").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics.tlsTactic").isNotEmpty())
                 .andExpect(jsonPath("$.securityTactics.jwtTactic").isNotEmpty())
@@ -92,15 +95,15 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.requestsPerSecond").value(1000))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityClientSideLoadBalancerTactic").value(true))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityServerSideLoadBalancerTactic").value(false))
-                .andExpect(jsonPath("$.timeoutPattern.resiliencyTimeoutPattern").value(true))
-                .andExpect(jsonPath("$.timeoutPattern.patternTimeoutMilliseconds").value(300))
-                .andExpect(jsonPath("$.retryPattern.resiliencyRetryPattern").value(true))
-                .andExpect(jsonPath("$.retryPattern.patternRetryTimes").value(3))
-                .andExpect(jsonPath("$.circuitBreakerPattern.resiliencyCircuitBreakerPattern").value(true))
-                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerPatternMinimumCalls").value(10))
-                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerHalfOpen").value(5))
-                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerWaitMilliseconds").value(60000))
-                .andExpect(jsonPath("$.circuitBreakerPattern.circuitBreakerFailureRate").value(50))
+                .andExpect(jsonPath("$.resiliencyPatterns.timeoutPattern.resiliencyTimeoutPattern").value(true))
+                .andExpect(jsonPath("$.resiliencyPatterns.timeoutPattern.patternTimeoutMilliseconds").value(300))
+                .andExpect(jsonPath("$.resiliencyPatterns.retryPattern.resiliencyRetryPattern").value(true))
+                .andExpect(jsonPath("$.resiliencyPatterns.retryPattern.patternRetryTimes").value(3))
+                .andExpect(jsonPath("$.resiliencyPatterns.circuitBreakerPattern.resiliencyCircuitBreakerPattern").value(true))
+                .andExpect(jsonPath("$.resiliencyPatterns.circuitBreakerPattern.circuitBreakerPatternMinimumCalls").value(10))
+                .andExpect(jsonPath("$.resiliencyPatterns.circuitBreakerPattern.circuitBreakerHalfOpen").value(5))
+                .andExpect(jsonPath("$.resiliencyPatterns.circuitBreakerPattern.circuitBreakerWaitMilliseconds").value(60000))
+                .andExpect(jsonPath("$.resiliencyPatterns.circuitBreakerPattern.circuitBreakerFailureRate").value(50))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(true))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.mtlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsReconnectsPerHour").value(2))
@@ -117,9 +120,11 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
-                new TimeoutPattern(true, 300),
-                new RetryPattern(true, 3),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
+                new ResiliencyPatterns(
+                        new TimeoutPattern(true, 300),
+                        new RetryPattern(true, 3),
+                        new CircuitBreakerPattern(false, 0, 0, 0, 0)
+                ),
                 SecurityTactics.empty()
         );
         mockMvc.perform(post("/api/session/tactics")
@@ -135,9 +140,9 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.requestsPerSecond").value(0))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityClientSideLoadBalancerTactic").value(false))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityServerSideLoadBalancerTactic").value(false))
-                .andExpect(jsonPath("$.timeoutPattern.resiliencyTimeoutPattern").value(false))
-                .andExpect(jsonPath("$.retryPattern.resiliencyRetryPattern").value(false))
-                .andExpect(jsonPath("$.circuitBreakerPattern.resiliencyCircuitBreakerPattern").value(false))
+                .andExpect(jsonPath("$.resiliencyPatterns.timeoutPattern.resiliencyTimeoutPattern").value(false))
+                .andExpect(jsonPath("$.resiliencyPatterns.retryPattern.resiliencyRetryPattern").value(false))
+                .andExpect(jsonPath("$.resiliencyPatterns.circuitBreakerPattern.resiliencyCircuitBreakerPattern").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.mtlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.oauthJwtEnabled").value(false))
@@ -149,9 +154,11 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 500,
                 new ReliabilityTactics(true, false),
-                new TimeoutPattern(true, 200),
-                new RetryPattern(false, 0),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
+                new ResiliencyPatterns(
+                        new TimeoutPattern(true, 200),
+                        new RetryPattern(false, 0),
+                        new CircuitBreakerPattern(false, 0, 0, 0, 0)
+                ),
                 SecurityTactics.empty()
         );
         mockMvc.perform(get("/api/session/tactics")
@@ -159,7 +166,7 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.requestsPerSecond").value(500))
                 .andExpect(jsonPath("$.reliabilityTactics.reliabilityClientSideLoadBalancerTactic").value(true))
-                .andExpect(jsonPath("$.timeoutPattern.patternTimeoutMilliseconds").value(200))
+                .andExpect(jsonPath("$.resiliencyPatterns.timeoutPattern.patternTimeoutMilliseconds").value(200))
                 .andExpect(jsonPath("$.securityTactics.tlsTactic.tlsEnabled").value(false))
                 .andExpect(jsonPath("$.securityTactics.jwtTactic.oauthJwtEnabled").value(false));
     }
@@ -169,9 +176,11 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, true),
-                new TimeoutPattern(false, 0),
-                new RetryPattern(false, 0),
-                new CircuitBreakerPattern(false, 0, 0, 0, 0),
+                new ResiliencyPatterns(
+                        new TimeoutPattern(false, 0),
+                        new RetryPattern(false, 0),
+                        new CircuitBreakerPattern(false, 0, 0, 0, 0)
+                ),
                 SecurityTactics.empty()
         );
         mockMvc.perform(delete("/api/session/tactics")
