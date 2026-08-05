@@ -44,8 +44,8 @@ public class UserRegistrationService {
 
     private void persistRegisteredUser(RegisterDTO registerDTO) {
         log.info("Persisting registered user: " + registerDTO);
-        String encodedPassword = passwordEncoder.encode(registerDTO.password());
-        UserEntity persistedUserEntity = new UserEntity(
+        final String encodedPassword = passwordEncoder.encode(registerDTO.password());
+        final UserEntity persistedUserEntity = new UserEntity(
                 registerDTO.username(),
                 encodedPassword,
                 registerDTO.email()

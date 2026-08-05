@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.containsString;
 public class Phase2BucProtoMappingSteps {
 
     public static final String CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES = "classpath:static/protos/";
+
     @Autowired
     private MockMvc mockMvc;
 

@@ -33,11 +33,11 @@ public class AuthenticationProviderImpl implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         log.info("Authenticating: " + authentication.getName());
-        String username = authentication.getName();
-        String password = authentication.getCredentials().toString();
+        final String username = authentication.getName();
+        final String password = authentication.getCredentials().toString();
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        String storedPassword = userDetails.getPassword();
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        final String storedPassword = userDetails.getPassword();
 
         if(!isValidPassword(password, storedPassword)) {
             throw new BadCredentialsException("Invalid credentials.");

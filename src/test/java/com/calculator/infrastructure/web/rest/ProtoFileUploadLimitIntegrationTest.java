@@ -10,21 +10,16 @@ import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static com.calculator.shared.ProtocolBuffersUtilsTest.VALID_PROTO_CONTENT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class ProtoFileUploadLimitIntegrationTest {
-
-    @Autowired
-    private TestRestTemplate restTemplate;
+class ProtoFileUploadLimitIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -42,18 +37,14 @@ class ProtoFileUploadLimitIntegrationTest {
                 SecurityTactics.empty()
         );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<ArchitecturalDecisionsDTO> request = new HttpEntity<>(dto, headers);
-        ResponseEntity<Void> response =
-                restTemplate.postForEntity("/api/session/tactics", request, Void.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        mockMvc.perform(post("/api/session/tactics")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    void shouldNotThrowFileCountLimitExceededExceptionWhenUploadingProtoFileOnly() {
+    void shouldNotThrowFileCountLimitExceededExceptionWhenUploadingProtoFileOnly() throws Exception {
         ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
@@ -64,36 +55,41 @@ class ProtoFileUploadLimitIntegrationTest {
                 ),
                 SecurityTactics.empty()
         );
-        HttpHeaders jsonHeaders = new HttpHeaders();
-        jsonHeaders.setContentType(MediaType.APPLICATION_JSON);
-        restTemplate.postForEntity("/api/session/tactics",
-                new HttpEntity<>(dto, jsonHeaders), Void.class);
 
-        HttpHeaders multipartHeaders = new HttpHeaders();
-        multipartHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        mockMvc.perform(post("/api/session/tactics")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNoContent());
 
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("protoFile", new ByteArrayResource(VALID_PROTO_CONTENT.getBytes()) {
-            @Override public String getFilename() { return "order.proto"; }
-        });
+        MockMultipartFile protoFile = new MockMultipartFile(
+                "protoFile",
+                "order.proto",
+                MediaType.TEXT_PLAIN_VALUE,
+                VALID_PROTO_CONTENT.getBytes()
+        );
 
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "/calculateProtofileNetworkingCosts",
-                new HttpEntity<>(body, multipartHeaders),
-                String.class);
+        MvcResult result = mockMvc.perform(multipart("/calculateProtofileNetworkingCosts")
+                        .file(protoFile))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(result.getResponse().getStatus()).isEqualTo(HttpStatus.OK.value());
     }
 
     @Test
-    void shouldReturnEmptyTacticsWhenNoSessionExists() {
-        ResponseEntity<ArchitecturalDecisionsDTO> response =
-                restTemplate.getForEntity("/api/session/tactics", ArchitecturalDecisionsDTO.class);
+    void shouldReturnEmptyTacticsWhenNoSessionExists() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/session/tactics"))
+                .andExpect(status().isOk())
+                .andReturn();
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().requestsPerSecond()).isZero();
-        assertThat(response.getBody().reliabilityTactics().reliabilityClientSideLoadBalancerTactic()).isFalse();
+        ArchitecturalDecisionsDTO responseBody = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                ArchitecturalDecisionsDTO.class
+        );
+
+        assertThat(responseBody).isNotNull();
+        assertThat(responseBody.requestsPerSecond()).isZero();
+        assertThat(responseBody.reliabilityTactics().reliabilityClientSideLoadBalancerTactic()).isFalse();
     }
 
     @Test
@@ -108,15 +104,26 @@ class ProtoFileUploadLimitIntegrationTest {
                 ),
                 SecurityTactics.empty()
         );
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        restTemplate.postForEntity("/api/session/tactics", new HttpEntity<>(dto, headers), Void.class);
 
-        restTemplate.delete("/api/session/tactics");
+        mockMvc.perform(post("/api/session/tactics")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNoContent());
 
-        ResponseEntity<ArchitecturalDecisionsDTO> response =
-                restTemplate.getForEntity("/api/session/tactics", ArchitecturalDecisionsDTO.class);
-        assertThat(response.getBody().requestsPerSecond()).isZero();
-        assertThat(response.getBody().reliabilityTactics().reliabilityClientSideLoadBalancerTactic()).isFalse();
+        mockMvc.perform(delete("/api/session/tactics"))
+                .andExpect(status().is2xxSuccessful());
+
+        MvcResult result = mockMvc.perform(get("/api/session/tactics"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        ArchitecturalDecisionsDTO responseBody = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                ArchitecturalDecisionsDTO.class
+        );
+
+        assertThat(responseBody).isNotNull();
+        assertThat(responseBody.requestsPerSecond()).isZero();
+        assertThat(responseBody.reliabilityTactics().reliabilityClientSideLoadBalancerTactic()).isFalse();
     }
 }

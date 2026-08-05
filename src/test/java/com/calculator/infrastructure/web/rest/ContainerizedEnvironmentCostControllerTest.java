@@ -20,9 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRepositoryStubsConfiguration.class)
 class ContainerizedEnvironmentCostControllerTest extends BaseIntegrationTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
     @MockitoBean
     private PricingClient pricingClientMock;
 
