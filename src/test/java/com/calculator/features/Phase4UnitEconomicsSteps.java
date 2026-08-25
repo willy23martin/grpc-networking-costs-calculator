@@ -50,9 +50,9 @@ public class Phase4UnitEconomicsSteps {
 
     @And("the calculated gross parameters match monthly TCO {string} and annual TCO {string} with requests {string}")
     public void verifyGrossTcoParameters(String expectedMonthlyTco, String expectedAnnualTco, String expectedRequests) throws Exception {
-        double monthlyTco = Double.parseDouble(expectedMonthlyTco);
-        double annualTco = Double.parseDouble(expectedAnnualTco);
-        long requests = Long.parseLong(expectedRequests);
+        final double monthlyTco = Double.parseDouble(expectedMonthlyTco);
+        final double annualTco = Double.parseDouble(expectedAnnualTco);
+        final long requests = Long.parseLong(expectedRequests);
 
         this.response.andExpect(jsonPath("$.totalMonthlyTcoUsd", is(closeTo(monthlyTco, 0.01))))
                 .andExpect(jsonPath("$.totalAnnualTcoUsd", is(closeTo(annualTco, 0.01))))
@@ -61,11 +61,11 @@ public class Phase4UnitEconomicsSteps {
 
     @And("the unit cost parameters match cost per request {string}, cost per user month {string}, and cost per user day {string}")
     public void verifyUnitCostParameters(String expectedCostPerReq, String expectedCostUserMonth, String expectedCostUserDay) throws Exception {
-        double costPerReq = Double.parseDouble(expectedCostPerReq);
-        double costUserMonth = Double.parseDouble(expectedCostUserMonth);
-        double costUserDay = Double.parseDouble(expectedCostUserDay);
+        final double costPerReq = Double.parseDouble(expectedCostPerReq);
+        final double costUserMonth = Double.parseDouble(expectedCostUserMonth);
+        final double costUserDay = Double.parseDouble(expectedCostUserDay);
 
-        double reqTolerance = costPerReq < 1e-6 ? 1e-11 : 1e-6;
+        final double reqTolerance = costPerReq < 1e-6 ? 1e-11 : 1e-6;
 
         this.response.andExpect(jsonPath("$.costPerRequestUsd", is(closeTo(costPerReq, reqTolerance))))
                 .andExpect(jsonPath("$.costPerUserPerMonthUsd", is(closeTo(costUserMonth, 0.0001))))
@@ -74,11 +74,11 @@ public class Phase4UnitEconomicsSteps {
 
     @And("the ROI metrics match total monthly revenue {string}, monthly profit {string}, monthly ROI pct {string}, break-even users {string}, and net margin per user {string}")
     public void verifyRoiMetrics(String expectedMonthlyRev, String expectedMonthlyProfit, String expectedRoiPct, String expectedBreakeven, String expectedNetMargin) throws Exception {
-        double monthlyRev = Double.parseDouble(expectedMonthlyRev);
-        double monthlyProfit = Double.parseDouble(expectedMonthlyProfit);
-        double roiPct = Double.parseDouble(expectedRoiPct);
-        int breakeven = Integer.parseInt(expectedBreakeven);
-        double netMargin = Double.parseDouble(expectedNetMargin);
+        final double monthlyRev = Double.parseDouble(expectedMonthlyRev);
+        final double monthlyProfit = Double.parseDouble(expectedMonthlyProfit);
+        final double roiPct = Double.parseDouble(expectedRoiPct);
+        final int breakeven = Integer.parseInt(expectedBreakeven);
+        final double netMargin = Double.parseDouble(expectedNetMargin);
 
         this.response.andExpect(jsonPath("$.totalMonthlyRevenueUsd", is(closeTo(monthlyRev, 0.01))))
                 .andExpect(jsonPath("$.netMonthlyProfitUsd", is(closeTo(monthlyProfit, 0.01))))

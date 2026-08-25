@@ -43,26 +43,27 @@ public class Activity4BaseCostCalculationSteps extends BaseIntegrationTest {
 
     @When("I trigger the base cost calculation")
     public void i_trigger_the_base_cost_calculation() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/reliability/tactic-mappings")
+        final MvcResult result = mockMvc.perform(get("/api/reliability/tactic-mappings")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String jsonResponse = result.getResponse().getContentAsString();
+        final String jsonResponse = result.getResponse().getContentAsString();
         this.responseMappings = objectMapper.readValue(jsonResponse, new TypeReference<List<ReliabilityTradeoffDTO>>() {});
     }
 
     @Then("the system should show {string} estimates")
     public void the_system_should_show_estimates(String hourlyCost) {
-        assertNotNull(responseMappings, "The API response should not be null");
-
-        ReliabilityTradeoffDTO matchedService = responseMappings.stream()
+        final ReliabilityTradeoffDTO matchedService = responseMappings.stream()
                 .filter(dto -> dto.getTacticName().equalsIgnoreCase(selectedCloudService) &&
                         dto.getCloudProvider().equalsIgnoreCase(cloudProvider))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Cloud service " + selectedCloudService + " for provider " + cloudProvider + " not found."));
 
-        String actualCostFactorNotes = matchedService.getCostFactor();
+        final String actualCostFactorNotes = matchedService.getCostFactor();
+
+        assertNotNull(responseMappings, "The API response should not be null");
+
         assertNotNull(actualCostFactorNotes, "Cost factor notes property should not be null");
 
         assertTrue(actualCostFactorNotes.contains(hourlyCost),
@@ -72,12 +73,13 @@ public class Activity4BaseCostCalculationSteps extends BaseIntegrationTest {
 
     @Then("highlight {string} as primary cost drivers")
     public void highlight_as_primary_cost_drivers(String expectedCostFactors) {
-        ReliabilityTradeoffDTO matchedService = responseMappings.stream()
+        final ReliabilityTradeoffDTO matchedService = responseMappings.stream()
                 .filter(dto -> dto.getTacticName().equalsIgnoreCase(selectedCloudService))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Cloud service " + selectedCloudService + " not found in response mappings."));
 
-        String actualCostFactorNotes = matchedService.getCostFactor();
+        final String actualCostFactorNotes = matchedService.getCostFactor();
+
         assertNotNull(actualCostFactorNotes, "Cost factor notes property should not be null");
 
         assertTrue(actualCostFactorNotes.contains(expectedCostFactors),

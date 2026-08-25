@@ -23,12 +23,10 @@ public class Activity3MapCloudServicesToImplementTheChosenTacticsSteps extends B
 
     @Given("the architect is authenticated on the TCO Calculator application")
     public void architectIsAuthenticated() {
-        // MockMvc context authentication setup if needed
     }
 
     @Given("the architect is configuring tactics in the Cloud Tactics & Patterns panel")
     public void architectIsConfiguringTactics() {
-        // Context placeholder matching the background step
     }
 
     @Given("I have selected pattern or tactic {string} for implementation that promotes {string}")
@@ -44,35 +42,31 @@ public class Activity3MapCloudServicesToImplementTheChosenTacticsSteps extends B
 
     @Then("the system should map the configuration to specific services {string}")
     public void verifyCloudServiceMapping(String expectedServicesString) throws Exception {
-        String targetApiPath = getEndpointForCharacteristic(architecturalCharacteristic);
+        final String targetApiPath = getEndpointForCharacteristic(architecturalCharacteristic);
 
         // Execute the API call and get the raw JSON response payload
-        MvcResult result = mockMvc.perform(get(targetApiPath))
+        final MvcResult result = mockMvc.perform(get(targetApiPath))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String responseBody = result.getResponse().getContentAsString();
+        final String responseBody = result.getResponse().getContentAsString();
 
-        // 1. Extract the parent tacticId dynamically based on the patternOrTactic name
-        // Example: Finds "tactic-server-lb" where tacticName matches "Server-side Load Balancing"
-        String parentTacticIdPath = "$[?(@.tacticName == '" + patternOrTactic + "')].tacticId";
-        List<String> parentIdList = JsonPath.read(responseBody, parentTacticIdPath);
+        final String parentTacticIdPath = "$[?(@.tacticName == '" + patternOrTactic + "')].tacticId";
+        final List<String> parentIdList = JsonPath.read(responseBody, parentTacticIdPath);
 
         if (parentIdList.isEmpty()) {
             throw new AssertionError("Could not find a parent tactic matching the name: " + patternOrTactic);
         }
-        String parentTacticId = parentIdList.get(0);
+        final String parentTacticId = parentIdList.getFirst();
 
-        // 2. Split comma-separated cloud service names from the Examples table
-        String[] expectedServices = Arrays.stream(expectedServicesString.split(","))
+        final String[] expectedServices = Arrays.stream(expectedServicesString.split(","))
                 .map(String::trim)
                 .toArray(String[]::new);
 
-        // 3. For each expected cloud service, assert it links back to the parent tactic ID
         for (String serviceName : expectedServices) {
-            String serviceDecisionsPath = "$[?(@.tacticName == '" + serviceName + "' && @.cloudProvider == '" + cloudProvider + "')].supportedArchitecturalDecisions[*]";
-            List<String> supportedDecisions = JsonPath.read(responseBody, serviceDecisionsPath);
+            final String serviceDecisionsPath = "$[?(@.tacticName == '" + serviceName + "' && @.cloudProvider == '" + cloudProvider + "')].supportedArchitecturalDecisions[*]";
+            final List<String> supportedDecisions = JsonPath.read(responseBody, serviceDecisionsPath);
 
             assertTrue(
                     supportedDecisions.contains(parentTacticId),

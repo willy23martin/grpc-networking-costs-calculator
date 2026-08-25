@@ -27,10 +27,10 @@ class EffectiveRPSCalculatorControllerTest {
 
     @Test
     void calculateEffectiveRps_zeroOrNegativeBaseRps() {
-        EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
+        final EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
         req.setBaseRequestPerSecond(0);
 
-        ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
+        final ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
         EffectiveRequestPerSecondResponse resp = response.getBody();
 
         assertNotNull(resp);
@@ -40,15 +40,15 @@ class EffectiveRPSCalculatorControllerTest {
 
     @Test
     void calculateEffectiveRps_noOverheadFallback() {
-        EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
+        final EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
         req.setBaseRequestPerSecond(100);
         req.setInterceptorType(InterceptorType.UNARY.name());
         req.setTokenValidationMode(OAuthTokenValidationModes.LOCAL.name());
 
         when(requestPerSecondCostCalculatorService.calculateEffectiveRequestsPerSecond(any())).thenReturn(100L);
 
-        ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
-        EffectiveRequestPerSecondResponse resp = response.getBody();
+        final ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
+        final EffectiveRequestPerSecondResponse resp = response.getBody();
 
         assertNotNull(resp);
         assertEquals(100, resp.getEffectiveRps());
@@ -58,7 +58,7 @@ class EffectiveRPSCalculatorControllerTest {
 
     @Test
     void calculateEffectiveRps_tlsAndOauthRemoteOverhead() {
-        EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
+        final EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
         req.setBaseRequestPerSecond(1000);
         req.setInterceptorType(InterceptorType.STREAM.name());
         req.setTokenValidationMode(OAuthTokenValidationModes.REMOTE_INTROSPECTION.name());
@@ -73,8 +73,8 @@ class EffectiveRPSCalculatorControllerTest {
 
         when(requestPerSecondCostCalculatorService.calculateEffectiveRequestsPerSecond(any())).thenReturn(2100L);
 
-        ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
-        EffectiveRequestPerSecondResponse resp = response.getBody();
+        final ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
+        final EffectiveRequestPerSecondResponse resp = response.getBody();
 
         assertNotNull(resp);
         assertEquals(2100, resp.getEffectiveRps());
@@ -89,7 +89,7 @@ class EffectiveRPSCalculatorControllerTest {
 
     @Test
     void calculateEffectiveRps_mtlsAndOauthLocalOverheadWithDefaults() {
-        EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
+        final EffectiveRequestPerSecondRequest req = new EffectiveRequestPerSecondRequest();
         req.setBaseRequestPerSecond(500);
         req.setInterceptorType(InterceptorType.UNARY.name());
         req.setTokenValidationMode(OAuthTokenValidationModes.LOCAL.name());
@@ -103,8 +103,8 @@ class EffectiveRPSCalculatorControllerTest {
 
         when(requestPerSecondCostCalculatorService.calculateEffectiveRequestsPerSecond(any())).thenReturn(600L);
 
-        ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
-        EffectiveRequestPerSecondResponse resp = response.getBody();
+        final ResponseEntity<EffectiveRequestPerSecondResponse> response = controller.calculateEffectiveRps(req);
+        final EffectiveRequestPerSecondResponse resp = response.getBody();
 
         assertNotNull(resp);
         assertEquals(600, resp.getEffectiveRps());

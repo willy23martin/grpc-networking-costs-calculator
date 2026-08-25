@@ -1,13 +1,12 @@
 package com.calculator.architecture;
 
-import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 import org.junit.jupiter.api.Test;
 
 class ArchitecturalTest {
 
     @Test
-    public void services_ShouldNotDependOn_Controllers() {
+    void services_ShouldNotDependOn_Controllers() {
         ArchRuleDefinition
                 .noClasses()
                 .that()
@@ -18,7 +17,7 @@ class ArchitecturalTest {
     }
 
     @Test
-    public void services_ShouldEndWithServiceName(){
+    void services_ShouldEndWithServiceName(){
         ArchRuleDefinition
                 .classes()
                 .that()
@@ -28,7 +27,7 @@ class ArchitecturalTest {
     }
 
     @Test
-    public void controllers_ShouldEndWithNameController_Or_ControllerTest() {
+    void controllers_ShouldEndWithNameController_Or_ControllerTest() {
         ArchRuleDefinition
                 .classes()
                 .that()

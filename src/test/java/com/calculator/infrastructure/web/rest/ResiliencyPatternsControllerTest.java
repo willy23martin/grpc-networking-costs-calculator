@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class ResiliencyPatternsControllerTest {
+class ResiliencyPatternsControllerTest {
 
     @Mock
     private ResiliencyTradeoffMapperService resiliencyTradeoffMapperService;
@@ -25,7 +25,7 @@ public class ResiliencyPatternsControllerTest {
     @Test
     void getTacticResiliencyMappings_returnsList() {
         when(resiliencyTradeoffMapperService.getResiliencyTradeoffs()).thenReturn(Collections.emptyList());
-        ResponseEntity<?> response = controller.getTacticResiliencyMappings();
+        final ResponseEntity<?> response = controller.getTacticResiliencyMappings();
         assertNotNull(response.getBody());
     }
 }

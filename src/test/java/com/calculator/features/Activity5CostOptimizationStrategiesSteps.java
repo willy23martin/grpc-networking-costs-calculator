@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
+import static com.calculator.shared.BDDTestUtils.calculateRIYearSavingsValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 public class Activity5CostOptimizationStrategiesSteps {
@@ -35,17 +35,18 @@ public class Activity5CostOptimizationStrategiesSteps {
         this.cloudInstanceParam = cloudInstance;
         this.baseMonthlyCostParam = baseMonthlyCost;
 
-        List<Map<String, Object>> ec2Instances = controller.getComputeInstances();
-        assertNotNull(ec2Instances, "EC2 instances pricing list should not be null");
+        final List<Map<String, Object>> ec2Instances = controller.getComputeInstances();
 
         this.targetInstanceData = ec2Instances.stream()
                 .filter(inst -> cloudInstance.equalsIgnoreCase(String.valueOf(inst.get("instanceType"))))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Instance type not found in calculator: " + cloudInstance));
 
-        double parsedExpectedCost = Double.parseDouble(baseMonthlyCost.replace("$", ""));
-        double hourlyPrice = ((Number) targetInstanceData.get("pricePerHourUsd")).doubleValue();
-        double calculatedMonthlyBase = Math.round(hourlyPrice * HOURS_PER_MONTH * 100.0) / 100.0; // 730 hours benchmark
+        final double parsedExpectedCost = Double.parseDouble(baseMonthlyCost.replace("$", ""));
+        final double hourlyPrice = ((Number) targetInstanceData.get("pricePerHourUsd")).doubleValue();
+        final double calculatedMonthlyBase = Math.round(hourlyPrice * HOURS_PER_MONTH * 100.0) / 100.0; // 730 hours benchmark
+
+        assertNotNull(ec2Instances, "EC2 instances pricing list should not be null");
 
         assertEquals(parsedExpectedCost, calculatedMonthlyBase, 0.01,
                 "The computed baseline monthly cost from the controller does not match the expected Gherkin baseline.");
@@ -63,19 +64,12 @@ public class Activity5CostOptimizationStrategiesSteps {
     public void the_system_should_predict_a_savings_percentage_of_in_cost_reduction(String expectedSavings) {
         double expectedPct = Double.parseDouble(expectedSavings.replace("%", "").trim()) / 100.0;
 
-        String normalizedStrategy = finopsStrategyParam.trim();
+        final String normalizedStrategy = finopsStrategyParam.trim();
 
-        double actualPctValue = 0.0;
-        if (normalizedStrategy.equalsIgnoreCase("Reserved Instances")
-                || normalizedStrategy.equalsIgnoreCase("Reserved Instance 1 year")) {
+        final double actualPctValue = normalizedStrategy.equalsIgnoreCase("Reserved Instances")
+                || normalizedStrategy.equalsIgnoreCase("Reserved Instance 1 year") ? calculateRIYearSavingsValue(optimizationData): 0.0;
 
-            Object rawPct = optimizationData.get("reservedInstance1yrSavingsPct");
-            assertNotNull(rawPct, "reservedInstance1yrSavingsPct key should exist in optimization data map");
-
-            actualPctValue = ((Number) rawPct).doubleValue();
-        }
-
-        double actualPct = actualPctValue / 100.0;
+        final double actualPct = actualPctValue / 100.0;
 
         assertEquals(expectedPct, actualPct, 0.001,
                 String.format("The savings percentage evaluated from the controller (%s) does not match expected (%s).",
@@ -87,7 +81,8 @@ public class Activity5CostOptimizationStrategiesSteps {
         String riNote = String.valueOf(optimizationData.get("riNote"));
         assertNotNull(riNote, "Reserved Instance notes should not be null");
 
-        assertTrue(riNote.equals(expectedImpact),
-                String.format("Expected strategy metadata containing terms not found in controller response: %s", riNote));
+        assertEquals(riNote, expectedImpact, String.format("Expected strategy metadata containing terms not found in controller response: %s", riNote));
     }
+
+
 }

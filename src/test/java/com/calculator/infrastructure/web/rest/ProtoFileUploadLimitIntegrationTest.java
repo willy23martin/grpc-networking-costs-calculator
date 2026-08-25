@@ -26,7 +26,7 @@ class ProtoFileUploadLimitIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void shouldSaveTacticsToSessionAndReturnNoContent() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
+        final ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true,  false),
                 new ResiliencyPatterns(
@@ -45,7 +45,7 @@ class ProtoFileUploadLimitIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void shouldNotThrowFileCountLimitExceededExceptionWhenUploadingProtoFileOnly() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
+        final ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
                 new ResiliencyPatterns(
@@ -61,14 +61,14 @@ class ProtoFileUploadLimitIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isNoContent());
 
-        MockMultipartFile protoFile = new MockMultipartFile(
+        final MockMultipartFile protoFile = new MockMultipartFile(
                 "protoFile",
                 "order.proto",
                 MediaType.TEXT_PLAIN_VALUE,
                 VALID_PROTO_CONTENT.getBytes()
         );
 
-        MvcResult result = mockMvc.perform(multipart("/calculateProtofileNetworkingCosts")
+        final MvcResult result = mockMvc.perform(multipart("/calculateProtofileNetworkingCosts")
                         .file(protoFile))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -78,11 +78,11 @@ class ProtoFileUploadLimitIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void shouldReturnEmptyTacticsWhenNoSessionExists() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/session/tactics"))
+        final MvcResult result = mockMvc.perform(get("/api/session/tactics"))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        ArchitecturalDecisionsDTO responseBody = objectMapper.readValue(
+        final ArchitecturalDecisionsDTO responseBody = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
                 ArchitecturalDecisionsDTO.class
         );
@@ -94,7 +94,7 @@ class ProtoFileUploadLimitIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void shouldClearTacticsFromSession() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
+        final ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 500,
                 new ReliabilityTactics(true, true),
                 new ResiliencyPatterns(
@@ -113,7 +113,7 @@ class ProtoFileUploadLimitIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(delete("/api/session/tactics"))
                 .andExpect(status().is2xxSuccessful());
 
-        MvcResult result = mockMvc.perform(get("/api/session/tactics"))
+        final MvcResult result = mockMvc.perform(get("/api/session/tactics"))
                 .andExpect(status().isOk())
                 .andReturn();
 

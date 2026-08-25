@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.calculator.application.services.calculators.CostEfficiencyCalculator.HOURS_PER_MONTH;
+import static com.calculator.shared.BDDTestUtils.calculateRIYearSavingsValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -18,10 +19,6 @@ public class Activity6CloudServiceConfigurationSteps extends BaseIntegrationTest
 
     @Autowired
     private CloudServicesTCCCalculatorController controller;
-
-    private String cloudServiceParam;
-    private String cloudInstanceParam;
-    private String finopsStrategyParam;
 
     private Map<String, Object> targetInstanceData;
     private Map<String, Object> optimizationData;
@@ -32,11 +29,8 @@ public class Activity6CloudServiceConfigurationSteps extends BaseIntegrationTest
 
     @Given("I have implemented {string} and a {string}")
     public void i_have_implemented_and_a(String cloudService, String cloudInstance) {
-        this.cloudServiceParam = cloudService;
-        this.cloudInstanceParam = cloudInstance;
 
-        List<Map<String, Object>> ec2Instances = controller.getComputeInstances();
-        assertNotNull(ec2Instances, "EC2 instances pricing list should not be null");
+        final List<Map<String, Object>> ec2Instances = controller.getComputeInstances();
 
         this.targetInstanceData = ec2Instances.stream()
                 .filter(inst -> cloudInstance.equalsIgnoreCase(String.valueOf(inst.get("instanceType"))))
@@ -45,27 +39,22 @@ public class Activity6CloudServiceConfigurationSteps extends BaseIntegrationTest
 
         this.calculatedHourlyBase = ((Number) targetInstanceData.get("pricePerHourUsd")).doubleValue();
         this.calculatedMonthlyBase = this.calculatedHourlyBase * HOURS_PER_MONTH;
+
+        assertNotNull(ec2Instances, "EC2 instances pricing list should not be null");
     }
 
     @When("I modify the configuration with {string}")
     public void i_modify_the_configuration_with(String finopsStrategy) {
-        this.finopsStrategyParam = finopsStrategy;
 
         this.optimizationData = controller.getCostOptimisationPricing();
-        assertNotNull(optimizationData, "Cost optimization pricing data should not be null");
 
-        String normalizedStrategy = finopsStrategy.trim();
-        double savingsPct = 0.0;
+        final String normalizedStrategy = finopsStrategy.trim();
+        final double savingsPct = normalizedStrategy.equalsIgnoreCase("Reserved Instances")
+                || normalizedStrategy.equalsIgnoreCase("Reserved Instance 1 year") ? calculateRIYearSavingsValue(optimizationData) : 0.0;
 
-        if (normalizedStrategy.equalsIgnoreCase("Reserved Instances")
-                || normalizedStrategy.equalsIgnoreCase("Reserved Instance 1 year")) {
-
-            Object rawPct = optimizationData.get("reservedInstance1yrSavingsPct");
-            assertNotNull(rawPct, "reservedInstance1yrSavingsPct key should exist in optimization metadata map");
-            savingsPct = ((Number) rawPct).doubleValue(); // Extracts 36.0
-        }
 
         this.calculatedMonthlySavings = this.calculatedMonthlyBase * (savingsPct / 100.0);
+        assertNotNull(optimizationData, "Cost optimization pricing data should not be null");
     }
 
     @Then("the system should calculate {string}")
@@ -76,4 +65,5 @@ public class Activity6CloudServiceConfigurationSteps extends BaseIntegrationTest
                 String.format("Monthly savings mismatch. Expected: %s, Calculated: %s",
                         expectedSavingsValue, this.calculatedMonthlySavings));
     }
+
 }

@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.within;
 class AWSDataTransferCostCalculationAdapterTest {
 
     @Autowired
-    AWSDataTransferCostCalculationServiceAdapter service;
+    private AWSDataTransferCostCalculationServiceAdapter service;
 
     @Test
     void calculateDataTransferCost_ReturnsZero_WhenResponseGbIsZero() {
@@ -36,14 +36,14 @@ class AWSDataTransferCostCalculationAdapterTest {
 
     @Test
     void calculateDataTransferCost_SpansMultipleTiers_WhenUsageExceedsFirstTier() {
-        double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09) + 0.085;
+        final double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09) + 0.085;
 
         assertThat(service.calculateDataTransferCost(10_241.0)).isCloseTo(expected, within(0.01));
     }
 
     @Test
     void calculateDataTransferCost_SpansAllFourTiers_WhenUsageIsVeryLarge() {
-        double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09)
+        final double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09)
                 + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[1] * 0.085)
                 + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[2] * 0.07)
                 + 0.05;
@@ -53,7 +53,7 @@ class AWSDataTransferCostCalculationAdapterTest {
 
     @Test
     void calculateDataTransferCost_UsesLastRate_WhenUsageExceedsFinalTierThreshold() {
-        double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09)
+        final double expected = (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[0] * 0.09)
                 + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[1] * 0.085)
                 + (AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB[2] * 0.07)
                 + (100.0 * 0.05);

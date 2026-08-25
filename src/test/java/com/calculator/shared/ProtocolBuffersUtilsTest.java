@@ -262,11 +262,9 @@ public class ProtocolBuffersUtilsTest {
 
     @Test
     void importGoogleProtocolBufferFileDependencies_allFilesCreated(@TempDir Path tempDir) throws IOException {
-        // Act: Public method triggers resolve() for all 4 files
-        Path result = ProtocolBuffersUtils.importGoogleProtocolBufferFileDependencies(tempDir);
+        final Path result = ProtocolBuffersUtils.importGoogleProtocolBufferFileDependencies(tempDir);
 
-        // Assert: Directory created + all 4 files present (covers resolve() try-catch)
-        Path googleDir = tempDir.resolve("google/protobuf");
+        final Path googleDir = tempDir.resolve("google/protobuf");
         assertAll("All well-known types copied",
                 () -> assertTrue(Files.exists(googleDir)),
                 () -> assertTrue(Files.exists(googleDir.resolve("timestamp.proto"))),
@@ -284,9 +282,9 @@ public class ProtocolBuffersUtilsTest {
         System.setProperty("os.arch", "x86_64");
         System.setProperty("user.home", "/home/test");
 
-        Path result = ProtocolBuffersUtils.resolveProtocolBufferFilesCompiler();
+        final Path result = ProtocolBuffersUtils.resolveProtocolBufferFilesCompiler();
 
-        String expected = "/home/test/.m2/repository/com/google/protobuf/protoc/4.29.4/protoc-4.29.4-windows-x86_64.exe";
+        final String expected = "/home/test/.m2/repository/com/google/protobuf/protoc/4.29.4/protoc-4.29.4-windows-x86_64.exe";
         assertEquals(Path.of(expected), result);
     }
 
@@ -297,7 +295,7 @@ public class ProtocolBuffersUtilsTest {
         System.setProperty("os.arch", "aarch64");
         System.setProperty("user.home", "/Users/test");
 
-        Path result = ProtocolBuffersUtils.resolveProtocolBufferFilesCompiler();
+        final Path result = ProtocolBuffersUtils.resolveProtocolBufferFilesCompiler();
 
         assertTrue(result.toString().contains("osx-aarch_64.exe"));
     }
@@ -309,7 +307,7 @@ public class ProtocolBuffersUtilsTest {
         System.setProperty("os.arch", "arm64");
         System.setProperty("user.home", "/home/test");
 
-        Path result = ProtocolBuffersUtils.resolveProtocolBufferFilesCompiler();
+        final Path result = ProtocolBuffersUtils.resolveProtocolBufferFilesCompiler();
 
         assertTrue(result.toString().contains("linux-aarch_64.exe"));
     }

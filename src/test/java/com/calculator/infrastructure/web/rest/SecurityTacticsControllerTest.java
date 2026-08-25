@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class SecurityTacticsControllerTest {
+class SecurityTacticsControllerTest {
 
     @Mock
     private SecurityTradeoffMapperService securityTradeoffMapperService;
@@ -25,7 +25,7 @@ public class SecurityTacticsControllerTest {
     @Test
     void getTacticSecurityMappings_returnsList() {
         when(securityTradeoffMapperService.getSecurityTradeoffs()).thenReturn(Collections.emptyList());
-        ResponseEntity<?> response = controller.getTacticSecurityMappings();
+        final ResponseEntity<?> response = controller.getTacticSecurityMappings();
         assertNotNull(response.getBody());
     }
 

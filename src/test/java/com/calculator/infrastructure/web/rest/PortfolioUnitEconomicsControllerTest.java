@@ -23,7 +23,7 @@ class PortfolioUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Test
     void calculatePortfolioRoi_emptyServices() throws Exception {
-        PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
+        final PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
         req.services = null;
         req.finopsMonthlySaving = 100.0;
         req.ec2BaselineSpend = 500.0;
@@ -39,12 +39,12 @@ class PortfolioUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Test
     void calculatePortfolioRoi_withRevenueAndFinOps() throws Exception {
-        PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
+        final PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
         req.finopsMonthlySaving = 200.0;
         req.ec2BaselineSpend = 1000.0;
         req.services = new ArrayList<>();
 
-        ServiceEntry s1 = new ServiceEntry();
+        final ServiceEntry s1 = new ServiceEntry();
         s1.name = "Service A";
         s1.buc = "BUC001";
         s1.tco = 1000.0;
@@ -53,7 +53,7 @@ class PortfolioUnitEconomicsControllerTest extends BaseIntegrationTest {
         s1.rps = 50;
         req.services.add(s1);
 
-        ServiceEntry s2 = new ServiceEntry();
+        final ServiceEntry s2 = new ServiceEntry();
         s2.name = "Service B";
         s2.buc = "BUC002";
         s2.tco = 2000.0;
@@ -72,7 +72,6 @@ class PortfolioUnitEconomicsControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.totalMonthlyRevenue").value(10000.0))
                 .andExpect(jsonPath("$.totalRps").value(200))
                 .andExpect(jsonPath("$.totalConsumers").value(1500))
-                // Note: Fixed syntax wraps greaterThan directly within .value()
                 .andExpect(jsonPath("$.portfolioArpu").value(greaterThan(0.0)))
                 .andExpect(jsonPath("$.monthlyRoi").value(greaterThan(0.0)))
                 .andExpect(jsonPath("$.annualRoi").value(greaterThan(0.0)))
@@ -88,11 +87,11 @@ class PortfolioUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Test
     void calculatePortfolioRoi_noRevenueDataAndZeroTotals() throws Exception {
-        PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
+        final PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
         req.finopsMonthlySaving = -50.0;
         req.services = new ArrayList<>();
 
-        ServiceEntry s1 = new ServiceEntry();
+        final ServiceEntry s1 = new ServiceEntry();
         s1.name = "Free Service";
         s1.tco = 500.0;
         s1.revenuePerUserMonth = 0.0;
@@ -116,10 +115,10 @@ class PortfolioUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Test
     void calculatePortfolioRoi_negativeAndEdgeValues() throws Exception {
-        PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
+        final PortfolioUnitEconomicsRequest req = new PortfolioUnitEconomicsRequest();
         req.services = new ArrayList<>();
 
-        ServiceEntry s1 = new ServiceEntry();
+        final ServiceEntry s1 = new ServiceEntry();
         s1.name = "Invalid Values Service";
         s1.tco = -100.0;
         s1.revenuePerUserMonth = -5.0;

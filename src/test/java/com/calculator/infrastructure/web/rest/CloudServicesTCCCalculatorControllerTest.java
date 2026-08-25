@@ -45,10 +45,10 @@ class CloudServicesTCCCalculatorControllerTest {
 
     @Test
     void getComputeInstances_returnsList() {
-        List<Map<String, Object>> expected = Collections.singletonList(Collections.singletonMap("instanceType", "t3.medium"));
+        final List<Map<String, Object>> expected = Collections.singletonList(Collections.singletonMap("instanceType", "t3.medium"));
         when(cloudComputeCostCalculator.calculatePriceByComputeInstance()).thenReturn(expected);
 
-        List<Map<String, Object>> actual = controller.getComputeInstances();
+        final List<Map<String, Object>> actual = controller.getComputeInstances();
 
         assertNotNull(actual);
         assertEquals(1, actual.size());
@@ -57,10 +57,10 @@ class CloudServicesTCCCalculatorControllerTest {
 
     @Test
     void getAlbPricing_returnsMap() {
-        Map<String, Object> expected = Collections.singletonMap("fixedCost", 16.20);
+        final Map<String, Object> expected = Collections.singletonMap("fixedCost", 16.20);
         when(albCostCalculator.calculateALBCosts()).thenReturn(expected);
 
-        Map<String, Object> actual = controller.getAlbPricing();
+        final Map<String, Object> actual = controller.getAlbPricing();
 
         assertNotNull(actual);
         assertEquals(1, actual.size());
@@ -69,10 +69,10 @@ class CloudServicesTCCCalculatorControllerTest {
 
     @Test
     void getDatabaseBackupPricing_returnsMap() {
-        Map<String, Object> expected = Collections.singletonMap("backupCost", 0.09);
+        final Map<String, Object> expected = Collections.singletonMap("backupCost", 0.09);
         when(databaseCostCalculator.calculateDatabaseBackupPricing()).thenReturn(expected);
 
-        Map<String, Object> actual = controller.getDatabaseBackupPricing();
+        final Map<String, Object> actual = controller.getDatabaseBackupPricing();
 
         assertNotNull(actual);
         assertEquals(1, actual.size());
@@ -81,10 +81,10 @@ class CloudServicesTCCCalculatorControllerTest {
 
     @Test
     void getSecurityServicesPricing_returnsMap() {
-        Map<String, Object> expected = Collections.singletonMap("kmsCost", 1.0);
+        final Map<String, Object> expected = Collections.singletonMap("kmsCost", 1.0);
         when(securityCostCalculator.calculateSecurityCosts()).thenReturn(expected);
 
-        Map<String, Object> actual = controller.getSecurityServicesPricing();
+        final Map<String, Object> actual = controller.getSecurityServicesPricing();
 
         assertNotNull(actual);
         assertEquals(1, actual.size());
@@ -93,10 +93,10 @@ class CloudServicesTCCCalculatorControllerTest {
 
     @Test
     void getCostOptimisationPricing_returnsMap() {
-        Map<String, Object> expected = Collections.singletonMap("savingsPlanDiscount", 30.0);
+        final Map<String, Object> expected = Collections.singletonMap("savingsPlanDiscount", 30.0);
         when(finOpsStrategyCostCalculator.calculateFinOpsStrategiesCosts()).thenReturn(expected);
 
-        Map<String, Object> actual = controller.getCostOptimisationPricing();
+        final Map<String, Object> actual = controller.getCostOptimisationPricing();
 
         assertNotNull(actual);
         assertEquals(1, actual.size());
@@ -105,10 +105,10 @@ class CloudServicesTCCCalculatorControllerTest {
 
     @Test
     void getCachingPricing_returnsMap() {
-        Map<String, Object> expected = Collections.singletonMap("elasticacheCost", 50.0);
+        final Map<String, Object> expected = Collections.singletonMap("elasticacheCost", 50.0);
         when(cachingCostCalculator.calculateCachingCosts()).thenReturn(expected);
 
-        Map<String, Object> actual = controller.getCachingPricing();
+        final Map<String, Object> actual = controller.getCachingPricing();
 
         assertNotNull(actual);
         assertEquals(1, actual.size());

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -46,43 +47,43 @@ class AWSDatabaseCostCalculatorAdapterTest {
 
     @Test
     void calculateDatabaseBackupPricing_successfulApiResponse_returnsDynamicPrices() throws Exception {
-       GetProductsResponse mockResponse = GetProductsResponse.builder()
+       final GetProductsResponse mockResponse = GetProductsResponse.builder()
                 .priceList(List.of("{\"mock\":\"json\"}"))
                 .build();
 
        when(pricingMock.getProducts(any(GetProductsRequest.class))).thenReturn(mockResponse);
 
-        JsonNode s3Root = mock(JsonNode.class);
-        JsonNode rdsRoot = mock(JsonNode.class);
-        when(mapperMock.readTree(any(String.class))).thenReturn(s3Root, rdsRoot);
+       final JsonNode s3Root = mock(JsonNode.class);
+       final JsonNode rdsRoot = mock(JsonNode.class);
+       when(mapperMock.readTree(any(String.class))).thenReturn(s3Root, rdsRoot);
 
-        setupElementsStubbing(s3Root, 0.023);
-        setupElementsStubbing(rdsRoot, 0.095);
+       setupElementsStubbing(s3Root, 0.023);
+       setupElementsStubbing(rdsRoot, 0.095);
 
-        when(auroraDatabaseCostCalculatorMock.calculateDatabaseBackupPricing())
+       when(auroraDatabaseCostCalculatorMock.calculateDatabaseBackupPricing())
                 .thenReturn(Map.of("auroraReplicaPerHour", 0.26));
 
-        String expectedNote = String.format(java.util.Locale.US, "Add ~$%.6f/WRU per extra replication region beyond the primary.", 0.000975);
-        when(awsDynamoDBCostCalculatorMock.calculateDatabaseBackupPricing())
+       final String expectedNote = String.format(java.util.Locale.US, "Add ~$%.6f/WRU per extra replication region beyond the primary.", 0.000975);
+       when(awsDynamoDBCostCalculatorMock.calculateDatabaseBackupPricing())
                 .thenReturn(Map.of(
                         "dynamoGlobalTablePerWruUsd", 0.000975,
                         "dynamoGlobalTableNote", expectedNote
                 ));
 
-        Map<String, Object> result = calculator.calculateDatabaseBackupPricing();
+       final Map<String, Object> result = calculator.calculateDatabaseBackupPricing();
 
-        assertThat(result).isNotNull();
-        assertThat(result.get("s3StandardStoragePerGbUsd")).isEqualTo(0.023);
-        assertThat(result.get("rdsSnapshotStoragePerGbUsd")).isEqualTo(0.095);
-        assertThat(result.get("auroraReplicaPerHour")).isEqualTo(0.26);
-        assertThat(result.get("dynamoGlobalTablePerWruUsd")).isEqualTo(0.000975);
-        assertThat((String) result.get("dynamoGlobalTableNote")).contains("0.000975");
+       assertThat(result).isNotNull();
+       assertEquals(0.023, result.get("s3StandardStoragePerGbUsd"));
+       assertEquals(0.095, result.get("rdsSnapshotStoragePerGbUsd"));
+       assertEquals(0.26, result.get("auroraReplicaPerHour"));
+       assertEquals(0.000975, result.get("dynamoGlobalTablePerWruUsd"));
+       assertThat((String) result.get("dynamoGlobalTableNote")).contains("0.000975");
     }
 
     @Test
     void calculateDatabaseBackupPricing_emptyPriceList_usesFallbacks() throws Exception {
 
-        GetProductsResponse emptyResponse = GetProductsResponse.builder()
+        final GetProductsResponse emptyResponse = GetProductsResponse.builder()
                 .priceList(Collections.emptyList())
                 .build();
 
@@ -94,7 +95,7 @@ class AWSDatabaseCostCalculatorAdapterTest {
                 .thenReturn(Map.of("dynamoGlobalTablePerWruUsd", 0.000975));
 
 
-        Map<String, Object> result = calculator.calculateDatabaseBackupPricing();
+        final Map<String, Object> result = calculator.calculateDatabaseBackupPricing();
 
 
         assertThat(result).isNotNull();
@@ -116,7 +117,7 @@ class AWSDatabaseCostCalculatorAdapterTest {
                 .thenReturn(Map.of("dynamoGlobalTablePerWruUsd", 0.000975));
 
 
-        Map<String, Object> result = calculator.calculateDatabaseBackupPricing();
+        final Map<String, Object> result = calculator.calculateDatabaseBackupPricing();
 
 
         assertThat(result).isNotNull();
@@ -127,20 +128,20 @@ class AWSDatabaseCostCalculatorAdapterTest {
     }
 
     private void setupElementsStubbing(JsonNode root, double value) {
-        JsonNode terms = mock(JsonNode.class);
-        JsonNode onDemand = mock(JsonNode.class);
-        JsonNode termValue = mock(JsonNode.class);
-        JsonNode priceDimensions = mock(JsonNode.class);
-        JsonNode dimension = mock(JsonNode.class);
-        JsonNode pricePerUnit = mock(JsonNode.class);
-        JsonNode usd = mock(JsonNode.class);
+        final JsonNode terms = mock(JsonNode.class);
+        final JsonNode onDemand = mock(JsonNode.class);
+        final JsonNode termValue = mock(JsonNode.class);
+        final JsonNode priceDimensions = mock(JsonNode.class);
+        final JsonNode dimension = mock(JsonNode.class);
+        final JsonNode pricePerUnit = mock(JsonNode.class);
+        final JsonNode usd = mock(JsonNode.class);
 
         lenient().when(root.path("terms")).thenReturn(terms);
         lenient().when(terms.path("OnDemand")).thenReturn(onDemand);
         lenient().when(onDemand.isMissingNode()).thenReturn(false);
         lenient().when(onDemand.isEmpty()).thenReturn(false);
 
-        Iterator<JsonNode> onDemandIterator = mock(Iterator.class);
+        final Iterator<JsonNode> onDemandIterator = mock(Iterator.class);
         lenient().when(onDemand.elements()).thenReturn(onDemandIterator);
         lenient().when(onDemandIterator.next()).thenReturn(termValue);
 
@@ -148,7 +149,7 @@ class AWSDatabaseCostCalculatorAdapterTest {
         lenient().when(priceDimensions.isMissingNode()).thenReturn(false);
         lenient().when(priceDimensions.isEmpty()).thenReturn(false);
 
-        Iterator<JsonNode> dimensionsIterator = mock(Iterator.class);
+        final Iterator<JsonNode> dimensionsIterator = mock(Iterator.class);
         lenient().when(priceDimensions.elements()).thenReturn(dimensionsIterator);
         lenient().when(dimensionsIterator.next()).thenReturn(dimension);
 
@@ -159,19 +160,19 @@ class AWSDatabaseCostCalculatorAdapterTest {
 
     private void injectMocks(AWSDatabaseCostCalculatorAdapter calc) throws Exception {
 
-        Field pricingField = AWSCloudCalculatorAdapter.class.getDeclaredField("pricingClient");
+        final Field pricingField = AWSCloudCalculatorAdapter.class.getDeclaredField("pricingClient");
         pricingField.setAccessible(true);
         pricingField.set(calc, pricingMock);
 
-        Field mapperField = AWSCloudCalculatorAdapter.class.getSuperclass().getDeclaredField("mapper");
+        final Field mapperField = AWSCloudCalculatorAdapter.class.getSuperclass().getDeclaredField("mapper");
         mapperField.setAccessible(true);
         mapperField.set(calc, mapperMock);
 
-        Field auroraField = AWSDatabaseCostCalculatorAdapter.class.getDeclaredField("auroraDatabaseCostCalculator");
+        final Field auroraField = AWSDatabaseCostCalculatorAdapter.class.getDeclaredField("auroraDatabaseCostCalculator");
         auroraField.setAccessible(true);
         auroraField.set(calc, auroraDatabaseCostCalculatorMock);
 
-        Field dynamoField = AWSDatabaseCostCalculatorAdapter.class.getDeclaredField("awsDynamoDBCostCalculator");
+        final Field dynamoField = AWSDatabaseCostCalculatorAdapter.class.getDeclaredField("awsDynamoDBCostCalculator");
         dynamoField.setAccessible(true);
         dynamoField.set(calc, awsDynamoDBCostCalculatorMock);
     }

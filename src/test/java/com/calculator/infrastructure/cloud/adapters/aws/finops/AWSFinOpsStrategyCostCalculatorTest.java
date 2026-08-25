@@ -59,17 +59,16 @@ class AWSFinOpsStrategyCostCalculatorTest {
     @Test
     @DisplayName("Should successfully handle both query and bulk pricing calls on the happy path")
     void calculateFinOpsStrategiesCosts_HappyPath() throws Exception {
-        String mockRiJson = "{\"terms\":{\"OnDemand\":{\"OD1\":{\"priceDimensions\":{\"D1\":{\"pricePerUnit\":{\"USD\":\"0.048\"}}}}},\"Reserved\":{\"RI1\":{\"termAttributes\":{\"LeaseContractLength\":\"1 yr\",\"OfferingClass\":\"standard\",\"PurchaseOption\":\"No Upfront\"},\"priceDimensions\":{\"D2\":{\"pricePerUnit\":{\"USD\":\"0.0308\"}}}}}}}";
-        String mockSupportJson = "{\"product\":{\"attributes\":{\"minMonthlyCharge\":\"100\"}},\"terms\":{\"External\":{\"SUP1\":{\"priceDimensions\":{\"D3\":{\"pricePerUnit\":{\"USD\":\"0.10\"}}}}}}}";
+        final String mockRiJson = "{\"terms\":{\"OnDemand\":{\"OD1\":{\"priceDimensions\":{\"D1\":{\"pricePerUnit\":{\"USD\":\"0.048\"}}}}},\"Reserved\":{\"RI1\":{\"termAttributes\":{\"LeaseContractLength\":\"1 yr\",\"OfferingClass\":\"standard\",\"PurchaseOption\":\"No Upfront\"},\"priceDimensions\":{\"D2\":{\"pricePerUnit\":{\"USD\":\"0.0308\"}}}}}}}";
+        final String mockSupportJson = "{\"product\":{\"attributes\":{\"minMonthlyCharge\":\"100\"}},\"terms\":{\"External\":{\"SUP1\":{\"priceDimensions\":{\"D3\":{\"pricePerUnit\":{\"USD\":\"0.10\"}}}}}}}";
 
-        GetProductsResponse mockProductsResponse = GetProductsResponse.builder()
+        final GetProductsResponse mockProductsResponse = GetProductsResponse.builder()
                 .priceList(List.of(mockRiJson, mockSupportJson))
                 .build();
 
         when(pricingClient.getProducts(any(GetProductsRequest.class))).thenReturn(mockProductsResponse);
 
-        // Updated mock JSON to include the nested rates matrix with discountedRegionCode set to us-east-1
-        String mockBulkManifestJson = "{"
+        final String mockBulkManifestJson = "{"
                 + "\"products\": ["
                 + "  {"
                 + "    \"sku\": \"MOCK-SKU-1YR\","
@@ -118,24 +117,24 @@ class AWSFinOpsStrategyCostCalculatorTest {
                 + "}"
                 + "}";
 
-        java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("aws-bulk-pricing-", ".json");
+        final java.nio.file.Path tempFile = java.nio.file.Files.createTempFile("aws-bulk-pricing-", ".json");
         java.nio.file.Files.writeString(tempFile, mockBulkManifestJson);
 
-        String mockFileUrlString = tempFile.toUri().toURL().toString();
+        final String mockFileUrlString = tempFile.toUri().toURL().toString();
 
-        PriceList mockPriceList = PriceList.builder().priceListArn("arn:aws:pricing:us-east-1::price-list/sp/1").build();
-        ListPriceListsResponse mockListResponse = ListPriceListsResponse.builder().priceLists(List.of(mockPriceList)).build();
-        GetPriceListFileUrlResponse mockUrlResponse = GetPriceListFileUrlResponse.builder().url(mockFileUrlString).build();
+        final PriceList mockPriceList = PriceList.builder().priceListArn("arn:aws:pricing:us-east-1::price-list/sp/1").build();
+        final ListPriceListsResponse mockListResponse = ListPriceListsResponse.builder().priceLists(List.of(mockPriceList)).build();
+        final GetPriceListFileUrlResponse mockUrlResponse = GetPriceListFileUrlResponse.builder().url(mockFileUrlString).build();
 
         when(pricingClient.listPriceLists(any(ListPriceListsRequest.class))).thenReturn(mockListResponse);
         when(pricingClient.getPriceListFileUrl(any(GetPriceListFileUrlRequest.class))).thenReturn(mockUrlResponse);
 
-        com.fasterxml.jackson.databind.JsonNode mockBulkNode = mapper.readTree(mockBulkManifestJson);
+        final com.fasterxml.jackson.databind.JsonNode mockBulkNode = mapper.readTree(mockBulkManifestJson);
         lenient().doReturn(mockBulkNode)
                 .when(mapper).readTree(org.mockito.ArgumentMatchers.isA(InputStream.class));
 
         try {
-            Map<String, Object> results = calculator.calculateFinOpsStrategiesCosts();
+            final Map<String, Object> results = calculator.calculateFinOpsStrategiesCosts();
 
             assertNotNull(results);
             assertEquals(36, results.get("reservedInstance1yrSavingsPct"));
@@ -145,7 +144,6 @@ class AWSFinOpsStrategyCostCalculatorTest {
             assertEquals(50, results.get("savingsPlan3yrSavingsPct"));
             assertEquals(mockFileUrlString, results.get("savingsPlanBulkFileUrl"));
         } finally {
-            // Clean up temporary IO footprint from disk
             java.nio.file.Files.deleteIfExists(tempFile);
         }
     }
@@ -156,9 +154,9 @@ class AWSFinOpsStrategyCostCalculatorTest {
         lenient().when(pricingClient.getProducts(any(GetProductsRequest.class)))
                 .thenThrow(new RuntimeException("API Connection Failure"));
 
-        PriceList mockPriceList = PriceList.builder().priceListArn("arn:aws:pricing::pl1").build();
-        ListPriceListsResponse mockListResponse = ListPriceListsResponse.builder().priceLists(List.of(mockPriceList)).build();
-        GetPriceListFileUrlResponse mockUrlResponse = GetPriceListFileUrlResponse.builder().url("https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/ComputeSavingsPlans/current/index.json").build();
+        final PriceList mockPriceList = PriceList.builder().priceListArn("arn:aws:pricing::pl1").build();
+        final ListPriceListsResponse mockListResponse = ListPriceListsResponse.builder().priceLists(List.of(mockPriceList)).build();
+        final GetPriceListFileUrlResponse mockUrlResponse = GetPriceListFileUrlResponse.builder().url("https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/ComputeSavingsPlans/current/index.json").build();
 
         lenient().when(pricingClient.listPriceLists(any(ListPriceListsRequest.class))).thenReturn(mockListResponse);
         lenient().when(pricingClient.getPriceListFileUrl(any(GetPriceListFileUrlRequest.class))).thenReturn(mockUrlResponse);
@@ -166,7 +164,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
         lenient().doThrow(new java.io.IOException("Network Timeout / Stream failure"))
                 .when(mapper).readTree(any(InputStream.class));
 
-        Map<String, Object> results = calculator.calculateFinOpsStrategiesCosts();
+        final Map<String, Object> results = calculator.calculateFinOpsStrategiesCosts();
 
         assertNotNull(results);
         assertEquals(36, results.get("reservedInstance1yrSavingsPct"));

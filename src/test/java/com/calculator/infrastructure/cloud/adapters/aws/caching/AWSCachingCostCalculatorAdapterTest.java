@@ -38,7 +38,7 @@ class AWSCachingCostCalculatorAdapterTest {
     void calculateCachingCosts_allApiExceptions_fullFallback() {
         when(pricingMock.getProducts((GetProductsRequest) any())).thenThrow(new RuntimeException("API fail"));
 
-        Map<String, Object> result = calculator.calculateCachingCosts();
+        final Map<String, Object> result = calculator.calculateCachingCosts();
 
         assertAll("All fallback map hits",
                 () -> assertEquals(0.166, result.get("redisR6gLargePerHour")),
@@ -50,11 +50,11 @@ class AWSCachingCostCalculatorAdapterTest {
     }
 
     private void injectMocks(AWSCachingCostCalculatorAdapter calc) throws Exception {
-        Field pricingField = AWSCloudCalculatorAdapter.class.getDeclaredField("pricingClient");
+        final Field pricingField = AWSCloudCalculatorAdapter.class.getDeclaredField("pricingClient");
         pricingField.setAccessible(true);
         pricingField.set(calc, pricingMock);
 
-        Field mapperField = AWSCloudCalculatorAdapter.class.getSuperclass().getDeclaredField("mapper");
+        final Field mapperField = AWSCloudCalculatorAdapter.class.getSuperclass().getDeclaredField("mapper");
         mapperField.setAccessible(true);
         mapperField.set(calc, mapperMock);
     }

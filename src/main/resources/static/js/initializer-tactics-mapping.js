@@ -42,15 +42,31 @@ document.addEventListener('DOMContentLoaded', () => {
 ================================================================= */
 async function fetchMappings(url, kind) {
     try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`${url} returned ${res.status}`);
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!res.ok) {
+           console.error(`[tactics-mapping] ${url} returned status: ${res.status} ${res.statusText}`);
+
+           // If it's a 401/403, the session really is dead or unauthenticated
+           if (res.status === 401 || res.status === 403) {
+               window.location.href = '/login';
+           }
+           return;
+        }
+
         const data = await res.json();
         console.log(`[tactics-mapping] Loaded ${data.length} ${kind} entries`);
         if (kind === 'security')    securityMappingsCache    = data;
         if (kind === 'reliability') reliabilityMappingsCache = data;
         if (kind === 'resiliency')  resiliencyMappingsCache  = data;
+
     } catch (err) {
-        console.warn(`[tactics-mapping] ${kind} fetch failed:`, err.message);
+        console.error(`[tactics-mapping] ${kind} fetch failed:`, err.message);
     }
 }
 

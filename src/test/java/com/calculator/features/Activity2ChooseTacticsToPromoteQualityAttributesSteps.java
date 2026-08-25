@@ -27,14 +27,11 @@ public class Activity2ChooseTacticsToPromoteQualityAttributesSteps extends BaseI
 
     @Then("the system should identify {string} with {string}")
     public void verifyTacticImpact(String expectedValue, String impactType) throws Exception {
-        String targetApiPath = getEndpointForCharacteristic(architecturalCharacteristic);
+        final String targetApiPath = getEndpointForCharacteristic(architecturalCharacteristic);
 
-        String jsonPath;
-        if (TradeoffType.PROMOTES.name().equals(impactType)) {
-            jsonPath = "$[?(@.tacticName == '" + specificTactic + "')].tacticCategory";
-        } else {
-            jsonPath = "$[?(@.tacticName == '" + specificTactic + "')].impactedAttribute";
-        }
+        final String jsonPath = TradeoffType.PROMOTES.name().equals(impactType) ?
+            "$[?(@.tacticName == '" + specificTactic + "')].tacticCategory" :
+            "$[?(@.tacticName == '" + specificTactic + "')].impactedAttribute";
 
         mockMvc.perform(get(targetApiPath))
                 .andDo(print())

@@ -23,7 +23,7 @@ class TCOUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Test
     void calculateCloudInfraTotal_allScenarios() throws Exception {
-        com.calculator.domain.dto.requests.CloudInfrastructureTotalCostRequest req1 =
+        final com.calculator.domain.dto.requests.CloudInfrastructureTotalCostRequest req1 =
                 new com.calculator.domain.dto.requests.CloudInfrastructureTotalCostRequest();
         req1.finopsMonthlySavingUsd = 150.0;
         req1.albMonthlyCostUsd = 50.0;
@@ -45,7 +45,7 @@ class TCOUnitEconomicsControllerTest extends BaseIntegrationTest {
 
     @Test
     void calculateUnitEconomics_noRevenueAndZeroTotals() throws Exception {
-        TCOUnitEconomicsRequest req = new TCOUnitEconomicsRequest();
+        final TCOUnitEconomicsRequest req = new TCOUnitEconomicsRequest();
         req.cloudInfraCostUsd = 0.0;
         req.egressTransferCostUsd = 0.0;
         req.effectiveRps = 0;

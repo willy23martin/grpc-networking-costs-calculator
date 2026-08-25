@@ -20,7 +20,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_allStructuralAndInfoTactics() throws Exception {
-        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 100;
         req.protoResponseSizeEffectiveBytes = 500;
         req.clientSideLoadBalancingEnabled = true;
@@ -30,13 +30,13 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
         req.timeoutEnabled = true;
         req.timeoutMs = 250;
 
-        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp = objectMapper.readValue(
+        final TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );
@@ -49,19 +49,19 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_retryBranchAndLowCostLabel() throws Exception {
-        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 1;
         req.protoResponseSizeEffectiveBytes = 10;
         req.retryEnabled = true;
         req.retryErrorRatePct = 5.0;
 
-        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp = objectMapper.readValue(
+        final TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );
@@ -73,20 +73,20 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_tlsAndMtlsBranches() throws Exception {
-        TacticTCCContributionRequest req1 = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req1 = new TacticTCCContributionRequest();
         req1.baseRps = 5000;
         req1.protoResponseSizeEffectiveBytes = 0;
         req1.tlsEnabled = true;
         req1.tlsReconnectsPerHour = 3600;
         req1.tlsOverheadBytesFromBackend = 50;
 
-        MvcResult result1 = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result1 = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req1)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp1 = objectMapper.readValue(
+        final TacticTCCContributionResponse resp1 = objectMapper.readValue(
                 result1.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );
@@ -95,19 +95,19 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
         assertTrue(resp1.usedPlaceholderBytes);
         assertEquals(1, resp1.contributions.size());
 
-        TacticTCCContributionRequest req2 = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req2 = new TacticTCCContributionRequest();
         req2.baseRps = 1000;
         req2.mtlsEnabled = true;
         req2.tlsReconnectsPerHour = 0;
         req2.tlsOverheadBytesFromBackend = 0;
 
-        MvcResult result2 = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result2 = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req2)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp2 = objectMapper.readValue(
+        final TacticTCCContributionResponse resp2 = objectMapper.readValue(
                 result2.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );
@@ -118,7 +118,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_oauthLocalAndRemoteModes() throws Exception {
-        TacticTCCContributionRequest req1 = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req1 = new TacticTCCContributionRequest();
         req1.baseRps = 1000;
         req1.protoResponseSizeEffectiveBytes = 1000;
         req1.oauthEnabled = true;
@@ -127,13 +127,13 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
         req1.concurrentClients = 0;
         req1.jwtOverheadBytesFromBackend = 0;
 
-        MvcResult result1 = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result1 = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req1)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp1 = objectMapper.readValue(
+        final TacticTCCContributionResponse resp1 = objectMapper.readValue(
                 result1.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );
@@ -141,7 +141,7 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
         assertNotNull(resp1);
         assertEquals(0.0, resp1.contributions.getFirst().estimatedMonthlyCostUsd);
 
-        TacticTCCContributionRequest req2 = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req2 = new TacticTCCContributionRequest();
         req2.baseRps = 200000;
         req2.protoResponseSizeEffectiveBytes = 2000;
         req2.oauthEnabled = true;
@@ -150,13 +150,13 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
         req2.concurrentClients = 2;
         req2.jwtOverheadBytesFromBackend = 800;
 
-        MvcResult result2 = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result2 = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req2)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp2 = objectMapper.readValue(
+        final TacticTCCContributionResponse resp2 = objectMapper.readValue(
                 result2.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );
@@ -167,19 +167,19 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_allEgressPricingTiers() throws Exception {
-        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 5_000_000;
         req.protoResponseSizeEffectiveBytes = 5_000;
         req.retryEnabled = true;
         req.retryErrorRatePct = 50.0;
 
-        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp = objectMapper.readValue(
+        final TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );
@@ -190,18 +190,18 @@ class TacticsContributionControllerTest extends BaseIntegrationTest{
 
     @Test
     void calculateTacticContributions_zeroEgressCost() throws Exception {
-        TacticTCCContributionRequest req = new TacticTCCContributionRequest();
+        final TacticTCCContributionRequest req = new TacticTCCContributionRequest();
         req.baseRps = 0;
         req.protoResponseSizeEffectiveBytes = -100;
         req.retryEnabled = true;
 
-        MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
+        final MvcResult result = mockMvc.perform(post("/api/cost/tactic-contributions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        TacticTCCContributionResponse resp = objectMapper.readValue(
+        final TacticTCCContributionResponse resp = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
                 TacticTCCContributionResponse.class
         );

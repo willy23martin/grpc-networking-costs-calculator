@@ -14,7 +14,7 @@ class ProtocolBufferFileParserTest {
 
     @Test
     void parseProtoFileFrom_completeProtoFile_allFieldsParsed(@TempDir Path tempDir) throws IOException {
-        String protoContent = """
+        final String protoContent = """
                 syntax = "proto3";
                 
                 package com.ecommerce.order.unary;
@@ -71,9 +71,9 @@ class ProtocolBufferFileParserTest {
                 }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "buc1_unary_order.proto", protoContent);
+        final Path protoFile = createProtoFile(tempDir, "buc1_unary_order.proto", protoContent);
 
-        JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
+        final JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
         assertEquals("com.ecommerce.order.grpc.unary", result.javaPackageName());
         assertEquals("", result.outerClassName());
@@ -83,7 +83,7 @@ class ProtocolBufferFileParserTest {
 
     @Test
     void parseProtoFileFrom_onlyPackageAndRpc_extractsAvailableFields(@TempDir Path tempDir) throws IOException {
-        String protoContent = """
+        final String protoContent = """
             syntax = "proto3";
             
             option java_package = "com.ecommerce.order.grpc.unary";
@@ -93,9 +93,9 @@ class ProtocolBufferFileParserTest {
             }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "minimal_unary.proto", protoContent);
+        final Path protoFile = createProtoFile(tempDir, "minimal_unary.proto", protoContent);
 
-        JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
+        final JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
         assertEquals("com.ecommerce.order.grpc.unary", result.javaPackageName());
         assertEquals("", result.outerClassName());
@@ -105,7 +105,7 @@ class ProtocolBufferFileParserTest {
 
     @Test
     void parseProtoFileFrom_noJavaOptions_onlyRpc(@TempDir Path tempDir) throws IOException {
-        String protoContent = """
+        final String protoContent = """
             syntax = "proto3";
             
             service UnaryOrderService {
@@ -113,9 +113,9 @@ class ProtocolBufferFileParserTest {
             }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "no_options_unary.proto", protoContent);
+        final Path protoFile = createProtoFile(tempDir, "no_options_unary.proto", protoContent);
 
-        JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
+        final JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
         assertEquals("", result.javaPackageName());
         assertEquals("", result.outerClassName());
@@ -125,7 +125,7 @@ class ProtocolBufferFileParserTest {
 
     @Test
     void parseProtoFileFrom_multipleRpc_firstOnly(@TempDir Path tempDir) throws IOException {
-        String multipleRPCsContent = """
+        final String multipleRPCsContent = """
             syntax = "proto3";
             
             service UnaryOrderService {
@@ -134,20 +134,19 @@ class ProtocolBufferFileParserTest {
             }
             """;
 
-        Path protoFile = createProtoFile(tempDir, "multi_rpc_unary.proto", multipleRPCsContent);
+        final Path protoFile = createProtoFile(tempDir, "multi_rpc_unary.proto", multipleRPCsContent);
 
-        JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
+        final JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(protoFile);
 
-        // Ensures the parser selects the primary baseline RPC execution contract (first matching metadata match)
         assertEquals("GetOrderRequest", result.requestMessageSimpleName());
         assertEquals("Order", result.responseMessageSimpleName());
     }
 
     @Test
     void parseProtoFileFrom_emptyFile_emptyResult(@TempDir Path tempDir) throws IOException {
-        Path emptyProtoFile = createProtoFile(tempDir, "empty_malformed.proto", "");
+        final Path emptyProtoFile = createProtoFile(tempDir, "empty_malformed.proto", "");
 
-        JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(emptyProtoFile);
+        final JavaParsedProtoFile result = ProtocolBufferFileParser.parseProtoFileFrom(emptyProtoFile);
 
         assertEquals("", result.javaPackageName());
         assertEquals("", result.outerClassName());
@@ -156,7 +155,7 @@ class ProtocolBufferFileParserTest {
     }
 
     private Path createProtoFile(Path tempDir, String filename, String content) throws IOException {
-        Path protoFile = tempDir.resolve(filename);
+        final Path protoFile = tempDir.resolve(filename);
         Files.write(protoFile, content.getBytes());
         return protoFile;
     }

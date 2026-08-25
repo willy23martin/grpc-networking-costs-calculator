@@ -10,7 +10,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static com.calculator.application.services.calculators.CostEfficiencyCalculator.SECONDS_PER_MONTH;
@@ -28,13 +27,11 @@ public class Phase1BaseRpsCostDeltaSteps extends BaseIntegrationTest {
     @Autowired
     private AWSDataTransferCostCalculationServiceAdapter dataTransferAdapter;
 
-    private int baseRps;
     private EffectiveRequestPerSecondRequest requestPayload;
     private EffectiveRequestPerSecondResponse apiResponse;
 
     @Given("a service with {int} requests per second")
     public void setBaseRps(Integer rps) {
-        this.baseRps = rps;
         this.requestPayload = new EffectiveRequestPerSecondRequest();
         this.requestPayload.setBaseRequestPerSecond(rps);
     }
@@ -49,34 +46,32 @@ public class Phase1BaseRpsCostDeltaSteps extends BaseIntegrationTest {
             this.requestPayload.setRetryErrorPercentage(100);
         }
 
-        MvcResult result = mockMvc.perform(post("/api/tco/effective-rps")
+        final MvcResult result = mockMvc.perform(post("/api/tco/effective-rps")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestPayload)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String responseBody = result.getResponse().getContentAsString();
+        final String responseBody = result.getResponse().getContentAsString();
         this.apiResponse = objectMapper.readValue(responseBody, EffectiveRequestPerSecondResponse.class);
         assertNotNull(this.apiResponse, "The API response from /api/tco/effective-rps was null.");
     }
 
     @Then("the live cost delta panel shows an egress cost increase of approximately {string} per month")
     public void verifyEgressCostDelta(String expectedDeltaUsd) {
-        double expectedCost = Double.parseDouble(
+        final double expectedCost = Double.parseDouble(
                 expectedDeltaUsd.replace("$", "")
                         .replace("/ mo", "")
                         .trim()
         );
 
-        double effectiveRps = apiResponse.getEffectiveRps();
-        double baseRpsFromApi = apiResponse.getBaseRps();
-        double rpsDelta = Math.abs(effectiveRps - baseRpsFromApi);
+        final double effectiveRps = apiResponse.getEffectiveRps();
+        final double baseRpsFromApi = apiResponse.getBaseRps();
+        final double rpsDelta = Math.abs(effectiveRps - baseRpsFromApi);
 
-        double responseSizeEffectiveBytes = 1200.0;
-        double secondsInMonth = SECONDS_PER_MONTH;
-        double bytesInGb = BYTES_PER_GB;
+        final double responseSizeEffectiveBytes = 1200.0;
 
-        double calculatedGbPerMonth = (responseSizeEffectiveBytes * rpsDelta * secondsInMonth) / bytesInGb;
+        double calculatedGbPerMonth = (responseSizeEffectiveBytes * rpsDelta * SECONDS_PER_MONTH) / BYTES_PER_GB;
 
         assertNotNull(dataTransferAdapter, "Data transfer cost adapter must be wired.");
         double calculatedCost = dataTransferAdapter.calculateDataTransferCost(calculatedGbPerMonth);

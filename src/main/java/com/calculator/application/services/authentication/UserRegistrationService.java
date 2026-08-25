@@ -22,7 +22,7 @@ public class UserRegistrationService {
     private PasswordEncoder passwordEncoder;
 
     public void register(RegisterDTO registerDTO) throws Exception{
-        log.info("Registering: " + registerDTO.toString());
+        log.info("Registering a new user ");
         verifyUser(registerDTO);
 
         persistRegisteredUser(registerDTO);
@@ -30,7 +30,7 @@ public class UserRegistrationService {
     }
 
     private void verifyUser(RegisterDTO registerDTO) throws Exception {
-        log.info("Verifying user: " + registerDTO.toString());
+        log.info("Verifying user");
         registerByUsername(registerDTO.username()).ifPresent(userEntity -> {
             throw new RuntimeException("Username already exists");
         });
@@ -39,11 +39,11 @@ public class UserRegistrationService {
                 .ifPresent( userEntity -> {
                     throw new RuntimeException("Username already exists");
                 });
-        log.info("User has been verified: " + registerDTO);
+        log.info("User has been verified");
     }
 
     private void persistRegisteredUser(RegisterDTO registerDTO) {
-        log.info("Persisting registered user: " + registerDTO);
+        log.info("Persisting registered user");
         final String encodedPassword = passwordEncoder.encode(registerDTO.password());
         final UserEntity persistedUserEntity = new UserEntity(
                 registerDTO.username(),
@@ -51,7 +51,7 @@ public class UserRegistrationService {
                 registerDTO.email()
         );
         userEntityRepository.save(persistedUserEntity);
-        log.info("Registered user: " + persistedUserEntity);
+        log.info("Registered user");
     }
 
     private Optional<UserEntity> registerByUsername(String username) throws Exception{

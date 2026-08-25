@@ -30,18 +30,11 @@ class NetworkingCostCalculatorControllerTest {
     private NetworkingCostCalculatorController controller;
 
     private Model model;
-    MockMultipartFile validProtoFile;
     private MockedStatic<ProtocolBufferParsedFileUtils> mockedFileUtils;
 
     @BeforeEach
     void setUp() {
         model = new ExtendedModelMap();
-        validProtoFile = new MockMultipartFile(
-                "protoFile",
-                "service.proto",
-                "text/plain",
-                "syntax = \"proto3\"; option java_package = \"com.test\"; message Req {} message Resp {}".getBytes()
-        );
         mockedFileUtils = Mockito.mockStatic(ProtocolBufferParsedFileUtils.class);
     }
 
@@ -54,11 +47,11 @@ class NetworkingCostCalculatorControllerTest {
 
     @Test
     void calculateProtoFileTCONetworkingCosts_NullOrEmptyFile_ReturnsEarlyWithSelectionMessage() {
-        String viewNull = controller.calculateProtoFileNetworkingCosts(null, session, model);
+        final String viewNull = controller.calculateProtoFileNetworkingCosts(null, session, model);
         assertEquals("calculator", viewNull);
         assertEquals("No file selected for upload.", model.getAttribute("uploadMessage"));
 
-        MockMultipartFile emptyFile = new MockMultipartFile("protoFile", "", "text/plain", new byte[0]);
+        final MockMultipartFile emptyFile = new MockMultipartFile("protoFile", "", "text/plain", new byte[0]);
         String viewEmpty = controller.calculateProtoFileNetworkingCosts(emptyFile, session, model);
         assertEquals("calculator", viewEmpty);
     }

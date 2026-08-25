@@ -13,7 +13,7 @@ import org.springframework.ui.Model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
-public class InitControllerTest {
+class InitControllerTest {
 
     @Mock
     private HttpSession session;
@@ -30,7 +30,7 @@ public class InitControllerTest {
 
     @Test
     void init_PopulatesEmptyBytesAndReturnsCalculatorView() {
-        String view = controller.init(model);
+        final String view = controller.init(model);
 
         assertEquals("calculator", view);
         assertEquals("", model.getAttribute("requestMessageBytes"));

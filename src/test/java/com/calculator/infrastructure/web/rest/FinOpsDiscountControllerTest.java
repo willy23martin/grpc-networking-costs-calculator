@@ -29,20 +29,20 @@ class FinOpsDiscountControllerTest extends BaseIntegrationTest {
     @DisplayName("Coverage: Live API Success Path")
     void testLiveApiSuccess() throws Exception {
         try (MockedStatic<PricingClient> mockedPricing = Mockito.mockStatic(PricingClient.class)) {
-            PricingClient mockClient = mock(PricingClient.class);
-            PricingClientBuilder mockBuilder = mock(PricingClientBuilder.class);
+            final PricingClient mockClient = mock(PricingClient.class);
+            final PricingClientBuilder mockBuilder = mock(PricingClientBuilder.class);
             mockedPricing.when(PricingClient::builder).thenReturn(mockBuilder);
             when(mockBuilder.region(any())).thenReturn(mockBuilder);
             when(mockBuilder.build()).thenReturn(mockClient);
 
-            String validJson = "{"
+            final String validJson = "{"
                     + "\"terms\": {"
                     + "  \"OnDemand\": { \"key1\": { \"priceDimensions\": { \"dim1\": { \"pricePerUnit\": { \"USD\": \"0.20\" } } } } },"
                     + "  \"Reserved\": { \"key2\": { \"priceDimensions\": { \"dim2\": { \"pricePerUnit\": { \"USD\": \"0.10\" } } } } }"
                     + " }"
                     + "}";
 
-            GetProductsResponse resp = GetProductsResponse.builder().priceList(List.of(validJson)).build();
+            final GetProductsResponse resp = GetProductsResponse.builder().priceList(List.of(validJson)).build();
             when(mockClient.getProducts(any(GetProductsRequest.class))).thenReturn(resp);
 
             mockMvc.perform(get("/api/finops/ri-prices/m6i.large"))
@@ -56,15 +56,15 @@ class FinOpsDiscountControllerTest extends BaseIntegrationTest {
     @DisplayName("Coverage: Malformed JSON & Missing Nodes")
     void testJsonEdgeCases() throws Exception {
         try (MockedStatic<PricingClient> mockedPricing = Mockito.mockStatic(PricingClient.class)) {
-            PricingClient mockClient = mock(PricingClient.class);
-            PricingClientBuilder mockBuilder = mock(PricingClientBuilder.class);
+            final PricingClient mockClient = mock(PricingClient.class);
+            final PricingClientBuilder mockBuilder = mock(PricingClientBuilder.class);
             mockedPricing.when(PricingClient::builder).thenReturn(mockBuilder);
             when(mockBuilder.region(any())).thenReturn(mockBuilder);
             when(mockBuilder.build()).thenReturn(mockClient);
 
-            String noDims = "{\"terms\":{\"OnDemand\":{\"k\":{\"priceDimensions\":{}}}}}";
+            final String noDims = "{\"terms\":{\"OnDemand\":{\"k\":{\"priceDimensions\":{}}}}}";
 
-            GetProductsResponse resp = GetProductsResponse.builder().priceList(List.of(noDims)).build();
+            final GetProductsResponse resp = GetProductsResponse.builder().priceList(List.of(noDims)).build();
             when(mockClient.getProducts(any(GetProductsRequest.class))).thenReturn(resp);
 
             mockMvc.perform(get("/api/finops/ri-prices/t3.medium"))

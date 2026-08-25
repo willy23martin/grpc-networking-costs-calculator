@@ -40,7 +40,7 @@ public class Activity1ChooseQualityAttributeSteps extends BaseIntegrationTest {
             default:            targetApiPath = "/api/reliability/tactic-mappings"; break;
         }
 
-        String responseContent = mockMvc.perform(get(targetApiPath)
+        final String responseContent = mockMvc.perform(get(targetApiPath)
                         .param("requirement", currentRequirement))
                 .andExpect(status().isOk())
                 .andReturn()
@@ -51,7 +51,7 @@ public class Activity1ChooseQualityAttributeSteps extends BaseIntegrationTest {
     }
 
     private static void verify(String recommendedTactics, String responseContent) {
-        String[] tacticsArray = recommendedTactics.split(",");
+        final String[] tacticsArray = recommendedTactics.split(",");
         for (String tactic : tacticsArray) {
             String trimmedTactic = tactic.trim();
             org.hamcrest.MatcherAssert.assertThat(

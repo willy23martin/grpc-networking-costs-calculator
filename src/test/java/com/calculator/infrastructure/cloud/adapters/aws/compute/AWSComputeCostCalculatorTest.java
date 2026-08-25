@@ -41,7 +41,7 @@ class AWSComputeCostCalculatorTest {
                 .thenReturn(GetProductsResponse.builder().priceList(List.of("success")).build())
                 .thenReturn(GetProductsResponse.builder().priceList(List.of("success")).build());
 
-        List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
+        final List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
 
         assertEquals(18, result.size());
         assertEquals("t3.micro", result.getFirst().get("instanceType"));
@@ -53,7 +53,7 @@ class AWSComputeCostCalculatorTest {
     void calculatePriceByComputeInstance_apiExceptions_usesFallback() {
         when(pricingMock.getProducts((GetProductsRequest) any())).thenThrow(new RuntimeException("API fail"));
 
-        List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
+        final List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
 
         assertEquals(18, result.size());
         assertEquals(0.0104, result.get(0).get("pricePerHourUsd"));  // t3.micro fallback
@@ -66,7 +66,7 @@ class AWSComputeCostCalculatorTest {
         when(pricingMock.getProducts((GetProductsRequest) any()))
                 .thenReturn(GetProductsResponse.builder().priceList(List.of()).build());
 
-        List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
+        final List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
 
         assertEquals(18, result.size());
         assertEquals(0.0, result.get(2).get("pricePerHourUsd"));
@@ -76,7 +76,7 @@ class AWSComputeCostCalculatorTest {
     void calculatePriceByComputeInstance_networkBandwidth_allValues() {
         when(pricingMock.getProducts((GetProductsRequest) any())).thenThrow(new RuntimeException("fail"));
 
-        List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
+        final List<Map<String, Object>> result = calculator.calculatePriceByComputeInstance();
 
         assertEquals(0.5, result.getFirst().get("networkGbps"));              // for t3 family
         assertEquals(12.5, findEntry(result, "m6i.large").get("networkGbps"));
@@ -85,11 +85,11 @@ class AWSComputeCostCalculatorTest {
     }
 
     private void injectMocks(AWSComputeCostCalculatorAdapter calc) throws Exception {
-        Field pricingField = AWSCloudCalculatorAdapter.class.getDeclaredField("pricingClient");
+        final Field pricingField = AWSCloudCalculatorAdapter.class.getDeclaredField("pricingClient");
         pricingField.setAccessible(true);
         pricingField.set(calc, pricingMock);
 
-        Field mapperField = AWSCloudCalculatorAdapter.class.getSuperclass().getDeclaredField("mapper");
+        final Field mapperField = AWSCloudCalculatorAdapter.class.getSuperclass().getDeclaredField("mapper");
         mapperField.setAccessible(true);
         mapperField.set(calc, mapperMock);
     }

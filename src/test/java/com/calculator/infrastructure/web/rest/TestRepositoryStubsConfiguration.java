@@ -25,7 +25,7 @@ public class TestRepositoryStubsConfiguration {
     @Bean
     @Primary
     public SecurityArchitecturalDecisionRepository securityArchitecturalDecisionRepository() {
-        SecurityArchitecturalDecisionRepository repo = Mockito.mock(SecurityArchitecturalDecisionRepository.class);
+        final SecurityArchitecturalDecisionRepository repo = Mockito.mock(SecurityArchitecturalDecisionRepository.class);
         Mockito.when(repo.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
         return repo;
     }
@@ -59,7 +59,7 @@ public class TestRepositoryStubsConfiguration {
     @Bean
     @Primary
     public ReliabilityArchitecturalDecisionRepository reliabilityArchitecturalDecisionRepository() {
-        ReliabilityArchitecturalDecisionRepository repo = Mockito.mock(ReliabilityArchitecturalDecisionRepository.class);
+        final ReliabilityArchitecturalDecisionRepository repo = Mockito.mock(ReliabilityArchitecturalDecisionRepository.class);
         Mockito.when(repo.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
         return repo;
     }
@@ -67,7 +67,7 @@ public class TestRepositoryStubsConfiguration {
     @Bean
     @Primary
     public CloudReliabilityArchitecturalDecisionRepository cloudReliabilityArchitecturalDecisionRepository() {
-        CloudReliabilityArchitecturalDecisionRepository repo = Mockito.mock(CloudReliabilityArchitecturalDecisionRepository.class);
+        final CloudReliabilityArchitecturalDecisionRepository repo = Mockito.mock(CloudReliabilityArchitecturalDecisionRepository.class);
         Mockito.when(repo.getAvailableReliabilityDecisions()).thenReturn(Collections.emptyList());
         return repo;
     }
@@ -75,7 +75,7 @@ public class TestRepositoryStubsConfiguration {
     @Bean
     @Primary
     public ResiliencyArchitecturalDecisionRepository resiliencyArchitecturalDecisionRepository() {
-        ResiliencyArchitecturalDecisionRepository repo = Mockito.mock(ResiliencyArchitecturalDecisionRepository.class);
+        final ResiliencyArchitecturalDecisionRepository repo = Mockito.mock(ResiliencyArchitecturalDecisionRepository.class);
         Mockito.when(repo.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
         return repo;
     }
@@ -83,7 +83,7 @@ public class TestRepositoryStubsConfiguration {
     @Bean
     @Primary
     public CloudResiliencyArchitecturalDecisionRepository cloudResiliencyArchitecturalDecisionRepository() {
-        CloudResiliencyArchitecturalDecisionRepository repo = Mockito.mock(CloudResiliencyArchitecturalDecisionRepository.class);
+        final CloudResiliencyArchitecturalDecisionRepository repo = Mockito.mock(CloudResiliencyArchitecturalDecisionRepository.class);
         Mockito.when(repo.getAvailableResiliencyDecisions()).thenReturn(Collections.emptyList());
         return repo;
     }

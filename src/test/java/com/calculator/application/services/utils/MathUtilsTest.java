@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static com.calculator.application.services.utils.MathUtils.round2;
 import static com.calculator.application.services.utils.MathUtils.round4;
 
-public class MathUtilsTest {
+class MathUtilsTest {
 
     @Test
     void testMath() {

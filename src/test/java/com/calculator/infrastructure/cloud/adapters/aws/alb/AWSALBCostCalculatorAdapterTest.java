@@ -43,7 +43,7 @@ class AWSALBCostCalculatorAdapterTest {
 
     @Test
     void calculateALBCosts_withMockedPricingApi_returnsValidDataStructure() {
-        String rawFixedChargeJson = """
+        final String rawFixedChargeJson = """
             {
               "product" : {
                 "productFamily" : "Load Balancer",
@@ -68,7 +68,7 @@ class AWSALBCostCalculatorAdapterTest {
             }
             """;
 
-        String rawLcuChargeJson = """
+        final String rawLcuChargeJson = """
             {
               "product" : {
                 "productFamily" : "Load Balancer",
@@ -120,11 +120,7 @@ class AWSALBCostCalculatorAdapterTest {
                         .priceList(List.of(rawFixedChargeJson, rawLcuChargeJson))
                         .build());
 
-        Map<String, Object> result = calculator.calculateALBCosts();
-
-        System.out.println("====== MOCKITO UNIT TEST OUTPUT MAP ======");
-        System.out.println(result);
-        System.out.println("==========================================");
+        final Map<String, Object> result = calculator.calculateALBCosts();
 
         assertThat(result).isNotNull();
         assertThat(result.get("source")).isEqualTo("AWS Pricing API");

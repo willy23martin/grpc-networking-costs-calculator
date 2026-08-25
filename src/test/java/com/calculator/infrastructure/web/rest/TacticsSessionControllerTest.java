@@ -29,7 +29,7 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldDeserialiseNestedTacticsRecordsFromJson() throws Exception {
-        String body = """
+        final String body = """
             {
               "requestsPerSecond": 1000,
               "reliabilityTactics": {
@@ -117,7 +117,7 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldSaveTacticsToSessionAndReturnNoContentWhenNoTacticsAreSelected() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
+        final ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, false),
                 new ResiliencyPatterns(
@@ -151,7 +151,7 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldReturnStoredTacticsFromSession() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
+        final ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 500,
                 new ReliabilityTactics(true, false),
                 new ResiliencyPatterns(
@@ -173,7 +173,7 @@ class TacticsSessionControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldClearTacticsFromSessionAndReturnNoContent() throws Exception {
-        ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
+        final ArchitecturalDecisionsDTO dto = new ArchitecturalDecisionsDTO(
                 1000,
                 new ReliabilityTactics(true, true),
                 new ResiliencyPatterns(

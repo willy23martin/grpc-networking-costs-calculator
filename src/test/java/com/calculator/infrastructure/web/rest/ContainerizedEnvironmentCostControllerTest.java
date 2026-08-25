@@ -1,11 +1,9 @@
 package com.calculator.infrastructure.web.rest;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 import software.amazon.awssdk.services.pricing.PricingClient;
 import software.amazon.awssdk.services.pricing.model.GetProductsRequest;
 import software.amazon.awssdk.services.pricing.model.GetProductsResponse;
@@ -25,8 +23,7 @@ class ContainerizedEnvironmentCostControllerTest extends BaseIntegrationTest {
 
     @Test
     void getContainerPricing_successfulExecution() throws Exception {
-        // Mock payload for the 1st invocation (vCPU Price)
-        String mockVcpuJson = """
+        final String mockVcpuJson = """
                 {
                   "terms": {
                     "OnDemand": {
@@ -43,7 +40,7 @@ class ContainerizedEnvironmentCostControllerTest extends BaseIntegrationTest {
                 """;
 
         // Mock payload for the 2nd invocation (GB RAM Price)
-        String mockGbJson = """
+        final String mockGbJson = """
                 {
                   "terms": {
                     "OnDemand": {
@@ -59,14 +56,12 @@ class ContainerizedEnvironmentCostControllerTest extends BaseIntegrationTest {
                 }
                 """;
 
-        // Mock payload for any subsequent sequential invocations (e.g. EC2 instances pricing loop)
-        String mockFallbackJson = "{\"terms\": {\"OnDemand\": {}}}";
+        final String mockFallbackJson = "{\"terms\": {\"OnDemand\": {}}}";
 
-        GetProductsResponse vcpuResponse = GetProductsResponse.builder().priceList(List.of(mockVcpuJson)).build();
-        GetProductsResponse gbResponse = GetProductsResponse.builder().priceList(List.of(mockGbJson)).build();
-        GetProductsResponse fallbackResponse = GetProductsResponse.builder().priceList(List.of(mockFallbackJson)).build();
+        final GetProductsResponse vcpuResponse = GetProductsResponse.builder().priceList(List.of(mockVcpuJson)).build();
+        final GetProductsResponse gbResponse = GetProductsResponse.builder().priceList(List.of(mockGbJson)).build();
+        final GetProductsResponse fallbackResponse = GetProductsResponse.builder().priceList(List.of(mockFallbackJson)).build();
 
-        // Chain multiple return responses sequentially to cover the whole lookup sequence cleanly
         when(pricingClientMock.getProducts(any(GetProductsRequest.class)))
                 .thenReturn(vcpuResponse)
                 .thenReturn(gbResponse)
@@ -82,14 +77,12 @@ class ContainerizedEnvironmentCostControllerTest extends BaseIntegrationTest {
 
     @Test
     void extractOnDemandPriceFromJson_missingPriceDimensions_returnsFallbackDefaultValues() throws Exception {
-        // Passing structurally partial/faulty JSON structures directly down the code paths
-        String faultyJson = "{\"terms\": {\"OnDemand\": {}}}";
+        final String faultyJson = "{\"terms\": {\"OnDemand\": {}}}";
 
-        GetProductsResponse faultyResponse = GetProductsResponse.builder()
+        final GetProductsResponse faultyResponse = GetProductsResponse.builder()
                 .priceList(List.of(faultyJson))
                 .build();
 
-        // Let all internal pricing extraction passes hit the JSON parsing exception block
         when(pricingClientMock.getProducts(any(GetProductsRequest.class)))
                 .thenReturn(faultyResponse);
 

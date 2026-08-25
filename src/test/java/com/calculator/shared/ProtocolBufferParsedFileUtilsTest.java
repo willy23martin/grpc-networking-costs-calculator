@@ -15,7 +15,7 @@ class ProtocolBufferParsedFileUtilsTest {
 
     @Test
     void isValid_bothMessagesPresent_returnsTrue() {
-        JavaParsedProtoFile validProto = new JavaParsedProtoFile(
+        final JavaParsedProtoFile validProto = new JavaParsedProtoFile(
                 "com.example", "OuterClass", "MyRequest", "MyResponse");
 
         assertTrue(ProtocolBufferParsedFileUtils.isValid(validProto));
@@ -23,7 +23,7 @@ class ProtocolBufferParsedFileUtilsTest {
 
     @Test
     void isValid_emptyRequestMessage_returnsFalse() {
-        JavaParsedProtoFile invalidProto = new JavaParsedProtoFile(
+        final JavaParsedProtoFile invalidProto = new JavaParsedProtoFile(
                 "com.example", "OuterClass", "", "MyResponse");
 
         assertFalse(ProtocolBufferParsedFileUtils.isValid(invalidProto));
@@ -31,7 +31,7 @@ class ProtocolBufferParsedFileUtilsTest {
 
     @Test
     void isValid_emptyResponseMessage_returnsFalse() {
-        JavaParsedProtoFile invalidProto = new JavaParsedProtoFile(
+        final JavaParsedProtoFile invalidProto = new JavaParsedProtoFile(
                 "com.example", "OuterClass", "MyRequest", "");
 
         assertFalse(ProtocolBufferParsedFileUtils.isValid(invalidProto));
@@ -39,10 +39,10 @@ class ProtocolBufferParsedFileUtilsTest {
 
     @Test
     void initializeProtoFileFullyQualifiedProperties_allFieldsPresent_correctFullNames() {
-        JavaParsedProtoFile protoFile = new JavaParsedProtoFile(
+        final JavaParsedProtoFile protoFile = new JavaParsedProtoFile(
                 "com.example", "RequestProto", "MyRequest", "MyResponse");
 
-        ProtoFileFullyQualifiedProperties result = ProtocolBufferParsedFileUtils
+        final ProtoFileFullyQualifiedProperties result = ProtocolBufferParsedFileUtils
                 .initializeProtoFileFullyQualifiedProperties(protoFile);
 
         assertEquals("com.example.RequestProto$MyRequest", result.fullRequestMessageClassName());
@@ -55,9 +55,9 @@ class ProtocolBufferParsedFileUtilsTest {
             String packageName, String outerClass, String requestSimple, String responseSimple,
             String expectedRequest, String expectedResponse) {
 
-        JavaParsedProtoFile protoFile = new JavaParsedProtoFile(packageName, outerClass, requestSimple, responseSimple);
+        final JavaParsedProtoFile protoFile = new JavaParsedProtoFile(packageName, outerClass, requestSimple, responseSimple);
 
-        ProtoFileFullyQualifiedProperties result = ProtocolBufferParsedFileUtils
+        final ProtoFileFullyQualifiedProperties result = ProtocolBufferParsedFileUtils
                 .initializeProtoFileFullyQualifiedProperties(protoFile);
 
         assertEquals(expectedRequest, result.fullRequestMessageClassName());
@@ -66,19 +66,15 @@ class ProtocolBufferParsedFileUtilsTest {
 
     static Stream<Arguments> allCombinationsProvider() {
         return Stream.of(
-                // Because it's package + outer + simple (both request/response)
                 Arguments.of("com.example", "OuterClass", "Req", "Resp",
                         "com.example.OuterClass$Req", "com.example.OuterClass$Resp"),
 
-                // Because it's package + simple (no outer)
                 Arguments.of("com.example", "", "Req", "Resp",
                         "com.example.Req", "com.example.Resp"),
 
-                // Because it's outer + simple (no package)
                 Arguments.of("", "OuterClass", "Req", "Resp",
                         "OuterClass$Req", "OuterClass$Resp"),
 
-                // Because it's simple only (no package, no outer)
                 Arguments.of("", "", "Req", "Resp",
                         "Req", "Resp")
         );
@@ -86,11 +82,12 @@ class ProtocolBufferParsedFileUtilsTest {
 
     @Test
     void isValid_validatesBeforeInitialize() {
-        JavaParsedProtoFile invalidProto = new JavaParsedProtoFile("", "", "", "Response");
+        final JavaParsedProtoFile invalidProto = new JavaParsedProtoFile("", "", "", "Response");
+
+        final ProtoFileFullyQualifiedProperties result = ProtocolBufferParsedFileUtils
+                .initializeProtoFileFullyQualifiedProperties(invalidProto);
 
         assertFalse(ProtocolBufferParsedFileUtils.isValid(invalidProto));
-        ProtoFileFullyQualifiedProperties result = ProtocolBufferParsedFileUtils
-                .initializeProtoFileFullyQualifiedProperties(invalidProto);
         assertEquals("Response", result.fullResponseMessageClassName());
     }
 }

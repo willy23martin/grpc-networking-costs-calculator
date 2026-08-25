@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
+class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Autowired
     SecurityTacticsSessionControllerTest(MockMvc mockMvc) {
@@ -29,13 +29,13 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldSaveAndReturnTlsSecurityTactics() throws Exception {
-        SecurityTactics securityTactics = new SecurityTactics(
+        final SecurityTactics securityTactics = new SecurityTactics(
                 new TLSTactic(true, false, 4),
                 new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(false)
         );
-        ArchitecturalDecisionsDTO architecturalDecisionsDTO = setTacticsDto(1000, securityTactics);
-        MockHttpSession session = new MockHttpSession();
+        final ArchitecturalDecisionsDTO architecturalDecisionsDTO = setTacticsDto(1000, securityTactics);
+        final MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -55,13 +55,13 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldSaveAndReturnMtlsSecurityTactics() throws Exception {
-        SecurityTactics mtls = new SecurityTactics(
+        final SecurityTactics mtls = new SecurityTactics(
                 new TLSTactic(true, true, 6),
                 new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(false)
         );
-        ArchitecturalDecisionsDTO dto = setTacticsDto(1000, mtls);
-        MockHttpSession session = new MockHttpSession();
+        final ArchitecturalDecisionsDTO dto = setTacticsDto(1000, mtls);
+        final MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,13 +81,13 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldSaveAndReturnOAuthJwtLocalValidation() throws Exception {
-        SecurityTactics oauth = new SecurityTactics(
+        final SecurityTactics oauth = new SecurityTactics(
                 new TLSTactic(false, false, 0),
                 new JWTTactic(true, OAuthTokenValidationModes.LOCAL, 1800, 3, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(false)
         );
-        ArchitecturalDecisionsDTO dto = setTacticsDto(2000, oauth);
-        MockHttpSession session = new MockHttpSession();
+        final ArchitecturalDecisionsDTO dto = setTacticsDto(2000, oauth);
+        final MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,13 +109,13 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldSaveAndReturnOAuthJwtRemoteIntrospection() throws Exception {
-        SecurityTactics oauth = new SecurityTactics(
+        final SecurityTactics oauth = new SecurityTactics(
                 new TLSTactic(false, false, 0),
                 new JWTTactic(true, OAuthTokenValidationModes.REMOTE_INTROSPECTION, 3600, 1, InterceptorType.STREAM),
                 new BasicAuthenticationPattern(false)
         );
-        ArchitecturalDecisionsDTO dto = setTacticsDto(500, oauth);
-        MockHttpSession session = new MockHttpSession();
+        final ArchitecturalDecisionsDTO dto = setTacticsDto(500, oauth);
+        final MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -134,13 +134,13 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldSaveAndReturnBasicAuthSecurityTactic() throws Exception {
-        SecurityTactics basicAuth = new SecurityTactics(
+        final SecurityTactics basicAuth = new SecurityTactics(
                 new TLSTactic(false, false, 0),
                 new JWTTactic(false, OAuthTokenValidationModes.LOCAL, 3600, 1, InterceptorType.UNARY),
                 new BasicAuthenticationPattern(true)
         );
-        ArchitecturalDecisionsDTO dto = setTacticsDto(300, basicAuth);
-        MockHttpSession session = new MockHttpSession();
+        final ArchitecturalDecisionsDTO dto = setTacticsDto(300, basicAuth);
+        final MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -158,13 +158,13 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldSaveAndReturnAllSecurityTacticsEnabled() throws Exception {
-        SecurityTactics allSecurityTactics = new SecurityTactics(
+        final SecurityTactics allSecurityTactics = new SecurityTactics(
                 new TLSTactic(true, true, 10),
                 new JWTTactic(true, OAuthTokenValidationModes.REMOTE_INTROSPECTION, 900, 5, InterceptorType.STREAM),
                 new BasicAuthenticationPattern(false)
         );
-        ArchitecturalDecisionsDTO dto = setTacticsDto(5000, allSecurityTactics);
-        MockHttpSession session = new MockHttpSession();
+        final ArchitecturalDecisionsDTO dto = setTacticsDto(5000, allSecurityTactics);
+        final MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -188,7 +188,7 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
 
     @Test
     void shouldHandleMissingSecurityTacticsBlockGracefully() throws Exception {
-        String bodyWithoutSecurity = """
+        final String bodyWithoutSecurity = """
             {
               "requestsPerSecond": 1000,
               "reliabilityTactics": {
@@ -207,7 +207,7 @@ public class SecurityTacticsSessionControllerTest extends BaseIntegrationTest{
             }
             """;
 
-        MockHttpSession session = new MockHttpSession();
+        final MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(post("/api/session/tactics")
                         .contentType(MediaType.APPLICATION_JSON)

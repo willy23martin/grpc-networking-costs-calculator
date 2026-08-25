@@ -45,7 +45,7 @@ class SecurityTradeoffMapperServiceTest {
         when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
         when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
 
-        List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
+        final List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
 
         assertNotNull(results);
         assertTrue(results.isEmpty());
@@ -53,9 +53,8 @@ class SecurityTradeoffMapperServiceTest {
 
     @Test
     void getSecurityTradeoffs_withArchitecturalTactic_mapsCorrectly() {
-        // Arrange
         List<QualityTradeoff> tradeoffs = new ArrayList<>();
-        SecurityQualityTradeoff securityTradeoff = new SecurityQualityTradeoff(
+        final SecurityQualityTradeoff securityTradeoff = new SecurityQualityTradeoff(
                 ArchitecturalCharacteristic.builder().name(ArchitecturalCharacteristics.SECURITY.name()).build(),
                 TradeoffType.PROMOTES,
                 new String[]{"A01:2021"},
@@ -65,13 +64,12 @@ class SecurityTradeoffMapperServiceTest {
         );
         tradeoffs.add(securityTradeoff);
 
-        // Add an additional promoted sub-characteristic to map promotedISO25010AttributeTradeoffs
         tradeoffs.add(new QualityTradeoff(
                 ArchitecturalCharacteristic.builder().name("CONFIDENTIALITY").build(),
                 TradeoffType.PROMOTES
         ));
 
-        ArchitecturalTactic tactic = ArchitecturalTactic.builder()
+        final ArchitecturalTactic tactic = ArchitecturalTactic.builder()
                 .id("tactic-oauth")
                 .name("OAuth 2.0 + JWT")
                 .architecturalCharacteristic(
@@ -90,13 +88,11 @@ class SecurityTradeoffMapperServiceTest {
         when(securityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(List.of(tactic));
         when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(Collections.emptyList());
 
-        // Act
-        List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
+        final List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
+        final SecurityTradeoffsDTO dto = results.getFirst();
 
-        // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        SecurityTradeoffsDTO dto = results.getFirst();
 
         assertEquals("tactic-oauth", dto.getTacticId());
         assertEquals("OAuth 2.0 + JWT", dto.getTacticName());
@@ -114,7 +110,7 @@ class SecurityTradeoffMapperServiceTest {
     void getSecurityTradeoffs_withCloudService_mapsCorrectly() {
         // Arrange
         List<QualityTradeoff> tradeoffs = new ArrayList<>();
-        SecurityQualityTradeoff securityTradeoff = new SecurityQualityTradeoff(
+        final SecurityQualityTradeoff securityTradeoff = new SecurityQualityTradeoff(
                 ArchitecturalCharacteristic.builder().name(ArchitecturalCharacteristics.SECURITY.name()).build(),
                 TradeoffType.PROMOTES,
                 new String[]{"A05:2021"},
@@ -124,7 +120,7 @@ class SecurityTradeoffMapperServiceTest {
         );
         tradeoffs.add(securityTradeoff);
 
-        CloudService cloudService = CloudService.builder()
+        final CloudService cloudService = CloudService.builder()
                 .id("sec-kms")
                 .name("AWS KMS (Encryption)")
                 .cloudProvider(CloudProvider.AWS)
@@ -145,13 +141,11 @@ class SecurityTradeoffMapperServiceTest {
         when(cloudSecurityArchitecturalDecisionRepository.getAvailableSecurityDecisions()).thenReturn(List.of(cloudService));
 
 
-        // Act
-        List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
+        final List<SecurityTradeoffsDTO> results = service.getSecurityTradeoffs();
+        final SecurityTradeoffsDTO dto = results.getFirst();
 
-        // Assert
         assertNotNull(results);
         assertEquals(1, results.size());
-        SecurityTradeoffsDTO dto = results.getFirst();
 
         assertEquals("sec-kms", dto.getTacticId());
         assertEquals("AWS KMS (Encryption)", dto.getTacticName());

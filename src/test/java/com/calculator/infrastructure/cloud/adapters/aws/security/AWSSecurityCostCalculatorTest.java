@@ -70,7 +70,6 @@ class AWSSecurityCostCalculatorTest {
 
     @BeforeEach
     void setUp() {
-        // Ensure securityArchitecturalDecisionRepository returns valid dummy tactics to prevent NPE
         Mockito.lenient().when(securityArchitecturalDecisionRepository.getOAuthTactic())
                 .thenReturn(ArchitecturalTactic.builder().id("tactic-oauth").name("OAuth 2.0 + JWT").build());
         Mockito.lenient().when(securityArchitecturalDecisionRepository.getMTLSTactic())
@@ -85,7 +84,7 @@ class AWSSecurityCostCalculatorTest {
     @Test
     @DisplayName("Should successfully capture and traverse live JSON parameters via modern case-insensitive evaluation")
     void shouldReturnLiveApiPricesWhenAvailable() {
-        GetProductsResponse mockResponse = GetProductsResponse.builder()
+        final GetProductsResponse mockResponse = GetProductsResponse.builder()
                 .priceList(Collections.singletonList(MOCK_PRICING_JSON))
                 .build();
 
@@ -98,7 +97,7 @@ class AWSSecurityCostCalculatorTest {
         );
         when(pricingClient.getProducts(any(GetProductsRequest.class))).thenReturn(mockResponse);
 
-        Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
+        final Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
 
         assertNotNull(results);
         assertEquals(3.75, results.get("guardDutyPerGbLogs"));
@@ -117,7 +116,7 @@ class AWSSecurityCostCalculatorTest {
     @Test
     @DisplayName("Should return accurate hardcoded defaults when live pricing responses return empty lists")
     void shouldGracefullyFallbackOnApiFailures() {
-        GetProductsResponse emptyResponse = GetProductsResponse.builder()
+        final GetProductsResponse emptyResponse = GetProductsResponse.builder()
                 .priceList(Collections.emptyList())
                 .build();
 
@@ -130,7 +129,7 @@ class AWSSecurityCostCalculatorTest {
         );
         when(pricingClient.getProducts(any(GetProductsRequest.class))).thenReturn(emptyResponse);
 
-        Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
+        final Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
 
         assertNotNull(results);
         assertEquals(1.00, results.get("guardDutyPerGbLogs"));
@@ -154,7 +153,7 @@ class AWSSecurityCostCalculatorTest {
         when(pricingClient.getProducts(any(GetProductsRequest.class)))
                 .thenThrow(ApiCallTimeoutException.create("API call exceeded configured total timeout threshold", null));
 
-        Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
+        final Map<String, Object> results = securityCostCalculator.calculateSecurityCosts();
 
         assertNotNull(results);
         assertEquals(1.00, results.get("guardDutyPerGbLogs"));

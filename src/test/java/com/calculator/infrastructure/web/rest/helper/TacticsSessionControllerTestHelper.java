@@ -24,7 +24,7 @@ public class TacticsSessionControllerTestHelper {
     }
 
     public static String setTacticsSessionJsonFrom(ArchitecturalDecisionsDTO architecturalDecisionsDTO) {
-        SecurityTactics securityTactics = architecturalDecisionsDTO.securityTactics();
+        final SecurityTactics securityTactics = architecturalDecisionsDTO.securityTactics();
         return """
                 {
                   "requestsPerSecond": %d,

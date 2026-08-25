@@ -52,7 +52,7 @@ public class Phase2BucProtoMappingSteps {
 
     @Then("the tool automatically loads {string} into application state")
     public void verifyProtoAutoLoaded(String protoFile) throws Exception {
-        Resource resource = resourceLoader.getResource(CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES + protoFile);
+        final Resource resource = resourceLoader.getResource(CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES + protoFile);
         assertTrue(resource.exists());
         response.andExpect(status().isOk());
     }
@@ -83,38 +83,43 @@ public class Phase2BucProtoMappingSteps {
 
     @Then("{string} is loaded and {string} is shown as the pattern badge")
     public void verifyProtoAndBadge(String protoFile, String rpcType) throws Exception {
-        Resource resource = resourceLoader.getResource(CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES + protoFile);
+        final Resource resource = resourceLoader.getResource(CLASSPATH_STATIC_PROTOCOL_BUFFER_FILES + protoFile);
         assertTrue(resource.exists());
 
         try (InputStream inputStream = resource.getInputStream()) {
-            String protoContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            String normalizedContent = protoContent.replaceAll("\\s+", " ");
+            final String protoContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            final String normalizedContent = protoContent.replaceAll("\\s+", " ");
 
-            Pattern rpcPattern = Pattern.compile("rpc\\s+\\w+\\s*\\(([^)]+)\\)\\s*returns\\s*\\(([^)]+)\\)");
-            Matcher matcher = rpcPattern.matcher(normalizedContent);
+            final Pattern rpcPattern = Pattern.compile("rpc\\s+\\w+\\s*\\(([^)]+)\\)\\s*returns\\s*\\(([^)]+)\\)");
+            final Matcher matcher = rpcPattern.matcher(normalizedContent);
 
             assertTrue(matcher.find());
 
-            String inputParam = matcher.group(1);
-            String outputParam = matcher.group(2);
-
-            boolean streamInInput = inputParam.contains("stream");
-            boolean streamInOutput = outputParam.contains("stream");
-
-            String detectedRpcType;
-            if (streamInInput && streamInOutput) {
-                detectedRpcType = "Bi-Directional Streaming";
-            } else if (streamInInput) {
-                detectedRpcType = "Client Streaming";
-            } else if (streamInOutput) {
-                detectedRpcType = "Server Streaming";
-            } else {
-                detectedRpcType = "Unary RPC";
-            }
+            String detectedRpcType = getDetectedRpcType(matcher);
 
             assertEquals(rpcType, detectedRpcType);
         }
 
         response.andExpect(status().isOk());
+    }
+
+    private static String getDetectedRpcType(Matcher matcher) {
+        final String inputParam = matcher.group(1);
+        final String outputParam = matcher.group(2);
+
+        final boolean streamInInput = inputParam.contains("stream");
+        boolean streamInOutput = outputParam.contains("stream");
+
+        String detectedRpcType;
+        if (streamInInput && streamInOutput) {
+            detectedRpcType = "Bi-Directional Streaming";
+        } else if (streamInInput) {
+            detectedRpcType = "Client Streaming";
+        } else if (streamInOutput) {
+            detectedRpcType = "Server Streaming";
+        } else {
+            detectedRpcType = "Unary RPC";
+        }
+        return detectedRpcType;
     }
 }

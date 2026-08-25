@@ -18,7 +18,7 @@ class SecurityArchitecturalDecisionRepositoryTest {
 
     @Test
     void getAvailableSecurityDecisions_returnsAllFourTactics() {
-        List<ArchitecturalDecision> decisions = repository.getAvailableSecurityDecisions();
+        final List<ArchitecturalDecision> decisions = repository.getAvailableSecurityDecisions();
 
         assertNotNull(decisions);
         assertEquals(4, decisions.size());
@@ -30,13 +30,13 @@ class SecurityArchitecturalDecisionRepositoryTest {
 
     @Test
     void getTLSTactic_validatesStructureAndTradeoffs() {
-        ArchitecturalDecision decision = repository.getTLSTactic();
+        final ArchitecturalDecision decision = repository.getTLSTactic();
+        final List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
 
         assertNotNull(decision);
         assertEquals("tactic-tls", decision.getId());
         assertNotNull(decision.getArchitecturalCharacteristic());
 
-        List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
         assertEquals(3, tradeoffs.size());
 
         assertInstanceOf(SecurityQualityTradeoff.class, tradeoffs.get(0));
@@ -48,13 +48,13 @@ class SecurityArchitecturalDecisionRepositoryTest {
 
     @Test
     void getMTLSTactic_validatesStructureAndTradeoffs() {
-        ArchitecturalDecision decision = repository.getMTLSTactic();
+        final ArchitecturalDecision decision = repository.getMTLSTactic();
+        final List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
 
         assertNotNull(decision);
         assertEquals("tactic-mtls", decision.getId());
         assertNotNull(decision.getArchitecturalCharacteristic());
 
-        List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
         assertEquals(4, tradeoffs.size());
 
         assertInstanceOf(SecurityQualityTradeoff.class, tradeoffs.get(0));
@@ -66,13 +66,13 @@ class SecurityArchitecturalDecisionRepositoryTest {
 
     @Test
     void getOAuthTactic_validatesStructureAndTradeoffs() {
-        ArchitecturalDecision decision = repository.getOAuthTactic();
+        final ArchitecturalDecision decision = repository.getOAuthTactic();
+        final List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
 
         assertNotNull(decision);
         assertEquals("tactic-oauth", decision.getId());
         assertNotNull(decision.getArchitecturalCharacteristic());
 
-        List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
         assertEquals(5, tradeoffs.size());
 
         assertEquals("ACCOUNTABILITY", tradeoffs.get(1).getArchitecturalCharacteristic().getName());
@@ -84,29 +84,28 @@ class SecurityArchitecturalDecisionRepositoryTest {
 
     @Test
     void getBasicAuthTactic_validatesStructureAndTradeoffs() {
-        ArchitecturalDecision decision = repository.getBasicAuthTactic();
+        final ArchitecturalDecision decision = repository.getBasicAuthTactic();
+        final List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
+        final SecurityQualityTradeoff securityTradeoff = (SecurityQualityTradeoff) tradeoffs.getFirst();
+        final QualityTradeoff affordabilityTradeoff = tradeoffs.get(1);
+        final NetworkingCost networkingCost = (NetworkingCost) decision.getCostFactor();
 
         assertNotNull(decision);
         assertEquals("tactic-basic-auth", decision.getId());
         assertNotNull(decision.getArchitecturalCharacteristic());
 
-        List<QualityTradeoff> tradeoffs = decision.getArchitecturalCharacteristic().getQualityTradeoffs();
         assertEquals(2, tradeoffs.size());
 
-        SecurityQualityTradeoff securityTradeoff = (SecurityQualityTradeoff) tradeoffs.get(0);
         assertEquals(TradeoffType.PROMOTES, securityTradeoff.getTradeoffType());
         assertArrayEquals(new String[]{"A02:2021", "A07:2021"}, securityTradeoff.getLinkedOwaspTop10Vulnerabilities());
         assertArrayEquals(new String[]{"Cryptographic Failures", "Identification and Authentication Failures"}, securityTradeoff.getLinkedOwaspLabels());
         assertArrayEquals(new String[]{"CWE-256", "CWE-522", "CWE-287"}, securityTradeoff.getCwes());
 
-        QualityTradeoff affordabilityTradeoff = tradeoffs.get(1);
         assertEquals(TradeoffType.ORTHOGONAL, affordabilityTradeoff.getTradeoffType());
         assertEquals("AFFORDABILITY", affordabilityTradeoff.getArchitecturalCharacteristic().getName());
 
         assertInstanceOf(NetworkingCost.class, decision.getCostFactor());
-        NetworkingCost networkingCost = (NetworkingCost) decision.getCostFactor();
 
-        // Asserting directly against the criteria type instead of the missing description getter
         assertEquals(NetworkingCostCriteria.NONE, networkingCost.getNetworkingCostCriteria());
     }
 }
