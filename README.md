@@ -221,7 +221,7 @@ The following table outlines the mathematical formulations used by the TCO Netwo
 
 ### Discernment with FinOps Personas and Engineering Teams:
 
-![img_2.png](src/main/resources/images/FinOps Tagging and labeling strategies.png)
+![FinOps tagging and labeling strategies](src/main/resources/images/src/main/resources/images/FinOps%20Tagging%20and%20labeling%20strategies.png)
 
 ![cloud services tagging and labelling.png](src/main/resources/images/cloud%20services%20tagging%20and%20labelling.png)
 
