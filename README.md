@@ -306,3 +306,6 @@ These charges are **not duplicated**; they represent separate AWS services.
 
 ## Credits
 [CREDITS.md](CREDITS.md)
+
+## License
+[LICENSE.md](LICENSE.md)
