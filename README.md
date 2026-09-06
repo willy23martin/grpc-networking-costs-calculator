@@ -183,6 +183,10 @@ The following table outlines the mathematical formulations used by the TCO Netwo
 4. In your browser go to [Service URL](http://localhost:8080/).
 5. To interact with the functionalities you must take into account the FinOps-gRPC End2End Model Interaction Process described below.
 
+## FinOps - gRPC - End2End Cost-efficiency calculator - Domain model
+![Cost-Efficiency calculator Domain Model](src/main/resources/domain/domain%20model%20-%20class%20diagram.png)
+
+
 ## FinOps - gRPC - End2End Model Interaction Process for Software Architects and FinOps Engineers
 ![FinOps-gRPC-Architect-End2EndModel-Interaction-Process.png](src/main/resources/images/FinOps-gRPC-Architect-End2EndModel-Interaction-Process.png)
 
