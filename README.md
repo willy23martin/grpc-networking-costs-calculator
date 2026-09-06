@@ -13,11 +13,11 @@ Security Trade-offs.**
 
 This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. This ensures that the software will remain free and open-source forever. For full legal details, please refer to the [LICENSE](LICENSE.md) file included in this repository.
 
-![Toolkit-Header.png](src/main/resources/images/Toolkit-Header.png)
+![Toolkit-Header.png](src/docs/images/Toolkit-Header.png)
 
-![Toolkit-Phase1Body.png](src/main/resources/images/Toolkit-Phase1Body.png)
+![Toolkit-Phase1Body.png](src/docs/images/Toolkit-Phase1Body.png)
 
-![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
+![Toolkit-Footer.png](src/docs/images/Toolkit-Footer.png)
 
 ## Protocol Buffer files:
 You can find the **Protocol Buffers files** in the [protos](src/main/resources/static/protos) folder, each of which is related to the [Business Use Cases](src/main/resources/static/protos/)
@@ -52,13 +52,13 @@ The service can be parametrized before building it to use a Cloud Service Provid
 ## Software Architecture - C4 Model
 
 ### Context:
-![SystemContext.png](src/main/resources/architecture/c4model/SystemContext.png)
+![SystemContext.png](src/docs/architecture/c4model/SystemContext.png)
 
 ### Containers:
-![ContainerView.png](src/main/resources/architecture/c4model/ContainerView.png)
+![ContainerView.png](src/docs/architecture/c4model/ContainerView.png)
 
 ### Components:
-![ComponentView.png](src/main/resources/architecture/c4model/ComponentView.png)
+![ComponentView.png](src/docs/architecture/c4model/ComponentView.png)
 
 ### MVC Controllers
 
@@ -112,26 +112,26 @@ This application leverages the Hexagonal Architecture pattern to decouple core b
     - [EC2 Latest instance types](https://docs.aws.amazon.com/ec2/latest/instancetypes/gp.html)
 
 - **AWS Price List Query API**:
-    - ELB / ALB pricing: [alb-pricing.json](src/main/resources/awspricelistapiexamples/aws-alb-pricing.json)
-    - RDS database pricing: [RDS-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-rds-database-pricing.json)
-    - FinOps CostOptimization Reserved Instances response: [ReservedInstances-finops-strategies-pricing.json](src/main/resources/awspricelistapiexamples/aws-reserved-instances-finops-strategies-pricing.json)
-    - S3 database pricing: [S3-database-pricing.json](src/main/resources/awspricelistapiexamples/aws-s3-database-pricing.json)
-    - Amazon GuardDuty: [amazon-guard-duty-pricing.json](src/main/resources/awspricelistapiexamples/amazon-guard-duty-pricing.json)
-    - Amazon Inspector: [amazon-inspector.json](src/main/resources/awspricelistapiexamples/amazon-inspector.json)
+    - ELB / ALB pricing: [alb-pricing.json](src/docs/awspricelistapiexamples/aws-alb-pricing.json)
+    - RDS database pricing: [RDS-database-pricing.json](src/docs/awspricelistapiexamples/aws-rds-database-pricing.json)
+    - FinOps CostOptimization Reserved Instances response: [ReservedInstances-finops-strategies-pricing.json](src/docs/awspricelistapiexamples/aws-reserved-instances-finops-strategies-pricing.json)
+    - S3 database pricing: [S3-database-pricing.json](src/docs/awspricelistapiexamples/aws-s3-database-pricing.json)
+    - Amazon GuardDuty: [amazon-guard-duty-pricing.json](src/docs/awspricelistapiexamples/amazon-guard-duty-pricing.json)
+    - Amazon Inspector: [amazon-inspector.json](src/docs/awspricelistapiexamples/amazon-inspector.json)
     - Amazon Web Application Firewall:
-        - Per rule pricing: [aws-waf-rule-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-rule-pricing.json)
-        - Per billion requests pricing: [aws-waf-requests-pricing.json](src/main/resources/awspricelistapiexamples/aws-waf-requests-pricing.json)
-    - Amazon Macie: [aws-macie-macie.json](src/main/resources/awspricelistapiexamples/aws-macie-macie.json)
-    - Amazon CloudWatch: [aws-cloud-watch-pricing.json](src/main/resources/awspricelistapiexamples/aws-cloud-watch-pricing.json)
-    - AWS KMS: [aws-kms-pricing.json](src/main/resources/awspricelistapiexamples/aws-kms-pricing.json)
-    - AWS DataTransfer pricing: [aws-datatransfer-pricing.json](src/main/resources/awspricelistapiexamples/awsdatatransferpricingexamples/aws-datatransfer-pricing.json)
-    - AWS Aurora MySQL: [aws-aurora-mysql-pricing.json](src/main/resources/awspricelistapiexamples/aws-aurora-mysql-pricing.json)
-    - AWS EKS: [aws-eks-pricing.json](src/main/resources/awspricelistapiexamples/aws-eks-pricing.json)
+        - Per rule pricing: [aws-waf-rule-pricing.json](src/docs/awspricelistapiexamples/aws-waf-rule-pricing.json)
+        - Per billion requests pricing: [aws-waf-requests-pricing.json](src/docs/awspricelistapiexamples/aws-waf-requests-pricing.json)
+    - Amazon Macie: [aws-macie-macie.json](src/docs/awspricelistapiexamples/aws-macie-macie.json)
+    - Amazon CloudWatch: [aws-cloud-watch-pricing.json](src/docs/awspricelistapiexamples/aws-cloud-watch-pricing.json)
+    - AWS KMS: [aws-kms-pricing.json](src/docs/awspricelistapiexamples/aws-kms-pricing.json)
+    - AWS DataTransfer pricing: [aws-datatransfer-pricing.json](src/docs/awspricelistapiexamples/awsdatatransferpricingexamples/aws-datatransfer-pricing.json)
+    - AWS Aurora MySQL: [aws-aurora-mysql-pricing.json](src/docs/awspricelistapiexamples/aws-aurora-mysql-pricing.json)
+    - AWS EKS: [aws-eks-pricing.json](src/docs/awspricelistapiexamples/aws-eks-pricing.json)
 
 - **AWS Price List Bulk API**:
-    - PriceList Bulk response: [pricelist-bul-api.json](src/main/resources/awspricelistbulkapiexamples/aws-pricelist-bulk-api.json)
-    - FinOps strategies pricing: [finops-strategies-pricing.json](src/main/resources/awspricelistbulkapiexamples/aws-finops-strategies-pricing.json)
-    - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/main/resources/awspricelistbulkapiexamples/aws-computesavingsplans-jsonpricingfile-response.json)
+    - PriceList Bulk response: [pricelist-bul-api.json](src/docs/awspricelistbulkapiexamples/aws-pricelist-bulk-api.json)
+    - FinOps strategies pricing: [finops-strategies-pricing.json](src/docs/awspricelistbulkapiexamples/aws-finops-strategies-pricing.json)
+    - Compute savings plans file response: [computesavingsplans-jsonpricingfile-response.json](src/docs/awspricelistbulkapiexamples/aws-computesavingsplans-jsonpricingfile-response.json)
 
 ## Fallback pricing values per services to fill cost factors:
 
@@ -184,55 +184,55 @@ The following table outlines the mathematical formulations used by the TCO Netwo
 5. To interact with the functionalities you must take into account the FinOps-gRPC End2End Model Interaction Process described below.
 
 ### Identity of the service:
-![Phase1.png](src/main/resources/images/example/Phase1.png)
+![Phase1.png](src/docs/images/example/Phase1.png)
 
 ### Select the use case, upload Protofile and define Consumers:
-![Toolkit-Phase2Body.png](src/main/resources/images/Toolkit-Phase2Body.png)
+![Toolkit-Phase2Body.png](src/docs/images/Toolkit-Phase2Body.png)
 
 ### End2End Model Interaction Process
 
 #### Choose a Quality Attribute
-![Toolkit-Phase3Body.png](src/main/resources/images/Toolkit-Phase3Body.png)
+![Toolkit-Phase3Body.png](src/docs/images/Toolkit-Phase3Body.png)
 #### Choose Tactics to Promote Quality Attribute
-![Toolkit-Phase3TacticsSelectionBody.png](src/main/resources/images/Toolkit-Phase3TacticsSelectionBody.png)
+![Toolkit-Phase3TacticsSelectionBody.png](src/docs/images/Toolkit-Phase3TacticsSelectionBody.png)
 
 #### Map Cloud Services to Implement those tactics:
-![Toolkit-Phase3AWSServicesMappingBody.png](src/main/resources/images/Toolkit-Phase3AWSServicesMappingBody.png)
+![Toolkit-Phase3AWSServicesMappingBody.png](src/docs/images/Toolkit-Phase3AWSServicesMappingBody.png)
 
 #### Calculate Base Costs:
-![Toolkit-Phase3CalculateBaseCostsBody.png](src/main/resources/images/Toolkit-Phase3CalculateBaseCostsBody.png)
+![Toolkit-Phase3CalculateBaseCostsBody.png](src/docs/images/Toolkit-Phase3CalculateBaseCostsBody.png)
 
 #### Define costs optimization strategies (FinOps practices)}
-![Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png](src/main/resources/images/Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png)
+![Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png](src/docs/images/Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png)
 
 #### Calculate the new cost (TCO Costs) and Unit Economics:
-[Last TCO Breakdown cost report phase 4 with Unit economics and a copy of TCC report of phase 3.pdf](src/main/resources/images/Last%20TCO%20Breakdown%20cost%20report%20phase%204%20with%20Unit%20economics%20and%20a%20copy%20of%20TCC%20report%20of%20phase%203.pdf)
+[Last TCO Breakdown cost report phase 4 with Unit economics and a copy of TCC report of phase 3.pdf](src/docs/images/Last%20TCO%20Breakdown%20cost%20report%20phase%204%20with%20Unit%20economics%20and%20a%20copy%20of%20TCC%20report%20of%20phase%203.pdf)
 
-![img.png](src/main/resources/images/TCO breakdown costs.png)
+![img.png](src/docs/images/TCO breakdown costs.png)
 
 #### Unit Economics and cost-efficiency
-![img_1.png](src/main/resources/images/Unit Economics cost efficiency report.png)
+![img_1.png](src/docs/images/Unit Economics cost efficiency report.png)
 
 ### Discernment with FinOps Personas and Engineering Teams:
 
-![FinOps tagging and labeling strategies](src/main/resources/images/src/main/resources/images/FinOps%20Tagging%20and%20labeling%20strategies.png)
+![FinOps tagging and labeling strategies](src/docs/images/src/main/resources/images/FinOps%20Tagging%20and%20labeling%20strategies.png)
 
-![cloud services tagging and labelling.png](src/main/resources/images/cloud%20services%20tagging%20and%20labelling.png)
+![cloud services tagging and labelling.png](src/docs/images/cloud%20services%20tagging%20and%20labelling.png)
 
-![Toolkit-Footer.png](src/main/resources/images/Toolkit-Footer.png)
+![Toolkit-Footer.png](src/docs/images/Toolkit-Footer.png)
 
 ## Additional screnshots of TCC, TCO and UnitEconomics reports:
-![Phase 3 report example.png](src/main/resources/images/example/Phase%203%20report%20example.png)
+![Phase 3 report example.png](src/docs/images/example/Phase%203%20report%20example.png)
 
-![Phase 4 report example.png](src/main/resources/images/example/Phase%204%20report%20example.png)
+![Phase 4 report example.png](src/docs/images/example/Phase%204%20report%20example.png)
 
-![Phase 4 report example - Unit economics.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20Unit%20economics.png)
+![Phase 4 report example - Unit economics.png](src/docs/images/example/Phase%204%20report%20example%20-%20Unit%20economics.png)
 
-![Phase 4 report example - FinOps Tagging and Labelling.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling.png)
+![Phase 4 report example - FinOps Tagging and Labelling.png](src/docs/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling.png)
 
-![Phase 4 report example - FinOps Tagging and Labelling Cloud Services.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling%20Cloud%20Services.png)
+![Phase 4 report example - FinOps Tagging and Labelling Cloud Services.png](src/docs/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling%20Cloud%20Services.png)
 
-![Phase 4 report example - Portfolio with FinOps savings.png](src/main/resources/images/example/Phase%204%20report%20example%20-%20Portfolio%20with%20FinOps%20savings.png)
+![Phase 4 report example - Portfolio with FinOps savings.png](src/docs/images/example/Phase%204%20report%20example%20-%20Portfolio%20with%20FinOps%20savings.png)
 
 ## Notes on containerized costs:
 ## EKS Cost Breakdown
