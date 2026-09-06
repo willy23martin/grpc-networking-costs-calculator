@@ -3,7 +3,7 @@ gRPC-based MACH Microservice TCO Costs Calculator based on Protocol Buffer defin
 
 This service calculates the TCO costs for a gRPC-based Microservices MACH Architecture's service by using the Protocol Buffers definition of the service.
 
-This project was developed within a university environment to be explored, improved, and extended by the open-source community. Students, researchers, and developers are welcome to collaborate, report bugs, and propose new features through Pull Requests or Issues.
+This project was developed within a university Master's Degree project and now it is availabke to be explored, improved, and extended by the open-source community. Students, researchers, and developers are welcome to collaborate, report bugs, and propose new features through Pull Requests or Issues.
 
 Authors: William Martín Chávez González. 
 University program: Master's Degree in Software Engineering, Pontificia Universidad Javeriana Cali - Colombia.
@@ -28,13 +28,13 @@ in the context of an **E-Commerce microservice**:
 4. **BUC4**: **gRPC Bi-Directional Streaming pattern**: Send  a continuous set of orders and process them into combined shipments based on the delivery date.
 
 ## Application Profiles:
-The service can be parametrized before building it to use a Cloud Service Provider to calculate costs.
+The service can be parametrized before building it to use a Cloud Service Provider to calculate costs. AWS is the only one supported so far. It is expected to cover another cloud service providers in the future.
 **Application Profiles**: In order to provide Networking calculation costs and Cloud Costs the user should specify one of the three [ApplicationProfile.java](src/main/java/com/calculator/application/configuration/ApplicationProfile.java) for it before deploying the service: **aws (for Amazon Web Service)**, **azure (for Microsoft Azure)** or **gcp (for Google Cloud Platform)**.
 
 ## Constraints:
 * **protoc dependency version supported**: **4.29.4** - used to load protocol buffer files and process them following the **protoc syntax v3**. Check [pom.xml](pom.xml)
-* Java AWS SDK and **Java 21+**
-* **Spring Boot 3.2+**
+* Java AWS SDK and **Java 21**
+* **Spring Boot 3.2**
 * **TCO Networking Cost calculation** considers only **costs for Data Transfer OUT From Amazon EC2 To Internet**.
 * In [application.properties](src/main/resources/application.properties): To define the [Data Transfer OUT From Amazon EC2 To Internet](https://aws.amazon.com/ec2/pricing/on-demand/) get the values from **First 10 TB / Month** to **Greater than 150 TB / Month**.
 * AWS_STANDARD_TIER_THRESHOLD_LIMITS_IN_GB are defined based on the ones defined in [Amazon EC2 On-Demand Pricing](https://aws.amazon.com/ec2/pricing/on-demand/).
@@ -45,8 +45,8 @@ The service can be parametrized before building it to use a Cloud Service Provid
 * **Resiliency tactics and patters**: Timeout, Retry and Circuit breaker.
 * **Security tactics**: TLS Certificate and OAuth2.0 + JWT Token. 
 * **Software Design Patterns that have been implemented**: **Composed Method** and **Builder**. Check for `// DESIGN PATTERN` comments.
-* **NOTE**:Some tests might be skipped as those are operating system dependent.
-* **Application Profiles**: Only **aws** is enabled.
+* **NOTE**:Some tests might be skipped as those are operating system dependent (Windows, Linux or Mac OS).
+* **Application Profiles**: Only **aws** is enabled and supported so far. It is expected to cover another cloud service providers in future versions.
 
 
 ## Software Architecture - C4 Model
@@ -65,20 +65,20 @@ The service can be parametrized before building it to use a Cloud Service Provid
 | Controller Class Name                    | Request Method & Endpoint Path           | Replaces JS function / Description |
 |------------------------------------------|------------------------------------------|---|
 | `NetworkingCostCalculatorController`     | `POST /calculateProtofileNetworkingCosts`| `recalculateRps()`, and compiles `.proto` file uploads dynamically |
-| `ContainerizedEnvironmentCostController` | `GET /api/cloud/compute-instances`       | Fetches live compute node on-demand/fallback definitions |
-| `CloudTCOCalculatorController`           | `GET /api/cloud/alb-pricing`             | Provides base structural load balancer tier schemas |
-| `CloudTCOCalculatorController`           | `GET /api/cloud/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
-| `CloudTCOCalculatorController`           | `GET /api/cloud/security-services`       | `recalculateSecCost()` (Native AWS protection parameters) |
-| `CloudTCOCalculatorController`           | `GET /api/cloud/cost-optimisation`       | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
-| `CloudTCOCalculatorController`           | `GET /api/cloud/caching-pricing`         | `recalculateCaching()` (Cache tier sizing matrices) |
+| `ContainerizedEnvironmentCostController` | `GET /api/cloud/container-pricing`       | Fetches live container pricing on-demand/fallback definitions from the cloud provider |
+| `CloudServicesTCCCalculatorController`           | `GET /api/cloud/alb-pricing`             | Provides base structural load balancer tier schemas |
+| `CloudServicesTCCCalculatorController`           | `GET /api/cloud/database-backup-pricing` | `recalculateDbCost()` (Backup and storage pricing frameworks) |
+| `CloudServicesTCCCalculatorController`           | `GET /api/cloud/security-services`       | `recalculateSecCost()` (Native AWS protection parameters) |
+| `CloudServicesTCCCalculatorController`           | `GET /api/cloud/cost-optimisation`       | `recalculateCostOpt()` (FinOps tactic strategies metadata) |
+| `CloudServicesTCCCalculatorController`           | `GET /api/cloud/caching-pricing`         | `recalculateCaching()` (Cache tier sizing matrices) |
 | `EffectiveRPSCalculatorController`       | `POST /api/tco/effective-rps`            | `recalculateRps()` (Network overhead scaling limits evaluation) |
-| `FinOpsDiscountController`               | `POST /api/finops/container-discounts`   | `recalculateContainerCost()` (RI vs Savings Plans optimization rules) |
-| `PortfolioUnitEconomicsController`       | `POST /api/portfolio/roi`                | `recalculateTimeline()` / `recalculateReplicas()` (Evaluates macro profit metrics across service bundles) |
-| `TCOUnitEconomicsController`             | `POST /api/cost/unit-economics`          | `populateUnitEcon()` (Compares request expenses against consumer ARPU constraints) |
-| `ReliabilityTacticsController`           | `GET /api/reliability/tactic-mappings`   | Lists qualitative score matrices for streaming protocols |
-| `ResiliencyPatternsController`           | `GET /api/resiliency/tactic-mappings`    | Lists resiliency structural tradeoff profiles |
-| `SecurityTacticsController`              | `GET /api/security/tactic-mappings`      | Lists channel security tactic constraints profiles |
-| `TacticsContributionController`          | `POST /api/cost/tactic-contributions`    | Quantifies individual egress additions induced by architectural design decisions |
+| `FinOpsDiscountController`               | `POST /api/finops/ri-prices/{instanceType}`   | `getRiPrices()` (Reserved Instances options and pricing for the specified instance) |
+| `PortfolioUnitEconomicsController`       | `POST /api/portfolio/roi`                | `calculatePortfolioRoi()` (Evaluates MACH Portfolio ROI) |
+| `TCOUnitEconomicsController`             | `POST /api/cost/unit-economics`          | `calculateUnitEconomics()` (Calculates unit economics) |
+| `ReliabilityTacticsController`           | `GET /api/reliability/tactic-mappings`   | Lists reliability tactics |
+| `ResiliencyPatternsController`           | `GET /api/resiliency/tactic-mappings`    | Lists resiliency patterns |
+| `SecurityTacticsController`              | `GET /api/security/tactic-mappings`      | Lists security tactics |
+| `TacticsTCCContributionController`          | `POST /api/cost/tactic-contributions`    | Quantifies individual egress additions induced by architectural design decisions |
 | `TacticsSessionController`               | `POST /api/session/tactics`              | Saves active architectural decisions into context state |
 | `TacticsSessionController`               | `GET /api/session/tactics`               | Retrieves current architectural choices from session buffer |
 | `TacticsSessionController`               | `DELETE /api/session/tactics`            | Purges tracked tactical options from the contextual storage |
@@ -174,9 +174,6 @@ The following table outlines the mathematical formulations used by the TCO Netwo
 | **Monthly ROI %** | $(Profit / TCO) \times 100$ | +102.55% | -3.55% |
 | **Break-Even Users** | $\lceil TCO / ARPU \rceil$ | 173 | 363 |
 | **Net Margin/User** | $ARPU - CostPerUser$ | +$7.5943 | -$0.5520 |
-
----
-*Note: Scenario 2 demonstrates a deficit state where current user demand is insufficient to cover the high-scale infrastructure costs, requiring either structural optimization or an increase in consumer footprint.*
 
 
 ## How to run it?
