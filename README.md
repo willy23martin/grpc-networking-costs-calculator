@@ -266,6 +266,14 @@ These charges are **not duplicated**; they represent separate AWS services.
 - **1× t3.medium (On-Demand)**: ~$30.37
 - **Total**: ~$103.37/month (before RI/SP discounts)
 
+## How FinOps principles were applied?
+1. **Teams Need to Collaborate**: this is a tool that enables engineering teams leaded by a software architect to consider cost-efficiency as an architectural characteristic to be aligned with Finance teams.
+2. **Decisions are driven by the business value of cloud**: the tool calculates an estimation of the ROI of implementing the architecture or the MACH portfolio on cloud.
+3. **Everyone takes ownership of their cloud usage**: in this tool the ownership of cloud usage is envisioned to software architects and their engineering teams.
+4. **FinOps reports should be accessible and timely**: this tool generates a unit economics report in phase 5 immediately after software architect selects the software tactics and patterns. Includes also suggestions for cost allocation for each microservice.
+5. **A centralized team drives FinOps**: this tools enables centralized teams to suggest this 5 phase process to engineering teams to include cost-efficiency an architectural characteristic as part of the analysis and architectural design processes.
+6. **Take advantage of the variable cost model of the cloud**: this tool includes different FinOps strategies to apply and the costs directly from the cloud vendors API (so far AWS the only one supported).
+
 # References:
 1. [Protocol Buffers overview](https://protobuf.dev/overview/).
 2. [Data Transfer OUT From Amazon EC2 To Internet](https://aws.amazon.com/ec2/pricing/on-demand/).
