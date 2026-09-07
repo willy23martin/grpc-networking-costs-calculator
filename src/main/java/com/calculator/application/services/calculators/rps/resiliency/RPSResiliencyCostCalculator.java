@@ -16,7 +16,8 @@ public class RPSResiliencyCostCalculator implements RPSNetworkingCostCalculator<
         BigDecimal baseRPS = new BigDecimal(baseRequestsPerSecond);
         BigDecimal addition = baseRPS
                 .multiply(percentage)
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP); // 100, Because it is a percentage
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
+                .setScale(0, RoundingMode.HALF_UP); // 100, Because it is a percentage
         return addition.longValue();
     }
 }
