@@ -3,24 +3,18 @@ package com.calculator.application.services.calculators;
 import com.calculator.domain.dto.ArchitecturalDecisionsDTO;
 import com.calculator.domain.dto.requests.TCOUnitEconomicsRequest;
 import com.calculator.domain.dto.responses.TCOUnitEconomicsResponse;
-import com.calculator.domain.dto.tactics.reliability.ReliabilityTactics;
-import com.calculator.domain.dto.tactics.security.SecurityTactics;
 import com.calculator.domain.model.architecture.ArchitecturalDecision;
 import com.calculator.domain.model.architecture.strategy.ReliabilityArchitecturalDecisionSettingStrategy;
 import com.calculator.domain.model.architecture.strategy.ResiliencyArchitecturalDecisionSettingStrategy;
 import com.calculator.domain.model.architecture.strategy.SecurityArchitecturalDecisionSettingStrategy;
 import com.calculator.domain.model.quality.ArchitecturalCharacteristics;
 import com.calculator.domain.model.quality.TradeoffType;
-import com.calculator.domain.repository.cloud.reliability.CloudReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.cloud.security.CloudSecurityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.reliability.ReliabilityArchitecturalDecisionRepository;
-import com.calculator.domain.repository.security.SecurityArchitecturalDecisionRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
 import static com.calculator.application.services.utils.MathUtils.*;
@@ -53,7 +47,7 @@ public class CostEfficiencyCalculator {
 
     @PostConstruct
     public void initializeArchitecturalDecisions() {
-        architecturalDecisions = new CopyOnWriteArrayList<>();
+        architecturalDecisions = new ArrayList<>();
     }
 
     public TCOUnitEconomicsResponse calculateUnitEconomics(
@@ -138,13 +132,13 @@ public class CostEfficiencyCalculator {
             if (tradeoffs == null) continue;
 
             for (Object tradeoff : tradeoffs) {
-                if (!(tradeoff instanceof com.calculator.domain.model.quality.QualityTradeoff qt)) continue;
-                if (qt.getArchitecturalCharacteristic() == null) continue;
+                if (!(tradeoff instanceof com.calculator.domain.model.quality.QualityTradeoff qualityTradeoff)) continue;
+                if (qualityTradeoff.getArchitecturalCharacteristic() == null) continue;
 
-                String attrName = qt.getArchitecturalCharacteristic().getName();
-                if (!ArchitecturalCharacteristics.AFFORDABILITY.name().equalsIgnoreCase(attrName)) continue;
+                String architecturalCharacteristic = qualityTradeoff.getArchitecturalCharacteristic().getName();
+                if (!ArchitecturalCharacteristics.AFFORDABILITY.name().equalsIgnoreCase(architecturalCharacteristic)) continue;
 
-                TradeoffType type = qt.getTradeoffType();
+                TradeoffType type = qualityTradeoff.getTradeoffType();
                 if (type == TradeoffType.INHIBITS)  anyInhibits = true;
                 if (type == TradeoffType.PROMOTES)  anyPromotes = true;
             }
