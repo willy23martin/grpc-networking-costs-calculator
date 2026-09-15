@@ -1,16 +1,3 @@
-/* =================================================================
-   initializer-tactics-mapping.js
-   Loads security, reliability and resiliency tactic mappings from
-   the backend and renders OWASP/CWE/ISO badges into the tactic rows.
-
-   FIX 3a — Cloud-service auto-selection:
-   When an architectural tactic is toggled (tls, mtls, oauth,
-   server-lb) this module reads the already-cached mapping data from
-   the three backend endpoints and checks every CloudService whose
-   supportedArchitecturalDecisions list contains that tactic id.
-   No hardcoded TACTIC_TO_CLOUD_SERVICE_MAP — the source of truth is
-   always the backend.
-================================================================= */
 
 /* ── caches ─────────────────────────────────────────────────────── */
 let securityMappingsCache    = [];
@@ -131,30 +118,6 @@ function renderMappingBadges(mapping) {
         </div>`;
 }
 
-/* =================================================================
-   FIX 3a — TACTIC → CLOUD SERVICE AUTO-SELECT
-   Driven entirely by the backend mapping data (supportedArchitecturalDecisions).
-   No hardcoded map here — the source of truth is always the three
-   /api/{security|reliability|resiliency}/tactic-mappings endpoints.
-
-   How it works:
-   1.  wireTacticToCloudServiceAutoSelect() delegates via document-level
-       event delegation so it works for both statically-rendered tactic
-       checkboxes AND dynamically-rendered cloud-service checkboxes.
-   2.  When a tactic checkbox changes, syncCloudServicesForTactic(tacticId)
-       scans the merged mapping cache for any entry whose
-       supportedArchitecturalDecisions contains that tactic id.
-   3.  If the tactic is being ENABLED, every matched cloud-service
-       checkbox is checked (if not already checked) and its onchange
-       is dispatched so recalculateSec/Alb/etc. runs normally.
-   4.  If the tactic is DISABLED, cloud services are NOT auto-unchecked
-       because the user may have independently selected them for other
-       tactics.
-   5.  If a cloud service checkbox does not exist yet (lazy panel not
-       rendered), the function ensures the panel is loaded and then
-       retries once via a short timeout.
-================================================================= */
-
 /**
  * All mapping entries that have at least one supportedArchitecturalDecision.
  * These are the CloudService rows in the backend — they carry the
@@ -169,40 +132,6 @@ function getAllCloudServiceMappings() {
     ].filter(m => m.supportedArchitecturalDecisions && m.supportedArchitecturalDecisions.length > 0);
 }
 
-/**
- * Checks or unchecks every cloud-service checkbox whose
- * supportedArchitecturalDecisions array includes tacticId.
- *
- * When ENABLING a tactic  → auto-checks all dependent services.
- * When DISABLING a tactic → auto-unchecks dependent services ONLY if no
- *   other currently-active tactic also requires them (shared services such
- *   as sec-cloudwatch, needed by both oauth AND tls, stay checked when
- *   only one of the two tactics is removed).
- *
- * @param {string}  tacticId   e.g. 'tactic-tls', 'tactic-oauth', 'tactic-server-lb'
- * @param {boolean} [isEnabled] the tactic's new state; if omitted, reads the DOM
- */
-// ─── Tactic → Cloud Service auto-select ──────────────────────────────────────
-//
-// Design: SIMPLE AND CORRECT.
-//
-// When a security/reliability tactic checkbox changes, we look at the cached
-// backend mapping data to find which cloud-service checkboxes have that tactic
-// in their supportedArchitecturalDecisions list.
-//
-// Rules:
-//  • We ONLY call syncCloudServicesForTactic for the ARCHITECTURAL TACTIC IDs
-//    (tactic-tls, tactic-mtls, tactic-oauth, tactic-server-lb).
-//    We NEVER call it for cloud-service IDs (sec-inspector, sec-waf, …).
-//    This prevents the cascade where clicking one service activates others.
-//  • We set .checked SILENTLY (no dispatchEvent) to avoid triggering
-//    recalculateSecCost with default input values.
-//  • We call recalculateSecCost() ONCE after all boxes are set.
-//  • loadCloudSecSection() is idempotent (guards against re-render).
-//  • On disable: uncheck dependent services not needed by another active tactic.
-
-// The ONLY tactic IDs that may trigger cloud-service auto-select.
-// These are the architectural tactics from the domain model — NOT cloud service IDs.
 var ARCHITECTURAL_TACTIC_TRIGGER_IDS = new Set([
     'tactic-tls', 'tactic-mtls', 'tactic-oauth', 'tactic-server-lb'
 ]);
