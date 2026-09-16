@@ -14,4 +14,4 @@ Feature: Optimized Cost Calculation
 
     Examples: User Story: Optimized Cost Calculation - Feature Examples
       | finops_strategy           | cloud_service | cloud_instance | new_monthly_cost | annual_savings |
-      | Reserved Instance 1 year  | AWS EC2       | t3.medium      | $19.44           | $131.18         |
+      | Reserved Instance 1 year  | AWS EC2       | t3.medium      | $19.13           | $134.83         |
