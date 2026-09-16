@@ -278,10 +278,10 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
     }
 
     private void fetchAndMapRICosts(Map<String, Object> targetMap) {
-        double standard1yr = 36.0;
-        double standard3yr = 57.0;
-        double convertible1yr = 28.0;
-        double convertible3yr = 47.0;
+        double standard1yr = 37.0; // https://aws.amazon.com/ec2/pricing/reserved-instances/pricing/ for t3 medium
+        double standard3yr = 57.0; // https://aws.amazon.com/ec2/pricing/reserved-instances/pricing/ for t3 medium
+        double convertible1yr = 28.0; // https://aws.amazon.com/ec2/pricing/reserved-instances/pricing/ t3 medium
+        double convertible3yr = 50.0; // https://aws.amazon.com/ec2/pricing/reserved-instances/pricing/ t3 medium
 
         try {
             GetProductsRequest riRequest = GetProductsRequest.builder()
@@ -303,14 +303,21 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
             for (String productJson : response.priceList()) {
                 if (productJson == null || productJson.isBlank()) continue;
                 JsonNode root = mapper.readTree(productJson);
+
+                JsonNode attributes = root.path("product").path("attributes");
+                String preInstalledSoftware = attributes.path("preInstalledSw").asText("NA");
+                if (!"NA".equalsIgnoreCase(preInstalledSoftware)) {
+                    continue;
+                }
+
                 JsonNode terms = root.path("terms");
                 JsonNode onDemand = terms.path("OnDemand");
                 if (!onDemand.fields().hasNext()) continue;
 
-                double odPrice = onDemand.fields().next().getValue().path("priceDimensions").fields().next().getValue()
+                double onDemandPrice = onDemand.fields().next().getValue().path("priceDimensions").fields().next().getValue()
                         .path("pricePerUnit").path("USD").asDouble(0.0);
 
-                if (odPrice <= 0.0) continue;
+                if (onDemandPrice <= 0.0) continue;
 
                 JsonNode reserved = terms.path("Reserved");
                 Iterator<Map.Entry<String, JsonNode>> fields = reserved.fields();
@@ -324,13 +331,13 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
 
                     JsonNode priceDimensions = termValue.path("priceDimensions");
                     if (!priceDimensions.fields().hasNext()) continue;
-                    double riPrice = priceDimensions.fields().next().getValue().path("pricePerUnit").path("USD").asDouble(0.0);
-                    double savingsPct = Math.round(((odPrice - riPrice) / odPrice) * 100.0);
+                    double riPrice = priceDimensions.fields().next().getValue().path("pricePerUnit").path("USD").asDouble(0.00);
+                    double savingsPct = Math.round(((onDemandPrice - riPrice) / onDemandPrice) * 100.0);
 
-                    if ("1 yr".equalsIgnoreCase(length)) {
+                    if ("1yr".equalsIgnoreCase(length)) {
                         if ("standard".equalsIgnoreCase(typeClass)) standard1yr = savingsPct;
                         else if ("convertible".equalsIgnoreCase(typeClass)) convertible1yr = savingsPct;
-                    } else if ("3 yr".equalsIgnoreCase(length)) {
+                    } else if ("3yr".equalsIgnoreCase(length)) {
                         if ("standard".equalsIgnoreCase(typeClass)) standard3yr = savingsPct;
                         else if ("convertible".equalsIgnoreCase(typeClass)) convertible3yr = savingsPct;
                     }
@@ -344,7 +351,7 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
         targetMap.put("reservedInstance3yrSavingsPct", (int) standard3yr);
         targetMap.put("convertibleRi1yrSavingsPct", (int) convertible1yr);
         targetMap.put("convertibleRi3yrSavingsPct", (int) convertible3yr);
-        targetMap.put("riNote", "Reserved Instances (RIs) suit predictable, constant workloads like servers that must stay active around the clock.");
+        targetMap.put("riNote", "Reserved Instances are best for predictable, steady workloads like 24/7 production servers.");
     }
 
     @Override

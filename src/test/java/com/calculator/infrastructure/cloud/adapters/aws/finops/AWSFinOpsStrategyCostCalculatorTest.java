@@ -138,7 +138,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
             Map<String, Object> results = calculator.calculateFinOpsStrategiesCosts();
 
             assertNotNull(results);
-            assertEquals(36, results.get("reservedInstance1yrSavingsPct"));
+            assertEquals(37, results.get("reservedInstance1yrSavingsPct"));
             assertEquals(100, results.get("businessSupportMinMonthUsd"));
             assertEquals(10, results.get("businessSupportPctMonthlyUsage"));
             assertEquals(31, results.get("savingsPlan1yrSavingsPct"));
@@ -169,7 +169,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
         Map<String, Object> results = calculator.calculateFinOpsStrategiesCosts();
 
         assertNotNull(results);
-        assertEquals(36, results.get("reservedInstance1yrSavingsPct"));
+        assertEquals(37, results.get("reservedInstance1yrSavingsPct"));
         assertEquals(100, results.get("businessSupportMinMonthUsd"));
 
         assertEquals(31, results.get("savingsPlan1yrSavingsPct"));

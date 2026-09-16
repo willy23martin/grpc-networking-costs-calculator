@@ -13,4 +13,4 @@ Feature: Cloud Service Configuration Modification
 
     Examples: User Story: Cloud Service Configuration Modification - Feature Examples
       | cloud_service    | cloud_instance | finops_strategy                | monthly_savings |
-      | AWS EC2          | t3.medium      | Reserved Instance 1 year       | $10.93          |
+      | AWS EC2          | t3.medium      | Reserved Instance 1 year       | $11.23          |

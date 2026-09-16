@@ -13,4 +13,4 @@ Feature: Cost Optimization Strategy Definition
 
     Examples: User Story: Cost Optimization Strategy Definition - Feature Examples
       | cloud_service | cloud_instance | base_monthly_cost | finops_strategy           | savings_percentage | impact                                                                                                             |
-      | AWS EC2       | t3.medium      | $30.37            | Reserved Instance 1 year  | 36%                | Reserved Instances (RIs) suit predictable, constant workloads like servers that must stay active around the clock. |
+      | AWS EC2       | t3.medium      | $30.37            | Reserved Instance 1 year  | 37%                | Reserved Instances are best for predictable, steady workloads like 24/7 production servers. |

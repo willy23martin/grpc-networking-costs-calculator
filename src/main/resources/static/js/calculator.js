@@ -1185,7 +1185,7 @@ function recalculateCostOpt() {
   res.innerHTML = '<div style="padding:14px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold-light),#fffdf5);border:1px solid var(--gold-border);">'
     + '<div style="font-family:\'DM Serif Display\',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px;"><i class="fas fa-coins" style="margin-right:6px;"></i>Cost Optimisation Summary</div>'
     + lines.map(function (l) { return '<div style="font-size:.82rem;margin-top:6px;color:var(--ink-medium);">\u2022 ' + l + '</div>'; }).join('')
-    + (best > 0 ? '<div style="margin-top:10px;font-weight:700;color:var(--green);">Best monthly saving: $' + best.toFixed(2) + '/mo \u2192 $' + ((spend - best) * 12).toFixed(2) + '/yr</div>' : '')
+    + (best > 0 ? '<div style="margin-top:10px;font-weight:700;color:var(--green);">Best monthly saving: $' + best.toFixed(2) + '/mo \u2192 $' + ((best) * 12).toFixed(2) + '/yr</div>' : '')
     + '</div>'
     + _fpHtml;
   /* Refresh live comparison delta */
