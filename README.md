@@ -9,8 +9,6 @@ This project was developed within a university Master's Degree project for educa
 of gRPC-based MACH Architectures: Resiliency, Reliability, and
 Security Trade-offs.** Author: William Martín Chávez González.
 
-This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. This ensures that the software will remain free and open-source forever. For full legal details, please refer to the [LICENSE](LICENSE.md) file included in this repository.
-
 ![Toolkit-Header.png](src/docs/images/Toolkit-Header.png)
 
 ![Toolkit-Phase1Body.png](src/docs/images/Toolkit-Phase1Body.png)
@@ -306,6 +304,3 @@ These charges are **not duplicated**; they represent separate AWS services.
 
 ## Credits
 [CREDITS.md](CREDITS.md)
-
-## License
-[LICENSE.md](LICENSE.md)
