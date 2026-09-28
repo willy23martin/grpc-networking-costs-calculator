@@ -302,7 +302,7 @@ These charges are **not duplicated**; they represent separate AWS services.
 
 ## Copyright & Intellectual Property Notice
 
-**Copyright © 2026 [William Martín Chávez González]. All rights reserved.**
+**Copyright © 2026 [William Martín Chávez González]. All rights reserved.** 
 
 ### 🛑 No License / Proprietary Software
 This repository contains the software implementation developed in support of the author's Master's Thesis.
