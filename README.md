@@ -3,13 +3,11 @@ gRPC-based MACH Microservice TCO Costs Calculator based on Protocol Buffer defin
 
 This service calculates the TCO costs for a gRPC-based Microservices MACH Architecture's service by using the Protocol Buffers definition of the service.
 
-This project was developed within a university Master's Degree project and now it is availabke to be explored, improved, and extended by the open-source community. Students, researchers, and developers are welcome to collaborate, report bugs, and propose new features through Pull Requests or Issues.
+This project was developed within a university Master's Degree project for educational purposes of validating a proposed model with a Proof of Concept, and now it is available to be explored, improved, and extended by the open-source community.
 
-Authors: William Martín Chávez González. 
-University program: Master's Degree in Software Engineering, Pontificia Universidad Javeriana Cali - Colombia.
 **Thesis: End-to-end model to apply FinOps for Evaluating Cost Efficiency
 of gRPC-based MACH Architectures: Resiliency, Reliability, and
-Security Trade-offs.**
+Security Trade-offs.** Author: William Martín Chávez González.
 
 This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. This ensures that the software will remain free and open-source forever. For full legal details, please refer to the [LICENSE](LICENSE.md) file included in this repository.
 
