@@ -300,6 +300,10 @@ These charges are **not duplicated**; they represent separate AWS services.
 ## Credits
 [CREDITS.md](CREDITS.md)
 
+Based on:https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository 
+"You're under no obligation to choose a license. However, without a license, the default copyright laws apply, meaning that you retain all rights to your source code and no one may reproduce, distribute, or create derivative works from your work. If you're creating an open source project, we strongly encourage you to include an open source license".
+Therefore I chose no license to make this repository public.
+
 ## Copyright & Intellectual Property Notice
 
 **Copyright © 2026 [William Martín Chávez González]. All rights reserved.** 
