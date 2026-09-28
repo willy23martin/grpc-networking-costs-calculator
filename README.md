@@ -11,8 +11,6 @@ University program: Master's Degree in Software Engineering, Pontificia Universi
 of gRPC-based MACH Architectures: Resiliency, Reliability, and
 Security Trade-offs.**
 
-This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. This ensures that the software will remain free and open-source forever. For full legal details, please refer to the [LICENSE](LICENSE.md) file included in this repository.
-
 ![Toolkit-Header.png](src/docs/images/Toolkit-Header.png)
 
 ![Toolkit-Phase1Body.png](src/docs/images/Toolkit-Phase1Body.png)
