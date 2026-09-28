@@ -3,12 +3,6 @@ gRPC-based MACH Microservice TCO Costs Calculator based on Protocol Buffer defin
 
 This service calculates the TCO costs for a gRPC-based Microservices MACH Architecture's service by using the Protocol Buffers definition of the service.
 
-This project was developed within a university Master's Degree project for educational purposes of validating a proposed model with a Proof of Concept, and now it is available to be explored, improved, and extended by the open-source community.
-
-**Thesis: End-to-end model to apply FinOps for Evaluating Cost Efficiency
-of gRPC-based MACH Architectures: Resiliency, Reliability, and
-Security Trade-offs.**
-Security Trade-offs.** Author: William Martín Chávez González.
 
 ![Toolkit-Header.png](src/docs/images/Toolkit-Header.png)
 
@@ -305,3 +299,31 @@ These charges are **not duplicated**; they represent separate AWS services.
 
 ## Credits
 [CREDITS.md](CREDITS.md)
+
+## Copyright & Intellectual Property Notice
+
+**Copyright © 2026 [William Martín Chávez González]. All rights reserved.**
+
+### 🛑 No License / Proprietary Software
+This repository contains the software implementation developed in support of the author's Master's Thesis.
+**Thesis: End-to-end model to apply FinOps for Evaluating Cost Efficiency
+of gRPC-based MACH Architectures: Resiliency, Reliability, and
+Security Trade-offs.**
+This project was developed within a university Master's Degree project for educational purposes of validating a proposed model with a Proof of Concept.
+**Author**: William Martín Chávez González.
+
+### 🎓 Academic & AI Collaboration Statement
+*(As stated in the accompanying Master's Thesis document)*:
+
+> "Along with the use of AI
+tools like Claude Code and Google Gemini, I developed and modeled the software architecture
+views effectively and efficiently by addressing all the concerns and architectural drivers and guiding
+the AI in the details of my implementation."
+>
+> "Even though I relied on the help of Claude Code
+(Anthropic, 2026), Gemini, and Perplexity AI as tools to guide the development and validate the
+cost-efficiency calculator for Software Architects, the difficulty of refactoring, validating, and testing
+against the model to ensure consistency with the FinOps, MACH, and AWS mapping was extremely
+challenging; it was also entertaining and enriching."
+
+The final compiled codebase represents original human authorship, synthesis, and technical verification, making the author the sole intellectual property owner of this software compilation. Unauthorized copying, cloning, or reproduction of this repository is strictly prohibited.
