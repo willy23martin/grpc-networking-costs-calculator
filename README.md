@@ -7,6 +7,7 @@ This project was developed within a university Master's Degree project for educa
 
 **Thesis: End-to-end model to apply FinOps for Evaluating Cost Efficiency
 of gRPC-based MACH Architectures: Resiliency, Reliability, and
+Security Trade-offs.**
 Security Trade-offs.** Author: William Martín Chávez González.
 
 ![Toolkit-Header.png](src/docs/images/Toolkit-Header.png)
