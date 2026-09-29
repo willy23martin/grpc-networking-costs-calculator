@@ -261,8 +261,7 @@ function hasAnyImpactingTactic() {
     'tactic-alb', 'tactic-cache', 'tactic-s3-backup', 'tactic-aurora-replica', 'tactic-apigw',
     // Container
     'cef-clusters', 'cef-cluster-lb', 'cef-host-storage', 'cef-workload-license',
-    // FIX 2 — security cloud-service checkboxes were missing, causing updateLiveComparison
-    // to return early before ever calling collectTacticContributions or renderComparison
+
     'sec-guardduty', 'sec-inspector', 'sec-waf', 'sec-macie',
     'sec-cloudwatch', 'sec-audit', 'sec-kms', 'sec-cloudtrail', 'sec-acm',
     // DB/DR cloud services
@@ -757,7 +756,7 @@ function renderComparisonEstimate(baseRps, effectiveRps) {
   var baseCost    = calcMonthlyCost(baseRps,      PLACEHOLDER_RESP_BYTES);
   var tacticsCost = calcMonthlyCost(effectiveRps, PLACEHOLDER_RESP_BYTES);
   aggregateCloudInfraCost();
-  // FIX 1 — show $0.00 base cost until a real proto file is uploaded
+
   var base    = {
     cost:            window._lastProtoFile ? baseCost.cost : 0,
     respGb:          baseCost.gbPerMonth,
@@ -778,7 +777,7 @@ function renderComparisonEstimateWithBytes(baseRps, effectiveRps) {
   var estRespBytes = PLACEHOLDER_RESP_BYTES + estTlsB;
   var fakeBackend  = { responseSizeEff: PLACEHOLDER_RESP_BYTES, tlsOverheadBytes: estTlsB, jwtOverheadBytes: estJwtB };
   aggregateCloudInfraCost();
-  // FIX 1 — show $0.00 base cost until a real proto file is uploaded
+
   var base = {
     cost: window._lastProtoFile
             ? calcMonthlyCost(baseRps, PLACEHOLDER_RESP_BYTES).cost

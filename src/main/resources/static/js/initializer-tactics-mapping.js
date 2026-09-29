@@ -2,14 +2,6 @@
    initializer-tactics-mapping.js
    Loads security, reliability and resiliency tactic mappings from
    the backend and renders OWASP/CWE/ISO badges into the tactic rows.
-
-   FIX 3a — Cloud-service auto-selection:
-   When an architectural tactic is toggled (tls, mtls, oauth,
-   server-lb) this module reads the already-cached mapping data from
-   the three backend endpoints and checks every CloudService whose
-   supportedArchitecturalDecisions list contains that tactic id.
-   No hardcoded TACTIC_TO_CLOUD_SERVICE_MAP — the source of truth is
-   always the backend.
 ================================================================= */
 
 /* ── caches ─────────────────────────────────────────────────────── */
@@ -28,12 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
     ]).then(() => {
         renderAllDynamicMetadata();
         wireCloudServiceVisibility();
-        wireTacticToCloudServiceAutoSelect();   /* FIX 3a */
+        wireTacticToCloudServiceAutoSelect();
     }).catch(err => {
         console.warn('One or more tactic mapping endpoints unavailable:', err);
         renderAllDynamicMetadata();
         wireCloudServiceVisibility();
-        wireTacticToCloudServiceAutoSelect();   /* FIX 3a — still wire with whatever loaded */
+        wireTacticToCloudServiceAutoSelect();
     });
 });
 
@@ -130,30 +122,6 @@ function renderMappingBadges(mapping) {
             </div>
         </div>`;
 }
-
-/* =================================================================
-   FIX 3a — TACTIC → CLOUD SERVICE AUTO-SELECT
-   Driven entirely by the backend mapping data (supportedArchitecturalDecisions).
-   No hardcoded map here — the source of truth is always the three
-   /api/{security|reliability|resiliency}/tactic-mappings endpoints.
-
-   How it works:
-   1.  wireTacticToCloudServiceAutoSelect() delegates via document-level
-       event delegation so it works for both statically-rendered tactic
-       checkboxes AND dynamically-rendered cloud-service checkboxes.
-   2.  When a tactic checkbox changes, syncCloudServicesForTactic(tacticId)
-       scans the merged mapping cache for any entry whose
-       supportedArchitecturalDecisions contains that tactic id.
-   3.  If the tactic is being ENABLED, every matched cloud-service
-       checkbox is checked (if not already checked) and its onchange
-       is dispatched so recalculateSec/Alb/etc. runs normally.
-   4.  If the tactic is DISABLED, cloud services are NOT auto-unchecked
-       because the user may have independently selected them for other
-       tactics.
-   5.  If a cloud service checkbox does not exist yet (lazy panel not
-       rendered), the function ensures the panel is loaded and then
-       retries once via a short timeout.
-================================================================= */
 
 /**
  * All mapping entries that have at least one supportedArchitecturalDecision.
