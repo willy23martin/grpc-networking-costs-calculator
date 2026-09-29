@@ -304,7 +304,7 @@ Based on:https://docs.github.com/en/repositories/managing-your-repositorys-setti
 "You're under no obligation to choose a license. However, without a license, the default copyright laws apply, meaning that you retain all rights to your source code and no one may reproduce, distribute, or create derivative works from your work. If you're creating an open source project, we strongly encourage you to include an open source license".
 Therefore I chose no license to make this repository public.
 
-## Copyright & Intellectual Property Notice
+## Master's Thesis Authorship & Copyright Notice
 
 **Copyright © 2026 [William Martín Chávez González]. All rights reserved.**
 
@@ -321,4 +321,5 @@ This project was developed within a university Master's Degree project for educa
 >
 > "Even though I relied on the help of Claude Code (Anthropic, 2026), Gemini, and Perplexity AI as tools to guide the development and validate the  cost-efficiency calculator for Software Architects, the difficulty of refactoring, validating, and testing  against the model to ensure consistency with the FinOps, MACH, and AWS mapping was extremely  challenging; it was also entertaining and enriching."
 
-The final compiled codebase represents original human authorship, synthesis, and technical verification, making the author the sole intellectual property owner of this software compilation. Unauthorized copying, cloning, or reproduction of this repository is strictly prohibited.
+The final compiled codebase represents original human authorship, synthesis, and technical verification; accordingly, the author asserts exclusive copyright over this original technical synthesis. Unauthorized copying, cloning, or reproduction of this repository is strictly prohibited.
+
