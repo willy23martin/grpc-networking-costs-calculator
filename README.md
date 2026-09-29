@@ -317,15 +317,8 @@ This project was developed within a university Master's Degree project for educa
 ### 🎓 Academic & AI Collaboration Statement
 *(As stated in the accompanying Master's Thesis document)*:
 
-> "Along with the use of AI
-tools like Claude Code and Google Gemini, I developed and modeled the software architecture
-views effectively and efficiently by addressing all the concerns and architectural drivers and guiding
-the AI in the details of my implementation."
+> "Along with the use of AI  tools like Claude Code and Google Gemini, I developed and modeled the software architecture views effectively and efficiently by addressing all the concerns and architectural drivers and guiding  the AI in the details of my implementation."
 >
-> "Even though I relied on the help of Claude Code
-(Anthropic, 2026), Gemini, and Perplexity AI as tools to guide the development and validate the
-cost-efficiency calculator for Software Architects, the difficulty of refactoring, validating, and testing
-against the model to ensure consistency with the FinOps, MACH, and AWS mapping was extremely
-challenging; it was also entertaining and enriching."
+> "Even though I relied on the help of Claude Code (Anthropic, 2026), Gemini, and Perplexity AI as tools to guide the development and validate the  cost-efficiency calculator for Software Architects, the difficulty of refactoring, validating, and testing  against the model to ensure consistency with the FinOps, MACH, and AWS mapping was extremely  challenging; it was also entertaining and enriching."
 
 The final compiled codebase represents original human authorship, synthesis, and technical verification, making the author the sole intellectual property owner of this software compilation. Unauthorized copying, cloning, or reproduction of this repository is strictly prohibited.
