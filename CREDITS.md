@@ -16,7 +16,7 @@ This document outlines the collaborative engineering, architectural design, and 
 - As the Lead Architect and Principal System Designer, contributions included:
 - **Architectural Specification**: Defined and designed the strict Hexagonal (Ports & Adapters) architectural layout isolating the core calculation domain from web infrastructure and cloud dependencies.
 - **Domain Modeling**: Developed the conceptual domain model (the end2end model for applying FinOps for calculating cost-efficiency: resiliency, reliability and security tradeoffs) for gRPC-based microservices: networking costs and infra costs.
-- **System Design Validation**: Directed the continuous structural refinement of the core Spring Boot monolithic application container, orchestrating the "Configuration as Data" paradigm to leverage dynamic properties file integration.
+- **System Design Validation**: Directed the continuous structural refinement of the core Spring Boot monolithic application container, orchestrating the "Configuration as Data" paradigm to leverage dynamic properties file integration: one profile enables in application properties: aws by default.
 - **Component Decomposition**: Mapped out responsibilities and interaction data-flows across all primary REST controllers (`TCOCalculatorController`, `CloudTCOCalculatorController`, `FinOpsDiscountController`, `TacticsSessionController`, and `PortfolioUnitEconomicsController`).
 
 ---
