@@ -306,15 +306,13 @@ Therefore I chose no license to make this repository public.
 
 ## Copyright & Intellectual Property Notice
 
-**Copyright © 2026 [William Martín Chávez González]. All rights reserved.** 
+**Copyright © 2026 [William Martín Chávez González]. All rights reserved.**
 
-### 🛑 No License / Proprietary Software
+### 🛑 Academic Research / All Rights Reserved (No License)
 This repository contains the software implementation developed in support of the author's Master's Thesis.
-**Thesis: End-to-end model to apply FinOps for Evaluating Cost Efficiency
-of gRPC-based MACH Architectures: Resiliency, Reliability, and
-Security Trade-offs.**
-This project was developed within a university Master's Degree project for educational purposes of validating a proposed model with a Proof of Concept.
+**Thesis: End-to-end model to apply FinOps for Evaluating Cost Efficiency of gRPC-based MACH Architectures: Resiliency, Reliability, and Security Trade-offs.**
 **Author**: William Martín Chávez González.
+This project was developed within a university Master's Degree project for educational purposes of validating a proposed model with a Proof of Concept. **No license is granted** to any individual or entity to copy, distribute, modify, sub-license, or use this software (or any part of its architectural framework) for commercial, corporate, or non-academic purposes.
 
 ### 🎓 Academic & AI Collaboration Statement
 *(As stated in the accompanying Master's Thesis document)*:
