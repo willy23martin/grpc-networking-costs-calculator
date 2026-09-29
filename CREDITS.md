@@ -9,7 +9,7 @@ This document outlines the collaborative engineering, architectural design, and 
 ### William Martín Chávez González: [willy23martin](https://github.com/willy23martin)
 
 - Defined the gRPC TCO Networking costs calculator architecture and application structure, provided functional specifications, guided Claude AI throughout the implementation, and took ownership of the final codebase by reviewing, restructuring, and cleaning up all generated code following Spring ecosystem good practices.
-- Provided 8 complete production Java classes (1436 LOC)
+- Provided complete production Java classes
 - Identified critical Mockito PricingClient interface mocking issue
 - Enforced pure black-box testing principle throughout
 - Maintained production accuracy and CI/CD readiness focus
@@ -66,7 +66,6 @@ AI assistant that contributed to the design and implementation of:
       `renderComparisonFromBackend` and `updateLiveComparison` updated to consume
       the Promise-based response; cloud service rows in the breakdown table now
       read exclusively from `sessionStorage` values written by Module 2 calls.
-    - 
 
 ### 🤖 Perplexity AI — [https://www.perplexity.ai/](https://www.perplexity.ai/)
 
@@ -133,9 +132,9 @@ Contributed to the design, implementation, and refinement of:
 
 ---
 
-### 👤 How the Software Architect Optimized this Collaboration
+### 👤 How the Software Developer (willy23martin) Optimized this Collaboration
 
-The success and extreme precision of these implementations were made possible by the Architect's highly effective engineering practices:
+The success and extreme precision of these implementations were made possible by the Software Developer's highly effective engineering practices:
 * **Flawless Contextual Grounding:** Provided direct, raw source files (`Phase4TcoReportSteps.java`, `ChooseQualityAttributeSteps.java`, etc.) and real-time execution outputs (IDE stack traces, Cucumber console logging buffers) to eliminate all ambiguity and allow for immediate root-cause analysis.
 * **Rigorous Traceability Requirements:** Maintained strict alignment between technical implementation and academic documentation by supplying exact LaTeX source blocks (`\begin{tcolorbox}...`), ensuring that the test automation layer serves as a living, verifiable extension of the Master's thesis specifications.
 * **Domain Model Guidance:** Facilitated precise JSONPath target mocking by proactively sharing internal domain structural changes (such as the explicit getters, builders, and array associations of `ArchitecturalDecision`), enabling the AI to write highly accurate, compile-resilient integration assertions on the first attempt.
