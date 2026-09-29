@@ -301,11 +301,26 @@ These charges are **not duplicated**; they represent separate AWS services.
 ## Credits
 [CREDITS.md](CREDITS.md)
 
+## Master's Thesis
+
+This repository contains the software implementation developed in support of the author's Master's Thesis.
+**Thesis: End-to-end model to apply FinOps for Evaluating Cost Efficiency of gRPC-based MACH Architectures: Resiliency, Reliability, and Security Trade-offs.**
+**Author**: William Martín Chávez González.
+This project was developed within a university Master's Degree project for educational purposes of validating a proposed model with a Proof of Concept. 
+**No license is granted** to any individual or entity to copy, distribute, modify, sub-license, or use this software (or any part of its architectural framework) for commercial, corporate, or non-academic purposes.
+
+### 🎓 Academic & AI Collaboration Statement
+*(As stated in the accompanying Master's Thesis document)*:
+
+> "Along with the use of AI  tools like Claude Code and Google Gemini, I developed and modeled the software architecture views effectively and efficiently by addressing all the concerns and architectural drivers and guiding  the AI in the details of my implementation."
+>
+> "Even though I relied on the help of Claude Code (Anthropic, 2026), Gemini, and Perplexity AI as tools to guide the development and validate the  cost-efficiency calculator for Software Architects, the difficulty of refactoring, validating, and testing  against the model to ensure consistency with the FinOps, MACH, and AWS mapping was extremely  challenging; it was also entertaining and enriching."
+
+## Disclaimer & Usage Terms
 Based on:https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository 
 "You're under no obligation to choose a license. However, without a license, the default copyright laws apply, meaning that you retain all rights to your source code and no one may reproduce, distribute, or create derivative works from your work. If you're creating an open source project, we strongly encourage you to include an open source license".
 Therefore no license has been chosen to make this repository public.
 
-Disclaimer & Usage Terms
 1. AI-Assisted Content & Copyright Notice: This repository contains a technical synthesis developed with the assistance of Artificial Intelligence (AI) tools. To the maximum extent permitted by applicable copyright laws, the human creator claims exclusive rights over the original synthesis, architecture, and technical verification of this codebase.
 2. No Warranty & Limitation of Liability: This code is provided "as-is" for educational and informational purposes only. Since AI tools were utilized in its generation, the author cannot guarantee that the codebase is completely free of third-party intellectual property overlaps. The author disclaims any liability for copyright infringements, bugs, or damages arising from the use of this software.
-3. GitHub Alignment & Local Testing License: In compliance with GitHub's Terms of Service, users are granted the right to view and fork this repository within the Service. Additionally, the author grants a limited, non-exclusive, and non-transferable license to clone and download this repository solely for personal, local testing and evaluation purposes. Any modification, external redistribution, or commercial exploitation is strictly prohibited.
+3. GitHub Alignment & Local Testing License: In compliance with GitHub's Terms of Service, users are granted the right to view and fork this repository within the Service. Additionally, as it is defined by GitHub "Some projects include information about their license in their README"(https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository), the author grants a limited, non-exclusive, and non-transferable license to clone and download this repository solely for personal, local testing and evaluation purposes. Any modification, external redistribution, or commercial exploitation is strictly prohibited.
