@@ -19,9 +19,7 @@ This document outlines the collaborative engineering, architectural design, and 
 - **System Design Validation**: Directed the continuous structural refinement of the core Spring Boot monolithic application container, with externalized configuration using properties files: one profile enabled in application properties: aws by default.
 - **Component Decomposition**: Mapped out responsibilities and interaction data-flows across all primary REST controllers (`TCOCalculatorController`, `CloudTCOCalculatorController`, `FinOpsDiscountController`, `TacticsSessionController`, and `PortfolioUnitEconomicsController`).
 
----
-
-# CREDITS
+# Used of AI tools: 
 
 ## **Claude (Anthropic)** — https://claude.ai
 
