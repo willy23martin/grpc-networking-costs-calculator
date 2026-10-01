@@ -231,15 +231,16 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
                                 if (is1yr || is3yr) {
                                     JsonNode rates = planNode.path("rates");
                                     if (rates.isArray()) {
-                                        // Loop through all rate objects to isolate us-east-1, t3.medium, and Linux (RunInstances)
                                         for (JsonNode rateNode : rates) {
                                             String regionCode = rateNode.path("discountedRegionCode").asText("");
                                             String instanceType = rateNode.path("discountedInstanceType").asText("");
                                             String operation = rateNode.path("discountedOperation").asText("");
+                                            String usageType = rateNode.path("discountedUsageType").asText("");
 
                                             if ("us-east-1".equalsIgnoreCase(regionCode)
                                                     && "t3.medium".equalsIgnoreCase(instanceType)
-                                                    && "RunInstances".equals(operation)) {
+                                                    && "RunInstances".equals(operation)
+                                                    && usageType.startsWith("BoxUsage")) {
 
                                                 double extractedPrice = rateNode.path("discountedRate").path("price").asDouble(0.0);
 
