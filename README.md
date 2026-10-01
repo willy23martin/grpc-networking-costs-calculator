@@ -1,4 +1,4 @@
-# gRPC-based MACH Architecture TCO Costs Calculator
+# Proof of Concept - gRPC-based MACH Architecture TCO Costs Calculator
 gRPC-based MACH Microservice TCO Costs Calculator based on Protocol Buffer definitions and the AWS Pricing API.
 
 ⚠️ **Disclaimer: Student Project / For Local Testing Only**
