@@ -105,7 +105,7 @@ public class ProtocolBuffersUtils {
         }
     }
 
-    public static void populateFieldsForMaxSize(DynamicMessage.Builder dynamicMessageBuilder, Descriptors.Descriptor messageDescriptor, int maxRepeatedItems) throws Exception {
+    public static void populateFieldsForRepresentativeSize(DynamicMessage.Builder dynamicMessageBuilder, Descriptors.Descriptor messageDescriptor, int maxRepeatedItems) throws Exception {
         for (Descriptors.FieldDescriptor fieldDescriptor : messageDescriptor.getFields()) {
             if (fieldDescriptor.isRepeated()) {
                 populateRepeated(dynamicMessageBuilder, maxRepeatedItems, fieldDescriptor);
@@ -138,7 +138,7 @@ public class ProtocolBuffersUtils {
 
     private static void recursivelyPopulateSingularNestedMessage(DynamicMessage.Builder dynamicMessageBuilder, int maxRepeatedItems, Descriptors.FieldDescriptor fieldDescriptor) throws Exception {
         DynamicMessage.Builder nestedBuilder = DynamicMessage.newBuilder(fieldDescriptor.getMessageType());
-        populateFieldsForMaxSize(nestedBuilder, fieldDescriptor.getMessageType(), maxRepeatedItems);
+        populateFieldsForRepresentativeSize(nestedBuilder, fieldDescriptor.getMessageType(), maxRepeatedItems);
         dynamicMessageBuilder.setField(fieldDescriptor, nestedBuilder.build());
     }
 
@@ -162,7 +162,7 @@ public class ProtocolBuffersUtils {
 
     private static void recursivelyPopulateNestedRepeatedMessage(DynamicMessage.Builder builder, int maxRepeatedItems, Descriptors.FieldDescriptor field) throws Exception {
         DynamicMessage.Builder nestedBuilder = DynamicMessage.newBuilder(field.getMessageType());
-        populateFieldsForMaxSize(nestedBuilder, field.getMessageType(), maxRepeatedItems);
+        populateFieldsForRepresentativeSize(nestedBuilder, field.getMessageType(), maxRepeatedItems);
         builder.addRepeatedField(field, nestedBuilder.build());
     }
 
