@@ -49,7 +49,9 @@ function recalculateReplicas() {
   var p    = sel.value.split('|');
   var instType = p[0];
   var R    = parseInt((document.getElementById('requestsPerSecond') || { value: '' }).value) || 0;
+  console.warn("Protocol Buffer Request bytes: " + window._lastProtoReqBytes);
   var sReq = window._lastProtoReqBytes  || PLACEHOLDER_REQ_BYTES;
+  console.warn("Protocol Buffer Response bytes: " + window._lastProtoRespBytes);
   var sRes = window._lastProtoRespBytes || PLACEHOLDER_RESP_BYTES;
   // C_req: per-replica request capacity derived from instance network bandwidth / proto size
   var _ec2Entry = window._ec2InstanceMap && window._ec2InstanceMap[instType];
@@ -62,7 +64,7 @@ function recalculateReplicas() {
   // nIn  = ceil(R × S_req / C_in)  = ceil(ingress bytes/sec needed / bandwidth)
   // nOut = ceil(R × S_res / C_out) = ceil(egress  bytes/sec needed / bandwidth)
   // C_req = user-set req/s capacity override; default = networkBytesPerSec / S_res
-  var cIn  = _netBytesPerSec || 625000000;  // bytes/sec network bandwidth per replica
+  var cIn  = _netBytesPerSec || 625000000;  // bytes/sec network bandwidth per replica t3.medium
   var cOut = _netBytesPerSec || 625000000;
   var _derivedCReq = sRes > 0 && cOut > 0 ? Math.floor(cOut / sRes) : 0;
   var cReq = ov > 0 ? ov : (_derivedCReq > 0 ? _derivedCReq : parseInt(p[1]) || 100);

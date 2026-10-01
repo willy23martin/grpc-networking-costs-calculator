@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import java.net.URLClassLoader;
 import java.util.logging.Logger;
 
-import static com.calculator.shared.ProtocolBuffersUtils.populateFieldsForMaxSize;
+import static com.calculator.shared.ProtocolBuffersUtils.populateFieldsForRepresentativeSize;
 
 @Service
 public class ProtocolBufferMessageSizeCalculationService {
@@ -26,7 +26,7 @@ public class ProtocolBufferMessageSizeCalculationService {
         Descriptors.Descriptor requestDescriptor = (Descriptors.Descriptor) messageClass.getMethod("getDescriptor").invoke(null);
         DynamicMessage.Builder requestBuilder = DynamicMessage.newBuilder(requestDescriptor);
 
-        populateFieldsForMaxSize(requestBuilder, requestDescriptor, globalMaxRepeatedItems);
+        populateFieldsForRepresentativeSize(requestBuilder, requestDescriptor, globalMaxRepeatedItems);
 
         DynamicMessage messageInstance = requestBuilder.build();
         return new MessageSizeCalculationResult(messageClass, messageInstance.toByteArray().length);
