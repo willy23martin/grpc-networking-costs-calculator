@@ -121,7 +121,9 @@ public class ProtocolBuffersUtils {
         } else if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
             populateSingularEnum(dynamicMessageBuilder, fieldDescriptor);
         } else {
-            Object value = getMaxValue(fieldDescriptor.getJavaType(), null); // Because is not an enum type
+            // Grounded in proto: Populates singular primitive/scalar fields (such as order_id or user_id strings)
+            // with a representative value.
+            Object value = getRepresentativeValue(fieldDescriptor.getJavaType(), null); // Not an enum type
             dynamicMessageBuilder.setField(fieldDescriptor, value);
         }
     }
@@ -151,7 +153,9 @@ public class ProtocolBuffersUtils {
     }
 
     private static void populateRepeatedEnumTypes(DynamicMessage.Builder builder, Descriptors.FieldDescriptor field) {
-        Object value = getMaxValue(field.getJavaType(),
+        // Grounded in proto: Populates repeated fields (such as order_ids lists or item collections)
+        // using a representative value rather than an edge-case maximum limit.
+        Object value = getRepresentativeValue(field.getJavaType(),
                 field.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM ? field.getEnumType() : null);
         builder.addRepeatedField(field, value);
     }
@@ -162,39 +166,51 @@ public class ProtocolBuffersUtils {
         builder.addRepeatedField(field, nestedBuilder.build());
     }
 
-    private static Object getMaxValue(Descriptors.FieldDescriptor.JavaType javaType, Descriptors.EnumDescriptor enumType) {
+    // Grounded in proto: main/resources/static/protos/biDirectionalStreamingRPCPattern.proto
+    private static Object getRepresentativeValue(Descriptors.FieldDescriptor.JavaType javaType, Descriptors.EnumDescriptor enumType) {
         Object result = null;
         switch (javaType) {
-            case INT -> result = Integer.MAX_VALUE;
-            case LONG -> result = Long.MAX_VALUE;
-            case FLOAT -> result =Float.MAX_VALUE;
-            case DOUBLE -> result = Double.MAX_VALUE;
-            case BOOLEAN -> result = true;
-            case STRING -> result =generateLargeString(ARBITRARY_LARGE_STRING_LENGTH);
-            case BYTE_STRING -> result = ByteString.copyFromUtf8(generateLargeString(ARBITRARY_LARGE_STRING_LENGTH));
-            case ENUM -> {
-                result = getMaxValue(enumType);
+            // Grounded in proto: Used for item quantities (e.g., OrderItem.quantity = 2)
+            // or fractional parts in Money (nanos). In Protobuf varint, small integers < 128 take 1 byte.
+            case INT -> result = 2; // Like number of item quantities
+            // Grounded in proto: Used for currency units in Money (e.g., units = 50 for $50)
+            // or epoch seconds in timestamp. Varint encoding keeps this compact.
+            case LONG -> result = 50L; // Like $50 USD
+            // Grounded in proto: Used for metrics or scaling factors. Statically consumes 4 bytes.
+            case FLOAT -> result = 1.0f; // Like a commerce package in kg
+            // Grounded in proto: Used for high-precision rates. Statically consumes 8 bytes.
+            case DOUBLE -> result = 1.0; // Like discount information in the package.
+            // Grounded in proto: Used for processing flags. Consumes exactly 1 byte.
+            case BOOLEAN -> result = false;
+            // Grounded in proto: Used for text identifiers like order_id, user_id, or address components.
+            // 36 characters matches a realistic average length for UUIDs and strings.
+            case STRING -> result = generateRepresentativeString(36); // Like:123e4567-e89b-12d3-a456-426614174000 for example
+            // Grounded in proto: Used for binary tokens, cryptographic hashes, or raw payloads.
+            // Aligned to a realistic short length (~30 bytes).
+            case BYTE_STRING -> {
+                result = ByteString.copyFromUtf8(generateRepresentativeString(30));
             }
+            // Grounded in proto: Used for status types. Defaults to the first valid option.
+            case ENUM -> result = getRepresentativeValue(enumType);
             case MESSAGE -> {}
-            default -> {
-                throw new RuntimeException("Error: Unsupported JavaType for max value generation: " + javaType);
-            }
+            default -> throw new RuntimeException("Error: Unsupported JavaType for representative value generation: " + javaType);
         }
         return result;
     }
 
-    private static Object getMaxValue(Descriptors.EnumDescriptor enumType) {
+    private static Object getRepresentativeValue(Descriptors.EnumDescriptor enumType) {
+        // Grounded in proto: Pick the first enum value as the typical/default state
         if (enumType != null && !enumType.getValues().isEmpty()) {
-            return enumType.getValues().get(enumType.getValues().size() - 1);
+            return enumType.getValues().getFirst();
         } else {
             return 0;
         }
     }
 
-    private static String generateLargeString(int length) {
+    private static String generateRepresentativeString(int length) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
-            sb.append('X'); // Because a consistent byte representation is needed.
+            sb.append('X'); // Consistent character representation for typical payload size estimation.
         }
         return sb.toString();
     }
