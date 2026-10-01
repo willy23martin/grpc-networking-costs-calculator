@@ -15,9 +15,9 @@ import static com.calculator.application.services.utils.MathUtils.round4;
 public class FinOpsDiscountController {
 
     /* ── Fallback discount rates (Q1-2025) if Pricing API unavailable ── */
-    private static final double RI_1YR_STD_DISCOUNT_PCT = 38.0; /* Standard RI 1-yr, no upfront */
+    private static final double RI_1YR_STD_DISCOUNT_PCT = 37.0; /* Standard RI 1-yr, no upfront */
     private static final double RI_3YR_STD_DISCOUNT_PCT = 57.0; /* Standard RI 3-yr, no upfront */
-    private static final double RI_CONVERTIBLE_1YR_DISCOUNT_PCT = 31.0; /* Convertible RI 1-yr, no upfront */
+    private static final double RI_CONVERTIBLE_1YR_DISCOUNT_PCT = 28.0; /* Convertible RI 1-yr, no upfront */
     private static final double SAVINGS_PLAN_1YR_DISCOUNT_PCT = 29.0; /* Compute SP 1-yr, no upfront */
     private static final double SAVINGS_PLAN_3YR_DISCOUNT_PCT = 48.0; /* Compute SP 3-yr, no upfront */
 
@@ -33,7 +33,7 @@ public class FinOpsDiscountController {
 
         if (onDemandPrice <= 0) {
             // Fallback pricing strategies based on typical AWS values if AWS pricing service is offline
-            double fallbackOnDemand = 0.096; // Baseline approx for m6i.large
+            double fallbackOnDemand = 0.0416; // Baseline approx for t3.medium
             response.put("source", "Local Fallback Estimates (API Down)");
             response.put("onDemandPerHourUsd", fallbackOnDemand);
             response.put("riStandard1yrPerHourUsd", round4(fallbackOnDemand * (1 - RI_1YR_STD_DISCOUNT_PCT / 100.0)));

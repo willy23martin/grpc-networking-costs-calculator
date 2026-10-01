@@ -53,8 +53,55 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
     }
 
     private void fetchAndMapSavingsPlansBulkMetadata(Map<String, Object> targetMap) {
-        double compute1yr = 31;
-        double compute3yr = 50;
+        /**
+         * "serviceCode" : "AmazonEC2",
+         *     "terms" : {
+         *       "OnDemand" : {
+         *         "PDB2GXXP8FHTY5J7.JRTCKXETXF" : {
+         *           "priceDimensions" : {
+         *             "PDB2GXXP8FHTY5J7.JRTCKXETXF.6YS6EN2CT7" : {
+         *               "unit" : "Hrs",
+         *               "endRange" : "Inf",
+         *               "description" : "$0.0416 per Unused Reservation Linux t3.medium Instance Hour",
+         *               "appliesTo" : [ ],
+         *               "rateCode" : "PDB2GXXP8FHTY5J7.JRTCKXETXF.6YS6EN2CT7",
+         *               "beginRange" : "0",
+         *               "pricePerUnit" : {
+         *                 "USD" : "0.0416000000"
+         *               }
+         *             }
+         *           },
+         *           "sku" : "PDB2GXXP8FHTY5J7",
+         *           "effectiveDate" : "2026-06-01T00:00:00Z",
+         *           "offerTermCode" : "JRTCKXETXF",
+         *           "termAttributes" : { }
+         *         }
+         *       }
+         *     },
+         *     "version" : "20260624090321",
+         *     "publicationDate" : "2026-06-24T09:03:21Z"
+         *   }
+         */
+        double amazonEc2T3MediumOnDemandPrice = 0.0416; // Check: PDB2GXXP8FHTY5J7.JRTCKXETXF in aws-reserved-instances-finops-strategies-pricing.json
+
+        /**
+         * Location Type: AWS Region
+         * Region: US East (N. Virginia)
+         * Term length: 1 year
+         * Payment options: No Upfront
+         * Operating system: Linux
+         * Tenancy: Shared
+         */
+        double compute1yr = 0.03; // https://aws.amazon.com/savingsplans/compute-pricing/: 28% discount for us-east-1
+        /**
+         * Location Type: AWS Region
+         * Region: US East (N. Virginia)
+         * Term length: 3 year
+         * Payment options: No Upfront
+         * Operating system: Linux
+         * Tenancy: Shared
+         */
+        double compute3yr = 0.0206; // https://aws.amazon.com/savingsplans/compute-pricing/ 50% discount for us-east-1
         log.info("Initializing compute1yr: " + compute1yr);
         log.info("Initializing compute3yr: " + compute3yr);
         String pricingFileUrl = "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/ComputeSavingsPlans/current/index.json";
@@ -180,24 +227,30 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
                                 boolean is1yr = (sku1yr != null && planSku.equals(sku1yr));
                                 boolean is3yr = (sku3yr != null && planSku.equals(sku3yr));
 
+
                                 if (is1yr || is3yr) {
                                     JsonNode rates = planNode.path("rates");
                                     if (rates.isArray()) {
-                                        // Loop through all regional objects within the matrix until we isolate us-east-1
+                                        // Loop through all rate objects to isolate us-east-1, t3.medium, and Linux (RunInstances)
                                         for (JsonNode rateNode : rates) {
                                             String regionCode = rateNode.path("discountedRegionCode").asText("");
+                                            String instanceType = rateNode.path("discountedInstanceType").asText("");
+                                            String operation = rateNode.path("discountedOperation").asText("");
 
-                                            if ("us-east-1".equalsIgnoreCase(regionCode)) {
+                                            if ("us-east-1".equalsIgnoreCase(regionCode)
+                                                    && "t3.medium".equalsIgnoreCase(instanceType)
+                                                    && "RunInstances".equals(operation)) {
+
                                                 double extractedPrice = rateNode.path("discountedRate").path("price").asDouble(0.0);
 
                                                 if (is1yr) {
                                                     compute1yr = extractedPrice;
-                                                    log.info("End value of compute1yr (us-east-1): " + compute1yr);
+                                                    log.info("End value of compute1yr (us-east-1, t3.medium, Linux): " + compute1yr);
                                                 } else {
                                                     compute3yr = extractedPrice;
-                                                    log.info("End value of compute3yr (us-east-1): " + compute3yr);
+                                                    log.info("End value of compute3yr (us-east-1, t3.medium, Linux): " + compute3yr);
                                                 }
-                                                break; // Break loop for rates once the us-east-1 match is resolved
+                                                break;
                                             }
                                         }
                                     }
@@ -214,8 +267,8 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
             log.warning("Bulk API discovery failed for Savings Plans: " + e.getMessage());
         }
 
-        targetMap.put("savingsPlan1yrSavingsPct", (int) Math.round(compute1yr));
-        targetMap.put("savingsPlan3yrSavingsPct", (int) Math.round(compute3yr));
+        targetMap.put("savingsPlan1yrSavingsPct", (int) Math.round(((amazonEc2T3MediumOnDemandPrice - compute1yr) / amazonEc2T3MediumOnDemandPrice) * 100.0));
+        targetMap.put("savingsPlan3yrSavingsPct", (int) Math.round(((amazonEc2T3MediumOnDemandPrice - compute3yr) / amazonEc2T3MediumOnDemandPrice) * 100.0));
         targetMap.put("savingsPlanBulkFileUrl", pricingFileUrl);
         targetMap.put("savingsPlanNote", "Savings Plans apply automatically to the highest compute usage. Master data dynamically parsed from Bulk URL: " + pricingFileUrl);
     }
@@ -284,6 +337,9 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
         double convertible3yr = 50.0; // https://aws.amazon.com/ec2/pricing/reserved-instances/pricing/ t3 medium
 
         try {
+
+            // By default, EC2 instances run on shared tenancy hardware. This means that multiple AWS accounts might share the same physical hardware. - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-instance.html
+
             GetProductsRequest riRequest = GetProductsRequest.builder()
                     .serviceCode("AmazonEC2")
                     .filters(
@@ -297,6 +353,7 @@ public class AWSFinOpsStrategyCostCalculatorAdapter extends AWSCloudCalculatorAd
                     .build();
 
             GetProductsResponse response = pricingClient.getProducts(riRequest);
+
             log.info("GetProductsResponse for fetchAndMapRICosts: \n" + response);
             JSONLogger.logAsJSON(log, response);
 

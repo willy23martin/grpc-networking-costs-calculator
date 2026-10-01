@@ -58,7 +58,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
 
     @Test
     @DisplayName("Should successfully handle both query and bulk pricing calls on the happy path")
-    void calculateFinOpsStrategiesCosts_HappyPath() throws Exception {
+    void calculateFinOpsStrategiesCosts_DefaultDiscounts() throws Exception {
         String mockRiJson = "{\"terms\":{\"OnDemand\":{\"OD1\":{\"priceDimensions\":{\"D1\":{\"pricePerUnit\":{\"USD\":\"0.048\"}}}}},\"Reserved\":{\"RI1\":{\"termAttributes\":{\"LeaseContractLength\":\"1 yr\",\"OfferingClass\":\"standard\",\"PurchaseOption\":\"No Upfront\"},\"priceDimensions\":{\"D2\":{\"pricePerUnit\":{\"USD\":\"0.0308\"}}}}}}}";
         String mockSupportJson = "{\"product\":{\"attributes\":{\"minMonthlyCharge\":\"100\"}},\"terms\":{\"External\":{\"SUP1\":{\"priceDimensions\":{\"D3\":{\"pricePerUnit\":{\"USD\":\"0.10\"}}}}}}}";
 
@@ -98,7 +98,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
                 + "        {"
                 + "          \"discountedRegionCode\": \"us-east-1\","
                 + "          \"discountedRate\": {"
-                + "            \"price\": \"31.0\""
+                + "            \"price\": \"0.03\""
                 + "          }"
                 + "        }"
                 + "      ]"
@@ -109,7 +109,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
                 + "        {"
                 + "          \"discountedRegionCode\": \"us-east-1\","
                 + "          \"discountedRate\": {"
-                + "            \"price\": \"50.0\""
+                + "            \"price\": \"0.0206\""
                 + "          }"
                 + "        }"
                 + "      ]"
@@ -141,7 +141,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
             assertEquals(37, results.get("reservedInstance1yrSavingsPct"));
             assertEquals(100, results.get("businessSupportMinMonthUsd"));
             assertEquals(10, results.get("businessSupportPctMonthlyUsage"));
-            assertEquals(31, results.get("savingsPlan1yrSavingsPct"));
+            assertEquals(28, results.get("savingsPlan1yrSavingsPct"));
             assertEquals(50, results.get("savingsPlan3yrSavingsPct"));
             assertEquals(mockFileUrlString, results.get("savingsPlanBulkFileUrl"));
         } finally {
@@ -172,7 +172,7 @@ class AWSFinOpsStrategyCostCalculatorTest {
         assertEquals(37, results.get("reservedInstance1yrSavingsPct"));
         assertEquals(100, results.get("businessSupportMinMonthUsd"));
 
-        assertEquals(31, results.get("savingsPlan1yrSavingsPct"));
+        assertEquals(28, results.get("savingsPlan1yrSavingsPct"));
         assertEquals(50, results.get("savingsPlan3yrSavingsPct"));
         assertEquals("https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/ComputeSavingsPlans/current/index.json", results.get("savingsPlanBulkFileUrl"));
     }
