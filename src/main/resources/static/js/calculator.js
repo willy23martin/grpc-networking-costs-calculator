@@ -1136,8 +1136,8 @@ function recalculateCostOpt() {
   if (g('opt-ri-standard').checked) _fpRows.push({ s: 'EC2 On-Demand (Standard RI 1-yr)', p: _coData.reservedInstance1yrSavingsPct });
   if (g('opt-ri-3yr').checked) _fpRows.push({ s: 'EC2 On-Demand (Standard RI 3-yr)', p: _coData.reservedInstance3yrSavingsPct });
   if (g('opt-ri-convertible').checked) _fpRows.push({ s: 'EC2 On-Demand (Convertible RI 1-yr)', p: _coData.convertibleRi1yrSavingsPct });
-  if (g('opt-savings-plan-1yr').checked) _fpRows.push({ s: 'EC2+Lambda+Fargate (SP 1-yr)', p: _coData.savingsPlan1yrSavingsPct });
-  if (g('opt-savings-plan-3yr').checked) _fpRows.push({ s: 'EC2+Lambda+Fargate (SP 3-yr)', p: _coData.savingsPlan3yrSavingsPct });
+  if (g('opt-savings-plan-1yr').checked) _fpRows.push({ s: 'EC2 (SP 1-yr)', p: _coData.savingsPlan1yrSavingsPct });
+  if (g('opt-savings-plan-3yr').checked) _fpRows.push({ s: 'EC2 (SP 3-yr)', p: _coData.savingsPlan3yrSavingsPct });
   var _fpHtml = _fpRows.length > 0
     ? '<div style="margin-top:14px;padding:12px 14px;border-radius:var(--r);'
     + 'background:linear-gradient(135deg,#f0fdf4,#e8f5e9);border:1px solid var(--green-border);">'

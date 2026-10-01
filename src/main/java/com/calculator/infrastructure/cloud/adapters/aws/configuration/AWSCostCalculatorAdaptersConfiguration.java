@@ -25,11 +25,12 @@ import java.time.Duration;
 @Configuration
 public class AWSCostCalculatorAdaptersConfiguration {
 
+    // Because AWS Pricing API is only available in us-east-1
     @Bean
     @Profile(CloudProvider.AWS)
     public PricingClient pricingClient(){
         return PricingClient.builder()
-                .region(Region.US_EAST_1) // Because AWS Pricing API is only available in us-east-1
+                .region(Region.US_EAST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
                 .overrideConfiguration(builder -> builder
                         .apiCallAttemptTimeout(Duration.ofSeconds(4))
