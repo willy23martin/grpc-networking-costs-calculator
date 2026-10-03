@@ -189,10 +189,13 @@ The following table outlines the mathematical formulations used by the TCO Netwo
 
 ### End2End Model Interaction Process
 
-#### Choose a Quality Attribute
+#### Choose a Quality Attribute & Choose Tactics to Promote Quality Attribute
 ![Toolkit-Phase3Body.png](src/docs/images/Toolkit-Phase3Body.png)
-#### Choose Tactics to Promote Quality Attribute
-![Toolkit-Phase3TacticsSelectionBody.png](src/docs/images/Toolkit-Phase3TacticsSelectionBody.png)
+
+![Toolkit-Phase3Body-II.png](src/docs/images/Toolkit-Phase3Body-II.png)
+
+![Toolkit-Phase3Body-III.png](src/docs/images/Toolkit-Phase3Body-III.png)
+
 
 #### Map Cloud Services to Implement those tactics:
 ![Toolkit-Phase3AWSServicesMappingBody.png](src/docs/images/Toolkit-Phase3AWSServicesMappingBody.png)
@@ -200,39 +203,22 @@ The following table outlines the mathematical formulations used by the TCO Netwo
 #### Calculate Base Costs:
 ![Toolkit-Phase3CalculateBaseCostsBody.png](src/docs/images/Toolkit-Phase3CalculateBaseCostsBody.png)
 
-#### Define costs optimization strategies (FinOps practices)}
+#### Define costs optimization strategies (FinOps practices)
 ![Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png](src/docs/images/Toolkit-Phase3AWSServicesMappingBody-CloudServicesAndTactics-CloudOptimization.png)
 
 #### Calculate the new cost (TCO Costs) and Unit Economics:
-[Last TCO Breakdown cost report phase 4 with Unit economics and a copy of TCC report of phase 3.pdf](src/docs/images/Last%20TCO%20Breakdown%20cost%20report%20phase%204%20with%20Unit%20economics%20and%20a%20copy%20of%20TCC%20report%20of%20phase%203.pdf)
-
-![img.png](src/docs/images/TCO breakdown costs.png)
+![TCO Breakdown Cost.png](src/docs/images/TCO%20Breakdown%20Cost.png)
 
 #### Unit Economics and cost-efficiency
-![img_1.png](src/docs/images/Unit Economics cost efficiency report.png)
 
-### Discernment with FinOps Personas and Engineering Teams:
 
-![FinOps tagging and labeling strategies](src/docs/images/src/main/resources/images/FinOps%20Tagging%20and%20labeling%20strategies.png)
+#### Discernment with FinOps Personas and Engineering Teams:
 
-![cloud services tagging and labelling.png](src/docs/images/cloud%20services%20tagging%20and%20labelling.png)
+![FinOpsLabellingAndTagging.png](src/docs/images/FinOpsLabellingAndTagging.png)
 
 ![Toolkit-Footer.png](src/docs/images/Toolkit-Footer.png)
 
-## Additional screnshots of TCC, TCO and UnitEconomics reports:
-![Phase 3 report example.png](src/docs/images/example/Phase%203%20report%20example.png)
-
-![Phase 4 report example.png](src/docs/images/example/Phase%204%20report%20example.png)
-
-![Phase 4 report example - Unit economics.png](src/docs/images/example/Phase%204%20report%20example%20-%20Unit%20economics.png)
-
-![Phase 4 report example - FinOps Tagging and Labelling.png](src/docs/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling.png)
-
-![Phase 4 report example - FinOps Tagging and Labelling Cloud Services.png](src/docs/images/example/Phase%204%20report%20example%20-%20FinOps%20Tagging%20and%20Labelling%20Cloud%20Services.png)
-
-![Phase 4 report example - Portfolio with FinOps savings.png](src/docs/images/example/Phase%204%20report%20example%20-%20Portfolio%20with%20FinOps%20savings.png)
-
-## Notes on containerized costs:
+# Notes on containerized costs:
 ## EKS Cost Breakdown
 
 ### Overview
@@ -246,17 +232,17 @@ These charges are **not duplicated**; they represent separate AWS services.
 
 ### Cost Components
 
-| Component | Pricing | Approx. Monthly Cost |
-|-----------|---------|----------------------|
-| **EKS Control Plane** | $0.10/hour per cluster | ~$73/month |
-| **EC2 Worker Nodes** (e.g., t3.medium) | $0.0416/hour per instance (us-east-1) | ~$30/month per node |
+| Component | Pricing | Approx. Monthly Cost   |
+|-----------|---------|------------------------|
+| **EKS Control Plane** | $0.10/hour per cluster | ~$73/month             |
+| **EC2 Worker Nodes** (e.g., t3.medium) | $0.0416/hour per instance (us-east-1) | ~$30.37/month per node |
 
 ### Key Points
 
 - The **$73/month** charge is **only** for the EKS control plane.
 - **EC2 worker nodes** (e.g., t3.medium) are billed **separately** as standard EC2 instances.
 - **Reserved Instances (RI)** or **Compute Savings Plans** apply **only to the EC2 worker node costs**, not the EKS control plane fee.
-- Therefore, a FinOps RI discount should be applied to the **total EC2 worker node cost** (e.g., $30.37), not to the control plane charge.
+- Therefore, a FinOps RI discount is applied to the **total EC2 worker node cost** (e.g., $30.37), not to the control plane charge.
 
 ### Example Monthly Cost (1 cluster + 1 t3.medium node)
 
