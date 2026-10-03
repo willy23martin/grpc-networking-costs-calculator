@@ -1663,14 +1663,17 @@ document.addEventListener('DOMContentLoaded', function () {
     var rendEffRps = null;
     if (rpsSpans.length >= 2) rendEffRps = parseInt((rpsSpans[1].textContent || '').replace(/[^0-9]/g, '')) || null;
     else if (rpsSpans.length === 1) rendEffRps = parseInt((rpsSpans[0].textContent || '').replace(/[^0-9]/g, '')) || null;
-    if (!rendEffRps) rendEffRps = parseInt(sessionStorage.getItem('tco_effective_rps')) || null;
+    if (!rendEffRps) rendEffRps = parseInt(sessionStorage.getItem('svc_rps')) || null;
 
     if (rawCost && parseFloat(rawCost) > 0) {
-
+      // Store the authoritative Transfer Cost from the proto analysis table
+      // This is the exact backend value ($1,683.65) used for Phase 4 TCO egress BUC1
       var _rcFloat = parseFloat(rawCost);
       window._lastEgressCostUsd = _rcFloat;
       sessionStorage.setItem('tco_phase3_egress', _rcFloat.toFixed(4));
-
+      // tco_phase3_base_egress = the base cost WITHOUT tactics ($1,599.76) - BUC1
+      // This is set by renderComparisonFromBackend when base result arrives.
+      // If not yet set, leave it — it will be set on the next comparison render.
       if (!sessionStorage.getItem('tco_phase3_base_egress') && window._lastBaseEgressCost > 0) {
         sessionStorage.setItem('tco_phase3_base_egress', window._lastBaseEgressCost.toFixed(4));
       }

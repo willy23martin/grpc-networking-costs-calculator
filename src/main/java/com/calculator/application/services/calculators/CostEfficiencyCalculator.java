@@ -79,7 +79,6 @@ public class CostEfficiencyCalculator {
         this.egressTransferCostUsd = unitEconomicsRequest.egressTransferCostUsd;
         this.cloudInfraCostUsd = unitEconomicsRequest.cloudInfraCostUsd;
         this.finopsSavingUsd = unitEconomicsRequest.finopsSavingUsd;
-        log.info("Effective requests per second received from frontend: " + unitEconomicsRequest.effectiveRps);
         this.effectiveRps = unitEconomicsRequest.effectiveRps;
         this.consumerCount = unitEconomicsRequest.consumerCount;
         this.revenuePerUserPerMonth = unitEconomicsRequest.revenuePerUserPerMonth;
