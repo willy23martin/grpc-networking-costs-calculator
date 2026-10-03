@@ -230,7 +230,7 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   }
   if (effectiveRps === undefined || effectiveRps === null) {
     effectiveRps = window._lastEffectiveRps
-      || parseInt(sessionStorage.getItem('tco_effective_rps') || '0', 10) || 0;
+      || parseInt(sessionStorage.getItem('svc_rps') || '0', 10) || 0;
   }
 
   var egressCost   = parseFloat(transferCostUsd) || 0;
@@ -246,7 +246,7 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var consumerType = (consumerTypeInput && consumerTypeInput.value) || sessionStorage.getItem('svc_consumer_type') || 'SERVICES';
   var revenue      = parseFloat((document.getElementById('revenuePerTransaction')||{value:''}).value)
                    || parseFloat(sessionStorage.getItem('svc_revenue_per_tx')||'0') || 0;
-  var monthlyReqs  = effectiveRps*2592000;
+  var monthlyReqs  = requestsPerMonthRaw || Math.round((effectiveRps||baseRps)*2592000);
 
   // ── Read costs from the tco_snapshot written by writeTcoSnapshot() ───────
   // writeTcoSnapshot() is called in calculator.js after every recalculate*
@@ -282,7 +282,6 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var netInfra     = Math.max(0, grossInfra - totalSavings);
   var localTco   = Math.round((egressCost + netInfra)*100)/100;
 
-  console.warn("Effective Request per second: ", effectiveRps);
   // ── POST to existing backend endpoints ─────────────────────────────────
   var infraReqBody = {
     albMonthlyCostUsd       : albCost,
@@ -298,7 +297,7 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
     egressTransferCostUsd  : egressCost,
     cloudInfraCostUsd      : netInfra,
     finopsSavingUsd        : finopsSaving,
-    effectiveRps           : effectiveRps,
+    effectiveRps           : effectiveRps || baseRps,
     consumerCount          : numConsumers,
     revenuePerUserPerMonth : revenue
   };
@@ -412,10 +411,8 @@ function _renderTcoBreakdownTable(
   if (ec2Cost > 0)       addRow('EC2 Compute Replicas', 'Cloud Infra', 'badge-warn', ec2Cost, '$'+ec2Cost.toFixed(2)+'/mo');
   if (spotSaving > 0)    addRow('EC2 Spot Instances (~' + (spotPct||0) + '% discount)', 'Cost Reduction', 'badge-bc',
     -spotSaving, 'AWS EC2 Spot Advisor — up to 90% vs on-demand · aws.amazon.com/ec2/spot/instance-advisor', true);
-  if (finopsSaving > 0)  {
-     addRow((finopsStrategy || 'FinOps Optimisation') + (finopsPct > 0 ? ' (' + finopsPct.toFixed(1) + '% off)' : ''), 'Cost Reduction', 'badge-bc',-finopsSaving, 'Discount applied to compute spend · /api/finops/ri-prices', true);
-     sumPositive -= finopsSaving;
-  }
+  if (finopsSaving > 0)  addRow((finopsStrategy || 'FinOps Optimisation') + (finopsPct > 0 ? ' (' + finopsPct.toFixed(1) + '% off)' : ''), 'Cost Reduction', 'badge-bc',
+    -finopsSaving, 'Discount applied to compute spend · /api/finops/ri-prices', true);
 
   // ROI Impact % = how much each row moves the ROI needle numerically.
   // For cost rows: roi% = -(row_cost / authTco * 100) — spending this reduces margin.
@@ -427,34 +424,15 @@ function _renderTcoBreakdownTable(
   function roiImpactPct(rowCost, isSaving, isInfo) {
     if (isInfo) return null;
     if (authTco <= 0) return null;
-
-    // 1. Calculate the current baseline ROI
-    // Formula: currentRoi = (totalRevenue - authTco) / authTco
-    var currentProfit = _revMonth - authTco;
-    var currentRoi = currentProfit / authTco;
-
-    // 2. Simulate TCO if this specific item is removed (What-if analysis)
-    // Formula:
-    // - If it's a cost, removing it decreases TCO: newTco = authTco - |rowCost|
-    // - If it's a saving, removing it increases TCO: newTco = authTco + |rowCost|
-    var newTco = isSaving ? (authTco + Math.abs(rowCost)) : (authTco - Math.abs(rowCost));
-
-    if (newTco <= 0) return null; // Prevent division by zero
-
-    // 3. Calculate the new profit and new ROI without this item
-    // Formula: newRoi = (totalRevenue - newTco) / newTco
-    var newProfit = _revMonth - newTco;
-    var newRoi = newProfit / newTco;
-
-    // 4. Return the difference in percentage points
-    // Formula: roiDelta = (newRoi - currentRoi) * 100
-    var roiDelta = (newRoi - currentRoi) * 100;
-
-    return roiDelta;
+    // Express as % change in ROI = delta_profit / TCO * 100
+    // Saving reduces TCO → profit up → positive ROI impact
+    // Cost increases TCO → profit down → negative ROI impact
+    var impactOnProfit = isSaving ? Math.abs(rowCost) : -Math.abs(rowCost);
+    return (impactOnProfit / authTco * 100);
   }
 
   var rowsHtml = rows.map(function(c){
-    var pct = (sumPositive > 0 && c.cost>0 && !c.isSaving && !c.isInfo)
+    var pct = (sumPositive>0&&c.cost>0&&!c.isSaving&&!c.isInfo)
       ? (c.cost/sumPositive*100).toFixed(1)+'%'
       : (c.isSaving ? '<span style="color:var(--green);">saving</span>'
         : (c.isInfo ? '<span style="color:var(--green);font-size:.73rem;">free</span>' : '—'));
@@ -518,9 +496,9 @@ function _renderUnitEconomicsGrid(gridEl, ueResp, tcoMonthly, egressCost, infraC
     ? (window.selectedBUC.indexOf('CUSTOM:')===0?window.selectedBUC.replace('CUSTOM:',''):window.selectedBUC)
     : '\u2014';
 
-  var costPerUser    = (ueResp && ueResp.costPerUserPerMonthUsd) ? ueResp.costPerUserPerMonthUsd : tcoMonthly/numConsumers;
-  var costPerReq     = (ueResp && ueResp.costPerRequestUsd)      ? ueResp.costPerRequestUsd      : (monthlyReqs > 0 ? tcoMonthly/monthlyReqs : 0);
-  var costPerUserDay = (ueResp && ueResp.costPerUserPerDayUsd)   ? ueResp.costPerUserPerDayUsd   : costPerUser/30;
+  var costPerUser    = (ueResp&&ueResp.costPerUserPerMonthUsd) ? ueResp.costPerUserPerMonthUsd : tcoMonthly/numConsumers;
+  var costPerReq     = (ueResp&&ueResp.costPerRequestUsd)      ? ueResp.costPerRequestUsd      : (monthlyReqs>0?tcoMonthly/monthlyReqs:0);
+  var costPerUserDay = (ueResp&&ueResp.costPerUserPerDayUsd)   ? ueResp.costPerUserPerDayUsd   : costPerUser/30;
 
   gridEl.innerHTML =
     '<div class="unit-econ-item" style="grid-column:1/-1;background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;">'
@@ -616,7 +594,7 @@ function _renderUnitEconomicsGrid(gridEl, ueResp, tcoMonthly, egressCost, infraC
       + '<div class="unit-econ-sub">(Revenue \u2212 TCO) \u00f7 TCO</div></div>'
       + '<div class="unit-econ-item"><div class="unit-econ-label">Annual ROI</div>'
       + '<div class="unit-econ-value" style="color:' + roiColorTheme + ';">' + annualRoiValue + '%</div>'
-      + '<div class="unit-econ-sub">Annualized (Monthly Run-Rate)</div></div>'
+      + '<div class="unit-econ-sub">12\u00d7 monthly projection</div></div>'
       + '<div class="unit-econ-item"><div class="unit-econ-label">Break-even Users</div>'
       + '<div class="unit-econ-value">' + breakEvenUsersVolume + '</div>'
       + '<div class="unit-econ-sub">users to cover full TCO</div></div>'
