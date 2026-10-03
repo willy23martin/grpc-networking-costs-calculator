@@ -49,9 +49,7 @@ function recalculateReplicas() {
   var p    = sel.value.split('|');
   var instType = p[0];
   var R    = parseInt((document.getElementById('requestsPerSecond') || { value: '' }).value) || 0;
-  console.warn("Protocol Buffer Request bytes: " + window._lastProtoReqBytes);
   var sReq = window._lastProtoReqBytes  || PLACEHOLDER_REQ_BYTES;
-  console.warn("Protocol Buffer Response bytes: " + window._lastProtoRespBytes);
   var sRes = window._lastProtoRespBytes || PLACEHOLDER_RESP_BYTES;
   // C_req: per-replica request capacity derived from instance network bandwidth / proto size
   var _ec2Entry = window._ec2InstanceMap && window._ec2InstanceMap[instType];
@@ -64,7 +62,7 @@ function recalculateReplicas() {
   // nIn  = ceil(R × S_req / C_in)  = ceil(ingress bytes/sec needed / bandwidth)
   // nOut = ceil(R × S_res / C_out) = ceil(egress  bytes/sec needed / bandwidth)
   // C_req = user-set req/s capacity override; default = networkBytesPerSec / S_res
-  var cIn  = _netBytesPerSec || 625000000;  // bytes/sec network bandwidth per replica t3.medium
+  var cIn  = _netBytesPerSec || 625000000;  // bytes/sec network bandwidth per replica
   var cOut = _netBytesPerSec || 625000000;
   var _derivedCReq = sRes > 0 && cOut > 0 ? Math.floor(cOut / sRes) : 0;
   var cReq = ov > 0 ? ov : (_derivedCReq > 0 ? _derivedCReq : parseInt(p[1]) || 100);
@@ -1663,17 +1661,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var rendEffRps = null;
     if (rpsSpans.length >= 2) rendEffRps = parseInt((rpsSpans[1].textContent || '').replace(/[^0-9]/g, '')) || null;
     else if (rpsSpans.length === 1) rendEffRps = parseInt((rpsSpans[0].textContent || '').replace(/[^0-9]/g, '')) || null;
-    if (!rendEffRps) rendEffRps = parseInt(sessionStorage.getItem('svc_rps')) || null;
+    if (!rendEffRps) rendEffRps = parseInt(sessionStorage.getItem('tco_effective_rps')) || null;
 
     if (rawCost && parseFloat(rawCost) > 0) {
-      // Store the authoritative Transfer Cost from the proto analysis table
-      // This is the exact backend value ($1,683.65) used for Phase 4 TCO egress BUC1
+
       var _rcFloat = parseFloat(rawCost);
       window._lastEgressCostUsd = _rcFloat;
       sessionStorage.setItem('tco_phase3_egress', _rcFloat.toFixed(4));
-      // tco_phase3_base_egress = the base cost WITHOUT tactics ($1,599.76) - BUC1
-      // This is set by renderComparisonFromBackend when base result arrives.
-      // If not yet set, leave it — it will be set on the next comparison render.
+
       if (!sessionStorage.getItem('tco_phase3_base_egress') && window._lastBaseEgressCost > 0) {
         sessionStorage.setItem('tco_phase3_base_egress', window._lastBaseEgressCost.toFixed(4));
       }
