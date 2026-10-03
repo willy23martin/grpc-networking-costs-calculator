@@ -282,6 +282,7 @@ function populateUnitEconomics(transferCostUsd, effectiveRps, requestsPerMonthRa
   var netInfra     = Math.max(0, grossInfra - totalSavings);
   var localTco   = Math.round((egressCost + netInfra)*100)/100;
 
+  console.warn("Effective Request per second: ", effectiveRps);
   // ── POST to existing backend endpoints ─────────────────────────────────
   var infraReqBody = {
     albMonthlyCostUsd       : albCost,
@@ -423,13 +424,13 @@ function _renderTcoBreakdownTable(
   var _revMonth = parseFloat(sessionStorage.getItem('svc_revenue_per_tx')||'0')
                 * (parseInt(sessionStorage.getItem('svc_consumers')||'1')||1);
 
-  function roiImpactPct(rowCost, isSaving, isInfo, totalRevenue, authTco) {
+  function roiImpactPct(rowCost, isSaving, isInfo) {
     if (isInfo) return null;
     if (authTco <= 0) return null;
 
     // 1. Calculate the current baseline ROI
     // Formula: currentRoi = (totalRevenue - authTco) / authTco
-    var currentProfit = totalRevenue - authTco;
+    var currentProfit = _revMonth - authTco;
     var currentRoi = currentProfit / authTco;
 
     // 2. Simulate TCO if this specific item is removed (What-if analysis)
@@ -442,7 +443,7 @@ function _renderTcoBreakdownTable(
 
     // 3. Calculate the new profit and new ROI without this item
     // Formula: newRoi = (totalRevenue - newTco) / newTco
-    var newProfit = totalRevenue - newTco;
+    var newProfit = _revMonth - newTco;
     var newRoi = newProfit / newTco;
 
     // 4. Return the difference in percentage points
